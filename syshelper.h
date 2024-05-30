@@ -114,6 +114,20 @@ enum class SysArch : unsigned char {
 	X64
 };
 
+enum class SidType : unsigned char {
+	User = SID_NAME_USE::SidTypeUser,
+	Group = SID_NAME_USE::SidTypeGroup,
+	Domain = SID_NAME_USE::SidTypeDomain,
+	Alias = SID_NAME_USE::SidTypeAlias,
+	WellKnownGroup = SID_NAME_USE::SidTypeWellKnownGroup,
+	DeletedAcc= SID_NAME_USE::SidTypeDeletedAccount,
+	Invalid = SID_NAME_USE::SidTypeInvalid,
+	Unknown = SID_NAME_USE::SidTypeUnknown,
+	Computer = SID_NAME_USE::SidTypeComputer,
+	Label = SID_NAME_USE::SidTypeLabel,
+	LogonSeesion = SID_NAME_USE::SidTypeLogonSession
+};
+
 bool IsBadReadPtr(void* p);
 
 struct AccountDesc;
@@ -496,6 +510,8 @@ class SysHandler {
 			None
 			Returns max number of threads available without oversubscription (cpucorenum - 1) */
 		unsigned char GetThreadNum() const;
+		SysOpResult GetSIDType(const PSID sid, SidType &sidType, const std::wstring machineName = L".", 
+			const std::wstring domainName = L".") const;
 		/* Gets RAM info
 			Param:
 			[out]	free RAM
@@ -515,8 +531,7 @@ class SysHandler {
 			[out]	free virtual memory
 			[out]	total virtual memory
 			Returns result code of the operation (enum value) */
-		SysOpResult GetVirtualMem(unsigned long long &freeVirtMem,
-			unsigned long long &totalVirtMem) const;
+		SysOpResult GetVirtualMem(unsigned long long &freeVirtMem, unsigned long long &totalVirtMem) const;
 		SysOpResult LocalGroupListFromUsername(std::vector<GroupDesc> &outGroupList, const std::wstring userName,
 			const std::wstring machineName = L".") const;
 		SysOpResult LocalGroupListFromStrSID(std::vector<GroupDesc> &outGroupList, const std::wstring strSID,
@@ -532,6 +547,8 @@ class SysHandler {
 			Returns result code of the operation (enum value) */
 		SysOpResult EnumAccounts(std::vector<AccountDesc> &accountList,
 			const std::wstring machineName = L".", const bool enumGroups = true) const;
+		bool IsAccountMemberOfGroup(PSID groupSID, PSID testSID) const;
+		bool GroupContainsAccount(PSID groupSID, PSID testSID) const;
 	protected:
 	private:
 };

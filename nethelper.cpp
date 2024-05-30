@@ -53,7 +53,7 @@
 
 #include "nethelper.h"
 
-PingResult ping(char* address) {
+PingResult ping(const char* address) {
     PingResult res;
     HANDLE hIcmpFile;
     unsigned long ipaddr = INADDR_NONE;
@@ -82,9 +82,7 @@ PingResult ping(char* address) {
                 // Unable to allocate memory
             }
         } else {
-            // LPWSTR buf = (LPWSTR)calloc(48, 48 * sizeof(WCHAR));
-            // wsprintf(buf, L"[Nethelper] Unable to open handle. IcmpCreatefile returned error: %06d", GetLastError());
-            // free(buf);
+            // Unable to open handle. IcmpCreatefile returned error: %06d", GetLastError()
         }
     } else {
         // Address incorrect
@@ -130,7 +128,7 @@ char* lookupIPAddress(const char* dnsName) {
     return ret;
 }
 
-char* getHostname(char* ip, unsigned short int port) {
+char* getHostname(const char* ip, unsigned short int port) {
     char* ret = (char*)calloc(7, 7 * sizeof(char));
     if (ret) strcpy(ret, "0.0.0.0");
 #if defined(_WIN32) || defined(_WIN64) 

@@ -1,3 +1,4 @@
+#include <iostream>
 #include "syshelper.h"
 
 bool IsBadReadPtr(void* p) {
@@ -272,6 +273,35 @@ unsigned char SysHandler::GetCPUCoreNum() const {
 
 unsigned char SysHandler::GetThreadNum() const {
 	return (unsigned char)(std::thread::hardware_concurrency() - 1);
+}
+
+SysOpResult SysHandler::GetSIDType(const PSID sid, SidType &sidType, const std::wstring machineName, const std::wstring domainName) const {
+	if (sid) {
+		unsigned long nameLen = 256, domainNameLen = 256;
+		NEW_ARR_NULLIFY(nameBuf, wchar_t, nameLen);
+		if (nameBuf) {
+			NEW_ARR_NULLIFY(domainNameBuf, wchar_t, domainNameLen);
+			if (domainNameBuf) {
+				swprintf(domainNameBuf, L"%s", domainName.c_str());
+				SID_NAME_USE sidUse;
+				if (LookupAccountSid(machineName.c_str(), sid, nameBuf, &nameLen, domainNameBuf, &domainNameLen, &sidUse)) {
+					SAFE_ARR_DELETE(nameBuf);
+					SAFE_ARR_DELETE(domainNameBuf);
+					sidType = (SidType)sidUse;
+					return SysOpResult::Success;
+				} else {
+					std::cout << "???" << std::endl;
+				}
+			} else {
+				SAFE_ARR_DELETE(nameBuf);
+				return SysOpResult::Fail;
+			}
+		} else {
+			return SysOpResult::Fail;
+		}
+	} else {
+		return SysOpResult::Fail;
+	}
 }
 
 SysOpResult SysHandler::GetRam(unsigned long long &freeRam,
@@ -670,4 +700,12 @@ SysOpResult SysHandler::EnumAccounts(std::vector<AccountDesc> &accountList,
 		SAFE_NetApiBufferFree(buf4);
 	}
 	return SysOpResult::Success;
+}
+
+bool SysHandler::IsAccountMemberOfGroup(PSID groupSID, PSID testSID) const {
+	return false;
+}
+
+bool SysHandler::GroupContainsAccount(PSID groupSID, PSID testSID) const {
+	return false;
 }

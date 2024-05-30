@@ -26,8 +26,8 @@ struct PingResult {
 	short int tripTime;
 };
 
-PingResult ping(char* address);
+PingResult ping(const char* address);
 char* lookupIPAddress(const char* dnsName);
-char* getHostname(char* ip, unsigned short int port = 27015);
+char* getHostname(const char* ip, unsigned short int port = 27015);
 
 #endif // _NETHELPER_H

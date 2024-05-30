@@ -43,82 +43,133 @@ ACLOpResult ACLHandler::StringSecurityDescriptor2SecurityDescriptor(const std::w
     return ACLOpResult::Fail;
 }
 
-bool ACLHandler::DACLReadAllowed(ACL* testACL, PSID sid) const {
-    bool ret = true;
+ACLOpResult ACLHandler::DACLReadAllowed(bool &allowed, ACL* testACL, PSID sid) const {
     void *testace = 0;
+    SysHandler sys;
+    SidType specsidype;
+    if (SysOpResult::Success != sys.GetSIDType(sid, specsidype)) {
+        return ACLOpResult::Fail;
+    }
     EXPLICIT_ACCESS *eaEntry = 0;
     for (size_t i = 0; i < testACL->AceCount; ++i) {
-        // testace = LocalAlloc(0, 1024);
-        // NEW_ARR_NULLIFY(testace, unsigned char, 1024);
-        // testace = malloc(1024);
-        // if (testace) {
-            if (!GetAce(testACL, i, (void**)&testace)) {
-                return false;
+        if (!GetAce(testACL, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_ALLOWED_ACE_TYPE) {
+            std::cout << "(" << i << ")\t Access allowed ACE" << std::endl;
+            ACCESS_ALLOWED_ACE *aceAllowed = (ACCESS_ALLOWED_ACE*)testace;
+            PSID accsid = (PSID)&aceAllowed->SidStart;
+            SidType sidtype;
+            if (SysOpResult::Success != sys.GetSIDType(accsid, sidtype)) {
+                return ACLOpResult::Fail;
             }
-            ACE_HEADER* vace = (ACE_HEADER*)testace;
-            if (vace->AceType == ACCESS_ALLOWED_ACE_TYPE) {
-                std::cout << "(" << i << ")\t Access allowed ACE" << std::endl;
-                ACCESS_ALLOWED_ACE *aceAllowed = (ACCESS_ALLOWED_ACE*)testace;
-                PSID accsid = (PSID)&aceAllowed->SidStart;
-                if (EqualSid(accsid, sid)) {
-                    if (READ_CONTROL & aceAllowed->Mask) {
-                        ret = true;
+            if (SidType::User == specsidype) {
+                if (SidType::User == sidtype) {
+                    if (EqualSid(accsid, sid)) {
+                        if (READ_CONTROL & aceAllowed->Mask) {
+                            allowed = false;
+                        }
                     }
+                } else if (SidType::Group == sidtype) {
+                    if (SidType::User == sidtype) {
+                    } else if (SidType::Group == sidtype) {
+                    } else {
+
+                    }
+                } else {
+
                 }
-            } else  if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
-                std::cout << "(" << i << ")\t Access denied ACE" << std::endl;
-                ACCESS_DENIED_ACE *aceDenied = (ACCESS_DENIED_ACE*)testace;
-                PSID accsid = (PSID)&aceDenied->SidStart;
-                if (EqualSid(accsid, sid)) {
-                    if (READ_CONTROL & aceDenied->Mask) {
-                        ret = false;
+            } else if (SidType::Group == specsidype) {
+                if (SidType::User == sidtype) {
+                } else if (SidType::Group == sidtype) {
+                    if (EqualSid(accsid, sid)) {
+                        if (READ_CONTROL & aceAllowed->Mask) {
+                            allowed = false;
+                        }
                     }
+                } else {
+
                 }
             } else {
-                std::cout << "(" << i << ")\t Undefined ACE" << std::endl;
+
             }
-            /*eaEntry = (EXPLICIT_ACCESS*)testace;
-            if (eaEntry->Trustee.TrusteeForm == TRUSTEE_IS_SID) {
-                std::cout << "(" << i << ")\t Treustee is SID" << std::endl;
-            } else  if (eaEntry->Trustee.TrusteeForm == TRUSTEE_IS_NAME) {
-                std::cout << "(" << i << ")\t Treustee is Name" << std::endl;
-            } else  if (eaEntry->Trustee.TrusteeForm == TRUSTEE_IS_OBJECTS_AND_SID) {
-                std::cout << "(" << i << ")\t Treustee is Objects and SID" << std::endl;
-            } else  if (eaEntry->Trustee.TrusteeForm == TRUSTEE_IS_OBJECTS_AND_NAME) {
-                std::cout << "(" << i << ")\t Treustee is Objects and Name" << std::endl;
-            } else  if (eaEntry->Trustee.TrusteeForm == TRUSTEE_IS_IMPERSONATE) {
-                std::cout << "(" << i << ")\t Treustee is Impersonate" << std::endl;
-            }*/
-            vace = 0;
-            LocalFree(&testace);
-            testace = 0;
-            // free(testace);
-            // memset(testace, 0, sizeof(ACCESS_ALLOWED_ACE));
-        // }
+        } else  if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
+            std::cout << "(" << i << ")\t Access denied ACE" << std::endl;
+            ACCESS_DENIED_ACE *aceDenied = (ACCESS_DENIED_ACE*)testace;
+            PSID accsid = (PSID)&aceDenied->SidStart;
+            SidType sidtype;
+            if (SysOpResult::Success != sys.GetSIDType(accsid, sidtype)) {
+                return ACLOpResult::Fail;
+            }
+            if (SidType::User == specsidype) {
+                if (SidType::User == sidtype) {
+                    if (EqualSid(accsid, sid)) {
+                        if (READ_CONTROL & aceDenied->Mask) {
+                            allowed = false;
+                        }
+                    }
+                } else if (SidType::Group == sidtype) {
+                    if (SidType::User == sidtype) {
+                    } else if (SidType::Group == sidtype) {
+                        if (EqualSid(accsid, sid)) {
+                            if (READ_CONTROL & aceDenied->Mask) {
+                                allowed = false;
+                            }
+                        }
+                    } else {
+
+                    }
+                } else {
+
+                }
+            } else if (SidType::Group == specsidype) {
+                if (SidType::User == sidtype) {
+                } else if (SidType::Group == sidtype) {
+                } else {
+
+                }
+            } else {
+
+            }
+        } else {
+            std::cout << "(" << i << ")\t Undefined ACE" << std::endl;
+        }
+        vace = 0;
+        LocalFree(&testace);
+        testace = 0;
     }
     SAFE_LOCALFREE(testace);
-    return ret;
+    return ACLOpResult::Success;
 }
 
-bool ACLHandler::DACLWriteAllowed(ACL &testACL, SID *sid) const {
-    return false;
+ACLOpResult ACLHandler::DACLWriteAllowed(bool &allowed, ACL &testACL, SID *sid) const {
+    return ACLOpResult::Success;
 }
 
-bool ACLHandler::DACLExecuteAllowed(ACL &testACL, SID *sid) const {
-    return false;
+ACLOpResult ACLHandler::DACLExecuteAllowed(bool &allowed, ACL &testACL, SID *sid) const {
+    return ACLOpResult::Success;
 }
 
-bool ACLHandler::DACLDeleteAllowed(ACL &testACL, SID *sid) const {
-    return false;
+ACLOpResult ACLHandler::DACLDeleteAllowed(bool &allowed, ACL& testACL, SID *sid) const {
+    return ACLOpResult::Success;
 }
 
-bool  ACLHandler::DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const {
+ACLOpResult ACLHandler::DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const {
     int daclPresent = false, daclDefaulted = false;
     if (GetSecurityDescriptorDacl(secDesc, &daclPresent, &dacl, &daclDefaulted)) {
-        return daclPresent;
+        if (daclPresent) {
+            return ACLOpResult::Success;
+        } else {
+            return ACLOpResult::Fail;
+        }
     } else {
-        return false;
+        return ACLOpResult::Fail;
     }
+}
+
+ACLOpResult ACLHandler::CreateAbsoluteSecDrsc() const {
+    return ACLOpResult::Success;
 }
 
 ACE_HEADER* ACLHandler::BuildACE(SID *sid, unsigned long aceType, unsigned char aceFlags,
