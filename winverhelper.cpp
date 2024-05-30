@@ -104,6 +104,7 @@ WinVerAdvanced getWinVerAdvanced() {
 	} else {
 		return WinVerAdvanced::WinVerUnknown;
 	}
+	return WinVerAdvanced::WinVerUnknown;
 }
 
 std::string getWinVersionStr() {

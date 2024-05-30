@@ -625,6 +625,7 @@ std::string replaceAll(const std::string source, const std::string replaceWhat,
             tmp.replace(pos, replaceWhat.length(), replaceWith);
         } while (std::wstring::npos != tmp.find(replaceWhat));
     }
+    return source;
 }
 
 std::wstring replaceAll(const std::wstring source, const std::wstring replaceWhat,
@@ -640,6 +641,7 @@ std::wstring replaceAll(const std::wstring source, const std::wstring replaceWha
             tmp.replace(pos, replaceWhat.length(), replaceWith);
         } while (std::wstring::npos != tmp.find(replaceWhat));
     }
+    return source;
 }
 
 void removeFromStart(std::string& source, const std::string sequence, const bool ignoreCase) {
@@ -993,7 +995,7 @@ bool endsWith(const std::wstring source, const std::wstring sequence, const bool
                 if (tempSrc.substr(tempSrc.length() - tempSeq.length(), tempSeq.length()) == tempSeq) {
                     return true;
                 } else {
-                    return true;
+                    return false;
                 }
             } else {
                 return true;

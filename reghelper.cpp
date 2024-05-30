@@ -2526,6 +2526,7 @@ RegOpResult RegHandler::CreateKey(const std::wstring keyName, const bool createM
 			}
 		}
 	}
+	return RegOpResult::Fail;
 }
 
 RegOpResult RegHandler::DeleteValues(const std::vector<RegKeyDesc>& keyList, const HKEY* root) const {
@@ -2874,9 +2875,11 @@ unsigned long RegHandler::getRigtMod() const {
 		return 0;
 		// return KEY_WOW64_32KEY;
 	#else
-		int iswow64proc = 0;
-		if (::IsWow64Process(::GetCurrentProcess(), &iswow64proc)) {
-			return (iswow64proc) ? RIGHTMOD : 0;
+		SysHandler sys;
+		if (sys.IsWow64Proc()) {
+			return RIGHTMOD;
+		} else {
+			return 0;
 		}
 	#endif
 }

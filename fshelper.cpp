@@ -24,6 +24,7 @@ FileRecord::FileRecord() {
 }
 
 FileRecord::FileRecord(const FileRecord& other) {
+	fileName = other.fileName;
 	filePath = other.filePath;
 	hash = other.hash;
 	size = other.size;
@@ -34,6 +35,7 @@ FileRecord::~FileRecord() {}
 FolderRecord::FolderRecord() {}
 
 FolderRecord::FolderRecord(const FolderRecord &other) {
+	folderName = other.folderName;
 	folderPath = other.folderPath;
 	files = other.files;
 	folders = other.folders;
@@ -117,17 +119,11 @@ PartitionDesc::PartitionDesc(const PartitionDesc& other) {
 
 PartitionDesc::~PartitionDesc() {}
 
-FSHandler::FSHandler() {
-	m_hHeap = 0;
-}
+FSHandler::FSHandler() {}
 
-FSHandler::FSHandler(const FSHandler& other) {
-	m_hHeap = other.m_hHeap;
-}
+FSHandler::FSHandler(const FSHandler& other) {}
 
-FSHandler::~FSHandler() {
-	DestroyHeap();
-}
+FSHandler::~FSHandler() {}
 
 PartsOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc>& partList,
 	const bool clearList) {
@@ -210,30 +206,6 @@ PartsOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc>& partList,
 	} else {
 		return PartsOpResult::Fail;
 	}
-}
-
-PartsOpResult FSHandler::CreateHeap(const unsigned long long initSz, const unsigned long long maxSz, HeapOpts heapOpts) {
-	if (!m_hHeap) {
-		m_hHeap = HeapCreate((unsigned long)heapOpts, initSz, maxSz);
-		if (m_hHeap) {
-			return PartsOpResult::Success;
-		} else {
-			return PartsOpResult::Fail;
-		}
-	}
-	return PartsOpResult::Fail;
-}
-
-PartsOpResult FSHandler::DestroyHeap() {
-	if (m_hHeap && INVALID_HANDLE_VALUE != m_hHeap) {
-		if (HeapDestroy(m_hHeap)) {
-			m_hHeap = 0;
-			return PartsOpResult::Success;
-		} else {
-			return PartsOpResult::Fail;
-		}
-	}
-	return PartsOpResult::Fail;
 }
 
 unsigned long long FSHandler::GetFSize(const std::wstring filePath) {
@@ -328,6 +300,64 @@ bool FSHandler::PathExists(const std::wstring path) {
 	return (INVALID_FILE_ATTRIBUTES != GetFileAttributes(path.c_str()));
 }
 
+PartsOpResult FSHandler::EnumFolderContents(FolderRecord &folderInfo, const std::wstring folderPath,
+	const bool getFileControlSums, const HashType hashType, const bool getFileSize) {
+	if (PathExists(folderPath)) {
+		std::wstring seekpath = lower_copy(folderPath);
+		if (endsWith(folderPath, L"\\")) {
+			seekpath = removeFromEnd_copy(lower_copy(folderPath), L"\\");
+		} else {
+			seekpath = lower_copy(folderPath);
+		}
+		if (!startsWith(seekpath, fs_pathnolim)) {
+			seekpath = fs_pathnolim + seekpath;
+		}
+		if (!endsWith(seekpath, fs_pathsall)) {
+			seekpath = seekpath + fs_pathsall;
+		}
+		WIN32_FIND_DATA fd;
+		memset(&fd, 0, sizeof(WIN32_FIND_DATA));
+		HANDLE hFind = FindFirstFile(seekpath.c_str(), &fd);
+		if (INVALID_HANDLE_VALUE != hFind) {
+			folderInfo.folderName = splitStr(lower_copy(folderPath), L"\\").back();
+			folderInfo.folderPath = lower_copy(folderPath);
+			do {
+				removeFromEnd(seekpath, fs_pathsall);
+				if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+					if (wcscmp(fd.cFileName, L".") && wcscmp(fd.cFileName, L"..") &&
+						wcscmp(fd.cFileName, L"System Volume Information") &&
+						wcscmp(fd.cFileName, L"$Recycle.Bin")) {
+						FolderRecord folderrec;
+						folderrec.folderName = lower_copy(fd.cFileName);
+						folderrec.folderPath = removeFromStart_copy(seekpath, fs_pathnolim) + L"\\" +
+							lower_copy(fd.cFileName);
+						if (PartsOpResult::Success != EnumFolderContents(folderrec, folderrec.folderPath)) {
+							return PartsOpResult::Fail;
+						}
+						folderInfo.folders.push_back(folderrec);
+					}
+				} else {
+					FileRecord filerec;
+					filerec.fileName = lower_copy(fd.cFileName);
+					filerec.filePath = removeFromStart_copy(seekpath, fs_pathnolim) + L"\\" +
+						lower_copy(fd.cFileName);
+					if (getFileControlSums) {
+						filerec.hash = GetFileControlSum(filerec.filePath, hashType);
+					}
+					if (getFileSize) {
+						filerec.size = GetFSize(filerec.filePath);
+					}
+					folderInfo.files.push_back(filerec);
+				}
+			} while (FindNextFile(hFind, &fd));
+			FindClose(hFind);
+		}
+	} else {
+		return PartsOpResult::Fail;
+	}
+	return PartsOpResult::Success;
+}
+
 std::vector<FileRecord> FSHandler::SeekFile(const std::wstring filename,
 	const bool getSize, const bool getControlSum,
 	const bool excludeEmptyFiles, const HashType hash, const std::vector<std::wstring> exclusions,
@@ -387,9 +417,10 @@ std::vector<FileRecord> FSHandler::SeekFile(const std::wstring filename,
 							if (!startsWith(seekpath, fs_pathnolim)) {
 								seekpath = fs_pathnolim + seekpath;
 							}
-							std::vector<FileRecord> searchRes = SeekFileRecursive(seekpath + L"\\" + lower_copy(fd.cFileName) + fs_pathsall,
-								path + L"\\" + std::wstring(fd.cFileName), fnamelow, fbr,
-								getSize, getControlSum, excludeEmptyFiles, hash, &exclLow);
+							std::vector<FileRecord> searchRes = SeekFileRecursive(seekpath + L"\\" +
+								lower_copy(fd.cFileName) + fs_pathsall, path + L"\\" + std::wstring(fd.cFileName),
+								fnamelow, fbr, getSize, getControlSum, excludeEmptyFiles,
+								hash, &exclLow);
 							ret.insert(ret.end(), searchRes.begin(), searchRes.end());
 						}
 					}
@@ -400,6 +431,7 @@ std::vector<FileRecord> FSHandler::SeekFile(const std::wstring filename,
 						if (!valInList(exclLow, seekpathraw + L"\\" + lower_copy(std::wstring(fd.cFileName))) ||
 							!valInList(exclLow, seekpathraw)) {
 							FileRecord searchres;
+							searchres.fileName = lower_copy(fd.cFileName);
 							searchres.filePath = path + L"\\" + fd.cFileName;
 							if (getSize) {
 								searchres.size = GetFSize(searchres.filePath);
@@ -478,6 +510,7 @@ std::vector<FileRecord> FSHandler::SeekFileInDir(const std::wstring startPath,
 					if (!valInList(exclusions, seekpathraw + L"\\" + lower_copy(std::wstring(fd.cFileName))) ||
 						!valInList(exclusions, seekpathraw)) {
 						FileRecord searchres;
+						searchres.fileName = lower_copy(fd.cFileName);
 						searchres.filePath = path + L"\\" + std::wstring(fd.cFileName);
 						if (getSize) {
 							searchres.size = GetFSize(searchres.filePath);
@@ -699,7 +732,8 @@ std::wstring FSHandler::calcHash(const std::wstring filePath,
 								oss.width(2);
 								oss << std::hex << static_cast<const int>(*iter);
 							}
-							HeapFree(fileContent, 0, 0);
+							SAFE_ARR_DELETE(fileContent);
+							// HeapFree(fileContent, 0, 0);
 							CryptDestroyHash(hHash);
 							CryptReleaseContext(hProv, 0);
 							if (hashUCase) {
@@ -708,11 +742,13 @@ std::wstring FSHandler::calcHash(const std::wstring filePath,
 								return str2wstr(oss.str());
 							}
 						}
-						HeapFree(fileContent, 0, 0);
+						SAFE_ARR_DELETE(fileContent);
+						// HeapFree(fileContent, 0, 0);
 						CryptDestroyHash(hHash);
 						CryptReleaseContext(hProv, 0);
 					}
-					HeapFree(fileContent, 0, 0);
+					SAFE_ARR_DELETE(fileContent);
+					// HeapFree(fileContent, 0, 0);
 					CryptDestroyHash(hHash);
 					CryptReleaseContext(hProv, 0);
 				}
@@ -729,35 +765,34 @@ std::wstring FSHandler::calcHash(const std::wstring filePath,
 unsigned char* FSHandler::File2Buf(const std::wstring filePath) {
 	unsigned long long fsize = GetFSize(filePath);
 	if (fsize) {
-		CreateHeap();
-		if (m_hHeap) {
-			unsigned char* readBuf = (unsigned char*)HeapAlloc(m_hHeap, 0, REG_READBUFSZ * sizeof(unsigned char));
-			if (readBuf) {
-				unsigned char* fileBuf = (unsigned char*)HeapAlloc(GetProcessHeap(), 0, fsize * sizeof(unsigned char));
-				if (fileBuf) {
-					HANDLE hFile = CreateFile(filePath.c_str(), GENERIC_READ, FILE_SHARE_READ,
-						NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-					if (INVALID_HANDLE_VALUE != hFile) {
-						unsigned long bytesRead = 0;
-						unsigned long readBufPos = 0;
-						while ((ReadFile(hFile, readBuf, REG_READBUFSZ, &bytesRead, 0)) &&
-							(readBufPos < fsize)) {
-							if (!bytesRead) {
-								break;
-							}
-							memcpy(&fileBuf[readBufPos], readBuf, bytesRead * sizeof(unsigned char));
-							readBufPos += bytesRead;
+		NEW_ARR_NULLIFY(readBuf, unsigned char, REG_READBUFSZ);
+		if (readBuf) {
+			NEW_ARR_NULLIFY(fileBuf, unsigned char, fsize);
+			if (fileBuf) {
+				HANDLE hFile = CreateFile(filePath.c_str(), GENERIC_READ, FILE_SHARE_READ,
+					NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+				if (INVALID_HANDLE_VALUE != hFile) {
+					unsigned long bytesRead = 0;
+					unsigned long readBufPos = 0;
+					while ((ReadFile(hFile, readBuf, REG_READBUFSZ, &bytesRead, 0)) &&
+						(readBufPos < fsize)) {
+						if (!bytesRead) {
+							break;
 						}
-						HeapFree(readBuf, 0, 0);
-						readBuf = 0;
-						return fileBuf;
+						memcpy(&fileBuf[readBufPos], readBuf, bytesRead * sizeof(unsigned char));
+						readBufPos += bytesRead;
 					}
-				} else {
-					return 0;
+					SAFE_ARR_DELETE(readBuf);
+					/*HeapFree(readBuf, 0, 0);
+					readBuf = 0;*/
+					return fileBuf;
 				}
 			} else {
 				return 0;
 			}
+		} else {
+			return 0;
 		}
 	}
+	return 0;
 }

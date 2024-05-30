@@ -148,6 +148,25 @@ SysArch SysHandler::GetMachineArch() const {
 	}
 }
 
+bool SysHandler::IsWow64Proc () const {
+	bool isWow64 = false;
+	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(
+		GetModuleHandle(L"kernel32"), "IsWow64Process");
+	if(fnIsWow64Process) {
+		bool* isWow64test = new bool;
+		*isWow64test = false;
+		if (fnIsWow64Process(GetCurrentProcess(), *isWow64test)) {
+			isWow64 = *isWow64test;
+			return isWow64;
+		} else {
+			return false;
+		}
+	} else {
+		return false;
+	}
+	return false;
+}
+
 bool SysHandler::ExtractResource(const std::wstring extractPath, const unsigned long resId) const {
 	HRSRC hResource = 0;
 	hResource = FindResource(NULL, MAKEINTRESOURCE(resId), RT_RCDATA);
@@ -439,7 +458,11 @@ SysOpResult SysHandler::EnumLocalGroups(std::vector<GroupDesc> &groupList,
 	unsigned char* buf = 0;
 	unsigned char* tmpbuf = 0;
 	unsigned long entriesRead = 0, totalEntries = 0, res = 0;
+#ifdef _WIN64
 	unsigned long long resptr = 0;
+#else
+	unsigned long resptr = 0;
+#endif
 	do {
 		res = NetLocalGroupEnum(machineName.c_str(), 1, &buf, MAX_PREFERRED_LENGTH, &entriesRead,
 			&totalEntries, &resptr);

@@ -99,6 +99,8 @@
 // can be used for unsigned long long or double (8-byte types)
 #define BYTESWAP64(n) ((BYTESWAP32((n&0xFFFFFFFF00000000)>>32))|((BYTESWAP32(n&0x00000000FFFFFFFF))<<32))
 
+typedef bool(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, bool&);
+
 // constexpr to get TZ offset
 static constexpr time_t const NULL_TIME = -1;
 
@@ -437,6 +439,7 @@ class SysHandler {
 			[in] path to extract resource to
 			[in] resource id in resource file
 			Returns true on success, false on failure */
+		bool IsWow64Proc() const;
 		bool ExtractResource(const std::wstring extractPath, const unsigned long resId) const;
 		/* Converts string SID to SID type
 			Param:

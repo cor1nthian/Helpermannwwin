@@ -114,6 +114,7 @@ struct FileRecord {
 	// File description struct destructor
 	~FileRecord();
 	FileRecord& operator=(const FileRecord& other) {
+		fileName = other.fileName;
 		filePath = other.filePath;
 		hash = other.hash;
 		size = other.size;
@@ -137,6 +138,8 @@ struct FileRecord {
 			filePath != other.filePath);
 #endif
 	}
+	// Name of a file
+	std::wstring fileName;
 	// Path to a file
 	std::wstring filePath;
 	// File hash string
@@ -153,6 +156,7 @@ struct FolderRecord {
 	FolderRecord(const FolderRecord &other);
 	~FolderRecord();
 	FolderRecord& operator=(const FolderRecord &other) {
+		folderName = other.folderName;
 		folderPath = other.folderPath;
 		files = other.files;
 		folders = other.folders;
@@ -161,6 +165,11 @@ struct FolderRecord {
 	bool operator==(const FolderRecord &other) const {
 		return (files == other.files &&
 			folders == other.folders &&
+#if defined (_WIN32) || defined (_WIN64)
+			lower_copy(folderName) == lower_copy(other.folderName) &&
+#else
+			folderName == other.folderName) &&
+#endif
 #if defined (_WIN32) || defined (_WIN64)
 			lower_copy(folderPath) == lower_copy(other.folderPath));
 #else
@@ -171,11 +180,17 @@ struct FolderRecord {
 		return (files != other.files ||
 			folders != other.folders ||
 #if defined (_WIN32) || defined (_WIN64)
+			lower_copy(folderName) != lower_copy(other.folderName) ||
+#else
+			folderName == other.folderName) ||
+#endif
+#if defined (_WIN32) || defined (_WIN64)
 			lower_copy(folderPath) != lower_copy(other.folderPath));
 #else
 			folderPath != other.folderPath);
 #endif
 	}
+	std::wstring folderName;
 	std::wstring folderPath;
 	std::vector<FileRecord> files;
 	std::vector<FolderRecord> folders;
@@ -411,10 +426,6 @@ class FSHandler {
 			Returns result code of the operation (enum value) */
 		PartsOpResult EnumPartitions(std::vector<PartitionDesc> &partList,
 			const bool clearList = true);
-		PartsOpResult CreateHeap(const unsigned long long initSz = 16384, 
-			const unsigned long long maxSz = 268435456,
-			HeapOpts heapOpts = HeapOpts::NoOpts);
-		PartsOpResult DestroyHeap();
 		/* Gets the size for a given file
 			Param:
 			[in] path to a file to calc comtrol sum for
@@ -435,6 +446,9 @@ class FSHandler {
 			[in] string path to check
 			Returns true if path exists, false otherwise */
 		bool PathExists(const std::wstring path);
+		PartsOpResult EnumFolderContents(FolderRecord& folderInfo,
+			const std::wstring folderPath, const bool getFileControlSums = true,
+			const HashType hashType = HashType::SHA256, const bool getFileSize = true);
 		/* Does the file search baaed on a filename on all available partitions. Filename supports regex expressions.
 			Param:
 			[in] filename to search. Supports regex.
@@ -508,7 +522,6 @@ class FSHandler {
 		std::wstring calcHash(const std::wstring filePath,
 			const HashType hashType, const bool hashUCase = true);
 		unsigned char* File2Buf(const std::wstring filePath);
-		HANDLE m_hHeap;
 };
 
 #endif // _FS_HELPER_H
