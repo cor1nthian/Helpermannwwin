@@ -52,6 +52,9 @@ ACLOpResult ACLHandler::DACLReadAllowed(bool &allowed, ACL* testACL, PSID sid) c
     }
     EXPLICIT_ACCESS *eaEntry = 0;
     for (size_t i = 0; i < testACL->AceCount; ++i) {
+        if (i == 6) {
+            Sleep(1);
+        }
         if (!GetAce(testACL, i, (void**)&testace)) {
             return ACLOpResult::Fail;
         }
@@ -62,26 +65,47 @@ ACLOpResult ACLHandler::DACLReadAllowed(bool &allowed, ACL* testACL, PSID sid) c
             PSID accsid = (PSID)&aceAllowed->SidStart;
             SidType sidtype;
             if (SysOpResult::Success != sys.GetSIDType(accsid, sidtype)) {
-                return ACLOpResult::Fail;
+                LocalFree(&testace);
+                continue;
+                // return ACLOpResult::Fail;
             }
             if (SidType::User == specsidype) {
                 if (SidType::User == sidtype) {
                     if (EqualSid(accsid, sid)) {
                         if (READ_CONTROL & aceAllowed->Mask) {
-                            allowed = false;
+                            allowed = true;
                         }
                     }
                 } else if (SidType::Group == sidtype) {
-                    if (SidType::User == sidtype) {
-                    } else if (SidType::Group == sidtype) {
+                    bool ismember = false;
+                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(accsid, sid, ismember)) {
+                        if (ismember) {
+                            if (READ_CONTROL & aceAllowed->Mask) {
+                                allowed = true;
+                            }
+                        }
                     } else {
-
+                        return ACLOpResult::Fail;
                     }
                 } else {
-
+                    if (EqualSid(accsid, sid)) {
+                        if (READ_CONTROL & aceAllowed->Mask) {
+                            allowed = true;
+                        }
+                    }
                 }
             } else if (SidType::Group == specsidype) {
                 if (SidType::User == sidtype) {
+                    bool ismember = false;
+                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(sid, accsid, ismember)) {
+                        if (ismember) {
+                            if (READ_CONTROL & aceAllowed->Mask) {
+                                allowed = true;
+                            }
+                        }
+                    } else {
+                        return ACLOpResult::Fail;
+                    }
                 } else if (SidType::Group == sidtype) {
                     if (EqualSid(accsid, sid)) {
                         if (READ_CONTROL & aceAllowed->Mask) {
@@ -89,10 +113,18 @@ ACLOpResult ACLHandler::DACLReadAllowed(bool &allowed, ACL* testACL, PSID sid) c
                         }
                     }
                 } else {
-
+                    if (EqualSid(accsid, sid)) {
+                        if (READ_CONTROL & aceAllowed->Mask) {
+                            allowed = true;
+                        }
+                    }
                 }
             } else {
-
+                if (EqualSid(accsid, sid)) {
+                    if (READ_CONTROL & aceAllowed->Mask) {
+                        allowed = true;
+                    }
+                }
             }
         } else  if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
             std::cout << "(" << i << ")\t Access denied ACE" << std::endl;
@@ -100,7 +132,9 @@ ACLOpResult ACLHandler::DACLReadAllowed(bool &allowed, ACL* testACL, PSID sid) c
             PSID accsid = (PSID)&aceDenied->SidStart;
             SidType sidtype;
             if (SysOpResult::Success != sys.GetSIDType(accsid, sidtype)) {
-                return ACLOpResult::Fail;
+                LocalFree(&testace);
+                continue;
+                // return ACLOpResult::Fail;
             }
             if (SidType::User == specsidype) {
                 if (SidType::User == sidtype) {
@@ -110,27 +144,54 @@ ACLOpResult ACLHandler::DACLReadAllowed(bool &allowed, ACL* testACL, PSID sid) c
                         }
                     }
                 } else if (SidType::Group == sidtype) {
-                    if (SidType::User == sidtype) {
-                    } else if (SidType::Group == sidtype) {
-                        if (EqualSid(accsid, sid)) {
+                    bool ismember = false;
+                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(accsid, sid, ismember)) {
+                        if (ismember) {
                             if (READ_CONTROL & aceDenied->Mask) {
                                 allowed = false;
                             }
                         }
                     } else {
-
+                        return ACLOpResult::Fail;
                     }
                 } else {
-
+                    if (EqualSid(accsid, sid)) {
+                        if (READ_CONTROL & aceDenied->Mask) {
+                            allowed = true;
+                        }
+                    }
                 }
             } else if (SidType::Group == specsidype) {
                 if (SidType::User == sidtype) {
+                    bool ismember = false;
+                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(sid, accsid, ismember)) {
+                        if (ismember) {
+                            if (READ_CONTROL & aceDenied->Mask) {
+                                allowed = false;
+                            }
+                        }
+                    } else {
+                        return ACLOpResult::Fail;
+                    }
                 } else if (SidType::Group == sidtype) {
+                    if (EqualSid(accsid, sid)) {
+                        if (READ_CONTROL & aceDenied->Mask) {
+                            allowed = false;
+                        }
+                    }
                 } else {
-
+                    if (EqualSid(accsid, sid)) {
+                        if (READ_CONTROL & aceDenied->Mask) {
+                            allowed = true;
+                        }
+                    }
                 }
             } else {
-
+                if (EqualSid(accsid, sid)) {
+                    if (READ_CONTROL & aceDenied->Mask) {
+                        allowed = true;
+                    }
+                }
             }
         } else {
             std::cout << "(" << i << ")\t Undefined ACE" << std::endl;
@@ -143,15 +204,331 @@ ACLOpResult ACLHandler::DACLReadAllowed(bool &allowed, ACL* testACL, PSID sid) c
     return ACLOpResult::Success;
 }
 
-ACLOpResult ACLHandler::DACLWriteAllowed(bool &allowed, ACL &testACL, SID *sid) const {
+ACLOpResult ACLHandler::DACLWriteAllowed(bool &allowed, ACL* testACL, PSID sid) const {
+    void* testace = 0;
+    SysHandler sys;
+    SidType specsidype;
+    if (SysOpResult::Success != sys.GetSIDType(sid, specsidype)) {
+        return ACLOpResult::Fail;
+    }
+    EXPLICIT_ACCESS* eaEntry = 0;
+    for (size_t i = 0; i < testACL->AceCount; ++i) {
+        if (i == 6) {
+            Sleep(1);
+        }
+        if (!GetAce(testACL, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_ALLOWED_ACE_TYPE) {
+            std::cout << "(" << i << ")\t Access allowed ACE" << std::endl;
+            ACCESS_ALLOWED_ACE* aceAllowed = (ACCESS_ALLOWED_ACE*)testace;
+            PSID accsid = (PSID)&aceAllowed->SidStart;
+            SidType sidtype;
+            if (SysOpResult::Success != sys.GetSIDType(accsid, sidtype)) {
+                LocalFree(&testace);
+                continue;
+                // return ACLOpResult::Fail;
+            }
+            if (SidType::User == specsidype) {
+                if (SidType::User == sidtype) {
+                    if (EqualSid(accsid, sid)) {
+                        if (WRITE_DAC & aceAllowed->Mask) {
+                            allowed = true;
+                        }
+                    }
+                } else if (SidType::Group == sidtype) {
+                    bool ismember = false;
+                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(accsid, sid, ismember)) {
+                        if (ismember) {
+                            if (WRITE_DAC & aceAllowed->Mask) {
+                                allowed = true;
+                            }
+                        }
+                    } else {
+                        return ACLOpResult::Fail;
+                    }
+                } else {
+                    if (EqualSid(accsid, sid)) {
+                        if (WRITE_DAC & aceAllowed->Mask) {
+                            allowed = true;
+                        }
+                    }
+                }
+            } else if (SidType::Group == specsidype) {
+                if (SidType::User == sidtype) {
+                    bool ismember = false;
+                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(sid, accsid, ismember)) {
+                        if (ismember) {
+                            if (WRITE_DAC & aceAllowed->Mask) {
+                                allowed = true;
+                            }
+                        }
+                    } else {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (SidType::Group == sidtype) {
+                    if (EqualSid(accsid, sid)) {
+                        if (WRITE_DAC & aceAllowed->Mask) {
+                            allowed = false;
+                        }
+                    }
+                } else {
+                    if (EqualSid(accsid, sid)) {
+                        if (WRITE_DAC & aceAllowed->Mask) {
+                            allowed = true;
+                        }
+                    }
+                }
+            } else {
+                if (EqualSid(accsid, sid)) {
+                    if (WRITE_DAC & aceAllowed->Mask) {
+                        allowed = true;
+                    }
+                }
+            }
+        } else  if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
+            std::cout << "(" << i << ")\t Access denied ACE" << std::endl;
+            ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
+            PSID accsid = (PSID)&aceDenied->SidStart;
+            SidType sidtype;
+            if (SysOpResult::Success != sys.GetSIDType(accsid, sidtype)) {
+                LocalFree(&testace);
+                continue;
+                // return ACLOpResult::Fail;
+            }
+            if (SidType::User == specsidype) {
+                if (SidType::User == sidtype) {
+                    if (EqualSid(accsid, sid)) {
+                        if (WRITE_DAC & aceDenied->Mask) {
+                            allowed = false;
+                        }
+                    }
+                }
+                else if (SidType::Group == sidtype) {
+                    bool ismember = false;
+                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(accsid, sid, ismember)) {
+                        if (ismember) {
+                            if (WRITE_DAC & aceDenied->Mask) {
+                                allowed = false;
+                            }
+                        }
+                    } else {
+                        return ACLOpResult::Fail;
+                    }
+                } else {
+                    if (EqualSid(accsid, sid)) {
+                        if (WRITE_DAC & aceDenied->Mask) {
+                            allowed = true;
+                        }
+                    }
+                }
+            }
+            else if (SidType::Group == specsidype) {
+                if (SidType::User == sidtype) {
+                    bool ismember = false;
+                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(sid, accsid, ismember)) {
+                        if (ismember) {
+                            if (WRITE_DAC & aceDenied->Mask) {
+                                allowed = false;
+                            }
+                        }
+                    } else {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (SidType::Group == sidtype) {
+                    if (EqualSid(accsid, sid)) {
+                        if (WRITE_DAC & aceDenied->Mask) {
+                            allowed = false;
+                        }
+                    }
+                } else {
+                    if (EqualSid(accsid, sid)) {
+                        if (WRITE_DAC & aceDenied->Mask) {
+                            allowed = true;
+                        }
+                    }
+                }
+            } else {
+                if (EqualSid(accsid, sid)) {
+                    if (WRITE_DAC & aceDenied->Mask) {
+                        allowed = true;
+                    }
+                }
+            }
+        } else {
+            std::cout << "(" << i << ")\t Undefined ACE" << std::endl;
+        }
+        vace = 0;
+        LocalFree(&testace);
+        testace = 0;
+    }
+    SAFE_LOCALFREE(testace);
     return ACLOpResult::Success;
 }
 
-ACLOpResult ACLHandler::DACLExecuteAllowed(bool &allowed, ACL &testACL, SID *sid) const {
+ACLOpResult ACLHandler::DACLExecuteAllowed(bool &allowed, ACL* testACL, PSID sid) const {
     return ACLOpResult::Success;
 }
 
-ACLOpResult ACLHandler::DACLDeleteAllowed(bool &allowed, ACL& testACL, SID *sid) const {
+ACLOpResult ACLHandler::DACLDeleteAllowed(bool &allowed, ACL* testACL, PSID sid) const {
+    void* testace = 0;
+    SysHandler sys;
+    SidType specsidype;
+    if (SysOpResult::Success != sys.GetSIDType(sid, specsidype)) {
+        return ACLOpResult::Fail;
+    }
+    EXPLICIT_ACCESS* eaEntry = 0;
+    for (size_t i = 0; i < testACL->AceCount; ++i) {
+        if (i == 6) {
+            Sleep(1);
+        }
+        if (!GetAce(testACL, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_ALLOWED_ACE_TYPE) {
+            std::cout << "(" << i << ")\t Access allowed ACE" << std::endl;
+            ACCESS_ALLOWED_ACE* aceAllowed = (ACCESS_ALLOWED_ACE*)testace;
+            PSID accsid = (PSID)&aceAllowed->SidStart;
+            SidType sidtype;
+            if (SysOpResult::Success != sys.GetSIDType(accsid, sidtype)) {
+                LocalFree(&testace);
+                continue;
+                // return ACLOpResult::Fail;
+            }
+            if (SidType::User == specsidype) {
+                if (SidType::User == sidtype) {
+                    if (EqualSid(accsid, sid)) {
+                        if (DELETE & aceAllowed->Mask) {
+                            allowed = true;
+                        }
+                    }
+                } else if (SidType::Group == sidtype) {
+                    bool ismember = false;
+                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(accsid, sid, ismember)) {
+                        if (ismember) {
+                            if (DELETE & aceAllowed->Mask) {
+                                allowed = true;
+                            }
+                        }
+                    } else {
+                        return ACLOpResult::Fail;
+                    }
+                } else {
+                    if (EqualSid(accsid, sid)) {
+                        if (DELETE & aceAllowed->Mask) {
+                            allowed = true;
+                        }
+                    }
+                }
+            } else if (SidType::Group == specsidype) {
+                if (SidType::User == sidtype) {
+                    bool ismember = false;
+                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(sid, accsid, ismember)) {
+                        if (ismember) {
+                            if (DELETE & aceAllowed->Mask) {
+                                allowed = true;
+                            }
+                        }
+                    } else {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (SidType::Group == sidtype) {
+                    if (EqualSid(accsid, sid)) {
+                        if (DELETE & aceAllowed->Mask) {
+                            allowed = false;
+                        }
+                    }
+                } else {
+                    if (EqualSid(accsid, sid)) {
+                        if (DELETE & aceAllowed->Mask) {
+                            allowed = true;
+                        }
+                    }
+                }
+            } else {
+                if (EqualSid(accsid, sid)) {
+                    if (DELETE & aceAllowed->Mask) {
+                        allowed = true;
+                    }
+                }
+            }
+        } else  if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
+            std::cout << "(" << i << ")\t Access denied ACE" << std::endl;
+            ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
+            PSID accsid = (PSID)&aceDenied->SidStart;
+            SidType sidtype;
+            if (SysOpResult::Success != sys.GetSIDType(accsid, sidtype)) {
+                LocalFree(&testace);
+                continue;
+                // return ACLOpResult::Fail;
+            }
+            if (SidType::User == specsidype) {
+                if (SidType::User == sidtype) {
+                    if (EqualSid(accsid, sid)) {
+                        if (DELETE & aceDenied->Mask) {
+                            allowed = false;
+                        }
+                    }
+                } else if (SidType::Group == sidtype) {
+                    bool ismember = false;
+                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(accsid, sid, ismember)) {
+                        if (ismember) {
+                            if (DELETE & aceDenied->Mask) {
+                                allowed = false;
+                            }
+                        }
+                    } else {
+                        return ACLOpResult::Fail;
+                    }
+                } else {
+                    if (EqualSid(accsid, sid)) {
+                        if (DELETE & aceDenied->Mask) {
+                            allowed = true;
+                        }
+                    }
+                }
+            } else if (SidType::Group == specsidype) {
+                if (SidType::User == sidtype) {
+                    bool ismember = false;
+                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(sid, accsid, ismember)) {
+                        if (ismember) {
+                            if (DELETE & aceDenied->Mask) {
+                                allowed = false;
+                            }
+                        }
+                    } else {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (SidType::Group == sidtype) {
+                    if (EqualSid(accsid, sid)) {
+                        if (DELETE & aceDenied->Mask) {
+                            allowed = false;
+                        }
+                    }
+                } else {
+                    if (EqualSid(accsid, sid)) {
+                        if (DELETE & aceDenied->Mask) {
+                            allowed = true;
+                        }
+                    }
+                }
+            } else {
+                if (EqualSid(accsid, sid)) {
+                    if (DELETE & aceDenied->Mask) {
+                        allowed = true;
+                    }
+                }
+            }
+        } else {
+            std::cout << "(" << i << ")\t Undefined ACE" << std::endl;
+        }
+        vace = 0;
+        LocalFree(&testace);
+        testace = 0;
+    }
+    SAFE_LOCALFREE(testace);
     return ACLOpResult::Success;
 }
 

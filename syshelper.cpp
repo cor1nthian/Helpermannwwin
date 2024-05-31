@@ -150,15 +150,16 @@ SysArch SysHandler::GetMachineArch() const {
 }
 
 bool SysHandler::IsWow64Proc () const {
-	bool isWow64 = false;
+	int isWow64 = 0;
 	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(
 		GetModuleHandle(L"kernel32"), "IsWow64Process");
 	if(fnIsWow64Process) {
-		bool* isWow64test = new bool;
-		*isWow64test = false;
-		if (fnIsWow64Process(GetCurrentProcess(), *isWow64test)) {
-			isWow64 = *isWow64test;
-			return isWow64;
+		if (fnIsWow64Process(GetCurrentProcess(), isWow64)) {
+			if (isWow64) {
+				return true;
+			} else {
+				return false;
+			}
 		} else {
 			return false;
 		}
@@ -290,7 +291,10 @@ SysOpResult SysHandler::GetSIDType(const PSID sid, SidType &sidType, const std::
 					sidType = (SidType)sidUse;
 					return SysOpResult::Success;
 				} else {
-					std::cout << "???" << std::endl;
+					SAFE_ARR_DELETE(nameBuf);
+					SAFE_ARR_DELETE(domainNameBuf);
+					sidType = SidType::SidUnknown;
+					return SysOpResult::Fail;
 				}
 			} else {
 				SAFE_ARR_DELETE(nameBuf);
@@ -408,7 +412,7 @@ std::wstring SysHandler::GetAccountNameFromStrSID(const std::wstring strSid,
 		if (endsWith(strSid, L"}")) {
 			sid = removeFromEnd_copy(strSid, L"}");
 		}
-		PSID tpsid = SIDFromStrSid(sid);
+		PSID tpsid = SIDFromStrSid(strSid);
 		unsigned long nameLen = MAX_PATH, domainNameLen = MAX_PATH;
 		SID_NAME_USE sidUse;
 		NEW_ARR_NULLIFY(nameBuf, wchar_t, nameLen + 1);
@@ -702,10 +706,38 @@ SysOpResult SysHandler::EnumAccounts(std::vector<AccountDesc> &accountList,
 	return SysOpResult::Success;
 }
 
-bool SysHandler::IsAccountMemberOfGroup(PSID groupSID, PSID testSID) const {
-	return false;
+SysOpResult SysHandler::IsAccountMemberOfGroup(const PSID groupSID, const PSID testSID, bool &isMember,
+	const std::wstring machineName) const {
+	isMember = false;
+	std::vector<GroupDesc> groups;
+	std::wstring teststrsid = StrSIDFromSID(testSID);
+	std::wstring groupstrsid = StrSIDFromSID(groupSID);
+	if (SysOpResult::Success == LocalGroupListFromStrSID(groups, groupstrsid, machineName)) {
+		for (size_t i = 0; i < groups.size(); ++i) {
+			if (lower_copy(teststrsid) == lower_copy(groups[i].GroupStrSid)) {
+				isMember = true;
+				return SysOpResult::Success;
+			}
+		}
+	} else {
+		return SysOpResult::Fail;
+	}
+	return SysOpResult::Success;
 }
 
-bool SysHandler::GroupContainsAccount(PSID groupSID, PSID testSID) const {
-	return false;
+SysOpResult SysHandler::IsAccountMemberOfGroup(const std::wstring groupName, const std::wstring testAccName,
+	bool &isMember, const std::wstring machineName) const {
+	isMember = false;
+	std::vector<GroupDesc> groups;
+	if (SysOpResult::Success == LocalGroupListFromUsername(groups, testAccName, machineName)) {
+		for (size_t i = 0; i < groups.size(); ++i) {
+			if (lower_copy(groupName) == lower_copy(groups[i].GroupName)) {
+				isMember = true;
+				return SysOpResult::Success;
+			}
+		}
+	} else {
+		return SysOpResult::Fail;
+	}
+	return SysOpResult::Success;
 }

@@ -99,7 +99,7 @@
 // can be used for unsigned long long or double (8-byte types)
 #define BYTESWAP64(n) ((BYTESWAP32((n&0xFFFFFFFF00000000)>>32))|((BYTESWAP32(n&0x00000000FFFFFFFF))<<32))
 
-typedef bool(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, bool&);
+typedef bool(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, int&);
 
 // constexpr to get TZ offset
 static constexpr time_t const NULL_TIME = -1;
@@ -120,12 +120,13 @@ enum class SidType : unsigned char {
 	Domain = SID_NAME_USE::SidTypeDomain,
 	Alias = SID_NAME_USE::SidTypeAlias,
 	WellKnownGroup = SID_NAME_USE::SidTypeWellKnownGroup,
-	DeletedAcc= SID_NAME_USE::SidTypeDeletedAccount,
+	DeletedAcc = SID_NAME_USE::SidTypeDeletedAccount,
 	Invalid = SID_NAME_USE::SidTypeInvalid,
 	Unknown = SID_NAME_USE::SidTypeUnknown,
 	Computer = SID_NAME_USE::SidTypeComputer,
 	Label = SID_NAME_USE::SidTypeLabel,
-	LogonSeesion = SID_NAME_USE::SidTypeLogonSession
+	LogonSeesion = SID_NAME_USE::SidTypeLogonSession,
+	SidUnknown = 255
 };
 
 bool IsBadReadPtr(void* p);
@@ -453,8 +454,8 @@ class SysHandler {
 			[in] path to extract resource to
 			[in] resource id in resource file
 			Returns true on success, false on failure */
-		bool IsWow64Proc() const;
 		bool ExtractResource(const std::wstring extractPath, const unsigned long resId) const;
+		bool IsWow64Proc() const;
 		/* Converts string SID to SID type
 			Param:
 			[in] account string SID
@@ -510,6 +511,8 @@ class SysHandler {
 			None
 			Returns max number of threads available without oversubscription (cpucorenum - 1) */
 		unsigned char GetThreadNum() const;
+		SysOpResult IsAccountMemberOfGroup(const PSID groupSID, const PSID testSID, bool &isMember, const std::wstring machineName = L".") const;
+		SysOpResult IsAccountMemberOfGroup(const std::wstring groupName, const std::wstring testAccName, bool& isMember, const std::wstring machineName = L".") const;
 		SysOpResult GetSIDType(const PSID sid, SidType &sidType, const std::wstring machineName = L".", 
 			const std::wstring domainName = L".") const;
 		/* Gets RAM info
@@ -517,15 +520,13 @@ class SysHandler {
 			[out]	free RAM
 			[out]	total RAM
 			Returns result code of the operation (enum value) */
-		SysOpResult GetRam(unsigned long long &freeRam,
-			unsigned long long &totalRam, unsigned char &precentInUse) const;
+		SysOpResult GetRam(unsigned long long &freeRam, unsigned long long &totalRam, unsigned char &precentInUse) const;
 		/* Gets paging file info
 			Param:
 			[out]	free paging file
 			[out]	total paging file
 			Returns result code of the operation (enum value) */
-		SysOpResult GetPageFile(unsigned long long& freePageFile,
-			unsigned long long &totalPageFile) const;
+		SysOpResult GetPageFile(unsigned long long& freePageFile, unsigned long long &totalPageFile) const;
 		/* Gets virtual memory info
 			Param:
 			[out]	free virtual memory
@@ -547,8 +548,6 @@ class SysHandler {
 			Returns result code of the operation (enum value) */
 		SysOpResult EnumAccounts(std::vector<AccountDesc> &accountList,
 			const std::wstring machineName = L".", const bool enumGroups = true) const;
-		bool IsAccountMemberOfGroup(PSID groupSID, PSID testSID) const;
-		bool GroupContainsAccount(PSID groupSID, PSID testSID) const;
 	protected:
 	private:
 };

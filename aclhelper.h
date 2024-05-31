@@ -101,9 +101,9 @@ class ACLHandler {
 		ACLOpResult StringSecurityDescriptor2SecurityDescriptor(const std::wstring textSecDesc,
 			unsigned char* &secDesc, unsigned long &secDeszSz) const;
 		ACLOpResult DACLReadAllowed(bool &allowed, ACL* testACL, PSID sid) const;
-		ACLOpResult DACLWriteAllowed(bool &allowed, ACL &testACL, SID *sid) const;
-		ACLOpResult DACLExecuteAllowed(bool &allowed, ACL &testACL, SID *sid) const;
-		ACLOpResult DACLDeleteAllowed(bool &allowed, ACL &testACL, SID *sid) const;
+		ACLOpResult DACLWriteAllowed(bool &allowed, ACL* testACL, PSID sid) const;
+		ACLOpResult DACLExecuteAllowed(bool &allowed, ACL* testACL, PSID sid) const;
+		ACLOpResult DACLDeleteAllowed(bool &allowed, ACL* testACL, PSID sid) const;
 		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const;
 		ACLOpResult CreateAbsoluteSecDrsc() const;
 	protected:
