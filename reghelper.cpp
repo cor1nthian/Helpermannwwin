@@ -2458,7 +2458,7 @@ RegOpResult RegHandler::GetKeySecurity(const std::wstring keyName, SecDesc &secD
 		unsigned long secinfosz = 0;
 		if (ERROR_INSUFFICIENT_BUFFER == ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::DACLSecInfo),
 			secDesc.daclInfo, &secinfosz)) {
-			secDesc.daclInfo = malloc(secinfosz);
+			secDesc.daclInfo = LocalAlloc(LPTR, secinfosz);
 			if (secDesc.daclInfo) {
 				if (ERROR_SUCCESS != ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::DACLSecInfo),
 					secDesc.daclInfo, &secinfosz)) {
@@ -2480,7 +2480,7 @@ RegOpResult RegHandler::GetKeySecurity(const std::wstring keyName, SecDesc &secD
 		res = ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::SACLSecInfo),
 			secDesc.saclInfo, &secinfosz);
 		if (ERROR_INSUFFICIENT_BUFFER == res) {
-			secDesc.saclInfo = malloc(secinfosz);
+			secDesc.saclInfo = LocalAlloc(LPTR, secinfosz);
 			if (secDesc.saclInfo) {
 				if (ERROR_SUCCESS != ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::SACLSecInfo),
 					secDesc.saclInfo, &secinfosz)) {
@@ -2502,7 +2502,7 @@ RegOpResult RegHandler::GetKeySecurity(const std::wstring keyName, SecDesc &secD
 		secinfosz = 0;
 		if (ERROR_INSUFFICIENT_BUFFER == ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::OwnerSecInfo),
 			secDesc.ownerInfo, &secinfosz)) {
-			secDesc.ownerInfo = (PSID)malloc(secinfosz);
+			secDesc.ownerInfo = (PSID)LocalAlloc(LPTR, secinfosz);
 			if (secDesc.ownerInfo) {
 				if (ERROR_SUCCESS != ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::OwnerSecInfo),
 					secDesc.ownerInfo, &secinfosz)) {
@@ -2522,7 +2522,7 @@ RegOpResult RegHandler::GetKeySecurity(const std::wstring keyName, SecDesc &secD
 		secinfosz = 0;
 		if (ERROR_INSUFFICIENT_BUFFER == ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::GroupSecInfo),
 			secDesc.primaryGroupInfo, &secinfosz)) {
-			secDesc.primaryGroupInfo = (PSID)malloc(secinfosz);
+			secDesc.primaryGroupInfo = (PSID)LocalAlloc(LPTR, secinfosz);
 			if (secDesc.primaryGroupInfo) {
 				if (ERROR_SUCCESS != ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::GroupSecInfo),
 					secDesc.primaryGroupInfo, &secinfosz)) {

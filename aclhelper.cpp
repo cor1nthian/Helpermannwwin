@@ -20,24 +20,24 @@ SecDesc::SecDesc(const SecDesc &other) {
     ownerInfo = other.ownerInfo;
     primaryGroupInfo = other.primaryGroupInfo;
     if (other.daclInfo) {
-        daclInfo = malloc(daclInfoSz);
+        daclInfo = LocalAlloc(LPTR, daclInfoSz);
         if (daclInfo) {
             memcpy(daclInfo, other.daclInfo, daclInfoSz);
         }
     } else {
         if (daclInfo) {
-            SAFE_FREE(daclInfo);
+            SAFE_LOCALFREE(daclInfo);
         }
         daclInfo = 0;
     }
     if (other.saclInfo) {
-        saclInfo = malloc(saclInfoSz);
+        saclInfo = LocalAlloc(LPTR, saclInfoSz);
         if (saclInfo) {
             memcpy(saclInfo, other.saclInfo, saclInfoSz);
         }
     } else {
         if (saclInfo) {
-            SAFE_FREE(saclInfo);
+            SAFE_LOCALFREE(saclInfo);
         }
         saclInfo = 0;
     }
@@ -45,10 +45,16 @@ SecDesc::SecDesc(const SecDesc &other) {
 
 SecDesc::~SecDesc() {
     if (daclInfo) {
-        SAFE_FREE(daclInfo);
+        SAFE_LOCALFREE(daclInfo);
     }
     if (saclInfo) {
-        SAFE_FREE(saclInfo);
+        SAFE_LOCALFREE(saclInfo);
+    }
+    if (ownerInfo) {
+        SAFE_LOCALFREE(ownerInfo);
+    }
+    if (primaryGroupInfo) {
+        SAFE_LOCALFREE(primaryGroupInfo);
     }
 }
 
