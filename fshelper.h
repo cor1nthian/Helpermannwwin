@@ -424,8 +424,7 @@ class FSHandler {
 			[out] partition description list/vector
 			[in] [default - true] cleat given list before collecting the data
 			Returns result code of the operation (enum value) */
-		PartsOpResult EnumPartitions(std::vector<PartitionDesc> &partList,
-			const bool clearList = true);
+		PartsOpResult EnumPartitions(std::vector<PartitionDesc> &partList, const bool clearList = true);
 		/* Gets the size for a given file
 			Param:
 			[in] path to a file to calc comtrol sum for

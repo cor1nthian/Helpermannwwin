@@ -826,7 +826,8 @@ RegOpResult RegHandler::AddItem2DesktopContextMenu(const std::wstring itemName, 
 		unsigned char* buf = 0;
 		unsigned long bufSz = 0;
 		std::wstring cmName = L"HKEY_CLASSES_ROOT\\DesktopBackground\\Shell\\" + subMenuNameMod;
-		if (RegOpResult::Success != GetKeyACL(cmName, buf, bufSz, SecInfo::DACLSecInfo, root)) {
+		SecDesc sd;
+		if (RegOpResult::Success != GetKeySecurity(cmName, sd, root)) {
 			if (buf) {
 				SAFE_ARR_DELETE(buf);
 			}
@@ -882,7 +883,7 @@ RegOpResult RegHandler::AddItem2DesktopContextMenu(const std::wstring itemName, 
 		}
 		cmName = L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CommandStore\\shell\\" +
 			subCommandMenuNameCombined;
-		if (RegOpResult::Success != GetKeyACL(cmName, buf, bufSz, SecInfo::DACLSecInfo, root)) {
+		if (RegOpResult::Success != GetKeySecurity(cmName, sd, root)) {
 			if (buf) {
 				SAFE_ARR_DELETE(buf);
 			}
@@ -2435,8 +2436,7 @@ RegOpResult RegHandler::FreeValues(const std::vector<RegValDesc> &valList,
 	return RegOpResult::Success;
 }
 
-RegOpResult RegHandler::GetKeyACL(const std::wstring keyName, unsigned char* &buf, unsigned long &aclSz,
-	const SecInfo secInfoType, const HKEY *root) const {
+RegOpResult RegHandler::GetKeySecurity(const std::wstring keyName, SecDesc &secDesc, const HKEY *root) const {
 	HKEY keyHandle = { 0 }, rootKey = { 0 };
 	std::wstring keyPath = keyName;
 	if (root) {
@@ -2447,24 +2447,100 @@ RegOpResult RegHandler::GetKeyACL(const std::wstring keyName, unsigned char* &bu
 	prepHKEYKeyPath(rootKey, keyPath, rootKey, keyPath);
 	if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
 		KEY_READ | getRigtMod(), &keyHandle)) {
-		unsigned long secinfosz = 0;
-		if (ERROR_INSUFFICIENT_BUFFER == ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(secInfoType),
-			buf, &secinfosz)) {
-			NEW_ARR_NULLIFY_NO_REDEFINE(buf, unsigned char, secinfosz);
-			if (buf) {
-				if (ERROR_SUCCESS == ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(secInfoType), 
-					buf, &secinfosz)) {
-					aclSz = secinfosz;
-					// SAFE_ARR_DELETE(buf);
-					CLOSEKEY_NULLIFY(keyHandle);
-					return RegOpResult::Success;
-				}
+		ProcessHandler proc;
+		unsigned long procid = proc.GetCurrentProcPid();
+		std::vector<std::wstring> privs = proc.GetProcPrivileges(procid);
+		if (!valInList(privs, L"SeSecurityPrivilege")) {
+			if (!proc.EnableSecurityPrivilege(procid)) {
+				return RegOpResult::Fail;
 			}
+		}
+		unsigned long secinfosz = 0;
+		if (ERROR_INSUFFICIENT_BUFFER == ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::DACLSecInfo),
+			secDesc.daclInfo, &secinfosz)) {
+			secDesc.daclInfo = malloc(secinfosz);
+			if (secDesc.daclInfo) {
+				if (ERROR_SUCCESS != ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::DACLSecInfo),
+					secDesc.daclInfo, &secinfosz)) {
+					CLOSEKEY_NULLIFY(keyHandle);
+					return RegOpResult::Fail;
+				} else {
+					secDesc.daclInfoSz = secinfosz;
+				}
+			} else {
+				CLOSEKEY_NULLIFY(keyHandle);
+				return RegOpResult::Fail;
+			}
+		} else {
 			CLOSEKEY_NULLIFY(keyHandle);
 			return RegOpResult::Fail;
 		}
-		CLOSEKEY_NULLIFY(keyHandle);
-		return RegOpResult::Fail;
+		secinfosz = 0;
+		unsigned long res = 0;
+		res = ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::SACLSecInfo),
+			secDesc.saclInfo, &secinfosz);
+		if (ERROR_INSUFFICIENT_BUFFER == res) {
+			secDesc.saclInfo = malloc(secinfosz);
+			if (secDesc.saclInfo) {
+				if (ERROR_SUCCESS != ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::SACLSecInfo),
+					secDesc.saclInfo, &secinfosz)) {
+					CLOSEKEY_NULLIFY(keyHandle);
+					return RegOpResult::Fail;
+				} else {
+					secDesc.saclInfoSz = secinfosz;
+				}
+			} else {
+				CLOSEKEY_NULLIFY(keyHandle);
+				return RegOpResult::Fail;
+			}
+		} else if ((ERROR_ACCESS_DENIED == res) || (ERROR_SUCCESS == res)) {
+			secDesc.saclInfoSz = 0;
+		} else {
+			CLOSEKEY_NULLIFY(keyHandle);
+			return RegOpResult::Fail;
+		}
+		secinfosz = 0;
+		if (ERROR_INSUFFICIENT_BUFFER == ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::OwnerSecInfo),
+			secDesc.ownerInfo, &secinfosz)) {
+			secDesc.ownerInfo = (PSID)malloc(secinfosz);
+			if (secDesc.ownerInfo) {
+				if (ERROR_SUCCESS != ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::OwnerSecInfo),
+					secDesc.ownerInfo, &secinfosz)) {
+					CLOSEKEY_NULLIFY(keyHandle);
+					return RegOpResult::Fail;
+				} else {
+					secDesc.ownerInfoSz = secinfosz;
+				}
+			} else {
+				CLOSEKEY_NULLIFY(keyHandle);
+				return RegOpResult::Fail;
+			}
+		} else {
+			CLOSEKEY_NULLIFY(keyHandle);
+			return RegOpResult::Fail;
+		}
+		secinfosz = 0;
+		if (ERROR_INSUFFICIENT_BUFFER == ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::GroupSecInfo),
+			secDesc.primaryGroupInfo, &secinfosz)) {
+			secDesc.primaryGroupInfo = (PSID)malloc(secinfosz);
+			if (secDesc.primaryGroupInfo) {
+				if (ERROR_SUCCESS != ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::GroupSecInfo),
+					secDesc.primaryGroupInfo, &secinfosz)) {
+					CLOSEKEY_NULLIFY(keyHandle);
+					return RegOpResult::Fail;
+				} else {
+					secDesc.primaryGroupInfoSz = secinfosz;
+				}
+			}
+			CLOSEKEY_NULLIFY(keyHandle);
+			if (!proc.DisableSecurityPrivilege(procid)) {
+				return RegOpResult::Fail;
+			}
+			return RegOpResult::Success;
+		} else {
+			CLOSEKEY_NULLIFY(keyHandle);
+			return RegOpResult::Fail;
+		}
 	}
 	return RegOpResult::Fail;
 }
@@ -2929,7 +3005,8 @@ std::wstring RegHandler::pickMenuModNum(const std::wstring subMenuKey, const HKE
 		iconv = std::to_wstring(i);
 		keyname = L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CommandStore\\shell\\"
 			+ subMenuKey + iconv;
-		if (RegOpResult::Success != GetKeyACL(keyname, buf, bufSz, SecInfo::DACLSecInfo, root)) {
+		SecDesc sd;
+		if (RegOpResult::Success != GetKeySecurity(keyname, sd, root)) {
 			if (buf) {
 				SAFE_ARR_DELETE(buf);
 			}

@@ -15,6 +15,20 @@ bool IsBadReadPtr(void* p) {
 	return true;
 }
 
+bool IsBadWritePtr(void* p) {
+	MEMORY_BASIC_INFORMATION mbi = { 0 };
+	if (::VirtualQuery(p, &mbi, sizeof(mbi))) {
+		DWORD mask = (PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY);
+		bool b = !(mbi.Protect & mask);
+		// check the page is not a guard page
+		if (mbi.Protect & (PAGE_GUARD | PAGE_NOACCESS)) {
+			b = true;
+		}
+		return b;
+	}
+	return true;
+}
+
 AccountDesc::AccountDesc() {
 	ncNormalAcc = false;
 	ncTempDupAcc = false;
@@ -53,7 +67,7 @@ AccountDesc::AccountDesc() {
 	primaryGroupId = 0;
 }
 
-AccountDesc::AccountDesc(const AccountDesc& other) {
+AccountDesc::AccountDesc(const AccountDesc &other) {
 	ncNormalAcc = other.ncNormalAcc;
 	ncTempDupAcc = other.ncTempDupAcc;
 	ncWorkstationTrustAcc = other.ncWorkstationTrustAcc;
@@ -158,6 +172,34 @@ bool SysHandler::IsWow64Proc () const {
 			if (isWow64) {
 				return true;
 			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	} else {
+		return false;
+	}
+	return false;
+}
+
+bool SysHandler::IsWow64Proc(const unsigned long pid, const unsigned long desiredProcRights) const {
+	int isWow64 = 0;
+	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(
+		GetModuleHandle(L"kernel32"), "IsWow64Process");
+	if (fnIsWow64Process) {
+		HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+		if (hProc && INVALID_HANDLE_VALUE != hProc && hProc) {
+			if (fnIsWow64Process(hProc, isWow64)) {
+				if (isWow64) {
+					::CloseHandle(hProc);
+					return true;
+				} else {
+					::CloseHandle(hProc);
+					return false;
+				}
+			} else {
+				::CloseHandle(hProc);
 				return false;
 			}
 		} else {

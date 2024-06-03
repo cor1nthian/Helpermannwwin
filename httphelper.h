@@ -48,11 +48,13 @@ class HTTPHelper {
 		HTTPHelper();
 		HTTPHelper(const HTTPHelper &other);
 		~HTTPHelper();
-		bool GetHTTPSResponse(const std::wstring address,
-			std::string& res, std::wstring requri = L"") const;
+		bool GetHTTPSResponse(const std::string address, std::string &res, std::string requri = "") const;
+		bool GetHTTPSResponse(const std::wstring address, std::string &res, std::wstring requri = L"") const;
 	protected:
 
 	private:
+		std::string serverAddressFromLink(const std::string link,
+			const bool caseInsensitive = true) const;
 		std::wstring serverAddressFromLink(const std::wstring link,
 			const bool caseInsensitive = true) const;
 		std::string uriFromLink(const std::string link, const bool caseInsensitive = true) const;

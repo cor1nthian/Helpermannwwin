@@ -41,7 +41,16 @@
 #include "strhelper.h"
 #include "syshelper.h"
 
-enum SecInfo : unsigned long {
+enum class AceType : unsigned char {
+	// same as ACCESS_MIN_MS_ACE_TYPE
+	AccessAllowed = ACCESS_ALLOWED_ACE_TYPE,
+	AccessDenied = ACCESS_DENIED_ACE_TYPE,
+	SystemAudit = SYSTEM_AUDIT_ACE_TYPE,
+	// same as ACCESS_MAX_MS_V2_ACE_TYPE
+	SystemAlarm = SYSTEM_ALARM_ACE_TYPE
+};
+
+enum class SecInfo : unsigned long {
 	/* The resource properties of the object being referenced. The resource properties are
 	stored in SYSTEM_RESOURCE_ATTRIBUTE_ACE types in the SACL of the security descriptor.
 	Windows Server 2008 R2, Windows 7,
@@ -91,6 +100,115 @@ enum class ACLOpResult : unsigned char {
 	Fail
 };
 
+struct SecDesc {
+	SecDesc();
+	SecDesc(const SecDesc &other);
+	~SecDesc();
+	SecDesc& operator=(const SecDesc &other) {
+		daclInfoSz = other.daclInfoSz;
+		saclInfoSz = other.saclInfoSz;
+		ownerInfoSz = other.ownerInfoSz;
+		primaryGroupInfoSz = other.primaryGroupInfoSz;
+		ownerInfo = other.ownerInfo;
+		primaryGroupInfo = other.primaryGroupInfo;
+		if (other.daclInfo) {
+			daclInfo = malloc(daclInfoSz);
+			if (daclInfo) {
+				memcpy(daclInfo, other.daclInfo, daclInfoSz);
+			}
+		} else {
+			if (daclInfo) {
+				SAFE_FREE(daclInfo);
+			}
+			daclInfo = 0;
+		}
+		if (other.saclInfo) {
+			saclInfo = malloc(saclInfoSz);
+			if (saclInfo) {
+				memcpy(saclInfo, other.saclInfo, saclInfoSz);
+			}
+		} else {
+			if (saclInfo) {
+				SAFE_FREE(saclInfo);
+			}
+			saclInfo = 0;
+		}
+		return *this;
+	}
+	bool operator==(const SecDesc& other) const {
+		bool bufeq = false, otheq = false;
+		if (daclInfo && other.daclInfo) {
+			bufeq = !memcmp(daclInfo, other.daclInfo, other.daclInfoSz);
+		} else {
+			if (daclInfo && !other.daclInfo) {
+				bufeq = false;
+			} else if (!daclInfo && other.daclInfo) {
+				bufeq = false;
+			} else if (!daclInfo && !other.daclInfo) {
+				bufeq = true;
+			}
+		}
+		if (saclInfo && other.saclInfo) {
+			bufeq = !memcmp(saclInfo, other.saclInfo, other.saclInfoSz);
+		} else {
+			if (saclInfo && !other.saclInfo) {
+				bufeq = false;
+			} else if (!saclInfo && other.saclInfo) {
+				bufeq = false;
+			} else if (!saclInfo && !other.saclInfo) {
+				bufeq = true;
+			}
+		}
+		otheq = (daclInfoSz == other.daclInfoSz &&
+			saclInfoSz == other.saclInfoSz &&
+			ownerInfoSz == other.ownerInfoSz &&
+			primaryGroupInfoSz == other.primaryGroupInfoSz &&
+			ownerInfo == other.ownerInfo &&
+			primaryGroupInfo == other.primaryGroupInfo);
+		return (bufeq && otheq);
+	}
+	bool operator!=(const SecDesc& other) const {
+		bool bufneq = false, othneq = false;
+		if (daclInfo && other.daclInfo) {
+			bufneq = memcmp(daclInfo, other.daclInfo, other.daclInfoSz);
+		} else {
+			if (daclInfo && !other.daclInfo) {
+				bufneq = true;
+			} else if (!daclInfo && other.daclInfo) {
+				bufneq = true;
+			} else if (!daclInfo && !other.daclInfo) {
+				bufneq = false;
+			}
+		}
+		if (saclInfo && other.saclInfo) {
+			bufneq = memcmp(saclInfo, other.saclInfo, other.saclInfoSz);
+		} else {
+			if (saclInfo && !other.saclInfo) {
+				bufneq = true;
+			} else if (!saclInfo && other.saclInfo) {
+				bufneq = true;
+			} else if (!saclInfo && !other.saclInfo) {
+				bufneq = false;
+			}
+		}
+		othneq = (daclInfoSz != other.daclInfoSz ||
+			saclInfoSz != other.saclInfoSz ||
+			ownerInfoSz != other.ownerInfoSz ||
+			primaryGroupInfoSz != other.primaryGroupInfoSz ||
+			ownerInfo != other.ownerInfo ||
+			primaryGroupInfo != other.primaryGroupInfo);
+		return (bufneq || othneq);
+	}
+	unsigned long daclInfoSz;
+	unsigned long saclInfoSz;
+	unsigned long ownerInfoSz;
+	unsigned long primaryGroupInfoSz;
+	PSID ownerInfo;
+	PSID primaryGroupInfo;
+	void* daclInfo;
+	void* saclInfo;
+};
+
 class ACLHandler {
 	public:
 		ACLHandler();
@@ -105,11 +223,15 @@ class ACLHandler {
 		ACLOpResult DACLExecuteAllowed(bool &allowed, ACL* testACL, PSID sid) const;
 		ACLOpResult DACLDeleteAllowed(bool &allowed, ACL* testACL, PSID sid) const;
 		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const;
-		ACLOpResult CreateAbsoluteSecDrsc() const;
+		ACLOpResult DACLAddReadPermissions(ACL* dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRemoveSIDACE(ACL* dacl, ACL* &outDacl, const PSID sid, const bool includeGroups = true) const;
+		ACLOpResult CreateAbsoluteSecDesc(SecDesc secDesc, SECURITY_DESCRIPTOR* secDesceiptor,
+			SECURITY_DESCRIPTOR* absoluteSecDescriptor, unsigned long &absDescSz) const;
+		ACLOpResult DACL2SD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const;
 	protected:
 
 	private:
-		ACE_HEADER* BuildACE(SID *sid, unsigned long aceType, unsigned char aceFlags,
+		ACE_HEADER* BuildACE(PSID sid, AceType aceType, unsigned char aceFlags,
 			ACCESS_MASK accessMask) const;
 		ACL* AddACE(ACL *acl, ACE_HEADER *newHeader) const;
 		ACL* RemoveACE(ACL *acl, ACE_HEADER *newHeader) const;

@@ -99,7 +99,36 @@
 // can be used for unsigned long long or double (8-byte types)
 #define BYTESWAP64(n) ((BYTESWAP32((n&0xFFFFFFFF00000000)>>32))|((BYTESWAP32(n&0x00000000FFFFFFFF))<<32))
 
-typedef bool(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, int&);
+// Check memory address access
+const unsigned long const dwForbiddenArea = PAGE_GUARD | PAGE_NOACCESS;
+const unsigned long const dwReadRights = PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY;
+const unsigned long const dwWriteRights = PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY;
+
+template<unsigned long dwAccessRights>
+bool CheckAccess(void* pAddress, size_t nSize) {
+	if (!pAddress || !nSize) {
+		return false;
+	}
+	MEMORY_BASIC_INFORMATION sMBI;
+	bool bRet = false;
+	unsigned long long pCurrentAddress = (unsigned long long)pAddress;
+	unsigned long long pEndAdress = pCurrentAddress + (nSize - 1);
+	do {
+		ZeroMemory(&sMBI, sizeof(sMBI));
+		::VirtualQuery((const void*)pCurrentAddress, &sMBI, sizeof(sMBI));
+		bRet = (sMBI.State & MEM_COMMIT)			// memory allocated and
+			&& !(sMBI.Protect & dwForbiddenArea)	// access to page allowed and
+			&& (sMBI.Protect & dwAccessRights);		// the required rights
+		pCurrentAddress = ((unsigned long long)sMBI.BaseAddress + sMBI.RegionSize);
+	} while (bRet && pCurrentAddress <= pEndAdress);
+	return bRet;
+}
+
+#define IsBadWritePtrSz(p, n) (!CheckAccess<dwWriteRights>(p, n))
+#define IsBadReadPtrSz(p, n) (!CheckAccess<dwReadRights>(p, n))
+#define IsBadStringPtrWSz(p, n) (!CheckAccess<dwReadRights>(p, 2 * n))
+
+typedef bool(__stdcall* LPFN_ISWOW64PROCESS) (HANDLE procHandle, int &result);
 
 // constexpr to get TZ offset
 static constexpr time_t const NULL_TIME = -1;
@@ -130,6 +159,7 @@ enum class SidType : unsigned char {
 };
 
 bool IsBadReadPtr(void* p);
+bool IsBadWritePtr(void* p);
 
 struct AccountDesc;
 struct GroupDesc;
@@ -407,7 +437,7 @@ struct GroupDesc {
 		Comment = other.Comment;
 		return *this;
 	}
-	bool operator==(const GroupDesc& other) const {
+	bool operator==(const GroupDesc &other) const {
 		return ((GroupName == other.GroupName &&
 				lower_copy(GroupName) == lower_copy(other.GroupName) &&
 			(GroupStrSid == other.GroupStrSid &&
@@ -455,12 +485,23 @@ class SysHandler {
 			[in] resource id in resource file
 			Returns true on success, false on failure */
 		bool ExtractResource(const std::wstring extractPath, const unsigned long resId) const;
+		/* Checks if current x86 process runs under Wow64 environment
+			Param:
+			None
+			Returns true if current x86 process runs under Wow64 environment, false otherwise */
 		bool IsWow64Proc() const;
+		/* Checks if a given x86 process runs under Wow64 environment
+			Param:
+			[in] [mandatory] process id
+			[in] [optional] [default - PROCESS_ALL_ACCESS] roghts to open requested process
+			Returns true if current x86 process runs under Wow64 environment, false otherwise */
+		bool IsWow64Proc(const unsigned long pid,
+			const unsigned long desiredProcRights = PROCESS_ALL_ACCESS) const;
 		/* Converts string SID to SID type
 			Param:
-			[in] account string SID
+			[in] [mandatory] account string SID
 			Returns PSID related with source string SID
-			Returned PSID must be freed with LocalFreee */
+			Returned PSID must be freed with LocalFree */
 		PSID SIDFromStrSid(const std::wstring sidstr) const;
 		/* Converts PSID to string SID
 			Param:
@@ -474,6 +515,11 @@ class SysHandler {
 			[in] [default - "."] target machine name. Leave it unchanged or empty to get local machine accounts
 			Returns account name */
 		std::wstring GetAccountNameFromSID(const PSID sid, const std::wstring machineName = L".") const;
+		/* Gets account name based on str SID
+			Param:
+			[in] target str SID
+			[in] [default - "."] target machine name. Leave it unchanged or empty to get local machine accounts
+			Returns account name */
 		std::wstring GetAccountNameFromStrSID(const std::wstring strSid,
 			const std::wstring machineName = L".") const;
 		/* Gets string SID based on account name
@@ -484,6 +530,13 @@ class SysHandler {
 			Returns result code of the operation */
 		std::wstring GetStrSIDFromAccountName(const std::wstring accName,
 			const std::wstring machineName = L".", const bool isDomainAcc = false) const;
+		/* Gets PSID from a given account name
+			Param:
+			[in] [mandatory] account name / login
+			[in] [optional] [default - "."]		target machine name. Leave it unchanged or empty to get local machine accounts
+			[in] [optional] [default - false]	set to true if requested account belongs to domain
+			Returns account PSID
+			Returned PSID must be freed with LocalFree */
 		PSID GetSIDFromAccountName(const std::wstring accName,
 			const std::wstring machineName = L".", const bool isDomainAcc = false) const;
 		/* Converts current system time to Unix time
@@ -511,8 +564,10 @@ class SysHandler {
 			None
 			Returns max number of threads available without oversubscription (cpucorenum - 1) */
 		unsigned char GetThreadNum() const;
-		SysOpResult IsAccountMemberOfGroup(const PSID groupSID, const PSID testSID, bool &isMember, const std::wstring machineName = L".") const;
-		SysOpResult IsAccountMemberOfGroup(const std::wstring groupName, const std::wstring testAccName, bool& isMember, const std::wstring machineName = L".") const;
+		SysOpResult IsAccountMemberOfGroup(const PSID groupSID, const PSID testSID, bool &isMember,
+			const std::wstring machineName = L".") const;
+		SysOpResult IsAccountMemberOfGroup(const std::wstring groupName, const std::wstring testAccName,
+			bool &isMember, const std::wstring machineName = L".") const;
 		SysOpResult GetSIDType(const PSID sid, SidType &sidType, const std::wstring machineName = L".", 
 			const std::wstring domainName = L".") const;
 		/* Gets RAM info
@@ -537,14 +592,21 @@ class SysHandler {
 			const std::wstring machineName = L".") const;
 		SysOpResult LocalGroupListFromStrSID(std::vector<GroupDesc> &outGroupList, const std::wstring strSID,
 			const std::wstring machineName = L".") const;
+		/* Enumerates local groups
+			Param:
+			[out] [mandatory] group desctiption vector to receive data
+			[in] [optional] [default - "."]	target machine name. Leave it unchanged or empty to get local accounts
+			[in] [optional] [default - true] add a short list of group memners
+			[in] [optional] [default - 0] pointer to account list to use. Leaving value as 0 causes account enumeration (EnumAccounts call)
+			Returns result code of the operation (enum value) */
 		SysOpResult EnumLocalGroups(std::vector<GroupDesc> &groupList,
 			const std::wstring machineName = L".", const bool enumAccs = true,
 			const std::vector<AccountDesc> *accList = 0) const;
 		/* Enumerates local accounts
 			Param:
-			[out] account desctiption vector to receive data
-			[in] [default - "."]	target machine name. Leave it unchanged or empty to get local accounts
-			[in] [default - true]	add a short list of groups to which account belongs to
+			[out] [mandatory] account desctiption vector to receive data
+			[in] [optional] [default - "."]	target machine name. Leave it unchanged or empty to get local accounts
+			[in] [optional] [default - true] add a short list of groups to which account belongs
 			Returns result code of the operation (enum value) */
 		SysOpResult EnumAccounts(std::vector<AccountDesc> &accountList,
 			const std::wstring machineName = L".", const bool enumGroups = true) const;

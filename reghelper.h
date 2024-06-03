@@ -366,9 +366,7 @@ class RegHandler {
 		RegOpResult DeleteValues(const std::vector<RegValDesc> &valList, const HKEY *root = 0) const;
 		RegOpResult FreeValues(const std::vector<RegKeyDesc> &keyList, const HKEY *root = 0) const;
 		RegOpResult FreeValues(const std::vector<RegValDesc> &valList, const HKEY *root = 0) const;
-		RegOpResult GetKeyACL(const std::wstring keyName, unsigned char* &buf,
-			unsigned long &aclSz, const SecInfo secInfoType = SecInfo::DACLSecInfo,
-			const HKEY *root = 0) const;
+		RegOpResult GetKeySecurity(const std::wstring keyName, SecDesc &secDesc, const HKEY *root = 0) const;
 		RegOpResult CreateKey(const std::wstring keyName, const bool createMissingKeys = true,
 			const HKEY *root = 0) const;
 		RegOpResult DeleteKey(const std::wstring keyName, const bool deleteSubKeys = true,
