@@ -2536,10 +2536,18 @@ RegOpResult RegHandler::GetKeySecurity(const std::wstring keyName, SecDesc &secD
 			if (!proc.DisableSecurityPrivilege(procid)) {
 				return RegOpResult::Fail;
 			}
-			return RegOpResult::Success;
+			ACLHandler aclh;
+			if (ACLOpResult::Success == aclh.CreateAbsoluteSecDesc(secDesc)) {
+				return RegOpResult::Success;
+			}
+			return RegOpResult::Fail;
 		} else {
 			CLOSEKEY_NULLIFY(keyHandle);
 			return RegOpResult::Fail;
+		}
+	} else {
+		if (keyHandle) {
+			CLOSEKEY_NULLIFY(keyHandle);
 		}
 	}
 	return RegOpResult::Fail;

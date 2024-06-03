@@ -1,6 +1,8 @@
 #ifndef _NETHELPER_H
 #define _NETHELPER_H
 
+#include "strhelper.h"
+
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
 
@@ -26,8 +28,11 @@ struct PingResult {
 	short int tripTime;
 };
 
-PingResult ping(const char* address);
-char* lookupIPAddress(const char* dnsName);
-char* getHostname(const char* ip, unsigned short int port = 27015);
+PingResult ping(const std::string address);
+PingResult ping(const std::wstring address);
+std::string lookupIPAddress(const std::string dnsName);
+std::wstring lookupIPAddress(const std::wstring dnsName);
+std::string getHostname(const std::string ip, unsigned short int port = 27015);
+std::wstring getHostname(const std::wstring ip, unsigned short int port = 27015);
 
 #endif // _NETHELPER_H
