@@ -116,7 +116,7 @@ struct SecDesc {
 		if (other.daclInfo) {
 			/* if (daclInfo && daclInfoSz) {
 				 SAFE_LOCALFREE(daclInfo);
-			 }*/
+			}*/
 			daclInfo = LocalAlloc(LPTR, daclInfoSz);
 			if (daclInfo) {
 				memcpy(daclInfo, other.daclInfo, daclInfoSz);
@@ -130,7 +130,7 @@ struct SecDesc {
 		if (other.daclAbsInfo) {
 			/* if (daclAbsInfo && daclAbsInfoSz) {
 				 SAFE_LOCALFREE(daclAbsInfo);
-			 }*/
+			}*/
 			daclAbsInfo = LocalAlloc(LPTR, daclAbsInfoSz);
 			if (daclAbsInfo) {
 				memcpy(daclAbsInfo, other.daclAbsInfo, daclAbsInfoSz);
@@ -158,7 +158,7 @@ struct SecDesc {
 		if (other.saclAbsInfo) {
 			/* if (saclAbsInfo && saclAbsInfoSz) {
 				 SAFE_LOCALFREE(saclAbsInfo);
-			 }*/
+			}*/
 			saclAbsInfo = LocalAlloc(LPTR, saclAbsInfoSz);
 			if (saclAbsInfo) {
 				memcpy(saclAbsInfo, other.saclAbsInfo, saclAbsInfoSz);
@@ -283,11 +283,9 @@ struct SecDesc {
 		} else {
 			if (saclAbsInfo && !other.saclAbsInfo) {
 				bufeq &= false;
-			}
-			else if (!saclAbsInfo && other.saclAbsInfo) {
+			} else if (!saclAbsInfo && other.saclAbsInfo) {
 				bufeq &= false;
-			}
-			else if (!saclAbsInfo && !other.saclAbsInfo) {
+			} else if (!saclAbsInfo && !other.saclAbsInfo) {
 				bufeq &= true;
 			}
 		}
@@ -465,9 +463,9 @@ class ACLHandler {
 		ACLOpResult DACLDeleteAllowed(bool &allowed, ACL* testACL, PSID sid) const;
 		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const;
 		ACLOpResult DACLAddReadPermissions(ACL* dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRemoveSIDACE(ACL* dacl, ACL* &outDacl, const PSID sid, const bool includeGroups = true) const;
+		ACLOpResult DACLRemoveSIDACE(ACL* &dacl, const PSID sid, const bool includeGroups = true) const;
 		ACLOpResult CreateAbsoluteSecDesc(SecDesc &secDesc) const;
-		ACLOpResult DACL2SD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const;
+		ACLOpResult DACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const;
 	protected:
 
 	private:

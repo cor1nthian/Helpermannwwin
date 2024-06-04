@@ -2565,11 +2565,12 @@ RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secD
 	if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
 		KEY_ALL_ACCESS | getRigtMod(), &keyHandle)) {
 		if (ERROR_SUCCESS == ::RegSetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::DACLSecInfo),
-			secDesc.daclInfo)) {
+			secDesc.absoluteSDInfo)) {
 			Sleep(1);
 		} else {
 			Sleep(1);
 		}
+		CLOSEKEY_NULLIFY(keyHandle);
 	}
 	return RegOpResult::Success;
 }

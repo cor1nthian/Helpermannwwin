@@ -30,7 +30,7 @@ SecDesc::SecDesc(const SecDesc &other) {
     absoluteSDInfoSz = other.absoluteSDInfoSz;
     selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
     if (other.daclInfo) {
-       /* if (daclInfo && daclInfoSz) {
+        /* if (daclInfo && daclInfoSz) {
             SAFE_LOCALFREE(daclInfo);
         }*/
         daclInfo = LocalAlloc(LPTR, daclInfoSz);
@@ -46,7 +46,7 @@ SecDesc::SecDesc(const SecDesc &other) {
     if (other.daclAbsInfo) {
         /* if (daclAbsInfo && daclAbsInfoSz) {
              SAFE_LOCALFREE(daclAbsInfo);
-         }*/
+        }*/
         daclAbsInfo = LocalAlloc(LPTR, daclAbsInfoSz);
         if (daclAbsInfo) {
             memcpy(daclAbsInfo, other.daclAbsInfo, daclAbsInfoSz);
@@ -74,7 +74,7 @@ SecDesc::SecDesc(const SecDesc &other) {
     if (other.saclAbsInfo) {
         /* if (saclAbsInfo && saclAbsInfoSz) {
              SAFE_LOCALFREE(saclAbsInfo);
-         }*/
+        }*/
         saclAbsInfo = LocalAlloc(LPTR, saclAbsInfoSz);
         if (saclAbsInfo) {
             memcpy(saclAbsInfo, other.saclAbsInfo, saclAbsInfoSz);
@@ -221,9 +221,6 @@ ACLOpResult ACLHandler::DACLReadAllowed(bool &allowed, ACL* testACL, PSID sid) c
     }
     EXPLICIT_ACCESS *eaEntry = 0;
     for (size_t i = 0; i < testACL->AceCount; ++i) {
-        if (i == 6) {
-            Sleep(1);
-        }
         if (!GetAce(testACL, i, (void**)&testace)) {
             return ACLOpResult::Fail;
         }
@@ -472,8 +469,7 @@ ACLOpResult ACLHandler::DACLWriteAllowed(bool &allowed, ACL* testACL, PSID sid) 
                             allowed = false;
                         }
                     }
-                }
-                else if (SidType::Group == sidtype) {
+                } else if (SidType::Group == sidtype) {
                     bool ismember = false;
                     if (SysOpResult::Success == sys.IsAccountMemberOfGroup(accsid, sid, ismember)) {
                         if (ismember) {
@@ -728,14 +724,17 @@ ACLOpResult ACLHandler::CreateAbsoluteSecDesc(SecDesc &secDesc) const {
         return ACLOpResult::Success;
     } else {
         if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
-            secDesc.daclAbsInfo = LocalAlloc(LPTR, secDesc.daclAbsInfoSz);
-            if (secDesc.daclAbsInfo) {
+            if (secDesc.daclAbsInfoSz) {
+                secDesc.daclAbsInfo = LocalAlloc(LPTR, secDesc.daclAbsInfoSz);
+                if (!secDesc.daclAbsInfo) {
+                    return ACLOpResult::Fail;
+                }
+            }
+            if (secDesc.saclAbsInfoSz) {
                 secDesc.saclAbsInfo = LocalAlloc(LPTR, secDesc.saclAbsInfoSz);
                 if (!secDesc.saclAbsInfo) {
                     return ACLOpResult::Fail;
                 }
-            } else {
-                return ACLOpResult::Fail;
             }
             if (MakeAbsoluteSD((SECURITY_DESCRIPTOR*)secDesc.daclInfo, (SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
                 &secDesc.absoluteSDInfoSz, (ACL*)secDesc.daclAbsInfo, &secDesc.daclAbsInfoSz, (ACL*)secDesc.saclAbsInfo,
@@ -751,8 +750,7 @@ ACLOpResult ACLHandler::CreateAbsoluteSecDesc(SecDesc &secDesc) const {
                                 secDesc.selfRelativeSDInfo = LocalAlloc(LPTR, secDesc.selfRelativeSDInfoSz);
                                 if (MakeSelfRelativeSD(secDesc.absoluteSDInfo, secDesc.selfRelativeSDInfo, &secDesc.selfRelativeSDInfoSz)) {
                                     return ACLOpResult::Success;
-                                }
-                                else {
+                                } else {
                                     return ACLOpResult::Fail;
                                 }
                             }
@@ -769,8 +767,7 @@ ACLOpResult ACLHandler::DACLAddReadPermissions(ACL* dacl, PSID sid, const bool r
     return ACLOpResult::Success;
 }
 
-ACLOpResult ACLHandler::DACLRemoveSIDACE(ACL* dacl, ACL* &outDacl, const PSID sid,
-    const bool includeGroups) const {
+ACLOpResult ACLHandler::DACLRemoveSIDACE(ACL* &dacl, const PSID sid, const bool includeGroups) const {
     if (!dacl->AceCount) {
         return ACLOpResult::Fail;
     }
@@ -785,7 +782,7 @@ ACLOpResult ACLHandler::DACLRemoveSIDACE(ACL* dacl, ACL* &outDacl, const PSID si
     for (i = 0; i < delmarks.size(); ++i) {
         delmarks[i] = false;
     }
-    for (size_t i = 0; i < dacl->AceCount; ++i) {
+    for (i = 0; i < dacl->AceCount; ++i) {
         if (!GetAce(dacl, i, (void**)&testace)) {
             return ACLOpResult::Fail;
         }
@@ -822,7 +819,7 @@ ACLOpResult ACLHandler::DACLRemoveSIDACE(ACL* dacl, ACL* &outDacl, const PSID si
             }
         }
         vace = 0;
-        // LocalFree(&testace);
+        LocalFree(&testace);
         testace = 0;
     }
     unsigned long sz = 0;
@@ -844,7 +841,7 @@ ACLOpResult ACLHandler::DACLRemoveSIDACE(ACL* dacl, ACL* &outDacl, const PSID si
             if(!::DeleteAce(dacl, i)) {
                 return ACLOpResult::Fail;
             }
-            dacl->AclSize -= (sz + GetLengthSid(sid));
+            // dacl->AclSize -= (sz + GetLengthSid(sid));
             delmarks.erase(delmarks.begin() + i);
         }
     }
@@ -854,7 +851,7 @@ ACLOpResult ACLHandler::DACLRemoveSIDACE(ACL* dacl, ACL* &outDacl, const PSID si
     return ACLOpResult::Success;
 }
 
-ACLOpResult ACLHandler::DACL2SD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const {
+ACLOpResult ACLHandler::DACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const {
     if (SetSecurityDescriptorDacl(secDesc, true, dacl, false)) {
         return ACLOpResult::Success;
     } else {
