@@ -2550,7 +2550,28 @@ RegOpResult RegHandler::GetKeySecurity(const std::wstring keyName, SecDesc &secD
 			CLOSEKEY_NULLIFY(keyHandle);
 		}
 	}
-	return RegOpResult::Fail;
+	return RegOpResult::Success;
+}
+
+RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secDesc, const HKEY *root) const {
+	HKEY keyHandle = { 0 }, rootKey = { 0 };
+	std::wstring keyPath = keyName;
+	if (root) {
+		rootKey = *root;
+	} else {
+		rootKey = { 0 };
+	}
+	prepHKEYKeyPath(rootKey, keyPath, rootKey, keyPath);
+	if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
+		KEY_ALL_ACCESS | getRigtMod(), &keyHandle)) {
+		if (ERROR_SUCCESS == ::RegSetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::DACLSecInfo),
+			secDesc.daclInfo)) {
+			Sleep(1);
+		} else {
+			Sleep(1);
+		}
+	}
+	return RegOpResult::Success;
 }
 
 RegOpResult RegHandler::CreateKey(const std::wstring keyName, const bool createMissingKeys,

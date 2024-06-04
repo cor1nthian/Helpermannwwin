@@ -106,105 +106,123 @@ struct SecDesc {
 	~SecDesc();
 	SecDesc& operator=(const SecDesc &other) {
 		daclInfoSz = other.daclInfoSz;
+		daclAbsInfoSz = other.daclAbsInfoSz;
 		saclInfoSz = other.saclInfoSz;
+		saclAbsInfoSz = other.saclAbsInfoSz;
 		ownerInfoSz = other.ownerInfoSz;
 		primaryGroupInfoSz = other.primaryGroupInfoSz;
 		absoluteSDInfoSz = other.absoluteSDInfoSz;
 		selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
 		if (other.daclInfo) {
-			if (!IsBadReadPtrSz(other.daclInfo, other.daclInfoSz)) {
-				if (daclInfo && !IsBadReadPtrSz(daclInfo, daclInfoSz)) {
-					SAFE_LOCALFREE(daclInfo);
-				}
-				daclInfo = LocalAlloc(LPTR, daclInfoSz);
-				if (daclInfo) {
-					memcpy(daclInfo, other.daclInfo, daclInfoSz);
-				}
+			/* if (daclInfo && daclInfoSz) {
+				 SAFE_LOCALFREE(daclInfo);
+			 }*/
+			daclInfo = LocalAlloc(LPTR, daclInfoSz);
+			if (daclInfo) {
+				memcpy(daclInfo, other.daclInfo, daclInfoSz);
 			}
 		} else {
-			if (daclInfo && !IsBadReadPtrSz(daclInfo, daclInfoSz)) {
+			/*if (daclInfo && daclInfoSz) {
 				SAFE_LOCALFREE(daclInfo);
-			}
+			}*/
 			daclInfo = 0;
 		}
-		if (other.saclInfo) {
-			if (!IsBadReadPtrSz(other.saclInfo, other.saclInfoSz)) {
-				if (saclInfo && !IsBadReadPtrSz(saclInfo, saclInfoSz)) {
-					SAFE_LOCALFREE(saclInfo);
-				}
-				saclInfo = LocalAlloc(LPTR, saclInfoSz);
-				if (saclInfo) {
-					memcpy(saclInfo, other.saclInfo, saclInfoSz);
-				}
+		if (other.daclAbsInfo) {
+			/* if (daclAbsInfo && daclAbsInfoSz) {
+				 SAFE_LOCALFREE(daclAbsInfo);
+			 }*/
+			daclAbsInfo = LocalAlloc(LPTR, daclAbsInfoSz);
+			if (daclAbsInfo) {
+				memcpy(daclAbsInfo, other.daclAbsInfo, daclAbsInfoSz);
 			}
 		} else {
-			if (saclInfo && !IsBadReadPtrSz(saclInfo, saclInfoSz)) {
+			/*if (daclAbsInfo && daclAbsInfoSz) {
+				SAFE_LOCALFREE(daclAbsInfo);
+			}*/
+			daclAbsInfo = 0;
+		}
+		if (other.saclInfo) {
+			/*if (saclInfo && saclInfoSz) {
 				SAFE_LOCALFREE(saclInfo);
+			}*/
+			saclInfo = LocalAlloc(LPTR, saclInfoSz);
+			if (saclInfo) {
+				memcpy(saclInfo, other.saclInfo, saclInfoSz);
 			}
+		} else {
+			/*if (saclInfo && saclInfoSz) {
+				SAFE_LOCALFREE(saclInfo);
+			}*/
 			saclInfo = 0;
 		}
-		if (other.ownerInfo) {
-			if (!IsBadReadPtrSz(other.ownerInfo, other.ownerInfoSz)) {
-				if (ownerInfo && !IsBadReadPtrSz(ownerInfo, ownerInfoSz)) {
-					SAFE_LOCALFREE(ownerInfo);
-				}
-				ownerInfo = LocalAlloc(LPTR, saclInfoSz);
-				if (ownerInfo) {
-					memcpy(ownerInfo, other.ownerInfo, ownerInfoSz);
-				}
+		if (other.saclAbsInfo) {
+			/* if (saclAbsInfo && saclAbsInfoSz) {
+				 SAFE_LOCALFREE(saclAbsInfo);
+			 }*/
+			saclAbsInfo = LocalAlloc(LPTR, saclAbsInfoSz);
+			if (saclAbsInfo) {
+				memcpy(saclAbsInfo, other.saclAbsInfo, saclAbsInfoSz);
 			}
 		} else {
-			if (ownerInfo && !IsBadReadPtrSz(ownerInfo, ownerInfoSz)) {
+			/*if (saclAbsInfo && saclAbsInfoSz) {
+				SAFE_LOCALFREE(saclAbsInfo);
+			}*/
+			saclAbsInfo = 0;
+		}
+		if (other.ownerInfo) {
+			/*if (ownerInfo && ownerInfoSz) {
 				SAFE_LOCALFREE(ownerInfo);
+			}*/
+			ownerInfo = LocalAlloc(LPTR, saclInfoSz);
+			if (ownerInfo) {
+				memcpy(ownerInfo, other.ownerInfo, ownerInfoSz);
 			}
+		} else {
+			/*if (ownerInfo && ownerInfoSz) {
+				SAFE_LOCALFREE(ownerInfo);
+			}*/
 			ownerInfo = 0;
 		}
 		if (other.primaryGroupInfo) {
-			if (!IsBadReadPtrSz(other.primaryGroupInfo, other.primaryGroupInfoSz)) {
-				if (primaryGroupInfo && !IsBadReadPtrSz(primaryGroupInfo, primaryGroupInfoSz)) {
-					SAFE_LOCALFREE(primaryGroupInfo);
-				}
-				primaryGroupInfo = LocalAlloc(LPTR, primaryGroupInfoSz);
-				if (primaryGroupInfo) {
-					memcpy(primaryGroupInfo, other.primaryGroupInfo, primaryGroupInfoSz);
-				}
+			/*if (primaryGroupInfo && primaryGroupInfoSz) {
+				SAFE_LOCALFREE(primaryGroupInfo);
+			}*/
+			primaryGroupInfo = LocalAlloc(LPTR, primaryGroupInfoSz);
+			if (primaryGroupInfo) {
+				memcpy(primaryGroupInfo, other.primaryGroupInfo, primaryGroupInfoSz);
 			}
 		} else {
-			if (primaryGroupInfo && !IsBadReadPtrSz(primaryGroupInfo, primaryGroupInfoSz)) {
+			/*if (primaryGroupInfo && primaryGroupInfoSz) {
 				SAFE_LOCALFREE(primaryGroupInfo);
-			}
+			}*/
 			primaryGroupInfo = 0;
 		}
 		if (other.absoluteSDInfo) {
-			if (!IsBadReadPtrSz(other.absoluteSDInfo, other.absoluteSDInfoSz)) {
-				if (absoluteSDInfo && !IsBadReadPtrSz(absoluteSDInfo, absoluteSDInfoSz)) {
-					SAFE_LOCALFREE(absoluteSDInfo);
-				}
-				absoluteSDInfo = LocalAlloc(LPTR, absoluteSDInfoSz);
-				if (absoluteSDInfo) {
-					memcpy(absoluteSDInfo, other.absoluteSDInfo, absoluteSDInfoSz);
-				}
+			/*if (absoluteSDInfo && absoluteSDInfoSz) {
+				SAFE_LOCALFREE(absoluteSDInfo);
+			}*/
+			absoluteSDInfo = LocalAlloc(LPTR, absoluteSDInfoSz);
+			if (absoluteSDInfo) {
+				memcpy(absoluteSDInfo, other.absoluteSDInfo, absoluteSDInfoSz);
 			}
 		} else {
-			if (absoluteSDInfo && !IsBadReadPtrSz(absoluteSDInfo, absoluteSDInfoSz)) {
+			/*if (absoluteSDInfo && absoluteSDInfoSz) {
 				SAFE_LOCALFREE(absoluteSDInfo);
-			}
+			}*/
 			absoluteSDInfo = 0;
 		}
 		if (other.selfRelativeSDInfo) {
-			if (!IsBadReadPtrSz(other.selfRelativeSDInfo, other.selfRelativeSDInfoSz)) {
-				if (selfRelativeSDInfo && !IsBadReadPtrSz(selfRelativeSDInfo, selfRelativeSDInfoSz)) {
-					SAFE_LOCALFREE(absoluteSDInfo);
-				}
-				selfRelativeSDInfo = LocalAlloc(LPTR, absoluteSDInfoSz);
-				if (selfRelativeSDInfo) {
-					memcpy(selfRelativeSDInfo, other.selfRelativeSDInfo, selfRelativeSDInfoSz);
-				}
+			/*if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
+				SAFE_LOCALFREE(absoluteSDInfo);
+			}*/
+			selfRelativeSDInfo = LocalAlloc(LPTR, absoluteSDInfoSz);
+			if (selfRelativeSDInfo) {
+				memcpy(selfRelativeSDInfo, other.selfRelativeSDInfo, selfRelativeSDInfoSz);
 			}
 		} else {
-			if (selfRelativeSDInfo && !IsBadReadPtrSz(selfRelativeSDInfo, selfRelativeSDInfoSz)) {
+			/*if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
 				SAFE_LOCALFREE(selfRelativeSDInfo);
-			}
+			}*/
 			selfRelativeSDInfo = 0;
 		}
 		return *this;
@@ -212,7 +230,11 @@ struct SecDesc {
 	bool operator==(const SecDesc& other) const {
 		bool bufeq = false, otheq = false, sideq = false;
 		if (daclInfo && other.daclInfo) {
-			bufeq = !memcmp(daclInfo, other.daclInfo, other.daclInfoSz);
+			if (daclInfoSz && other.daclInfoSz) {
+				bufeq = !memcmp(daclInfo, other.daclInfo, other.daclInfoSz);
+			} else {
+				bufeq = false;
+			}
 		} else {
 			if (daclInfo && !other.daclInfo) {
 				bufeq = false;
@@ -222,8 +244,27 @@ struct SecDesc {
 				bufeq = true;
 			}
 		}
+		if (daclAbsInfo && other.daclAbsInfo) {
+			if (daclAbsInfoSz && other.daclAbsInfoSz) {
+				bufeq &= !memcmp(daclAbsInfo, other.daclAbsInfo, other.daclAbsInfoSz);
+			} else {
+				bufeq &= false;
+			}
+		} else {
+			if (daclAbsInfo && !other.daclAbsInfo) {
+				bufeq &= false;
+			} else if (!daclAbsInfo && other.daclAbsInfo) {
+				bufeq &= false;
+			} else if (!daclAbsInfo && !other.daclAbsInfo) {
+				bufeq &= true;
+			}
+		}
 		if (saclInfo && other.saclInfo) {
-			bufeq &= !memcmp(saclInfo, other.saclInfo, other.saclInfoSz);
+			if (saclInfoSz && other.saclInfoSz) {
+				bufeq &= !memcmp(saclInfo, other.saclInfo, other.saclInfoSz);
+			} else {
+				bufeq &= false;
+			}
 		} else {
 			if (saclInfo && !other.saclInfo) {
 				bufeq &= false;
@@ -233,8 +274,29 @@ struct SecDesc {
 				bufeq &= true;
 			}
 		}
+		if (saclAbsInfo && other.saclAbsInfo) {
+			if (saclAbsInfoSz && other.saclAbsInfoSz) {
+				bufeq &= !memcmp(saclAbsInfo, other.saclAbsInfo, other.saclAbsInfoSz);
+			} else {
+				bufeq &= false;
+			}
+		} else {
+			if (saclAbsInfo && !other.saclAbsInfo) {
+				bufeq &= false;
+			}
+			else if (!saclAbsInfo && other.saclAbsInfo) {
+				bufeq &= false;
+			}
+			else if (!saclAbsInfo && !other.saclAbsInfo) {
+				bufeq &= true;
+			}
+		}
 		if (absoluteSDInfo && other.absoluteSDInfo) {
-			bufeq &= !memcmp(absoluteSDInfo, other.absoluteSDInfo, other.absoluteSDInfoSz);
+			if (absoluteSDInfoSz && other.absoluteSDInfoSz) {
+				bufeq &= !memcmp(absoluteSDInfo, other.absoluteSDInfo, other.absoluteSDInfoSz);
+			} else {
+				bufeq &= false;
+			}
 		} else {
 			if (absoluteSDInfo && !other.absoluteSDInfo) {
 				bufeq &= false;
@@ -245,12 +307,15 @@ struct SecDesc {
 			}
 		}
 		if (selfRelativeSDInfo && other.selfRelativeSDInfo) {
-			bufeq &= !memcmp(selfRelativeSDInfo, other.selfRelativeSDInfo, other.selfRelativeSDInfoSz);
+			if (selfRelativeSDInfoSz && other.selfRelativeSDInfoSz) {
+				bufeq &= !memcmp(selfRelativeSDInfo, other.selfRelativeSDInfo, other.selfRelativeSDInfoSz);
+			} else {
+				bufeq &= false;
+			}
 		} else {
 			if (selfRelativeSDInfo && !other.selfRelativeSDInfo) {
 				bufeq &= false;
-			}
-			else if (!selfRelativeSDInfo && other.selfRelativeSDInfo) {
+			} else if (!selfRelativeSDInfo && other.selfRelativeSDInfo) {
 				bufeq &= false;
 			}
 			else if (!selfRelativeSDInfo && !other.selfRelativeSDInfo) {
@@ -269,7 +334,11 @@ struct SecDesc {
 	bool operator!=(const SecDesc& other) const {
 		bool bufneq = false, othneq = false, sidneq = false;
 		if (daclInfo && other.daclInfo) {
-			bufneq = memcmp(daclInfo, other.daclInfo, other.daclInfoSz);
+			if (daclInfoSz && other.daclInfoSz) {
+				bufneq = memcmp(daclInfo, other.daclInfo, other.daclInfoSz);
+			} else {
+				bufneq = true;
+			}
 		} else {
 			if (daclInfo && !other.daclInfo) {
 				bufneq = true;
@@ -279,8 +348,27 @@ struct SecDesc {
 				bufneq = false;
 			}
 		}
+		if (daclAbsInfo && other.daclAbsInfo) {
+			if (daclAbsInfoSz && other.daclAbsInfoSz) {
+				bufneq |= memcmp(daclAbsInfo, other.daclAbsInfo, other.daclAbsInfoSz);
+			} else {
+				bufneq |= true;
+			}
+		} else {
+			if (daclAbsInfo && !other.daclAbsInfo) {
+				bufneq |= true;
+			} else if (!daclAbsInfo && other.daclAbsInfo) {
+				bufneq |= true;
+			} else if (!daclAbsInfo && !other.daclAbsInfo) {
+				bufneq |= false;
+			}
+		}
 		if (saclInfo && other.saclInfo) {
-			bufneq |= memcmp(saclInfo, other.saclInfo, other.saclInfoSz);
+			if(saclInfoSz && other.saclInfoSz) {
+				bufneq |= memcmp(saclInfo, other.saclInfo, other.saclInfoSz);
+			} else {
+				bufneq |= true;
+			}
 		} else {
 			if (saclInfo && !other.saclInfo) {
 				bufneq |= true;
@@ -290,8 +378,27 @@ struct SecDesc {
 				bufneq |= false;
 			}
 		}
+		if (saclAbsInfo && other.saclAbsInfo) {
+			if (saclAbsInfoSz && other.saclAbsInfoSz) {
+				bufneq |= memcmp(saclAbsInfo, other.saclAbsInfo, other.saclAbsInfoSz);
+			} else {
+				bufneq |= true;
+			}
+		} else {
+			if (saclAbsInfo && !other.saclAbsInfo) {
+				bufneq |= true;
+			} else if (!saclAbsInfo && other.saclAbsInfo) {
+				bufneq |= true;
+			} else if (!saclAbsInfo && !other.saclAbsInfo) {
+				bufneq |= false;
+			}
+		}
 		if (absoluteSDInfo && other.absoluteSDInfo) {
-			bufneq |= memcmp(absoluteSDInfo, other.absoluteSDInfo, other.absoluteSDInfoSz);
+			if (absoluteSDInfoSz && other.absoluteSDInfoSz) {
+				bufneq |= memcmp(absoluteSDInfo, other.absoluteSDInfo, other.absoluteSDInfoSz);
+			} else {
+				bufneq |= true;
+			}
 		} else {
 			if (absoluteSDInfo && !other.absoluteSDInfo) {
 				bufneq |= true;
@@ -302,15 +409,17 @@ struct SecDesc {
 			}
 		}
 		if (selfRelativeSDInfo && other.selfRelativeSDInfo) {
-			bufneq |= memcmp(selfRelativeSDInfo, other.selfRelativeSDInfo, other.selfRelativeSDInfoSz);
+			if (selfRelativeSDInfoSz && other.selfRelativeSDInfoSz) {
+				bufneq |= memcmp(selfRelativeSDInfo, other.selfRelativeSDInfo, other.selfRelativeSDInfoSz);
+			} else {
+				bufneq |= true;
+			}
 		} else {
 			if (selfRelativeSDInfo && !other.selfRelativeSDInfo) {
 				bufneq |= true;
-			}
-			else if (!selfRelativeSDInfo && other.selfRelativeSDInfo) {
+			} else if (!selfRelativeSDInfo && other.selfRelativeSDInfo) {
 				bufneq |= true;
-			}
-			else if (!selfRelativeSDInfo && !other.selfRelativeSDInfo) {
+			} else if (!selfRelativeSDInfo && !other.selfRelativeSDInfo) {
 				bufneq |= false;
 			}
 		}
@@ -324,7 +433,9 @@ struct SecDesc {
 		return (bufneq || othneq || sidneq);
 	}
 	unsigned long daclInfoSz;
+	unsigned long daclAbsInfoSz;
 	unsigned long saclInfoSz;
+	unsigned long saclAbsInfoSz;
 	unsigned long ownerInfoSz;
 	unsigned long primaryGroupInfoSz;
 	unsigned long absoluteSDInfoSz;
@@ -332,7 +443,9 @@ struct SecDesc {
 	PSID ownerInfo;
 	PSID primaryGroupInfo;
 	void* daclInfo;
+	void* daclAbsInfo;
 	void* saclInfo;
+	void* saclAbsInfo;
 	void* absoluteSDInfo;
 	void* selfRelativeSDInfo;
 };
@@ -353,7 +466,7 @@ class ACLHandler {
 		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const;
 		ACLOpResult DACLAddReadPermissions(ACL* dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLRemoveSIDACE(ACL* dacl, ACL* &outDacl, const PSID sid, const bool includeGroups = true) const;
-		ACLOpResult CreateAbsoluteSecDesc(SecDesc secDesc) const;
+		ACLOpResult CreateAbsoluteSecDesc(SecDesc &secDesc) const;
 		ACLOpResult DACL2SD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const;
 	protected:
 
