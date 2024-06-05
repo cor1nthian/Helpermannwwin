@@ -2564,8 +2564,10 @@ RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secD
 	prepHKEYKeyPath(rootKey, keyPath, rootKey, keyPath);
 	if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
 		KEY_ALL_ACCESS | getRigtMod(), &keyHandle)) {
-		if (ERROR_SUCCESS == ::RegSetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::DACLSecInfo),
-			secDesc.absoluteSDInfo)) {
+		unsigned long res = 0;
+		res = ::RegSetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::DACLSecInfo),
+			(SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo);
+		if (ERROR_SUCCESS == res) {
 			Sleep(1);
 		} else {
 			Sleep(1);

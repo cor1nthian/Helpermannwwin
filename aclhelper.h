@@ -326,7 +326,7 @@ struct SecDesc {
 			primaryGroupInfoSz == other.primaryGroupInfoSz &&
 			absoluteSDInfoSz == other.absoluteSDInfoSz &&
 			selfRelativeSDInfoSz == other.selfRelativeSDInfoSz);
-		sideq = (EqualSid(ownerInfo, other.ownerInfo) && EqualSid(primaryGroupInfo, other.primaryGroupInfo));
+		sideq = (::EqualSid(ownerInfo, other.ownerInfo) && ::EqualSid(primaryGroupInfo, other.primaryGroupInfo));
 		return (bufeq && otheq && sideq);
 	}
 	bool operator!=(const SecDesc& other) const {
@@ -427,7 +427,7 @@ struct SecDesc {
 			primaryGroupInfoSz != other.primaryGroupInfoSz ||
 			absoluteSDInfoSz != other.absoluteSDInfoSz ||
 			selfRelativeSDInfoSz != other.selfRelativeSDInfoSz);
-		sidneq = (!EqualSid(ownerInfo, other.ownerInfo) || !EqualSid(primaryGroupInfo, other.primaryGroupInfo));
+		sidneq = (!::EqualSid(ownerInfo, other.ownerInfo) || !::EqualSid(primaryGroupInfo, other.primaryGroupInfo));
 		return (bufneq || othneq || sidneq);
 	}
 	unsigned long daclInfoSz;
@@ -461,20 +461,21 @@ class ACLHandler {
 		ACLOpResult DACLWriteAllowed(bool &allowed, ACL* testACL, PSID sid) const;
 		ACLOpResult DACLExecuteAllowed(bool &allowed, ACL* testACL, PSID sid) const;
 		ACLOpResult DACLDeleteAllowed(bool &allowed, ACL* testACL, PSID sid) const;
-		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const;
-		ACLOpResult DACLAddReadPermissions(ACL* dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLAddDeleteAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLAddWriteAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLAddReadAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLAddReadDeniedPermissions(ACL* &dacl, const PSID sid) const;
+		ACLOpResult DACLAddWriteDeniedPermissions(ACL* &dacl, const PSID sid) const;
+		ACLOpResult DACLAddDeleteDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLRemoveSIDACE(ACL* &dacl, const PSID sid, const bool includeGroups = true) const;
+		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL*& dacl) const;
 		ACLOpResult CreateAbsoluteSecDesc(SecDesc &secDesc) const;
 		ACLOpResult DACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const;
 	protected:
 
 	private:
-		ACE_HEADER* BuildACE(PSID sid, AceType aceType, unsigned char aceFlags,
-			ACCESS_MASK accessMask) const;
-		ACL* AddACE(ACL *acl, ACE_HEADER *newHeader) const;
-		ACL* RemoveACE(ACL *acl, ACE_HEADER *newHeader) const;
-		unsigned long AddRegACE(SID *sid, HKEY hKey, unsigned long aceType, ACCESS_MASK accessMask) const;
-		unsigned long RemoveRegACE(SID *sid, HKEY hKey, unsigned long aceType, ACCESS_MASK accessMask) const;
+		ACLOpResult BuildACE(ACE_HEADER* &ace, PSID sid, AceType aceType,
+			ACCESS_MASK accessMask, unsigned char aceFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
 };
 
 #endif // _ACL_HELPER_H
