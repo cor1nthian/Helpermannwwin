@@ -476,6 +476,11 @@ class ACLHandler {
 	private:
 		ACLOpResult BuildACE(ACE_HEADER* &ace, PSID sid, AceType aceType,
 			ACCESS_MASK accessMask, unsigned char aceFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
+		ACLOpResult DACLDenyPermissionSetter(ACL* &dacl, PSID sid, unsigned long aclMask,
+			unsigned char aclFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
+		ACLOpResult DACLAllowPermissionSetter(ACL* &dacl, PSID sid, const bool removeExistingBan,
+			unsigned long aclMask, unsigned char aclFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
+		ACLOpResult DACLPermissionGetter(bool &allowed, ACL* testACL, PSID sid, const unsigned long mask) const;
 };
 
 #endif // _ACL_HELPER_H

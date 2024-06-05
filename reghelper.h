@@ -411,7 +411,7 @@ class RegHandler {
 			HKEY &tgtHKEY, std::wstring &tgtKeyPath) const;
 		std::wstring rebuildSearchKeyPath(const HKEY &root, const std::wstring &origPath,
 			const std::wstring keyName) const;
-		unsigned long getRigtMod() const;
+		unsigned long getRigtMod(const std::wstring keyPath) const;
 		inline std::wstring pickLoadKey(const std::wstring hivePath) const;
 		inline HKEY pickLoadTarget(const RegLoadTarget loadTarget = RegLoadTarget::None) const;
 		HKEY pickUnloadKey(const std::wstring loadTarget) const;

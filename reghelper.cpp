@@ -116,7 +116,7 @@ RegOpResult RegHandler::GetStrVal(const std::wstring valName, std::wstring &val,
 			rootKey = { 0 };
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
-		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0, KEY_READ | getRigtMod(), &keyHandle)) {
+		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0, KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			unsigned long buflen = REG_READBUFSZ;
 			if (ERROR_SUCCESS == ::RegQueryValueEx(keyHandle, valueName.c_str(), 0, 0,
 				0, &buflen)) {
@@ -168,7 +168,7 @@ RegOpResult RegHandler::GetDWordVal(const std::wstring valName, unsigned long &v
 			rootKey = { 0 };
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
-		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0, KEY_READ | getRigtMod(), &keyHandle)) {
+		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0, KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			unsigned long buflen = sizeof(unsigned long);
 			unsigned char readBuf[sizeof(unsigned long)] = { 0 };
 			if (ERROR_SUCCESS == ::RegQueryValueEx(keyHandle, valueName.c_str(), 0, 0,
@@ -199,7 +199,7 @@ RegOpResult RegHandler::GetQWordVal(const std::wstring valName, unsigned long lo
 			rootKey = { 0 };
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
-		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0, KEY_READ | getRigtMod(), &keyHandle)) {
+		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0, KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			unsigned long buflen = 16; // sizeof(unsigned long);
 			unsigned char readBuf[sizeof(unsigned long long)] = { 0 };
 			if (ERROR_SUCCESS == ::RegQueryValueEx(keyHandle, valueName.c_str(), 0, 0,
@@ -230,7 +230,7 @@ RegOpResult RegHandler::GetBinaryVal(const std::wstring valName, unsigned char* 
 			rootKey = { 0 };
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
-		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0, KEY_READ | getRigtMod(), &keyHandle)) {
+		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0, KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			unsigned long type = KEY_READ, buflen = REG_READBUFSZ;
 			if (ERROR_SUCCESS == ::RegQueryValueEx(keyHandle, valueName.c_str(), 0, 0,
 				0, &buflen)) {
@@ -271,7 +271,7 @@ RegOpResult RegHandler::GetMultiStrVal(const std::wstring valName, wchar_t* &buf
 			rootKey = { 0 };
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
-		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0, KEY_READ | getRigtMod(), &keyHandle)) {
+		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0, KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			unsigned long type = KEY_READ, buflen = REG_READBUFSZ;
 			if (ERROR_SUCCESS == ::RegQueryValueEx(keyHandle, valueName.c_str(), 0, 0,
 				0, &buflen)) {
@@ -313,7 +313,7 @@ RegOpResult RegHandler::GetMultiStrVal(const std::wstring valName,
 			rootKey = { 0 };
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
-		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0, KEY_READ | getRigtMod(), &keyHandle)) {
+		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0, KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			unsigned long buflen = 0;
 			if (ERROR_SUCCESS == ::RegQueryValueEx(keyHandle, valueName.c_str(), 0, 0,
 				0, &buflen)) {
@@ -377,7 +377,7 @@ RegOpResult RegHandler::GetResourceList(const std::wstring valName,
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_READ | getRigtMod(), &keyHandle)) {
+			KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			unsigned long buflen = 0;
 			if (ERROR_SUCCESS == ::RegQueryValueEx(keyHandle, valueName.c_str(), 0, 0,
 				0, &buflen)) {
@@ -426,7 +426,7 @@ RegOpResult RegHandler::GetVal(const std::wstring valName, unsigned char* &buf,
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_READ | getRigtMod(), &keyHandle)) {
+			KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			unsigned long dataType = 0;
 			if (ERROR_SUCCESS == ::RegQueryValueEx(keyHandle, valueName.c_str(), 0,
 				&dataType, 0, &bufSz)) {
@@ -467,7 +467,7 @@ RegOpResult RegHandler::GetValueType(const std::wstring valName, RegValType &val
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_READ | getRigtMod(), &keyHandle)) {
+			KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			unsigned long dataType = 0;
 			if (ERROR_SUCCESS == ::RegQueryValueEx(keyHandle, valueName.c_str(), 0,
 				&dataType, 0, 0)) {
@@ -518,7 +518,7 @@ RegOpResult RegHandler::CreateStrVal(const std::wstring valName, const std::wstr
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_SET_VALUE | KEY_READ | getRigtMod(), &keyHandle)) {
+			KEY_SET_VALUE | KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			if (ERROR_SUCCESS == RegSetValueEx(keyHandle, valueName.c_str(), 0,
 				REG_SZ, (unsigned char*)val.c_str(), wcslen_c(val.c_str()) * sizeof(wchar_t))) {
 				CLOSEKEY_NULLIFY(keyHandle);
@@ -549,7 +549,7 @@ RegOpResult RegHandler::CreateDWordVal(const std::wstring valName, const unsigne
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_SET_VALUE | KEY_READ | getRigtMod(), &keyHandle)) {
+			KEY_SET_VALUE | KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			if (ERROR_SUCCESS == RegSetValueEx(keyHandle, valueName.c_str(), 0,
 				REG_DWORD, (unsigned char*)&val, sizeof(unsigned long))) {
 				CLOSEKEY_NULLIFY(keyHandle);
@@ -579,7 +579,7 @@ RegOpResult RegHandler::CreateQWordVal(const std::wstring valName, const unsigne
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_SET_VALUE | KEY_READ | getRigtMod(), &keyHandle)) {
+			KEY_SET_VALUE | KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			if (ERROR_SUCCESS == RegSetValueEx(keyHandle, valueName.c_str(), 0,
 				REG_DWORD, (unsigned char*)&val, sizeof(unsigned long))) {
 				CLOSEKEY_NULLIFY(keyHandle);
@@ -610,7 +610,7 @@ RegOpResult RegHandler::CreateBinaryVal(const std::wstring valName, unsigned cha
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_SET_VALUE | KEY_READ | getRigtMod(), &keyHandle)) {
+			KEY_SET_VALUE | KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			if (ERROR_SUCCESS == RegSetValueEx(keyHandle, valueName.c_str(), 0,
 				REG_BINARY, buf, bufSz)) {
 				CLOSEKEY_NULLIFY(keyHandle);
@@ -641,7 +641,7 @@ RegOpResult RegHandler::CreateMultiStrVal(const std::wstring valName,
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_SET_VALUE | KEY_READ | getRigtMod(), &keyHandle)) {
+			KEY_SET_VALUE | KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			size_t totalsz = 0;
 			for (size_t i = 0; i < val.size(); ++i) {
 				totalsz += wcslen_c(val[i].c_str()) + 1;
@@ -691,7 +691,7 @@ RegOpResult RegHandler::DeleteVal(const std::wstring valName, const HKEY *root) 
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, valName, keyPath, valueName);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_ALL_ACCESS | getRigtMod(), &keyHandle)) {
+			KEY_ALL_ACCESS | getRigtMod(keyPath), &keyHandle)) {
 			if (ERROR_SUCCESS == ::RegDeleteValue(keyHandle, valueName.c_str())) {
 				CLOSEKEY_NULLIFY(keyHandle);
 				return RegOpResult::Success;
@@ -729,14 +729,15 @@ RegOpResult RegHandler::AddItem2ExplorerContextMenu(const std::wstring itemName,
 			HKEY keyHandle = { 0 };
 			std::wstring pathPrepped = joinStrs(splitStr(itemPath, L"\\"), L"\\", 1);
 			std::wstring pathCommandPrepped = joinStrs(splitStr(itemCommandPath, L"\\"), L"\\", 1);
-			if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_CLASSES_ROOT, pathPrepped.c_str(), 0, KEY_SET_VALUE | getRigtMod(),
-				&keyHandle)) {
+			if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_CLASSES_ROOT, pathPrepped.c_str(), 0,
+				KEY_SET_VALUE | getRigtMod(pathPrepped), &keyHandle)) {
 				if (ERROR_SUCCESS != ::RegSetValueEx(keyHandle, L"Icon", 0, REG_SZ,
 					(unsigned char*)objectPath.c_str(), objectPath.length() * sizeof(wchar_t))) {
 				}
 				CLOSEKEY_NULLIFY(keyHandle);
 			}
-			if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_CLASSES_ROOT, pathCommandPrepped.c_str(), 0, KEY_SET_VALUE | getRigtMod(),
+			if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_CLASSES_ROOT, pathCommandPrepped.c_str(), 0,
+				KEY_SET_VALUE | getRigtMod(pathCommandPrepped),
 				&keyHandle)) {
 				if (ERROR_SUCCESS != ::RegSetValueEx(keyHandle, 0, 0, REG_SZ,
 					(unsigned char*)objectPath.c_str(), objectPath.length() * sizeof(wchar_t))) {
@@ -752,16 +753,16 @@ RegOpResult RegHandler::AddItem2ExplorerContextMenu(const std::wstring itemName,
 			HKEY keyHandle = { 0 };
 			std::wstring pathPrepped = joinStrs(splitStr(itemPath, L"\\"), L"\\", 1);
 			std::wstring pathCommandPrepped = joinStrs(splitStr(itemCommandPath, L"\\"), L"\\", 1);
-			if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_CLASSES_ROOT, pathPrepped.c_str(), 0, KEY_SET_VALUE | getRigtMod(),
-				&keyHandle)) {
+			if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_CLASSES_ROOT, pathPrepped.c_str(), 0,
+				KEY_SET_VALUE | getRigtMod(pathPrepped), &keyHandle)) {
 				if (ERROR_SUCCESS != ::RegSetValueEx(keyHandle, L"Icon", 0, REG_SZ,
 					(unsigned char*)objectPath.c_str(), objectPath.length() * sizeof(wchar_t))) {
 					return RegOpResult::Fail;
 				}
 				CLOSEKEY_NULLIFY(keyHandle);
 			}
-			if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_CLASSES_ROOT, pathCommandPrepped.c_str(), 0, KEY_SET_VALUE | getRigtMod(),
-				&keyHandle)) {
+			if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_CLASSES_ROOT, pathCommandPrepped.c_str(), 0,
+				KEY_SET_VALUE | getRigtMod(pathCommandPrepped), &keyHandle)) {
 				if (ERROR_SUCCESS != ::RegSetValueEx(keyHandle, 0, 0, REG_SZ,
 					(unsigned char*)objectPath.c_str(), objectPath.length() * sizeof(wchar_t))) {
 					return RegOpResult::Fail;
@@ -892,7 +893,8 @@ RegOpResult RegHandler::AddItem2DesktopContextMenu(const std::wstring itemName, 
 				if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_LOCAL_MACHINE,
 					(L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CommandStore\\shell\\" +
 						subCommandMenuNameCombined).c_str(),
- 					0, KEY_SET_VALUE | getRigtMod(), &keyHandle)) {
+ 					0, KEY_SET_VALUE | getRigtMod((L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CommandStore\\shell\\" +
+						subCommandMenuNameCombined)), &keyHandle)) {
 					if (ERROR_SUCCESS != ::RegSetValueEx(keyHandle, 0, 0, REG_SZ,
 						(unsigned char*)(itemName.c_str()), (itemName.length() * sizeof(wchar_t)))) {
 						CLOSEKEY_NULLIFY(keyHandle);
@@ -910,7 +912,8 @@ RegOpResult RegHandler::AddItem2DesktopContextMenu(const std::wstring itemName, 
 					if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_LOCAL_MACHINE,
 						(L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CommandStore\\shell\\" +
 							subCommandMenuNameCombined + L"\\command").c_str(),
-						0, KEY_SET_VALUE | getRigtMod(), &keyHandle)) {
+						0, KEY_SET_VALUE | getRigtMod(L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CommandStore\\shell\\" +
+							subCommandMenuNameCombined + L"\\command"), &keyHandle)) {
 						if (ERROR_SUCCESS != ::RegSetValueEx(keyHandle, 0, 0, REG_SZ,
 							(unsigned char*)(objectPath.c_str()), (objectPath.length() * sizeof(wchar_t)))) {
 							CLOSEKEY_NULLIFY(keyHandle);
@@ -953,7 +956,7 @@ RegOpResult RegHandler::AddItem2DesktopContextMenu(const std::wstring itemName, 
 			std::wstring pathPrepped = joinStrs(splitStr(regPath, L"\\"), L"\\", 1);
 			std::wstring pathCommandPrepped = joinStrs(splitStr(regPathCommand, L"\\"), L"\\", 1);
 			if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_CLASSES_ROOT, pathPrepped.c_str(),
-				0, KEY_SET_VALUE | getRigtMod(), &keyHandle)) {
+				0, KEY_SET_VALUE | getRigtMod(pathPrepped), &keyHandle)) {
 				if (ERROR_SUCCESS != ::RegSetValueEx(keyHandle, 0, 0, REG_SZ,
 					(unsigned char*)(itemNameMod.c_str()), (objectPath.length() * sizeof(wchar_t)))) {
 					CLOSEKEY_NULLIFY(keyHandle);
@@ -966,7 +969,7 @@ RegOpResult RegHandler::AddItem2DesktopContextMenu(const std::wstring itemName, 
 				}
 				CLOSEKEY_NULLIFY(keyHandle);
 				if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_CLASSES_ROOT, pathCommandPrepped.c_str(),
-					0, KEY_SET_VALUE | getRigtMod(), &keyHandle)) {
+					0, KEY_SET_VALUE | getRigtMod(pathCommandPrepped), &keyHandle)) {
 					if (ERROR_SUCCESS != ::RegSetValueEx(keyHandle, 0, 0, REG_SZ,
 						(unsigned char*)(objectPath.c_str()), (objectPath.length() * sizeof(wchar_t)))) {
 						CLOSEKEY_NULLIFY(keyHandle);
@@ -1014,7 +1017,7 @@ RegOpResult RegHandler::RemoveItemFromDesktopContextMenu(const std::wstring item
 					pathPrepped = joinStrs(splitStr(searchres[i].keyPath, L"\\"), L"\\", 1);
 					delOpt = splitStr(searchres[i].keyPath, L"\\").back();
 					if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, pathPrepped.c_str(), 0,
-						KEY_READ | KEY_QUERY_VALUE | getRigtMod(), &keyHandle)) {
+						KEY_READ | KEY_QUERY_VALUE | getRigtMod(pathPrepped), &keyHandle)) {
 						if (ERROR_SUCCESS == ::RegQueryValueEx(keyHandle, 0, 0, &type, 0, &bufSz)) {
 							buf = (wchar_t*)malloc(bufSz);
 							if (buf) {
@@ -1222,14 +1225,14 @@ RegOpResult RegHandler::CopyVal(const std::wstring source,
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, source, keyPath, valueName);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_ALL_ACCESS | getRigtMod(), &keyHandle)) {
+			KEY_ALL_ACCESS | getRigtMod(keyPath), &keyHandle)) {
 			unsigned char* buf = 0;
 			unsigned long bufSz = 0;
 			RegValType valType;
 			if (RegOpResult::Success == GetVal(source, buf, bufSz, valType)) {
 				bool keyAvail = false;
 				if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, destKeyName.c_str(), 0,
-					KEY_READ | getRigtMod(), &keyHandle)) {
+					KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 					keyAvail = true;
 					CLOSEKEY_NULLIFY(keyHandle);
 				} else {
@@ -1243,7 +1246,7 @@ RegOpResult RegHandler::CopyVal(const std::wstring source,
 				if (keyAvail) {
 					prepHKEYKeyPath(rootKey, destKeyName, rootKey, keyPath);
 					if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-						KEY_ALL_ACCESS | getRigtMod(), &keyHandle)) {
+						KEY_ALL_ACCESS | getRigtMod(keyPath), &keyHandle)) {
 						if (ERROR_SUCCESS == RegSetValueEx(keyHandle, destValName.c_str(),
 							0, static_cast<unsigned long>(valType), buf, bufSz)) {
 							SAFE_ARR_DELETE(buf);
@@ -1288,7 +1291,7 @@ RegOpResult RegHandler::MoveVal(const std::wstring source,
 		}
 		prepHKEYKeyPathValueName(rootKey, rootKey, source, keyPath, valueName);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_ALL_ACCESS | getRigtMod(), &keyHandle)) {
+			KEY_ALL_ACCESS | getRigtMod(keyPath), &keyHandle)) {
 			if (RegOpResult::Success == CopyVal(source, destKeyName,
 				destValName, root)) {
 				if (RegOpResult::Success == DeleteVal(source, root)) {
@@ -1332,7 +1335,7 @@ RegOpResult RegHandler::SeekVal(const std::wstring valName,
 		}
 		prepHKEYKeyPath(rootKey, path, rootKey, keyPath);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_READ | KEY_QUERY_VALUE | getRigtMod(), &keyHandle)) {
+			KEY_READ | KEY_QUERY_VALUE | getRigtMod(keyPath), &keyHandle)) {
 			wchar_t			achClass[MAX_PATH] = L"";
 			wchar_t			achValue[REG_MAX_VALUE_NAME] = { 0 }; // buffer for value name
 			wchar_t			achKey[256] = { 0 };				  // buffer for subkey name
@@ -1451,7 +1454,7 @@ RegOpResult RegHandler::SeekKey(const std::wstring keyName, std::vector<RegKeyDe
 		}
 		prepHKEYKeyPath(rootKey, keyPath, rootKey, keyPath);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_READ | KEY_QUERY_VALUE | getRigtMod(), &keyHandle)) {
+			KEY_READ | KEY_QUERY_VALUE | getRigtMod(keyPath), &keyHandle)) {
 			wchar_t			achClass[MAX_PATH] = L"";
 			wchar_t			achValue[REG_MAX_VALUE_NAME] = { 0 }; // buffer for value name
 			wchar_t			achKey[256] = { 0 };				  // buffer for subkey name
@@ -1572,7 +1575,7 @@ RegOpResult RegHandler::SeekVal2(const std::wstring valName,
 		}
 		prepHKEYKeyPath(rootKey, keyPath, rootKey, keyPath);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_READ | KEY_QUERY_VALUE | getRigtMod(), &keyHandle)) {	
+			KEY_READ | KEY_QUERY_VALUE | getRigtMod(keyPath), &keyHandle)) {	
 			long keyret = 0;
 			unsigned long keyIdx = 0, keyNameLen = 4096, keyClassLen = 512;
 			FILETIME writeTime = { 0 };
@@ -1685,7 +1688,7 @@ RegOpResult RegHandler::SeekVal(const std::wstring valName,
 		}
 		prepHKEYKeyPath(rootKey, path, rootKey, keyPath);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_READ | KEY_QUERY_VALUE  | getRigtMod(), &keyHandle)) {
+			KEY_READ | KEY_QUERY_VALUE  | getRigtMod(keyPath), &keyHandle)) {
 			wchar_t			achClass[MAX_PATH] = L"";
 			wchar_t			achValue[REG_MAX_VALUE_NAME] = { 0 }; // buffer for value name
 			wchar_t			achKey[256] = { 0 };				  // buffer for subkey name
@@ -1797,7 +1800,7 @@ RegOpResult RegHandler::SeekKeyRec(const std::wstring keyName, std::vector<RegKe
 	}
 	prepHKEYKeyPath(rootKey, keyPath, rootKey, keyPath);
 	if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-		KEY_READ | KEY_QUERY_VALUE | getRigtMod(), &keyHandle)) {
+		KEY_READ | KEY_QUERY_VALUE | getRigtMod(keyPath), &keyHandle)) {
 		wchar_t			achClass[MAX_PATH] = L"";
 		wchar_t			achValue[REG_MAX_VALUE_NAME] = { 0 }; // buffer for value name
 		wchar_t			achKey[256] = { 0 };				  // buffer for subkey name
@@ -1919,7 +1922,7 @@ RegOpResult RegHandler::SeekValRec(const std::wstring valName,
 		}
 		prepHKEYKeyPath(rootKey, path, rootKey, keyPath);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_READ | KEY_QUERY_VALUE | getRigtMod(), &keyHandle)) {
+			KEY_READ | KEY_QUERY_VALUE | getRigtMod(keyPath), &keyHandle)) {
 			wchar_t			achClass[MAX_PATH] = L"";
 			wchar_t			achValue[REG_MAX_VALUE_NAME] = { 0 }; // buffer for value name
 			wchar_t			achKey[256] = { 0 };				  // buffer for subkey name
@@ -2035,7 +2038,7 @@ RegOpResult RegHandler::SeekValRecType(const std::wstring valName,
 		}
 		prepHKEYKeyPath(rootKey, path, rootKey, keyPath);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_READ | KEY_QUERY_VALUE | getRigtMod(), &keyHandle)) {
+			KEY_READ | KEY_QUERY_VALUE | getRigtMod(keyPath), &keyHandle)) {
 			wchar_t			achClass[MAX_PATH] = L"";
 			wchar_t			achValue[REG_MAX_VALUE_NAME] = { 0 }; // buffer for value name
 			wchar_t			achKey[256] = { 0 };						  // buffer for subkey name
@@ -2386,7 +2389,7 @@ RegOpResult RegHandler::CreateValues(const std::vector<RegValDesc> &valList,
 		for (size_t i = 0; i < valList.size(); ++i) {
 			prepHKEYKeyPathValueName(rootKey, rootKey, valList[i].valPath, keyPath, valName);
 			if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-				KEY_ALL_ACCESS | getRigtMod(), &keyHandle)) {
+				KEY_ALL_ACCESS | getRigtMod(keyPath), &keyHandle)) {
 				if (ERROR_SUCCESS != RegSetValueEx(keyHandle, valList[i].valName.c_str(),
 					0, static_cast<unsigned long>(valList[i].valType),
 					(unsigned char*)valList[i].valData, valList[i].valDataSz)) {
@@ -2446,7 +2449,7 @@ RegOpResult RegHandler::GetKeySecurity(const std::wstring keyName, SecDesc &secD
 	}
 	prepHKEYKeyPath(rootKey, keyPath, rootKey, keyPath);
 	if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-		KEY_READ | getRigtMod(), &keyHandle)) {
+		KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 		ProcessHandler proc;
 		unsigned long procid = proc.GetCurrentProcPid();
 		std::vector<std::wstring> privs = proc.GetProcPrivileges(procid);
@@ -2563,7 +2566,7 @@ RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secD
 	}
 	prepHKEYKeyPath(rootKey, keyPath, rootKey, keyPath);
 	if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-		KEY_ALL_ACCESS | getRigtMod(), &keyHandle)) {
+		KEY_ALL_ACCESS | getRigtMod(keyPath), &keyHandle)) {
 		unsigned long res = 0;
 		res = ::RegSetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::DACLSecInfo),
 			(SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo);
@@ -2594,7 +2597,7 @@ RegOpResult RegHandler::CreateKey(const std::wstring keyName, const bool createM
 					std::wstring pathJoined = joinStrs(keys, L"\\", 0, i + 1);
 					prepHKEYKeyPath(rootKey, pathJoined, rootKey, pathJoined);
 					if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, pathJoined.c_str(), 0,
-						KEY_READ | getRigtMod(), &keyHandle)) {
+						KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 						HKEY tkey = { 0 };
 						if (ERROR_SUCCESS == ::RegCreateKey(keyHandle, keys[i + 1].c_str(),
 							&tkey)) {
@@ -2669,7 +2672,7 @@ RegOpResult RegHandler::DeleteValues(const std::vector<RegValDesc> &valList,
 	for (size_t i = 0; i < valList.size(); ++i) {
 		prepHKEYKeyPathValueName(rootKey, rootKey, valList[i].valPath, keyPath, valueName);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_ALL_ACCESS | getRigtMod(), &keyHandle)) {
+			KEY_ALL_ACCESS | getRigtMod(keyPath), &keyHandle)) {
 			if (ERROR_SUCCESS != ::RegDeleteValue(keyHandle, valueName.c_str())) {
 				if (keyHandle) {
 					CLOSEKEY_NULLIFY(keyHandle);
@@ -2704,7 +2707,7 @@ RegOpResult RegHandler::DeleteKey(const std::wstring keyName, const bool deleteS
 		prepHKEYKeyPath(rootKey, keyName, rootKey, keyPath);
 		if (deleteSubKeys) {
 			if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-				KEY_READ | getRigtMod(), &keyHandle)) {
+				KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 				std::wstring keyPathRec = rebuildSearchKeyPath(rootKey, keyPath, L"");
 				long res = 0;
 				unsigned long size = MAX_PATH;
@@ -2763,7 +2766,7 @@ RegOpResult RegHandler::CopyKey(const std::wstring source,
 		}
 		prepHKEYKeyPath(rootKey, source, rootKey, keyPath);
 		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
-			KEY_READ | getRigtMod(), &keyHandle)) {
+			KEY_READ | getRigtMod(keyPath), &keyHandle)) {
 			CLOSEKEY_NULLIFY(keyHandle);
 		} else {
 			if (keyHandle) {
@@ -2978,14 +2981,21 @@ std::wstring RegHandler::rebuildSearchKeyPath(const HKEY &root,
 	return ret;
 }
 
-unsigned long RegHandler::getRigtMod() const {
+unsigned long RegHandler::getRigtMod(const std::wstring keyPath) const {
 	#ifdef _WIN64
 		return 0;
 		// return KEY_WOW64_32KEY;
 	#else
+		std::vector<std::wstring> pathmatch;
+		pathmatch.push_back(L"Wow6432Node");
 		SysHandler sys;
 		if (sys.IsWow64Proc()) {
-			return RIGHTMOD;
+			for (size_t i = 0; i < pathmatch.size(); ++i) {
+				if (partialMatch(keyPath, pathmatch[i])) {
+					return RIGHTMOD;
+				}
+			}
+			return 0;
 		} else {
 			return 0;
 		}
@@ -3138,7 +3148,7 @@ RegOpResult RegHandler::prepHKEYKeyPathValueName(HKEY& keyHandle,
 			std::wstring lastsec;
 			do {
 				tstr = joinStrs(strSplTest, L"\\");
-				res = ::RegOpenKeyEx(hktest, tstr.c_str(), 0, KEY_READ | getRigtMod(), &hkres);
+				res = ::RegOpenKeyEx(hktest, tstr.c_str(), 0, KEY_READ | getRigtMod(tstr), &hkres);
 				RegValType rvt;
 				if (ERROR_SUCCESS == res) {
 					if (ERROR_SUCCESS == ::RegQueryValueEx(hkres, lastsec.c_str(), 0, 0, 0, 0) &&
