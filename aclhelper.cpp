@@ -367,6 +367,20 @@ ACLOpResult ACLHandler::DACLAddCustomDeniedACE(ACL* &dacl, const PSID sid, unsig
     return DACLDenyPermissionSetter(dacl, sid, aclMask, aceFlags);
 }
 
+ACLOpResult ACLHandler::DACLAddCustomACE(ACL* &dacl, const PSID sid, const AceType aceTyoe, unsigned long aclMask,
+    const unsigned char aceFlags, const bool removeExistingBan) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    if (AceType::AccessAllowed == aceTyoe) {
+        return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, aclMask, aceFlags);
+    } else if (AceType::AccessDenied == aceTyoe) {
+        return DACLDenyPermissionSetter(dacl, sid, aclMask, aceFlags);
+    } else {
+        return ACLOpResult::Fail;
+    }
+}
+
 ACLOpResult ACLHandler::DACLAddDeleteAllowedPermissions(ACL*& dacl, PSID sid, const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;

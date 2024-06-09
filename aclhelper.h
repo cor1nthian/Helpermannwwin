@@ -227,7 +227,7 @@ struct SecDesc {
 		}
 		return *this;
 	}
-	bool operator==(const SecDesc& other) const {
+	bool operator==(const SecDesc &other) const {
 		bool bufeq = false, otheq = false, sideq = false;
 		if (daclInfo && other.daclInfo) {
 			if (daclInfoSz && other.daclInfoSz) {
@@ -328,7 +328,7 @@ struct SecDesc {
 		sideq = (::EqualSid(ownerInfo, other.ownerInfo) && ::EqualSid(primaryGroupInfo, other.primaryGroupInfo));
 		return (bufeq && otheq && sideq);
 	}
-	bool operator!=(const SecDesc& other) const {
+	bool operator!=(const SecDesc &other) const {
 		bool bufneq = false, othneq = false, sidneq = false;
 		if (daclInfo && other.daclInfo) {
 			if (daclInfoSz && other.daclInfoSz) {
@@ -464,6 +464,8 @@ class ACLHandler {
 			const unsigned char aceFlags, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddCustomDeniedACE(ACL* &dacl, const PSID sid, unsigned long aclMask,
 			const unsigned char aceFlags) const;
+		ACLOpResult DACLAddCustomACE(ACL* &dacl, const PSID sid, const AceType aceTyoe, unsigned long aclMask,
+			const unsigned char aceFlags, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddDeleteAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddWriteAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddReadAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
