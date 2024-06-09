@@ -456,10 +456,14 @@ class ACLHandler {
 			std::wstring &textSecDesc, SecInfo secInfo = SecInfo::DACLSecInfo) const;
 		ACLOpResult StringSecurityDescriptor2SecurityDescriptor(const std::wstring textSecDesc,
 			unsigned char* &secDesc, unsigned long &secDeszSz) const;
-		ACLOpResult DACLReadAllowed(bool &allowed, ACL* testACL, PSID sid) const;
-		ACLOpResult DACLWriteAllowed(bool &allowed, ACL* testACL, PSID sid) const;
-		ACLOpResult DACLExecuteAllowed(bool &allowed, ACL* testACL, PSID sid) const;
-		ACLOpResult DACLDeleteAllowed(bool &allowed, ACL* testACL, PSID sid) const;
+		ACLOpResult DACLReadAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
+		ACLOpResult DACLWriteAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
+		ACLOpResult DACLExecuteAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
+		ACLOpResult DACLDeleteAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
+		ACLOpResult DACLAddCustomAllowedACE(ACL* &dacl, const PSID sid, const unsigned long aceMask,
+			const unsigned char aceFlags, const bool removeExistingBan = true) const;
+		ACLOpResult DACLAddCustomDeniedACE(ACL* &dacl, const PSID sid, unsigned long aceMask,
+			const unsigned char aceFlags) const;
 		ACLOpResult DACLAddDeleteAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddWriteAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddReadAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
@@ -489,13 +493,13 @@ class ACLHandler {
 	protected:
 
 	private:
-		ACLOpResult BuildACE(ACE_HEADER* &ace, PSID sid, AceType aceType,
-			ACCESS_MASK accessMask, unsigned char aceFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
-		ACLOpResult DACLDenyPermissionSetter(ACL* &dacl, PSID sid, unsigned long aclMask,
-			unsigned char aclFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
+		ACLOpResult BuildACE(ACE_HEADER* &ace, const PSID sid, const AceType aceType,
+			const ACCESS_MASK accessMask, const unsigned char aceFlags) const;
+		ACLOpResult DACLDenyPermissionSetter(ACL* &dacl, const PSID sid, const unsigned long aclMask,
+			const unsigned char aclFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
 		ACLOpResult DACLAllowPermissionSetter(ACL* &dacl, PSID sid, const bool removeExistingBan,
-			unsigned long aclMask, unsigned char aclFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
-		ACLOpResult DACLPermissionGetter(bool &allowed, ACL* testACL, PSID sid, const unsigned long mask,
+			const unsigned long aclMask, const unsigned char aclFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
+		ACLOpResult DACLPermissionGetter(bool &allowed, const ACL* testACL, const PSID sid, const unsigned long mask,
 			const bool checkGroups = true) const;
 };
 

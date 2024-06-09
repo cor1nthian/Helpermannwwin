@@ -212,19 +212,19 @@ ACLOpResult ACLHandler::StringSecurityDescriptor2SecurityDescriptor(const std::w
     return ACLOpResult::Fail;
 }
 
-ACLOpResult ACLHandler::DACLReadAllowed(bool &allowed, ACL* testACL, PSID sid) const {
+ACLOpResult ACLHandler::DACLReadAllowed(bool &allowed, const ACL* testACL, const PSID sid) const {
     return DACLPermissionGetter(allowed, testACL, sid, READ_CONTROL);
 }
 
-ACLOpResult ACLHandler::DACLWriteAllowed(bool &allowed, ACL* testACL, PSID sid) const {
+ACLOpResult ACLHandler::DACLWriteAllowed(bool &allowed, const ACL* testACL, const PSID sid) const {
     return DACLPermissionGetter(allowed, testACL, sid, WRITE_DAC);
 }
 
-ACLOpResult ACLHandler::DACLExecuteAllowed(bool &allowed, ACL* testACL, PSID sid) const {
+ACLOpResult ACLHandler::DACLExecuteAllowed(bool &allowed, const ACL* testACL, const PSID sid) const {
     return DACLPermissionGetter(allowed, testACL, sid, GENERIC_EXECUTE);
 }
 
-ACLOpResult ACLHandler::DACLDeleteAllowed(bool &allowed, ACL* testACL, PSID sid) const {
+ACLOpResult ACLHandler::DACLDeleteAllowed(bool &allowed, const ACL* testACL, const PSID sid) const {
     return DACLPermissionGetter(allowed, testACL, sid, DELETE);
 }
 
@@ -349,6 +349,16 @@ ACLOpResult ACLHandler::DACLRegAddCreateLinkAllowedPermissions(ACL*& dacl, const
         return ACLOpResult::Fail;
     }
     return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_CREATE_LINK);
+}
+
+ACLOpResult ACLHandler::DACLAddCustomAllowedACE(ACL* &dacl, const PSID sid, const unsigned long aceMask,
+    const unsigned char aceFlags, const bool removeExistingBan) const {
+    return ACLOpResult::Success;
+}
+
+ACLOpResult ACLHandler::DACLAddCustomDeniedACE(ACL* &dacl, const PSID sid, unsigned long aceMask,
+    const unsigned char aceFlags) const {
+    return ACLOpResult::Success;
 }
 
 ACLOpResult ACLHandler::DACLAddDeleteAllowedPermissions(ACL*& dacl, PSID sid, const bool removeExistingBan) const {
@@ -870,8 +880,8 @@ ACLOpResult ACLHandler::DACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl)
     }
 }
 
-ACLOpResult ACLHandler::BuildACE(ACE_HEADER* &ace, PSID sid, AceType aceType,
-    ACCESS_MASK accessMask, unsigned char aceFlags) const {
+ACLOpResult ACLHandler::BuildACE(ACE_HEADER* &ace, const PSID sid, const AceType aceType,
+    const ACCESS_MASK accessMask, const unsigned char aceFlags) const {
     unsigned long aceLen = 0;
     unsigned long sidLen = GetLengthSid(sid);
     if (AceType::AccessAllowed == aceType) {
@@ -909,8 +919,8 @@ ACLOpResult ACLHandler::BuildACE(ACE_HEADER* &ace, PSID sid, AceType aceType,
 //      not inherited, allowed
 //      inherited, denied
 //      inherited, allowed
-ACLOpResult ACLHandler::DACLAllowPermissionSetter(ACL*& dacl, PSID sid, const bool removeExistingBan,
-    unsigned long aclMask, unsigned char aclFlags) const {
+ACLOpResult ACLHandler::DACLAllowPermissionSetter(ACL*& dacl, const PSID sid, const bool removeExistingBan,
+    const unsigned long aclMask, const unsigned char aclFlags) const {
     if (removeExistingBan) {
         if (ACLOpResult::Success != DACLRemoveACESID(dacl, sid, false)) {
             return ACLOpResult::Fail;
@@ -1048,8 +1058,8 @@ ACLOpResult ACLHandler::DACLAllowPermissionSetter(ACL*& dacl, PSID sid, const bo
 //      not inherited, allowed
 //      inherited, denied
 //      inherited, allowed
-ACLOpResult ACLHandler::DACLDenyPermissionSetter(ACL* &dacl, PSID sid, unsigned long aclMask,
-    unsigned char aclFlags) const {
+ACLOpResult ACLHandler::DACLDenyPermissionSetter(ACL* &dacl, const PSID sid, const unsigned long aclMask,
+    const unsigned char aclFlags) const {
     ACE_HEADER* newace = 0;
     if (ACLOpResult::Success != BuildACE(newace, sid, AceType::AccessDenied, aclMask, aclFlags)) {
         return ACLOpResult::Fail;
@@ -1177,8 +1187,8 @@ ACLOpResult ACLHandler::DACLDenyPermissionSetter(ACL* &dacl, PSID sid, unsigned 
     return ACLOpResult::Success;
 }
 
-ACLOpResult ACLHandler::DACLPermissionGetter(bool &allowed, ACL* testACL, PSID sid, const unsigned long mask,
-    const bool checkGroups) const {
+ACLOpResult ACLHandler::DACLPermissionGetter(bool &allowed, const ACL* testACL, const PSID sid,
+    const unsigned long mask, const bool checkGroups) const {
     void* testace = 0;
     SysHandler sys;
     SidType specsidype;
@@ -1186,7 +1196,7 @@ ACLOpResult ACLHandler::DACLPermissionGetter(bool &allowed, ACL* testACL, PSID s
         return ACLOpResult::Fail;
     }
     for (size_t i = 0; i < testACL->AceCount; ++i) {
-        if (!::GetAce(testACL, i, (void**)&testace)) {
+        if (!::GetAce((ACL*)testACL, i, (void**)&testace)) {
 #ifdef _WIN64
             LocalFree(&testace);
 #endif
