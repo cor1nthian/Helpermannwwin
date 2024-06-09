@@ -295,7 +295,7 @@ ACLOpResult ACLHandler::CreateAbsoluteSecDesc(SecDesc &secDesc) const {
     return ACLOpResult::Fail;
 }
 
-ACLOpResult ACLHandler::DACLRegAddFullControlAllowedPermissions(ACL*& dacl, const PSID sid,
+ACLOpResult ACLHandler::DACLRegAddFullControlAllowedPermissions(ACL* &dacl, const PSID sid,
     const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;
@@ -303,7 +303,7 @@ ACLOpResult ACLHandler::DACLRegAddFullControlAllowedPermissions(ACL*& dacl, cons
     return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_ALL_ACCESS);
 }
 
-ACLOpResult ACLHandler::DACLRegAddQueryValueAllowedPermissions(ACL*& dacl, const PSID sid,
+ACLOpResult ACLHandler::DACLRegAddQueryValueAllowedPermissions(ACL* &dacl, const PSID sid,
     const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;
@@ -311,7 +311,7 @@ ACLOpResult ACLHandler::DACLRegAddQueryValueAllowedPermissions(ACL*& dacl, const
     return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_QUERY_VALUE);
 }
 
-ACLOpResult ACLHandler::DACLRegAddSetValueAllowedPermissions(ACL*& dacl, const PSID sid,
+ACLOpResult ACLHandler::DACLRegAddSetValueAllowedPermissions(ACL* &dacl, const PSID sid,
     const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;
@@ -319,7 +319,7 @@ ACLOpResult ACLHandler::DACLRegAddSetValueAllowedPermissions(ACL*& dacl, const P
     return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_SET_VALUE);
 }
 
-ACLOpResult ACLHandler::DACLRegAddCreateSubkeyAllowedPermissions(ACL*& dacl, const PSID sid,
+ACLOpResult ACLHandler::DACLRegAddCreateSubkeyAllowedPermissions(ACL* &dacl, const PSID sid,
     const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;
