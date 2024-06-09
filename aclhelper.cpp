@@ -351,14 +351,20 @@ ACLOpResult ACLHandler::DACLRegAddCreateLinkAllowedPermissions(ACL*& dacl, const
     return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_CREATE_LINK);
 }
 
-ACLOpResult ACLHandler::DACLAddCustomAllowedACE(ACL* &dacl, const PSID sid, const unsigned long aceMask,
+ACLOpResult ACLHandler::DACLAddCustomAllowedACE(ACL* &dacl, const PSID sid, const unsigned long aclMask,
     const unsigned char aceFlags, const bool removeExistingBan) const {
-    return ACLOpResult::Success;
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, aclMask, aceFlags);
 }
 
-ACLOpResult ACLHandler::DACLAddCustomDeniedACE(ACL* &dacl, const PSID sid, unsigned long aceMask,
+ACLOpResult ACLHandler::DACLAddCustomDeniedACE(ACL* &dacl, const PSID sid, unsigned long aclMask,
     const unsigned char aceFlags) const {
-    return ACLOpResult::Success;
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLDenyPermissionSetter(dacl, sid, aclMask, aceFlags);
 }
 
 ACLOpResult ACLHandler::DACLAddDeleteAllowedPermissions(ACL*& dacl, PSID sid, const bool removeExistingBan) const {
