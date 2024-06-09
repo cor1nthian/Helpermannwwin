@@ -467,10 +467,12 @@ class ACLHandler {
 		ACLOpResult DACLAddCustomACE(ACL* &dacl, const PSID sid, const AceType aceTyoe, unsigned long aclMask,
 			const unsigned char aceFlags, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddDeleteAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLAddExecuteAllowedPermissions(ACL*& dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddWriteAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddReadAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddReadDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLAddWriteDeniedPermissions(ACL* &dacl, const PSID sid) const;
+		ACLOpResult DACLAddExecuteDeniedPermissions(ACL*& dacl, const PSID sid) const;
 		ACLOpResult DACLAddDeleteDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLRegAddFullControlAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLRegAddQueryValueAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
@@ -486,6 +488,8 @@ class ACLHandler {
 		ACLOpResult DACLRegAddSetValueDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLRegAddQueryValueDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLRegAddFullControlDeniedPermissions(ACL* &dacl, const PSID sid) const;
+		ACLOpResult DACLRemoveACESIDTypeMask(ACL*& dacl, const PSID sid, const AceType aceType,
+			const unsigned long aclMask, const bool includeGroups = true) const;
 		ACLOpResult DACLRemoveACESIDType(ACL* &dacl, const PSID sid, const AceType aceType,
 			const bool includeGroups = true) const;
 		ACLOpResult DACLRemoveACESID(ACL* &dacl, const PSID sid, const bool includeGroups = true) const;
