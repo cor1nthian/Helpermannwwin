@@ -295,6 +295,62 @@ ACLOpResult ACLHandler::CreateAbsoluteSecDesc(SecDesc &secDesc) const {
     return ACLOpResult::Fail;
 }
 
+ACLOpResult ACLHandler::DACLRegAddFullControlAllowedPermissions(ACL*& dacl, const PSID sid,
+    const bool removeExistingBan) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_ALL_ACCESS);
+}
+
+ACLOpResult ACLHandler::DACLRegAddQueryValueAllowedPermissions(ACL*& dacl, const PSID sid,
+    const bool removeExistingBan) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_QUERY_VALUE);
+}
+
+ACLOpResult ACLHandler::DACLRegAddSetValueAllowedPermissions(ACL*& dacl, const PSID sid,
+    const bool removeExistingBan) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_SET_VALUE);
+}
+
+ACLOpResult ACLHandler::DACLRegAddCreateSubkeyAllowedPermissions(ACL*& dacl, const PSID sid,
+    const bool removeExistingBan) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_CREATE_SUB_KEY);
+}
+
+ACLOpResult ACLHandler::DACLRegAddEnumSubkeyAllowedPermissions(ACL*& dacl, const PSID sid,
+    const bool removeExistingBan) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_ENUMERATE_SUB_KEYS);
+}
+
+ACLOpResult ACLHandler::DACLRegAddNotifyAllowedPermissions(ACL*& dacl, const PSID sid,
+    const bool removeExistingBan) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_NOTIFY);
+}
+
+ACLOpResult ACLHandler::DACLRegAddCreateLinkAllowedPermissions(ACL*& dacl, const PSID sid,
+    const bool removeExistingBan) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_CREATE_LINK);
+}
+
 ACLOpResult ACLHandler::DACLAddDeleteAllowedPermissions(ACL*& dacl, PSID sid, const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;
@@ -337,12 +393,282 @@ ACLOpResult ACLHandler::DACLAddDeleteDeniedPermissions(ACL*& dacl, PSID sid) con
     return DACLDenyPermissionSetter(dacl, sid, DELETE);
 }
 
+ACLOpResult ACLHandler::DACLRegAddCreateLinkDeniedPermissions(ACL*& dacl, const PSID sid) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLDenyPermissionSetter(dacl, sid, KEY_CREATE_LINK);
+}
+
+ACLOpResult ACLHandler::DACLRegAddNotifyDeniedPermissions(ACL*& dacl, const PSID sid) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLDenyPermissionSetter(dacl, sid, KEY_NOTIFY);
+}
+
+ACLOpResult ACLHandler::DACLRegAddEnumSubkeyDeniedPermissions(ACL*& dacl, const PSID sid) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLDenyPermissionSetter(dacl, sid, KEY_ENUMERATE_SUB_KEYS);
+}
+
+ACLOpResult ACLHandler::DACLRegAddCreateSubkeyDeniedPermissions(ACL*& dacl, const PSID sid) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLDenyPermissionSetter(dacl, sid, KEY_CREATE_SUB_KEY);
+}
+
+ACLOpResult ACLHandler::DACLRegAddSetValueDeniedPermissions(ACL*& dacl, const PSID sid) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLDenyPermissionSetter(dacl, sid, KEY_SET_VALUE);
+}
+
+ACLOpResult ACLHandler::DACLRegAddQueryValueDeniedPermissions(ACL*& dacl, const PSID sid) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLDenyPermissionSetter(dacl, sid, KEY_QUERY_VALUE);
+}
+
+ACLOpResult ACLHandler::DACLRegAddFullControlDeniedPermissions(ACL*& dacl, const PSID sid) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLDenyPermissionSetter(dacl, sid, KEY_ALL_ACCESS);
+}
+
 // Sequence of ACE's must be:
 //      not inherited, denied
 //      not inherited, allowed
 //      inherited, denied
 //      inherited, allowed
-ACLOpResult ACLHandler::DACLRemoveSIDACE(ACL* &dacl, const PSID sid, const bool includeGroups) const {
+ACLOpResult ACLHandler::DACLRemoveACESIDType(ACL* &dacl, const PSID sid, const AceType aceType,
+    const bool includeGroups) const {
+    if (!dacl->AceCount || !dacl) {
+        return ACLOpResult::Fail;
+    }
+    size_t i = 0, j = 0;
+    bool sideq = false;
+    SysHandler sys;
+    std::vector<GroupDesc> groups;
+    std::vector<PSID> groupsids;
+    if (includeGroups) {
+        if (SysOpResult::Success != sys.LocalGroupListFromStrSID(groups, sys.StrSIDFromSID(sid))) {
+            return ACLOpResult::Fail;
+        }
+        for (i = 0; i < groups.size(); ++i) {
+            PSID tpsid = sys.SIDFromStrSid(groups[i].GroupStrSid);
+            if (tpsid) {
+                groupsids.push_back(tpsid);
+            }
+        }
+    }
+    void* testace = 0;
+    ACL* newList = 0;
+    unsigned long aclSz = sizeof(ACL);
+    for (i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_ALLOWED_ACE_TYPE) {
+            ACCESS_ALLOWED_ACE* aceAllowed = (ACCESS_ALLOWED_ACE*)testace;
+            PSID accsid = (PSID)&aceAllowed->SidStart;
+            if (includeGroups && groupsids.size()) {
+                for (j = 0; j < groupsids.size(); ++j) {
+                    if (::EqualSid(accsid, groupsids[j]) && AceType::AccessAllowed == aceType) {
+                        continue;
+                    }
+                }
+            }
+            if (::EqualSid(accsid, sid) && AceType::AccessAllowed != aceType) {
+                aclSz += sizeof(ACCESS_ALLOWED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
+            } else if (!::EqualSid(accsid, sid)) {
+                aclSz += sizeof(ACCESS_ALLOWED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
+            }
+        } else if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
+            ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
+            PSID accsid = (PSID)&aceDenied->SidStart;
+            if (includeGroups && groupsids.size()) {
+                for (j = 0; j < groupsids.size(); ++j) {
+                    if (::EqualSid(accsid, groupsids[j]) && AceType::AccessDenied == aceType) {
+                        continue;
+                    }
+                }
+            }
+            if (::EqualSid(accsid, sid) && AceType::AccessDenied != aceType) {
+                aclSz += sizeof(ACCESS_ALLOWED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
+            } else if (!::EqualSid(accsid, sid)) {
+                aclSz += sizeof(ACCESS_ALLOWED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
+            }
+        }
+#ifdef _WIN64
+        LocalFree(&testace);
+#endif
+    }
+    aclSz = (aclSz + (sizeof(unsigned long) - 1)) & 0xfffffffc;
+    newList = (ACL*)LocalAlloc(LPTR, aclSz);
+    if (!newList) {
+        return ACLOpResult::Fail;
+    }
+    if (!::InitializeAcl(newList, aclSz, ACL_REVISION)) {
+        return ACLOpResult::Fail;
+    }
+    for (i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
+            ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
+            PSID accsid = (PSID)&aceDenied->SidStart;
+            if (includeGroups && groupsids.size()) {
+                for (j = 0; j < groupsids.size(); ++j) {
+                    if (::EqualSid(accsid, groupsids[j]) && AceType::AccessDenied == aceType) {
+                        continue;
+                    }
+                }
+            }
+            if (!(vace->AceFlags & INHERITED_ACE)) {
+                if (::EqualSid(accsid, sid) && AceType::AccessDenied != aceType) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if(!::EqualSid(accsid, sid)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                }
+            }
+        }
+#ifdef _WIN64
+        LocalFree(&testace);
+#endif
+    }
+    unsigned long aceCount = newList->AceCount + 1;
+    for (i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_ALLOWED_ACE_TYPE) {
+            ACCESS_ALLOWED_ACE* aceAllowedd = (ACCESS_ALLOWED_ACE*)testace;
+            PSID accsid = (PSID)&aceAllowedd->SidStart;
+            if (includeGroups && groupsids.size()) {
+                for (j = 0; j < groupsids.size(); ++j) {
+                    if (::EqualSid(accsid, groupsids[j]) && AceType::AccessAllowed == aceType) {
+                        continue;
+                    }
+                }
+            }
+            if (!(vace->AceFlags & INHERITED_ACE)) {
+                if (::EqualSid(accsid, sid) && AceType::AccessAllowed != aceType) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (!::EqualSid(accsid, sid)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                }
+            }
+        }
+#ifdef _WIN64
+        LocalFree(&testace);
+#endif
+    }
+    for (i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
+            ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
+            PSID accsid = (PSID)&aceDenied->SidStart;
+            if (includeGroups && groupsids.size()) {
+                for (j = 0; j < groupsids.size(); ++j) {
+                    if (::EqualSid(accsid, groupsids[j]) && AceType::AccessDenied == aceType) {
+                        continue;
+                    }
+                }
+            }
+            if (vace->AceFlags & INHERITED_ACE) {
+                if (::EqualSid(accsid, sid) && AceType::AccessDenied != aceType) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (!::EqualSid(accsid, sid)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                }
+            }
+        }
+#ifdef _WIN64
+        LocalFree(&testace);
+#endif
+    }
+    aceCount = newList->AceCount + 1;
+    for (i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_ALLOWED_ACE_TYPE) {
+            ACCESS_ALLOWED_ACE* aceAllowedd = (ACCESS_ALLOWED_ACE*)testace;
+            PSID accsid = (PSID)&aceAllowedd->SidStart;
+            if (includeGroups && groupsids.size()) {
+                for (j = 0; j < groupsids.size(); ++j) {
+                    if (::EqualSid(accsid, groupsids[j]) && AceType::AccessAllowed == aceType) {
+                        continue;
+                    }
+                }
+            }
+            if (vace->AceFlags & INHERITED_ACE) {
+                if (::EqualSid(accsid, sid) && AceType::AccessAllowed != aceType) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (!::EqualSid(accsid, sid)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                }
+            }
+        }
+#ifdef _WIN64
+        LocalFree(&testace);
+#endif
+    }
+    ACL_SIZE_INFORMATION asi;
+    if (::GetAclInformation(newList, &asi, sizeof(asi), AclSizeInformation)) {
+        newList->AclSize = (unsigned short)asi.AclBytesInUse;
+    } else {
+        return ACLOpResult::Fail;
+    }
+    for (i = 0; i < groupsids.size(); ++i) {
+        SAFE_LOCALFREE(groupsids[i]);
+    }
+#if defined(_WIN64)
+    LocalFree(&dacl);
+#else if defined(_WIN32)
+    LocalFree(dacl);
+#endif
+    dacl = newList;
+    return ACLOpResult::Success;
+}
+
+// Sequence of ACE's must be:
+//      not inherited, denied
+//      not inherited, allowed
+//      inherited, denied
+//      inherited, allowed
+ACLOpResult ACLHandler::DACLRemoveACESID(ACL* &dacl, const PSID sid, const bool includeGroups) const {
     if (!dacl->AceCount || !dacl) {
         return ACLOpResult::Fail;
     }
@@ -382,7 +708,7 @@ ACLOpResult ACLHandler::DACLRemoveSIDACE(ACL* &dacl, const PSID sid, const bool 
             if (!::EqualSid(accsid, sid)) {
                 aclSz += sizeof(ACCESS_ALLOWED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
             }
-        } else  if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
+        } else if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
             ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
             PSID accsid = (PSID)&aceDenied->SidStart;
             if (includeGroups && groupsids.size()) {
@@ -425,10 +751,8 @@ ACLOpResult ACLHandler::DACLRemoveSIDACE(ACL* &dacl, const PSID sid, const bool 
             }
             if(!(vace->AceFlags & INHERITED_ACE)) {
                 if (!::EqualSid(accsid, sid)) {
-                    if (::AddAce(newList, ACL_REVISION, 0, testace, ((ACE_HEADER*)testace)->AceSize)) {
-                        Sleep(1);
-                    } else {
-                        Sleep(1);
+                    if (!::AddAce(newList, ACL_REVISION, 0, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
                     }
                 }
             }
@@ -455,10 +779,8 @@ ACLOpResult ACLHandler::DACLRemoveSIDACE(ACL* &dacl, const PSID sid, const bool 
             }
             if (!(vace->AceFlags & INHERITED_ACE)) {
                 if (!::EqualSid(accsid, sid)) {
-                    if (::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
-                        Sleep(1);
-                    } else {
-                        Sleep(1);
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
                     }
                 }
             }
@@ -484,10 +806,8 @@ ACLOpResult ACLHandler::DACLRemoveSIDACE(ACL* &dacl, const PSID sid, const bool 
             }
             if (vace->AceFlags & INHERITED_ACE) {
                 if (!::EqualSid(accsid, sid)) {
-                    if (::AddAce(newList, ACL_REVISION, 0, testace, ((ACE_HEADER*)testace)->AceSize)) {
-                        Sleep(1);
-                    } else {
-                        Sleep(1);
+                    if (!::AddAce(newList, ACL_REVISION, 0, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
                     }
                 }
             }
@@ -514,10 +834,8 @@ ACLOpResult ACLHandler::DACLRemoveSIDACE(ACL* &dacl, const PSID sid, const bool 
             }
             if (vace->AceFlags & INHERITED_ACE) {
                 if (!::EqualSid(accsid, sid)) {
-                    if (::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
-                        Sleep(1);
-                    } else {
-                        Sleep(1);
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
                     }
                 }
             }
@@ -594,7 +912,7 @@ ACLOpResult ACLHandler::BuildACE(ACE_HEADER* &ace, PSID sid, AceType aceType,
 ACLOpResult ACLHandler::DACLAllowPermissionSetter(ACL*& dacl, PSID sid, const bool removeExistingBan,
     unsigned long aclMask, unsigned char aclFlags) const {
     if (removeExistingBan) {
-        if (ACLOpResult::Success != DACLRemoveSIDACE(dacl, sid, false)) {
+        if (ACLOpResult::Success != DACLRemoveACESID(dacl, sid, false)) {
             return ACLOpResult::Fail;
         }
     }
@@ -641,10 +959,8 @@ ACLOpResult ACLHandler::DACLAllowPermissionSetter(ACL*& dacl, PSID sid, const bo
             ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
             PSID accsid = (PSID)&aceDenied->SidStart;
             if (!(vace->AceFlags & INHERITED_ACE)) {
-                if (::AddAce(newList, ACL_REVISION, 0, testace, ((ACE_HEADER*)testace)->AceSize)) {
-                    Sleep(1);
-                } else {
-                    Sleep(1);
+                if (!::AddAce(newList, ACL_REVISION, 0, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                    return ACLOpResult::Fail;
                 }
             }
         }
@@ -652,10 +968,8 @@ ACLOpResult ACLHandler::DACLAllowPermissionSetter(ACL*& dacl, PSID sid, const bo
         LocalFree(&testace);
 #endif
     }
-    if (::AddAce(newList, ACL_REVISION, MAXDWORD, newace, newace->AceSize)) {
-        Sleep(1);
-    } else {
-        Sleep(1);
+    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, newace, newace->AceSize)) {
+        return ACLOpResult::Fail;
     }
     for (i = 0; i < dacl->AceCount; ++i) {
         if (!::GetAce(dacl, i, (void**)&testace)) {
@@ -667,10 +981,8 @@ ACLOpResult ACLHandler::DACLAllowPermissionSetter(ACL*& dacl, PSID sid, const bo
             PSID accsid = (PSID)&aceAllowedd->SidStart;
             if (!(vace->AceFlags & INHERITED_ACE)) {
                 if (!::EqualSid(accsid, sid)) {
-                    if (::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
-                        Sleep(1);
-                    } else {
-                        Sleep(1);
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
                     }
                 }
             }
@@ -688,10 +1000,8 @@ ACLOpResult ACLHandler::DACLAllowPermissionSetter(ACL*& dacl, PSID sid, const bo
             ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
             PSID accsid = (PSID)&aceDenied->SidStart;
             if (vace->AceFlags & INHERITED_ACE) {
-                if (::AddAce(newList, ACL_REVISION, 0, testace, ((ACE_HEADER*)testace)->AceSize)) {
-                    Sleep(1);
-                } else {
-                    Sleep(1);
+                if (!::AddAce(newList, ACL_REVISION, 0, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                    return ACLOpResult::Fail;
                 }
             }
         }
@@ -709,10 +1019,8 @@ ACLOpResult ACLHandler::DACLAllowPermissionSetter(ACL*& dacl, PSID sid, const bo
             ACCESS_ALLOWED_ACE* aceAllowedd = (ACCESS_ALLOWED_ACE*)testace;
             PSID accsid = (PSID)&aceAllowedd->SidStart;
             if (vace->AceFlags & INHERITED_ACE) {
-                if (::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
-                    Sleep(1);
-                } else {
-                    Sleep(1);
+                if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                    return ACLOpResult::Fail;
                 }
             }
         }
@@ -776,10 +1084,8 @@ ACLOpResult ACLHandler::DACLDenyPermissionSetter(ACL* &dacl, PSID sid, unsigned 
     if (!::InitializeAcl(newList, aclSz, ACL_REVISION)) {
         return ACLOpResult::Fail;
     }
-    if (::AddAce(newList, ACL_REVISION, 0, newace, newace->AceSize)) {
-        Sleep(1);
-    } else {
-        Sleep(1);
+    if (!::AddAce(newList, ACL_REVISION, 0, newace, newace->AceSize)) {
+        return ACLOpResult::Fail;
     }
     for (i = 0; i < dacl->AceCount; ++i) {
         if (!::GetAce(dacl, i, (void**)&testace)) {
@@ -790,10 +1096,8 @@ ACLOpResult ACLHandler::DACLDenyPermissionSetter(ACL* &dacl, PSID sid, unsigned 
             ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
             PSID accsid = (PSID)&aceDenied->SidStart;
             if (!(vace->AceFlags & INHERITED_ACE)) {
-                if (::AddAce(newList, ACL_REVISION, 0, testace, ((ACE_HEADER*)testace)->AceSize)) {
-                    Sleep(1);
-                } else {
-                    Sleep(1);
+                if (!::AddAce(newList, ACL_REVISION, 0, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                    return ACLOpResult::Fail;
                 }
             }
         }
@@ -811,10 +1115,8 @@ ACLOpResult ACLHandler::DACLDenyPermissionSetter(ACL* &dacl, PSID sid, unsigned 
             PSID accsid = (PSID)&aceAllowedd->SidStart;
             if (!(vace->AceFlags & INHERITED_ACE)) {
                 if (!::EqualSid(accsid, sid)) {
-                    if (::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
-                        Sleep(1);
-                    } else {
-                        Sleep(1);
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
                     }
                 }
             }
@@ -832,10 +1134,8 @@ ACLOpResult ACLHandler::DACLDenyPermissionSetter(ACL* &dacl, PSID sid, unsigned 
             ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
             PSID accsid = (PSID)&aceDenied->SidStart;
             if (vace->AceFlags & INHERITED_ACE) {
-                if (::AddAce(newList, ACL_REVISION, 0, testace, ((ACE_HEADER*)testace)->AceSize)) {
-                    Sleep(1);
-                } else {
-                    Sleep(1);
+                if (!::AddAce(newList, ACL_REVISION, 0, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                    return ACLOpResult::Fail;
                 }
             }
         }
@@ -853,10 +1153,8 @@ ACLOpResult ACLHandler::DACLDenyPermissionSetter(ACL* &dacl, PSID sid, unsigned 
             ACCESS_ALLOWED_ACE* aceAllowedd = (ACCESS_ALLOWED_ACE*)testace;
             PSID accsid = (PSID)&aceAllowedd->SidStart;
             if (vace->AceFlags & INHERITED_ACE) {
-                if (::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
-                    Sleep(1);
-                } else {
-                    Sleep(1);
+                if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                    return ACLOpResult::Fail;
                 }
             }
         }
@@ -879,7 +1177,8 @@ ACLOpResult ACLHandler::DACLDenyPermissionSetter(ACL* &dacl, PSID sid, unsigned 
     return ACLOpResult::Success;
 }
 
-ACLOpResult ACLHandler::DACLPermissionGetter(bool &allowed, ACL* testACL, PSID sid, const unsigned long mask) const {
+ACLOpResult ACLHandler::DACLPermissionGetter(bool &allowed, ACL* testACL, PSID sid, const unsigned long mask,
+    const bool checkGroups) const {
     void* testace = 0;
     SysHandler sys;
     SidType specsidype;
@@ -888,6 +1187,9 @@ ACLOpResult ACLHandler::DACLPermissionGetter(bool &allowed, ACL* testACL, PSID s
     }
     for (size_t i = 0; i < testACL->AceCount; ++i) {
         if (!::GetAce(testACL, i, (void**)&testace)) {
+#ifdef _WIN64
+            LocalFree(&testace);
+#endif
             return ACLOpResult::Fail;
         }
         ACE_HEADER* vace = (ACE_HEADER*)testace;
@@ -897,7 +1199,9 @@ ACLOpResult ACLHandler::DACLPermissionGetter(bool &allowed, ACL* testACL, PSID s
             PSID accsid = (PSID)&aceAllowed->SidStart;
             SidType sidtype;
             if (SysOpResult::Success != sys.GetSIDType(accsid, sidtype)) {
+#ifdef _WIN64
                 LocalFree(&testace);
+#endif
                 continue;
             }
             if (SidType::User == specsidype) {
@@ -908,15 +1212,17 @@ ACLOpResult ACLHandler::DACLPermissionGetter(bool &allowed, ACL* testACL, PSID s
                         }
                     }
                 } else if (SidType::Group == sidtype) {
-                    bool ismember = false;
-                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(accsid, sid, ismember)) {
-                        if (ismember) {
-                            if (mask & aceAllowed->Mask) {
-                                allowed = true;
+                    if (checkGroups) {
+                        bool ismember = false;
+                        if (SysOpResult::Success == sys.IsAccountMemberOfGroup(accsid, sid, ismember)) {
+                            if (ismember) {
+                                if (mask & aceAllowed->Mask) {
+                                    allowed = true;
+                                }
                             }
+                        } else {
+                            return ACLOpResult::Fail;
                         }
-                    } else {
-                        return ACLOpResult::Fail;
                     }
                 } else {
                     if (::EqualSid(accsid, sid)) {
@@ -927,15 +1233,17 @@ ACLOpResult ACLHandler::DACLPermissionGetter(bool &allowed, ACL* testACL, PSID s
                 }
             } else if (SidType::Group == specsidype) {
                 if (SidType::User == sidtype) {
-                    bool ismember = false;
-                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(sid, accsid, ismember)) {
-                        if (ismember) {
-                            if (mask & aceAllowed->Mask) {
-                                allowed = true;
+                    if (checkGroups) {
+                        bool ismember = false;
+                        if (SysOpResult::Success == sys.IsAccountMemberOfGroup(sid, accsid, ismember)) {
+                            if (ismember) {
+                                if (mask & aceAllowed->Mask) {
+                                    allowed = true;
+                                }
                             }
+                        } else {
+                            return ACLOpResult::Fail;
                         }
-                    } else {
-                        return ACLOpResult::Fail;
                     }
                 } else if (SidType::Group == sidtype) {
                     if (::EqualSid(accsid, sid)) {
@@ -963,7 +1271,9 @@ ACLOpResult ACLHandler::DACLPermissionGetter(bool &allowed, ACL* testACL, PSID s
             PSID accsid = (PSID)&aceDenied->SidStart;
             SidType sidtype;
             if (SysOpResult::Success != sys.GetSIDType(accsid, sidtype)) {
+#ifdef _WIN64
                 LocalFree(&testace);
+#endif
                 continue;
             }
             if (SidType::User == specsidype) {
@@ -974,15 +1284,17 @@ ACLOpResult ACLHandler::DACLPermissionGetter(bool &allowed, ACL* testACL, PSID s
                         }
                     }
                 } else if (SidType::Group == sidtype) {
-                    bool ismember = false;
-                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(accsid, sid, ismember)) {
-                        if (ismember) {
-                            if (mask & aceDenied->Mask) {
-                                allowed = false;
+                    if (checkGroups) {
+                        bool ismember = false;
+                        if (SysOpResult::Success == sys.IsAccountMemberOfGroup(accsid, sid, ismember)) {
+                            if (ismember) {
+                                if (mask & aceDenied->Mask) {
+                                    allowed = false;
+                                }
                             }
+                        } else {
+                            return ACLOpResult::Fail;
                         }
-                    } else {
-                        return ACLOpResult::Fail;
                     }
                 } else {
                     if (::EqualSid(accsid, sid)) {
@@ -993,15 +1305,17 @@ ACLOpResult ACLHandler::DACLPermissionGetter(bool &allowed, ACL* testACL, PSID s
                 }
             } else if (SidType::Group == specsidype) {
                 if (SidType::User == sidtype) {
-                    bool ismember = false;
-                    if (SysOpResult::Success == sys.IsAccountMemberOfGroup(sid, accsid, ismember)) {
-                        if (ismember) {
-                            if (mask & aceDenied->Mask) {
-                                allowed = false;
+                    if (checkGroups) {
+                        bool ismember = false;
+                        if (SysOpResult::Success == sys.IsAccountMemberOfGroup(sid, accsid, ismember)) {
+                            if (ismember) {
+                                if (mask & aceDenied->Mask) {
+                                    allowed = false;
+                                }
                             }
+                        } else {
+                            return ACLOpResult::Fail;
                         }
-                    } else {
-                        return ACLOpResult::Fail;
                     }
                 } else if (SidType::Group == sidtype) {
                     if (::EqualSid(accsid, sid)) {

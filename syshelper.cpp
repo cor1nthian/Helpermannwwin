@@ -524,7 +524,7 @@ SysOpResult SysHandler::LocalGroupListFromStrSID(std::vector<GroupDesc> &outGrou
 			return res;
 		}
 	}
-	return SysOpResult::Fail;
+	return SysOpResult::Success;
 }
 
 SysOpResult SysHandler::EnumLocalGroups(std::vector<GroupDesc> &groupList,

@@ -38,7 +38,6 @@
 	#define RIGHTMOD 0
 	// #define RIGHTMOD KEY_WOW64_32KEY
 #else
-	// #define RIGHTMOD 0
 	#define RIGHTMOD KEY_WOW64_64KEY
 #endif
 
@@ -70,10 +69,8 @@
 				} \
 				prepHKEYKeyPath(rootKey, path, rootKey, keyPath);
 
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4996)
-
 #include <Windows.h>
+#include <aclapi.h>
 #include <algorithm>
 #include <iterator>
 #include <regex>
@@ -85,6 +82,10 @@
 
 const void* const gc_wc_emptyVal = (void*)L'Z';
 const void* const gc_wc_incorrectVal = (void*)L'Y';
+
+#pragma warning(disable : 4244)
+#pragma warning(disable : 4996)
+#pragma comment(lib, "Advapi32.lib")
 
 const void* const gc_ul_emptyVal = (void*)0xFFFFFF11;
 const void* const gc_ul_incorrectVal = (void*)11111111;
@@ -367,7 +368,7 @@ class RegHandler {
 		RegOpResult FreeValues(const std::vector<RegKeyDesc> &keyList, const HKEY *root = 0) const;
 		RegOpResult FreeValues(const std::vector<RegValDesc> &valList, const HKEY *root = 0) const;
 		RegOpResult GetKeySecurity(const std::wstring keyName, SecDesc &secDesc, const HKEY *root = 0) const;
-		RegOpResult SetKeySecurity(const std::wstring keyName, SecDesc &secDesc, const HKEY* root = 0) const;
+		RegOpResult SetKeySecurity(const std::wstring keyName, SecDesc &secDesc, const HKEY *root = 0) const;
 		RegOpResult CreateKey(const std::wstring keyName, const bool createMissingKeys = true,
 			const HKEY *root = 0) const;
 		RegOpResult DeleteKey(const std::wstring keyName, const bool deleteSubKeys = true,
@@ -381,7 +382,7 @@ class RegHandler {
 			const bool mountHives = true);
 		RegOpResult MountHive_LoadKey(const std::wstring hivePath,
 			const RegLoadTarget loadTarget = RegLoadTarget::Users);
-		RegOpResult UnmountHive_UnloadKey(const std::wstring unloadKetName,
+		RegOpResult UnmountHive_UnloadKey(const std::wstring unloadKeyName,
 			const RegLoadTarget unloadTarget = RegLoadTarget::Users);
 		RegOpResult ConnectRegistry(const std::wstring remoteComputerName);
 		RegOpResult DisconnectRegistry(const HKEY connectedReg);
@@ -411,7 +412,7 @@ class RegHandler {
 			HKEY &tgtHKEY, std::wstring &tgtKeyPath) const;
 		std::wstring rebuildSearchKeyPath(const HKEY &root, const std::wstring &origPath,
 			const std::wstring keyName) const;
-		unsigned long getRigtMod(const std::wstring keyPath) const;
+		unsigned long getRightMod() const;
 		inline std::wstring pickLoadKey(const std::wstring hivePath) const;
 		inline HKEY pickLoadTarget(const RegLoadTarget loadTarget = RegLoadTarget::None) const;
 		HKEY pickUnloadKey(const std::wstring loadTarget) const;

@@ -315,8 +315,7 @@ struct SecDesc {
 				bufeq &= false;
 			} else if (!selfRelativeSDInfo && other.selfRelativeSDInfo) {
 				bufeq &= false;
-			}
-			else if (!selfRelativeSDInfo && !other.selfRelativeSDInfo) {
+			} else if (!selfRelativeSDInfo && !other.selfRelativeSDInfo) {
 				bufeq &= true;
 			}
 		}
@@ -467,8 +466,24 @@ class ACLHandler {
 		ACLOpResult DACLAddReadDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLAddWriteDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLAddDeleteDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLRemoveSIDACE(ACL* &dacl, const PSID sid, const bool includeGroups = true) const;
-		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL*& dacl) const;
+		ACLOpResult DACLRegAddFullControlAllowedPermissions(ACL*& dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddQueryValueAllowedPermissions(ACL*& dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddSetValueAllowedPermissions(ACL*& dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddCreateSubkeyAllowedPermissions(ACL*& dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddEnumSubkeyAllowedPermissions(ACL*& dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddNotifyAllowedPermissions(ACL*& dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddCreateLinkAllowedPermissions(ACL*& dacl, const PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddCreateLinkDeniedPermissions(ACL*& dacl, const PSID sid) const;
+		ACLOpResult DACLRegAddNotifyDeniedPermissions(ACL*& dacl, const PSID sid) const;
+		ACLOpResult DACLRegAddEnumSubkeyDeniedPermissions(ACL*& dacl, const PSID sid) const;
+		ACLOpResult DACLRegAddCreateSubkeyDeniedPermissions(ACL*& dacl, const PSID sid) const;
+		ACLOpResult DACLRegAddSetValueDeniedPermissions(ACL*& dacl, const PSID sid) const;
+		ACLOpResult DACLRegAddQueryValueDeniedPermissions(ACL*& dacl, const PSID sid) const;
+		ACLOpResult DACLRegAddFullControlDeniedPermissions(ACL*& dacl, const PSID sid) const;
+		ACLOpResult DACLRemoveACESIDType(ACL* &dacl, const PSID sid, const AceType aceType,
+			const bool includeGroups = true) const;
+		ACLOpResult DACLRemoveACESID(ACL* &dacl, const PSID sid, const bool includeGroups = true) const;
+		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const;
 		ACLOpResult CreateAbsoluteSecDesc(SecDesc &secDesc) const;
 		ACLOpResult DACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const;
 	protected:
@@ -480,7 +495,8 @@ class ACLHandler {
 			unsigned char aclFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
 		ACLOpResult DACLAllowPermissionSetter(ACL* &dacl, PSID sid, const bool removeExistingBan,
 			unsigned long aclMask, unsigned char aclFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
-		ACLOpResult DACLPermissionGetter(bool &allowed, ACL* testACL, PSID sid, const unsigned long mask) const;
+		ACLOpResult DACLPermissionGetter(bool &allowed, ACL* testACL, PSID sid, const unsigned long mask,
+			const bool checkGroups = true) const;
 };
 
 #endif // _ACL_HELPER_H
