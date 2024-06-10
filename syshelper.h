@@ -506,8 +506,7 @@ class SysHandler {
 		/* Converts PSID to string SID
 			Param:
 			[in] account PSID
-			Returns SID
-			String SID must be freed with LocalFree */
+			Returns string SID */
 		std::wstring StrSIDFromSID(const PSID sid) const;
 		/* Gets account name based on SID
 			Param:

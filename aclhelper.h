@@ -42,6 +42,7 @@
 #include "syshelper.h"
 
 #define PERMISSION std::pair<std::pair<std::wstring, std::wstring>, AceType>
+#define PERMISSIONFULL std::pair<std::pair<std::wstring, std::wstring>, std::pair<AceType, unsigned long>>
 
 enum class AceType : unsigned char {
 	// same as ACCESS_MIN_MS_ACE_TYPE
@@ -499,7 +500,9 @@ class ACLHandler {
 		ACLOpResult DACLRemoveACESID(ACL* &dacl, const PSID sid, const bool includeGroups = true) const;
 		ACLOpResult DACLGetSIDsByAceType(ACL* dacl, AceType reqAceType, std::vector<PERMISSION> &permissions,
 			const std::wstring machineName = L".") const;
-		ACLOpResult DACLGetAceTypeBySID(ACL* dacl, PSID sid, std::vector<PERMISSION> &permissions,
+		ACLOpResult DACLGetPermissionBySID(ACL* dacl, PSID sid, std::vector<PERMISSION> &permissions,
+			const bool incluGroups = true, const std::wstring machineName = L".") const;
+		ACLOpResult DACLGetPermissionMaskBySID(ACL* dacl, PSID sid, std::vector<PERMISSIONFULL> &permissions,
 			const bool incluGroups = true, const std::wstring machineName = L".") const;
 		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const;
 		ACLOpResult CreateAbsoluteSecDesc(SecDesc &secDesc) const;

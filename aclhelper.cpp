@@ -246,7 +246,7 @@ ACLOpResult ACLHandler::DACLGetSIDsByAceType(ACL* dacl, AceType reqAceType, std:
     }
 }
 
-ACLOpResult ACLHandler::DACLGetAceTypeBySID(ACL* dacl, PSID sid, std::vector<PERMISSION> &permissions,
+ACLOpResult ACLHandler::DACLGetPermissionBySID(ACL* dacl, PSID sid, std::vector<PERMISSION> &permissions,
     const bool incluGroups, const std::wstring machineName) const {
     void* testace = 0;
     PSID accsid = 0;
@@ -286,6 +286,51 @@ ACLOpResult ACLHandler::DACLGetAceTypeBySID(ACL* dacl, PSID sid, std::vector<PER
                 sys.GetAccountNameFromStrSID(twsid, machineName), twsid), (AceType)vace->AceType);
         }
     }
+    return ACLOpResult::Success;
+}
+
+ACLOpResult ACLHandler::DACLGetPermissionMaskBySID(ACL* dacl, PSID sid, std::vector<PERMISSIONFULL> &permissions,
+    const bool incluGroups, const std::wstring machineName) const {
+    void* testace = 0;
+    PSID accsid = 0;
+    ACCESS_ALLOWED_ACE* aceAllowed = 0;
+    SysHandler sys;
+    std::vector<GroupDesc> groups;
+    if (incluGroups) {
+        if (SysOpResult::Success != sys.LocalGroupListFromStrSID(groups, sys.StrSIDFromSID(sid))) {
+            return ACLOpResult::Fail;
+        }
+    }
+    for (size_t i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        aceAllowed = (ACCESS_ALLOWED_ACE*)testace;
+        accsid = (PSID)&aceAllowed->SidStart;
+        if (incluGroups) {
+            for (size_t j = 0; j < groups.size(); ++j) {
+                PSID tpsid = sys.SIDFromStrSid(groups[j].GroupStrSid);
+                if (::EqualSid(accsid, tpsid)) {
+                    /*PERMISSION perm;
+                    perm.first.first = sys.GetAccountNameFromStrSID(groups[j].GroupStrSid, machineName);
+                    perm.first.second = groups[j].GroupStrSid;
+                    perm.second = (AceType)vace->AceType;*/
+                    permissions.emplace_back(std::pair<std::wstring, std::wstring>(
+                        sys.GetAccountNameFromStrSID(groups[j].GroupStrSid, machineName), groups[j].GroupStrSid),
+                        std::pair<AceType, unsigned long>((AceType)vace->AceType, aceAllowed->Mask));
+                }
+                SAFE_LOCALFREE(tpsid);
+            }
+        }
+        if (::EqualSid(accsid, sid)) {
+            std::wstring twsid = sys.StrSIDFromSID(sid);
+            permissions.emplace_back(std::pair<std::wstring, std::wstring>(
+                sys.GetAccountNameFromStrSID(twsid, machineName), twsid), std::pair<AceType, unsigned long>(
+                (AceType)vace->AceType, aceAllowed->Mask));
+        }
+    }
+    return ACLOpResult::Success;
 }
 
 ACLOpResult ACLHandler::DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const {
