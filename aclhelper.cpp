@@ -228,6 +228,66 @@ ACLOpResult ACLHandler::DACLDeleteAllowed(bool &allowed, const ACL* testACL, con
     return DACLPermissionGetter(allowed, testACL, sid, DELETE);
 }
 
+ACLOpResult ACLHandler::DACLGetSIDsByAceType(ACL* dacl, AceType reqAceType, std::vector<PERMISSION> &permissions,
+    const std::wstring machineName) const {
+    void* testace = 0;
+    ACE_HEADER* vace = 0;
+    SysHandler sys;
+    for (size_t i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        vace = (ACE_HEADER*)testace;
+        if (vace->AceType == static_cast<unsigned char>(reqAceType)) {
+            std::wstring twsid = sys.StrSIDFromSID((PSID)&((ACCESS_ALLOWED_ACE*)testace)->SidStart);
+            permissions.emplace_back(std::pair<std::wstring, std::wstring>(
+                sys.GetAccountNameFromStrSID(twsid, machineName), twsid), (AceType)vace->AceType);
+        }
+    }
+}
+
+ACLOpResult ACLHandler::DACLGetAceTypeBySID(ACL* dacl, PSID sid, std::vector<PERMISSION> &permissions,
+    const bool incluGroups, const std::wstring machineName) const {
+    void* testace = 0;
+    PSID accsid = 0;
+    ACCESS_ALLOWED_ACE* aceAllowed = 0;
+    SysHandler sys;
+    std::vector<GroupDesc> groups;
+    if (incluGroups) {
+        if (SysOpResult::Success != sys.LocalGroupListFromStrSID(groups, sys.StrSIDFromSID(sid))) {
+            return ACLOpResult::Fail;
+        }
+    }
+    for (size_t i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        aceAllowed = (ACCESS_ALLOWED_ACE*)testace;
+        accsid = (PSID)&aceAllowed->SidStart;
+        if (incluGroups) {
+            for (size_t j = 0; j < groups.size(); ++j) {
+                PSID tpsid = sys.SIDFromStrSid(groups[j].GroupStrSid);
+                if (::EqualSid(accsid, tpsid)) {
+                    /*PERMISSION perm;
+                    perm.first.first = sys.GetAccountNameFromStrSID(groups[j].GroupStrSid, machineName);
+                    perm.first.second = groups[j].GroupStrSid;
+                    perm.second = (AceType)vace->AceType;*/
+                    permissions.emplace_back(std::pair<std::wstring, std::wstring>(
+                        sys.GetAccountNameFromStrSID(groups[j].GroupStrSid, machineName), groups[j].GroupStrSid),
+                        (AceType)vace->AceType);
+                }
+                SAFE_LOCALFREE(tpsid);
+            }
+        }
+        if (::EqualSid(accsid, sid)) {
+            std::wstring twsid = sys.StrSIDFromSID(sid);
+            permissions.emplace_back(std::pair<std::wstring, std::wstring>(
+                sys.GetAccountNameFromStrSID(twsid, machineName), twsid), (AceType)vace->AceType);
+        }
+    }
+}
+
 ACLOpResult ACLHandler::DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const {
     int daclPresent = false, daclDefaulted = false;
     if (GetSecurityDescriptorDacl(secDesc, &daclPresent, &dacl, &daclDefaulted)) {
@@ -491,6 +551,310 @@ ACLOpResult ACLHandler::DACLRegAddFullControlDeniedPermissions(ACL*& dacl, const
 //      not inherited, allowed
 //      inherited, denied
 //      inherited, allowed
+ACLOpResult ACLHandler::DACLRemoveACESIDTypeMaskFlags(ACL* &dacl, const PSID sid, const AceType aceType,
+    const unsigned long aclMask, const unsigned char aclFlags, const bool includeGroups) const {
+    if (!dacl->AceCount || !dacl) {
+        return ACLOpResult::Fail;
+    }
+    size_t i = 0, j = 0;
+    bool sideq = false;
+    SysHandler sys;
+    std::vector<GroupDesc> groups;
+    std::vector<PSID> groupsids;
+    if (includeGroups) {
+        if (SysOpResult::Success != sys.LocalGroupListFromStrSID(groups, sys.StrSIDFromSID(sid))) {
+            return ACLOpResult::Fail;
+        }
+        for (i = 0; i < groups.size(); ++i) {
+            PSID tpsid = sys.SIDFromStrSid(groups[i].GroupStrSid);
+            if (tpsid) {
+                groupsids.push_back(tpsid);
+            }
+        }
+    }
+    void* testace = 0;
+    ACL* newList = 0;
+    unsigned long aclSz = sizeof(ACL);
+    for (i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_ALLOWED_ACE_TYPE) {
+            ACCESS_ALLOWED_ACE* aceAllowed = (ACCESS_ALLOWED_ACE*)testace;
+            PSID accsid = (PSID)&aceAllowed->SidStart;
+            if (includeGroups && groupsids.size()) {
+                bool skip = false;
+                for (j = 0; j < groupsids.size(); ++j) {
+                    if (::EqualSid(accsid, groupsids[j]) && AceType::AccessAllowed == aceType &&
+                        (aceAllowed->Mask & aclMask) && (vace->AceFlags & aclFlags)) {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip) {
+                    continue;
+                }
+            }
+            if (::EqualSid(accsid, sid) && AceType::AccessAllowed == aceType && (aceAllowed->Mask & aclMask) &&
+                !(vace->AceFlags & aclFlags)) {
+                aclSz += sizeof(ACCESS_ALLOWED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
+            } else if (::EqualSid(accsid, sid) && AceType::AccessAllowed == aceType && !(aceAllowed->Mask & aclMask)) {
+                aclSz += sizeof(ACCESS_ALLOWED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
+            } else if (::EqualSid(accsid, sid) && AceType::AccessAllowed != aceType) {
+                aclSz += sizeof(ACCESS_ALLOWED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
+            } else if (!::EqualSid(accsid, sid)) {
+                aclSz += sizeof(ACCESS_ALLOWED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
+            }
+        }
+        else if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
+            ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
+            PSID accsid = (PSID)&aceDenied->SidStart;
+            if (includeGroups && groupsids.size()) {
+                bool skip = false;
+                for (j = 0; j < groupsids.size(); ++j) {
+                    if (::EqualSid(accsid, groupsids[j]) && AceType::AccessDenied == aceType &&
+                        (aceDenied->Mask & aclMask) && (vace->AceFlags & aclFlags)) {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip) {
+                    continue;
+                }
+            }
+            if (::EqualSid(accsid, sid) && AceType::AccessAllowed == aceType && (aceDenied->Mask & aclMask) &&
+                !(vace->AceFlags & aclFlags)) {
+                aclSz += sizeof(ACCESS_DENIED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
+            } else if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && !(aceDenied->Mask & aclMask)) {
+                aclSz += sizeof(ACCESS_DENIED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
+            } else if (::EqualSid(accsid, sid) && AceType::AccessDenied != aceType) {
+                aclSz += sizeof(ACCESS_DENIED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
+            } else if (!::EqualSid(accsid, sid)) {
+                aclSz += sizeof(ACCESS_DENIED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
+            }
+        }
+#ifdef _WIN64
+        LocalFree(&testace);
+#endif
+    }
+    aclSz = (aclSz + (sizeof(unsigned long) - 1)) & 0xfffffffc;
+    newList = (ACL*)LocalAlloc(LPTR, aclSz);
+    if (!newList) {
+        return ACLOpResult::Fail;
+    }
+    if (!::InitializeAcl(newList, aclSz, ACL_REVISION)) {
+        return ACLOpResult::Fail;
+    }
+    for (i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
+            ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
+            PSID accsid = (PSID)&aceDenied->SidStart;
+            if (includeGroups && groupsids.size()) {
+                bool skip = false;
+                for (j = 0; j < groupsids.size(); ++j) {
+                    if (::EqualSid(accsid, groupsids[j]) && AceType::AccessDenied == aceType &&
+                        (aceDenied->Mask & aclMask) && (vace->AceFlags & aclFlags)) {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip) {
+                    continue;
+                }
+            }
+            if (!(vace->AceFlags & INHERITED_ACE)) {
+                if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && (aceDenied->Mask & aclMask) &&
+                    !(vace->AceFlags & aclFlags)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && !(aceDenied->Mask & aclMask)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (::EqualSid(accsid, sid) && AceType::AccessDenied != aceType) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (!::EqualSid(accsid, sid)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                }
+            }
+        }
+#ifdef _WIN64
+        LocalFree(&testace);
+#endif
+    }
+    unsigned long aceCount = newList->AceCount + 1;
+    for (i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_ALLOWED_ACE_TYPE) {
+            ACCESS_ALLOWED_ACE* aceAllowed = (ACCESS_ALLOWED_ACE*)testace;
+            PSID accsid = (PSID)&aceAllowed->SidStart;
+            if (includeGroups && groupsids.size()) {
+                bool skip = false;
+                for (j = 0; j < groupsids.size(); ++j) {
+                    if (::EqualSid(accsid, groupsids[j]) && AceType::AccessAllowed == aceType &&
+                        (aceAllowed->Mask & aclMask) && (vace->AceFlags & aclFlags)) {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip) {
+                    continue;
+                }
+            }
+            if (!(vace->AceFlags & INHERITED_ACE)) {
+                if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && (aceAllowed->Mask & aclMask) &&
+                    !(vace->AceFlags & aclFlags)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (::EqualSid(accsid, sid) && AceType::AccessAllowed == aceType && !(aceAllowed->Mask & aclMask)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (::EqualSid(accsid, sid) && AceType::AccessAllowed != aceType) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (!::EqualSid(accsid, sid)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                }
+            }
+        }
+#ifdef _WIN64
+        LocalFree(&testace);
+#endif
+    }
+    for (i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_DENIED_ACE_TYPE) {
+            ACCESS_DENIED_ACE* aceDenied = (ACCESS_DENIED_ACE*)testace;
+            PSID accsid = (PSID)&aceDenied->SidStart;
+            if (includeGroups && groupsids.size()) {
+                bool skip = false;
+                for (j = 0; j < groupsids.size(); ++j) {
+                    if (::EqualSid(accsid, groupsids[j]) && AceType::AccessDenied == aceType &&
+                        (aceDenied->Mask & aclMask) && (vace->AceFlags & aclFlags)) {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip) {
+                    continue;
+                }
+            }
+            if (vace->AceFlags & INHERITED_ACE) {
+                if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && (aceDenied->Mask & aclMask) &&
+                    !(vace->AceFlags & aclFlags)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && !(aceDenied->Mask & aclMask)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (::EqualSid(accsid, sid) && AceType::AccessDenied != aceType) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (!::EqualSid(accsid, sid)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                }
+            }
+        }
+#ifdef _WIN64
+        LocalFree(&testace);
+#endif
+    }
+    aceCount = newList->AceCount + 1;
+    for (i = 0; i < dacl->AceCount; ++i) {
+        if (!::GetAce(dacl, i, (void**)&testace)) {
+            return ACLOpResult::Fail;
+        }
+        ACE_HEADER* vace = (ACE_HEADER*)testace;
+        if (vace->AceType == ACCESS_ALLOWED_ACE_TYPE) {
+            ACCESS_ALLOWED_ACE* aceAllowed = (ACCESS_ALLOWED_ACE*)testace;
+            PSID accsid = (PSID)&aceAllowed->SidStart;
+            if (includeGroups && groupsids.size()) {
+                bool skip = false;
+                for (j = 0; j < groupsids.size(); ++j) {
+                    if (::EqualSid(accsid, groupsids[j]) && AceType::AccessAllowed == aceType &&
+                        (aceAllowed->Mask & aclMask) && (vace->AceFlags & aclFlags)) {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip) {
+                    continue;
+                }
+            }
+            if (vace->AceFlags & INHERITED_ACE) {
+                if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && (aceAllowed->Mask & aclMask) &&
+                    !(vace->AceFlags & aclFlags)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (::EqualSid(accsid, sid) && AceType::AccessAllowed == aceType && !(aceAllowed->Mask & aclMask)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (::EqualSid(accsid, sid) && AceType::AccessAllowed != aceType) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                } else if (!::EqualSid(accsid, sid)) {
+                    if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
+                        return ACLOpResult::Fail;
+                    }
+                }
+            }
+        }
+#ifdef _WIN64
+        LocalFree(&testace);
+#endif
+    }
+    ACL_SIZE_INFORMATION asi;
+    if (::GetAclInformation(newList, &asi, sizeof(asi), AclSizeInformation)) {
+        newList->AclSize = (unsigned short)asi.AclBytesInUse;
+    } else {
+        return ACLOpResult::Fail;
+    }
+    for (i = 0; i < groupsids.size(); ++i) {
+        SAFE_LOCALFREE(groupsids[i]);
+    }
+#if defined(_WIN64)
+    LocalFree(&dacl);
+#else if defined(_WIN32)
+    LocalFree(dacl);
+#endif
+    dacl = newList;
+    return ACLOpResult::Success;
+}
+
+// Sequence of ACE's must be:
+//      not inherited, denied
+//      not inherited, allowed
+//      inherited, denied
+//      inherited, allowed
 ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, const AceType aceType,
     const unsigned long aclMask, const bool includeGroups) const {
     if (!dacl->AceCount || !dacl) {
@@ -527,7 +891,7 @@ ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, con
                 bool skip = false;
                 for (j = 0; j < groupsids.size(); ++j) {
                     if (::EqualSid(accsid, groupsids[j]) && AceType::AccessAllowed == aceType &&
-                        aceAllowed->Mask == aclMask) {
+                        (aceAllowed->Mask & aclMask)) {
                         skip = true;
                         break;
                     }
@@ -536,7 +900,7 @@ ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, con
                     continue;
                 }
             }
-            if (::EqualSid(accsid, sid) && AceType::AccessAllowed == aceType && aceAllowed->Mask != aclMask) {
+            if (::EqualSid(accsid, sid) && AceType::AccessAllowed == aceType && !(aceAllowed->Mask & aclMask)) {
                 aclSz += sizeof(ACCESS_ALLOWED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
             } else if (::EqualSid(accsid, sid) && AceType::AccessAllowed != aceType) {
                 aclSz += sizeof(ACCESS_ALLOWED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
@@ -550,7 +914,7 @@ ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, con
                 bool skip = false;
                 for (j = 0; j < groupsids.size(); ++j) {
                     if (::EqualSid(accsid, groupsids[j]) && AceType::AccessDenied == aceType &&
-                        aceDenied->Mask == aclMask) {
+                        (aceDenied->Mask & aclMask)) {
                         skip = true;
                         break;
                     }
@@ -559,7 +923,7 @@ ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, con
                     continue;
                 }
             }
-            if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && aceDenied->Mask != aclMask) {
+            if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && !(aceDenied->Mask & aclMask)) {
                 aclSz += sizeof(ACCESS_DENIED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
             } else if (::EqualSid(accsid, sid) && AceType::AccessDenied != aceType) {
                 aclSz += sizeof(ACCESS_DENIED_ACE) + (GetLengthSid(accsid) - sizeof(unsigned long));
@@ -591,7 +955,7 @@ ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, con
                 bool skip = false;
                 for (j = 0; j < groupsids.size(); ++j) {
                     if (::EqualSid(accsid, groupsids[j]) && AceType::AccessDenied == aceType &&
-                        aceDenied->Mask == aclMask) {
+                        (aceDenied->Mask & aclMask)) {
                         skip = true;
                         break;
                     }
@@ -601,7 +965,7 @@ ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, con
                 }
             }
             if (!(vace->AceFlags & INHERITED_ACE)) {
-                if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && aceDenied->Mask != aclMask) {
+                if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && !(aceDenied->Mask & aclMask)) {
                     if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
                         return ACLOpResult::Fail;
                     }
@@ -633,7 +997,7 @@ ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, con
                 bool skip = false;
                 for (j = 0; j < groupsids.size(); ++j) {
                     if (::EqualSid(accsid, groupsids[j]) && AceType::AccessAllowed == aceType &&
-                        aceAllowed->Mask == aclMask) {
+                        (aceAllowed->Mask & aclMask)) {
                         skip = true;
                         break;
                     }
@@ -643,7 +1007,7 @@ ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, con
                 }
             }
             if (!(vace->AceFlags & INHERITED_ACE)) {
-                if (::EqualSid(accsid, sid) && AceType::AccessAllowed == aceType && aceAllowed->Mask != aclMask) {
+                if (::EqualSid(accsid, sid) && AceType::AccessAllowed == aceType && !(aceAllowed->Mask & aclMask)) {
                     if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
                         return ACLOpResult::Fail;
                     }
@@ -674,7 +1038,7 @@ ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, con
                 bool skip = false;
                 for (j = 0; j < groupsids.size(); ++j) {
                     if (::EqualSid(accsid, groupsids[j]) && AceType::AccessDenied == aceType &&
-                        aceDenied->Mask == aclMask) {
+                        (aceDenied->Mask & aclMask)) {
                         skip = true;
                         break;
                     }
@@ -684,7 +1048,7 @@ ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, con
                 }
             }
             if (vace->AceFlags & INHERITED_ACE) {
-                if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && aceDenied->Mask != aclMask) {
+                if (::EqualSid(accsid, sid) && AceType::AccessDenied == aceType && !(aceDenied->Mask & aclMask)) {
                     if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
                         return ACLOpResult::Fail;
                     }
@@ -716,7 +1080,7 @@ ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, con
                 bool skip = false;
                 for (j = 0; j < groupsids.size(); ++j) {
                     if (::EqualSid(accsid, groupsids[j]) && AceType::AccessAllowed == aceType &&
-                        aceAllowed->Mask == aclMask) {
+                        (aceAllowed->Mask & aclMask)) {
                         skip = true;
                         break;
                     }
@@ -726,7 +1090,7 @@ ACLOpResult ACLHandler::DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, con
                 }
             }
             if (vace->AceFlags & INHERITED_ACE) {
-                if (::EqualSid(accsid, sid) && AceType::AccessAllowed == aceType && aceAllowed->Mask != aclMask) {
+                if (::EqualSid(accsid, sid) && AceType::AccessAllowed == aceType && !(aceAllowed->Mask & aclMask)) {
                     if (!::AddAce(newList, ACL_REVISION, MAXDWORD, testace, ((ACE_HEADER*)testace)->AceSize)) {
                         return ACLOpResult::Fail;
                     }

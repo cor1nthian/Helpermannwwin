@@ -41,6 +41,8 @@
 #include "strhelper.h"
 #include "syshelper.h"
 
+#define PERMISSION std::pair<std::pair<std::wstring, std::wstring>, AceType>
+
 enum class AceType : unsigned char {
 	// same as ACCESS_MIN_MS_ACE_TYPE
 	AccessAllowed = ACCESS_ALLOWED_ACE_TYPE,
@@ -488,11 +490,17 @@ class ACLHandler {
 		ACLOpResult DACLRegAddSetValueDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLRegAddQueryValueDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLRegAddFullControlDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLRemoveACESIDTypeMask(ACL*& dacl, const PSID sid, const AceType aceType,
+		ACLOpResult DACLRemoveACESIDTypeMaskFlags(ACL* &dacl, const PSID sid, const AceType aceType,
+			const unsigned long aclMask, const unsigned char aclFlags, const bool includeGroups = true) const;
+		ACLOpResult DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, const AceType aceType,
 			const unsigned long aclMask, const bool includeGroups = true) const;
 		ACLOpResult DACLRemoveACESIDType(ACL* &dacl, const PSID sid, const AceType aceType,
 			const bool includeGroups = true) const;
 		ACLOpResult DACLRemoveACESID(ACL* &dacl, const PSID sid, const bool includeGroups = true) const;
+		ACLOpResult DACLGetSIDsByAceType(ACL* dacl, AceType reqAceType, std::vector<PERMISSION> &permissions,
+			const std::wstring machineName = L".") const;
+		ACLOpResult DACLGetAceTypeBySID(ACL* dacl, PSID sid, std::vector<PERMISSION> &permissions,
+			const bool incluGroups = true, const std::wstring machineName = L".") const;
 		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const;
 		ACLOpResult CreateAbsoluteSecDesc(SecDesc &secDesc) const;
 		ACLOpResult DACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const;
@@ -503,7 +511,7 @@ class ACLHandler {
 			const ACCESS_MASK accessMask, const unsigned char aceFlags) const;
 		ACLOpResult DACLDenyPermissionSetter(ACL* &dacl, const PSID sid, const unsigned long aclMask,
 			const unsigned char aclFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
-		ACLOpResult DACLAllowPermissionSetter(ACL* &dacl, PSID sid, const bool removeExistingBan,
+		ACLOpResult DACLAllowPermissionSetter(ACL* &dacl, const PSID sid, const bool removeExistingBan,
 			const unsigned long aclMask, const unsigned char aclFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
 		ACLOpResult DACLPermissionGetter(bool &allowed, const ACL* testACL, const PSID sid, const unsigned long mask,
 			const bool checkGroups = true) const;
