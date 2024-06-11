@@ -29,6 +29,148 @@ bool IsBadWritePtr(void* p) {
 	return true;
 }
 
+std::map<std::wstring, std::wstring> GetWellKnownStrSIDs(PSID domainSID) {
+	std::map<std::wstring, std::wstring> ret;
+	unsigned char wksids[] = {
+		WELL_KNOWN_SID_TYPE::WinNullSid,
+		WELL_KNOWN_SID_TYPE::WinWorldSid,
+		WELL_KNOWN_SID_TYPE::WinLocalSid,
+		WELL_KNOWN_SID_TYPE::WinCreatorOwnerSid,
+		WELL_KNOWN_SID_TYPE::WinCreatorGroupSid,
+		WELL_KNOWN_SID_TYPE::WinCreatorOwnerServerSid,
+		WELL_KNOWN_SID_TYPE::WinCreatorGroupServerSid,
+		WELL_KNOWN_SID_TYPE::WinNtAuthoritySid,
+		WELL_KNOWN_SID_TYPE::WinDialupSid,
+		WELL_KNOWN_SID_TYPE::WinNetworkSid,
+		WELL_KNOWN_SID_TYPE::WinBatchSid,
+		WELL_KNOWN_SID_TYPE::WinInteractiveSid,
+		WELL_KNOWN_SID_TYPE::WinServiceSid,
+		WELL_KNOWN_SID_TYPE::WinAnonymousSid,
+		WELL_KNOWN_SID_TYPE::WinProxySid,
+		WELL_KNOWN_SID_TYPE::WinEnterpriseControllersSid,
+		WELL_KNOWN_SID_TYPE::WinSelfSid,
+		WELL_KNOWN_SID_TYPE::WinAuthenticatedUserSid,
+		WELL_KNOWN_SID_TYPE::WinRestrictedCodeSid,
+		WELL_KNOWN_SID_TYPE::WinTerminalServerSid,
+		WELL_KNOWN_SID_TYPE::WinRemoteLogonIdSid,
+		WELL_KNOWN_SID_TYPE::WinLogonIdsSid,
+		WELL_KNOWN_SID_TYPE::WinLocalSystemSid,
+		WELL_KNOWN_SID_TYPE::WinLocalServiceSid,
+		WELL_KNOWN_SID_TYPE::WinNetworkServiceSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinDomainSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinAdministratorsSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinUsersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinGuestsSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinPowerUsersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinAccountOperatorsSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinSystemOperatorsSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinPrintOperatorsSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinBackupOperatorsSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinReplicatorSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinPreWindows2000CompatibleAccessSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinRemoteDesktopUsersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinNetworkConfigurationOperatorsSid,
+		WELL_KNOWN_SID_TYPE::WinAccountAdministratorSid,
+		WELL_KNOWN_SID_TYPE::WinAccountGuestSid,
+		WELL_KNOWN_SID_TYPE::WinAccountKrbtgtSid,
+		WELL_KNOWN_SID_TYPE::WinAccountDomainAdminsSid,
+		WELL_KNOWN_SID_TYPE::WinAccountDomainUsersSid,
+		WELL_KNOWN_SID_TYPE::WinAccountDomainGuestsSid,
+		WELL_KNOWN_SID_TYPE::WinAccountComputersSid,
+		WELL_KNOWN_SID_TYPE::WinAccountControllersSid,
+		WELL_KNOWN_SID_TYPE::WinAccountCertAdminsSid,
+		WELL_KNOWN_SID_TYPE::WinAccountSchemaAdminsSid,
+		WELL_KNOWN_SID_TYPE::WinAccountEnterpriseAdminsSid,
+		WELL_KNOWN_SID_TYPE::WinAccountPolicyAdminsSid,
+		WELL_KNOWN_SID_TYPE::WinAccountRasAndIasServersSid,
+		WELL_KNOWN_SID_TYPE::WinNTLMAuthenticationSid,
+		WELL_KNOWN_SID_TYPE::WinDigestAuthenticationSid,
+		WELL_KNOWN_SID_TYPE::WinSChannelAuthenticationSid,
+		WELL_KNOWN_SID_TYPE::WinThisOrganizationSid,
+		WELL_KNOWN_SID_TYPE::WinOtherOrganizationSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinIncomingForestTrustBuildersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinPerfMonitoringUsersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinPerfLoggingUsersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinAuthorizationAccessSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinTerminalServerLicenseServersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinDCOMUsersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinIUsersSid,
+		WELL_KNOWN_SID_TYPE::WinIUserSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinCryptoOperatorsSid,
+		WELL_KNOWN_SID_TYPE::WinUntrustedLabelSid,
+		WELL_KNOWN_SID_TYPE::WinLowLabelSid,
+		WELL_KNOWN_SID_TYPE::WinMediumLabelSid,
+		WELL_KNOWN_SID_TYPE::WinHighLabelSid,
+		WELL_KNOWN_SID_TYPE::WinSystemLabelSid,
+		WELL_KNOWN_SID_TYPE::WinWriteRestrictedCodeSid,
+		WELL_KNOWN_SID_TYPE::WinCreatorOwnerRightsSid,
+		WELL_KNOWN_SID_TYPE::WinCacheablePrincipalsGroupSid,
+		WELL_KNOWN_SID_TYPE::WinNonCacheablePrincipalsGroupSid,
+		WELL_KNOWN_SID_TYPE::WinEnterpriseReadonlyControllersSid,
+		WELL_KNOWN_SID_TYPE::WinAccountReadonlyControllersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinEventLogReadersGroup,
+		WELL_KNOWN_SID_TYPE::WinNewEnterpriseReadonlyControllersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinCertSvcDComAccessGroup,
+		WELL_KNOWN_SID_TYPE::WinMediumPlusLabelSid,
+		WELL_KNOWN_SID_TYPE::WinLocalLogonSid,
+		WELL_KNOWN_SID_TYPE::WinConsoleLogonSid,
+		WELL_KNOWN_SID_TYPE::WinThisOrganizationCertificateSid,
+		WELL_KNOWN_SID_TYPE::WinApplicationPackageAuthoritySid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinAnyPackageSid,
+		WELL_KNOWN_SID_TYPE::WinCapabilityInternetClientSid,
+		WELL_KNOWN_SID_TYPE::WinCapabilityInternetClientServerSid,
+		WELL_KNOWN_SID_TYPE::WinCapabilityPrivateNetworkClientServerSid,
+		WELL_KNOWN_SID_TYPE::WinCapabilityPicturesLibrarySid,
+		WELL_KNOWN_SID_TYPE::WinCapabilityVideosLibrarySid,
+		WELL_KNOWN_SID_TYPE::WinCapabilityMusicLibrarySid,
+		WELL_KNOWN_SID_TYPE::WinCapabilityDocumentsLibrarySid,
+		WELL_KNOWN_SID_TYPE::WinCapabilitySharedUserCertificatesSid,
+		WELL_KNOWN_SID_TYPE::WinCapabilityEnterpriseAuthenticationSid,
+		WELL_KNOWN_SID_TYPE::WinCapabilityRemovableStorageSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinRDSRemoteAccessServersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinRDSEndpointServersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinRDSManagementServersSid,
+		WELL_KNOWN_SID_TYPE::WinUserModeDriversSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinHyperVAdminsSid,
+		WELL_KNOWN_SID_TYPE::WinAccountCloneableControllersSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinAccessControlAssistanceOperatorsSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinRemoteManagementUsersSid,
+		WELL_KNOWN_SID_TYPE::WinAuthenticationAuthorityAssertedSid,
+		WELL_KNOWN_SID_TYPE::WinAuthenticationServiceAssertedSid,
+		WELL_KNOWN_SID_TYPE::WinLocalAccountSid,
+		WELL_KNOWN_SID_TYPE::WinLocalAccountAndAdministratorSid,
+		WELL_KNOWN_SID_TYPE::WinAccountProtectedUsersSid,
+		WELL_KNOWN_SID_TYPE::WinCapabilityAppointmentsSid,
+		WELL_KNOWN_SID_TYPE::WinCapabilityContactsSid,
+		WELL_KNOWN_SID_TYPE::WinAccountDefaultSystemManagedSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinDefaultSystemManagedGroupSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinStorageReplicaAdminsSid,
+		WELL_KNOWN_SID_TYPE::WinAccountKeyAdminsSid,
+		WELL_KNOWN_SID_TYPE::WinAccountEnterpriseKeyAdminsSid,
+		WELL_KNOWN_SID_TYPE::WinAuthenticationKeyTrustSid,
+		WELL_KNOWN_SID_TYPE::WinAuthenticationKeyPropertyMFASid,
+		WELL_KNOWN_SID_TYPE::WinAuthenticationKeyPropertyAttestationSid,
+		WELL_KNOWN_SID_TYPE::WinAuthenticationFreshKeyAuthSid,
+		WELL_KNOWN_SID_TYPE::WinBuiltinDeviceOwnersSid
+	};
+	SysHandler sys;
+	PSID tpsid = 0;
+	unsigned long sidlen = SECURITY_MAX_SID_SIZE;
+	for (size_t i = 0; i < 120; ++i) {
+		sidlen = SECURITY_MAX_SID_SIZE;
+		tpsid = malloc(sidlen);
+		if (tpsid) {
+			if (::CreateWellKnownSid((WELL_KNOWN_SID_TYPE)wksids[i], domainSID, tpsid, &sidlen)) {
+				ret[sys.StrSIDFromSID(tpsid)] = sys.GetAccountNameFromSID(tpsid);
+			}
+			SAFE_FREE(tpsid);
+		} else {
+			return ret;
+		}
+	}
+	return ret;
+}
+
 AccountDesc::AccountDesc() {
 	ncNormalAcc = false;
 	ncTempDupAcc = false;

@@ -47,6 +47,7 @@
 #include <sstream>
 #include <fstream>
 #include <thread>
+#include <unordered_map>
 #include "strhelper.h"
 #include "winerrhelper.h"
 
@@ -160,6 +161,9 @@ enum class SidType : unsigned char {
 
 bool IsBadReadPtr(void* p);
 bool IsBadWritePtr(void* p);
+std::map<std::wstring, std::wstring> GetWellKnownStrSIDs(PSID domainSID = 0);
+
+const std::map<std::wstring, std::wstring> WellKnownStrSIDs = GetWellKnownStrSIDs();
 
 struct AccountDesc;
 struct GroupDesc;
