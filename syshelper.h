@@ -134,6 +134,10 @@ typedef bool(__stdcall* LPFN_ISWOW64PROCESS) (HANDLE procHandle, int &result);
 // constexpr to get TZ offset
 static constexpr time_t const NULL_TIME = -1;
 
+struct AccountDesc;
+struct GroupDesc;
+struct WKSid;
+
 enum class SysOpResult : unsigned char {
 	Success,
 	Fail
@@ -161,12 +165,44 @@ enum class SidType : unsigned char {
 
 bool IsBadReadPtr(void* p);
 bool IsBadWritePtr(void* p);
-std::map<std::wstring, std::wstring> GetWellKnownStrSIDs(PSID domainSID = 0);
+std::vector<WKSid> GetWellKnownStrSIDs(PSID domainSID = 0);
 
-const std::map<std::wstring, std::wstring> WellKnownStrSIDs = GetWellKnownStrSIDs();
+const std::vector<WKSid> WellKnownStrSIDs = GetWellKnownStrSIDs();
 
-struct AccountDesc;
-struct GroupDesc;
+struct WKSid {
+	WKSid() {}
+	WKSid(std::wstring sid,
+		std::wstring sidname, std::wstring sidnameorig) {
+		StrSID = sid;
+		SIDName = sidname;
+		SidNameOrig = sidnameorig;
+	}
+	WKSid(const WKSid& other) {
+		StrSID = other.StrSID;
+		SIDName = other.SIDName;
+		SidNameOrig = other.SidNameOrig;
+	}
+	WKSid& operator=(const WKSid &other) {
+		StrSID = other.StrSID;
+		SIDName = other.SIDName;
+		SidNameOrig = other.SidNameOrig;
+		return *this;
+	}
+	bool operator==(const WKSid &other) const {
+		return (lower_copy(StrSID) == lower_copy(other.StrSID) &&
+			lower_copy(SIDName) == lower_copy(other.SIDName) &&
+			lower_copy(SidNameOrig) == lower_copy(other.SidNameOrig));
+	}
+	bool operator!=(const WKSid &other) const {
+		return (lower_copy(StrSID) != lower_copy(other.StrSID) ||
+			lower_copy(SIDName) != lower_copy(other.SIDName) ||
+			lower_copy(SidNameOrig) != lower_copy(other.SidNameOrig));
+	}
+	~WKSid() {}
+	std::wstring StrSID;
+	std::wstring SIDName;
+	std::wstring SidNameOrig;
+};
 
 /* User account description struct
 Operators are defined in the header file,
