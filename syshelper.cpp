@@ -29,6 +29,26 @@ bool IsBadWritePtr(void* p) {
 	return true;
 }
 
+bool IsSIDWellKnown(const std::wstring strsid) {
+	for (size_t i = 0; i < gc_WellKnownStrSIDs.size(); ++i) {
+		if (gc_WellKnownStrSIDs[i].StrSID == strsid) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool IsSIDWellKnown(const PSID sid) {
+	SysHandler sys;
+	std::wstring twsid = sys.StrSIDFromSID(sid);
+	for (size_t i = 0; i < gc_WellKnownStrSIDs.size(); ++i) {
+		if (gc_WellKnownStrSIDs[i].StrSID == twsid) {
+			return true;
+		}
+	}
+	return false;
+}
+
 std::vector<WKSid> GetWellKnownStrSIDs(PSID domainSID) {
 	std::vector<WKSid> ret;
 	unsigned char wksids[] = {

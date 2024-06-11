@@ -501,9 +501,9 @@ class ACLHandler {
 		ACLOpResult DACLGetSIDsByAceType(ACL* dacl, AceType reqAceType, std::vector<PERMISSION> &permissions,
 			const std::wstring machineName = L".") const;
 		ACLOpResult DACLGetPermissionBySID(ACL* dacl, PSID sid, std::vector<PERMISSION> &permissions,
-			const bool incluGroups = true, const std::wstring machineName = L".") const;
+			const bool includeGroups = true, const std::wstring machineName = L".") const;
 		ACLOpResult DACLGetPermissionMaskBySID(ACL* dacl, PSID sid, std::vector<PERMISSIONFULL> &permissions,
-			const bool incluGroups = true, const std::wstring machineName = L".") const;
+			const bool includeGroups = true, const std::wstring machineName = L".") const;
 		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const;
 		ACLOpResult CreateAbsoluteSecDesc(SecDesc &secDesc) const;
 		ACLOpResult DACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const;

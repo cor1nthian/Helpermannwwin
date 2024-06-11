@@ -247,13 +247,13 @@ ACLOpResult ACLHandler::DACLGetSIDsByAceType(ACL* dacl, AceType reqAceType, std:
 }
 
 ACLOpResult ACLHandler::DACLGetPermissionBySID(ACL* dacl, PSID sid, std::vector<PERMISSION> &permissions,
-    const bool incluGroups, const std::wstring machineName) const {
+    const bool includeGroups, const std::wstring machineName) const {
     void* testace = 0;
     PSID accsid = 0;
     ACCESS_ALLOWED_ACE* aceAllowed = 0;
     SysHandler sys;
     std::vector<GroupDesc> groups;
-    if (incluGroups) {
+    if (includeGroups) {
         if (SysOpResult::Success != sys.LocalGroupListFromStrSID(groups, sys.StrSIDFromSID(sid))) {
             return ACLOpResult::Fail;
         }
@@ -265,7 +265,7 @@ ACLOpResult ACLHandler::DACLGetPermissionBySID(ACL* dacl, PSID sid, std::vector<
         ACE_HEADER* vace = (ACE_HEADER*)testace;
         aceAllowed = (ACCESS_ALLOWED_ACE*)testace;
         accsid = (PSID)&aceAllowed->SidStart;
-        if (incluGroups) {
+        if (includeGroups) {
             for (size_t j = 0; j < groups.size(); ++j) {
                 PSID tpsid = sys.SIDFromStrSid(groups[j].GroupStrSid);
                 if (::EqualSid(accsid, tpsid)) {
@@ -290,13 +290,13 @@ ACLOpResult ACLHandler::DACLGetPermissionBySID(ACL* dacl, PSID sid, std::vector<
 }
 
 ACLOpResult ACLHandler::DACLGetPermissionMaskBySID(ACL* dacl, PSID sid, std::vector<PERMISSIONFULL> &permissions,
-    const bool incluGroups, const std::wstring machineName) const {
+    const bool includeGroups, const std::wstring machineName) const {
     void* testace = 0;
     PSID accsid = 0;
     ACCESS_ALLOWED_ACE* aceAllowed = 0;
     SysHandler sys;
     std::vector<GroupDesc> groups;
-    if (incluGroups) {
+    if (includeGroups) {
         if (SysOpResult::Success != sys.LocalGroupListFromStrSID(groups, sys.StrSIDFromSID(sid))) {
             return ACLOpResult::Fail;
         }
@@ -308,7 +308,7 @@ ACLOpResult ACLHandler::DACLGetPermissionMaskBySID(ACL* dacl, PSID sid, std::vec
         ACE_HEADER* vace = (ACE_HEADER*)testace;
         aceAllowed = (ACCESS_ALLOWED_ACE*)testace;
         accsid = (PSID)&aceAllowed->SidStart;
-        if (incluGroups) {
+        if (includeGroups) {
             for (size_t j = 0; j < groups.size(); ++j) {
                 PSID tpsid = sys.SIDFromStrSid(groups[j].GroupStrSid);
                 if (::EqualSid(accsid, tpsid)) {

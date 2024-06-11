@@ -165,15 +165,17 @@ enum class SidType : unsigned char {
 
 bool IsBadReadPtr(void* p);
 bool IsBadWritePtr(void* p);
+bool IsSIDWellKnown(const std::wstring strsid);
+bool IsSIDWellKnown(const PSID sid);
 std::vector<WKSid> GetWellKnownStrSIDs(PSID domainSID = 0);
 
-const std::vector<WKSid> WellKnownStrSIDs = GetWellKnownStrSIDs();
+const std::vector<WKSid> const gc_WellKnownStrSIDs = GetWellKnownStrSIDs();
 
 struct WKSid {
 	WKSid() {}
-	WKSid(std::wstring sid,
+	WKSid(std::wstring strsid,
 		std::wstring sidname, std::wstring sidnameorig) {
-		StrSID = sid;
+		StrSID = strsid;
 		SIDName = sidname;
 		SidNameOrig = sidnameorig;
 	}
