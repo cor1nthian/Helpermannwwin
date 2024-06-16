@@ -350,6 +350,8 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring a
         timeoutBetweenPings);
 }
 
+/*  Send packets with increasing TTL until you get a reply from target host or max hops reached.
+    Packets with TTL = 1 dont leave LAN */
 NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std::string address, const unsigned char maxHops) {
     TracertResult res;
     std::string tracerttgt = address;
@@ -476,6 +478,8 @@ NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std:
     return NetOpResult::Success;
 }
 
+/*  Send packets with increasing TTL until you get a reply from target host or max hops reached.
+    Packets with TTL = 1 dont leave LAN */
 NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results,
     const std::wstring address, const unsigned char maxHops) {
     return traceroute_RawSocket(results, wstr2str(address), maxHops);
