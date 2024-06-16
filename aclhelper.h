@@ -475,7 +475,7 @@ class ACLHandler {
 		ACLOpResult DACLAddReadAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddReadDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLAddWriteDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLAddExecuteDeniedPermissions(ACL*& dacl, const PSID sid) const;
+		ACLOpResult DACLAddExecuteDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLAddDeleteDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLRegAddFullControlAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLRegAddQueryValueAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;

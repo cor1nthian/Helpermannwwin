@@ -370,7 +370,7 @@ std::string GUID2str(const GUID guid) {
 #if defined(_WIN32) || defined(_WIN64)
 std::string GUID2strMS(const GUID guid) {
     wchar_t tbuf[64] = { 0 };
-    if (StringFromGUID2(guid, tbuf, 64)) {
+    if (::StringFromGUID2(guid, tbuf, 64)) {
         std::wstring temp = tbuf;
         return wstr2str(temp);
     } else {
@@ -380,7 +380,7 @@ std::string GUID2strMS(const GUID guid) {
 
 std::wstring GUID2wstrMS(const GUID guid) {
     wchar_t tbuf[64] = { 0 };
-    if (StringFromGUID2(guid, tbuf, 64)) {
+    if (::StringFromGUID2(guid, tbuf, 64)) {
         std::wstring temp = tbuf;
         return temp;
     } else {
@@ -445,10 +445,11 @@ GUID str2GUIDMS(const std::string str) {
 
 GUID wstr2GUIDMS(const std::wstring str) {
     GUID ret = { 0 };
-    if(SUCCEEDED(CLSIDFromString(str.c_str(), &ret))) {
-
-    } else {}
-    return ret;
+    if(SUCCEEDED(::CLSIDFromString(str.c_str(), &ret))) {
+        return ret;
+    } else {
+        return GUID_NULL;
+    }
 }
 #endif
 
@@ -1928,8 +1929,7 @@ unsigned char isStringIP(const std::wstring testStr) {
     if (!(std::regex_match(testStr, ipv4regex))) {
         std::basic_regex<wchar_t> ipv6regex(L"((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}");
         if (!(std::regex_match(testStr, ipv6regex))) {
-            // std::regex domainregex("^((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\-]{1,61}|[a-z0-9-]{1,30}\.[a-z]{2,})$");
-            std::basic_regex<wchar_t> domainregex(L"^[a-zA-Z0-9][-a-zA-Z0-9]+[a-zA-Z0-9].[a-z]{2,5}(.[a-z]{2,5})?(.[a-z]{2,5})?$");
+            std::basic_regex<wchar_t> domainregex(L"^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$");
             if (!(std::regex_match(testStr, domainregex))) {
                 return 3;
             } else {
@@ -1954,7 +1954,8 @@ unsigned char isStringIP(const std::string testStr) {
         std::regex ipv6regex("((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}");
         if (!(std::regex_match(testStr, ipv6regex))) {
             // std::regex domainregex("^((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\-]{1,61}|[a-z0-9-]{1,30}\.[a-z]{2,})$");
-            std::regex domainregex("[a-zA-Z0-9][-a-zA-Z0-9]+[a-zA-Z0-9].[a-z]{2,5}(.[a-z]{2,5})?(.[a-z]{2,5})?$");
+            // std::regex domainregex("[a-zA-Z0-9][-a-zA-Z0-9]+[a-zA-Z0-9].[a-z]{2,5}(.[a-z]{3,5})?(.[a-z]{2,5})?$");
+            std::regex domainregex("^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$");
             if (!(std::regex_match(testStr, domainregex))) {
                 return 3;
             } else {

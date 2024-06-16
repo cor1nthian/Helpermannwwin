@@ -112,7 +112,7 @@ GUID wstr2GUID(const std::wstring str);
 #if defined(_WIN32) || defined(_WIN64)
 	GUID str2GUIDMS(const std::string str);
 	GUID wstr2GUIDMS(const std::wstring str);
-#endif 
+#endif
 void ltrim(std::string &s);
 void rtrim(std::string &s);
 void trim(std::string &s);

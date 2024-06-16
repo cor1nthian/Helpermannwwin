@@ -32,7 +32,7 @@ WinVerAdvanced getWinVerAdvanced() {
 	OSVERSIONINFOEX verinfo;
 	memset(&verinfo, 0, sizeof(OSVERSIONINFOEX));
 	verinfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	GetVersionEx((LPOSVERSIONINFO) &verinfo);
+	::GetVersionEx((LPOSVERSIONINFO) &verinfo);
 	auto sharedUserData = (unsigned char*)0x7FFE0000;
 	char winver[16] = { 0 };
 	sprintf(winver, "%d.%d.%d",
@@ -131,7 +131,7 @@ std::string getWinVersionTextStr() {
 	OSVERSIONINFOEX verinfo;
 	memset(&verinfo, 0, sizeof(OSVERSIONINFOEX));
 	verinfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	GetVersionEx((LPOSVERSIONINFO)&verinfo);
+	::GetVersionEx((LPOSVERSIONINFO)&verinfo);
 	auto sharedUserData = (unsigned char*)0x7FFE0000;
 	char winver[16] = { 0 };
 	std::string verTxtPart;
@@ -148,8 +148,7 @@ std::string getWinVersionTextStr() {
 		}
 	} else if (startsWith(winver, "5.1")) {
 		verTxtPart = "Windows XP?";
-	}
-	else if (startsWith(winver, "5.2")) {
+	} else if (startsWith(winver, "5.2")) {
 		if ((verinfo.wProductType == VER_NT_SERVER) ||
 			(verinfo.wProductType == VER_NT_DOMAIN_CONTROLLER)) {
 			verTxtPart = "Windows Server 2003?";
@@ -211,7 +210,7 @@ std::wstring getWinVersionTextWStr() {
 	OSVERSIONINFOEX verinfo;
 	memset(&verinfo, 0, sizeof(OSVERSIONINFOEX));
 	verinfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	GetVersionEx((LPOSVERSIONINFO)&verinfo);
+	::GetVersionEx((LPOSVERSIONINFO)&verinfo);
 	auto sharedUserData = (unsigned char*)0x7FFE0000;
 	wchar_t winver[16] = { 0 };
 	std::wstring verTxtPart;

@@ -1,15 +1,15 @@
 #include "winerrhelper.h"
 
 void errorMsgBox(const std::wstring errormsg) {
-	MessageBox(0, errormsg.c_str(), L"ERROR", MB_ICONERROR);
+	::MessageBox(0, errormsg.c_str(), L"ERROR", MB_ICONERROR);
 }
 
 void setLastError(const unsigned long code) {
-	SetLastError(code);
+	::SetLastError(code);
 }
 
 unsigned long getLastErrorCode() {
-	return GetLastError();
+	return ::GetLastError();
 }
 
 std::wstring getErrorDetails(const unsigned long errcode,
@@ -17,7 +17,7 @@ std::wstring getErrorDetails(const unsigned long errcode,
 	const std::wstring additionalInfo) {
 	unsigned long errCode = errcode;
 	if (!errCode) {
-		errCode = GetLastError();
+		errCode = ::GetLastError();
 	}
 	wchar_t descBuf[256] = { 0 };
 	wchar_t msgbuf[1024] = { 0 };
@@ -30,7 +30,7 @@ std::wstring getErrorDetails(const unsigned long errcode,
 	wcscat(msgbuf, L"\n\nError code: ");
 	wcscat(msgbuf, std::to_wstring(errCode).c_str());
 	wcscat(msgbuf, L"\n\nDetails:\n");
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+	::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 		NULL, errCode,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
 		descBuf, 256, NULL);

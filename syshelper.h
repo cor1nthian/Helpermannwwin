@@ -177,33 +177,33 @@ struct WKSid {
 		std::wstring sidname, std::wstring sidnameorig) {
 		StrSID = strsid;
 		SIDName = sidname;
-		SidNameOrig = sidnameorig;
+		SIDNameOrig = sidnameorig;
 	}
-	WKSid(const WKSid& other) {
+	WKSid(const WKSid &other) {
 		StrSID = other.StrSID;
 		SIDName = other.SIDName;
-		SidNameOrig = other.SidNameOrig;
+		SIDNameOrig = other.SIDNameOrig;
 	}
 	WKSid& operator=(const WKSid &other) {
 		StrSID = other.StrSID;
 		SIDName = other.SIDName;
-		SidNameOrig = other.SidNameOrig;
+		SIDNameOrig = other.SIDNameOrig;
 		return *this;
 	}
 	bool operator==(const WKSid &other) const {
 		return (lower_copy(StrSID) == lower_copy(other.StrSID) &&
 			lower_copy(SIDName) == lower_copy(other.SIDName) &&
-			lower_copy(SidNameOrig) == lower_copy(other.SidNameOrig));
+			lower_copy(SIDNameOrig) == lower_copy(other.SIDNameOrig));
 	}
 	bool operator!=(const WKSid &other) const {
 		return (lower_copy(StrSID) != lower_copy(other.StrSID) ||
 			lower_copy(SIDName) != lower_copy(other.SIDName) ||
-			lower_copy(SidNameOrig) != lower_copy(other.SidNameOrig));
+			lower_copy(SIDNameOrig) != lower_copy(other.SIDNameOrig));
 	}
 	~WKSid() {}
 	std::wstring StrSID;
 	std::wstring SIDName;
-	std::wstring SidNameOrig;
+	std::wstring SIDNameOrig;
 };
 
 /* User account description struct

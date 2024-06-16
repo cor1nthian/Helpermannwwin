@@ -152,8 +152,11 @@ struct FileRecord {
 Operators are defined in the header file,
 constructors and destructor are defined in the source code file */
 struct FolderRecord {
+	// Folder description struct constructor
 	FolderRecord();
+	// Folder description struct copy constructor
 	FolderRecord(const FolderRecord &other);
+	// Folder description struct destructor
 	~FolderRecord();
 	FolderRecord& operator=(const FolderRecord &other) {
 		folderName = other.folderName;

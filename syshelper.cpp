@@ -431,7 +431,7 @@ SysHandler::~SysHandler() {}
 std::wstring SysHandler::GetMachineName() const {
 	unsigned long nameLen = MAX_COMPUTERNAME_LENGTH;
 	wchar_t compName[MAX_COMPUTERNAME_LENGTH + 1] = { 0 };
-	if (GetComputerName(compName, &nameLen)) {
+	if (::GetComputerName(compName, &nameLen)) {
 		return compName;
 	} else {
 		return L"";
@@ -439,8 +439,8 @@ std::wstring SysHandler::GetMachineName() const {
 }
 
 SysArch SysHandler::GetMachineArch() const {
-	unsigned int x64test = GetSystemWow64DirectoryA(0, 0);
-	if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
+	unsigned int x64test = ::GetSystemWow64DirectoryA(0, 0);
+	if (::GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
 		return SysArch::X32;
 	} else {
 		return SysArch::X64;
@@ -450,7 +450,7 @@ SysArch SysHandler::GetMachineArch() const {
 bool SysHandler::IsWow64Proc () const {
 	int isWow64 = 0;
 	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(
-		GetModuleHandle(L"kernel32"), "IsWow64Process");
+		::GetModuleHandle(L"kernel32"), "IsWow64Process");
 	if(fnIsWow64Process) {
 		if (fnIsWow64Process(GetCurrentProcess(), isWow64)) {
 			if (isWow64) {
@@ -470,7 +470,7 @@ bool SysHandler::IsWow64Proc () const {
 bool SysHandler::IsWow64Proc(const unsigned long pid, const unsigned long desiredProcRights) const {
 	int isWow64 = 0;
 	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(
-		GetModuleHandle(L"kernel32"), "IsWow64Process");
+		::GetModuleHandle(L"kernel32"), "IsWow64Process");
 	if (fnIsWow64Process) {
 		HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 		if (hProc && INVALID_HANDLE_VALUE != hProc && hProc) {
@@ -531,10 +531,10 @@ std::wstring SysHandler::GetStrSIDFromAccountName(const std::wstring accName, co
 	SID_NAME_USE sidType;
 	/*std::wstring fullName = machineName.length() ?
 		machineName + L"\\" + accName : L".\\" + accName;*/
-	if (LookupAccountName(machineName.c_str(), accName.c_str(), buf, &sidlen, domainName,
+	if (::LookupAccountName(machineName.c_str(), accName.c_str(), buf, &sidlen, domainName,
 		&domainNameLen, &sidType)) {
 		SID* sid = (SID*)buf;
-		if (ConvertSidToStringSid(sid, &sidstr)) {
+		if (::ConvertSidToStringSid(sid, &sidstr)) {
 			std::wstring ret = sidstr;
 			SAFE_NetApiBufferFree(sidstr);
 			SAFE_ARR_DELETE(buf);
@@ -558,7 +558,7 @@ PSID SysHandler::GetSIDFromAccountName(const std::wstring accName,
 	unsigned long domainNameLen = 128, sidlen = 128;
 	/*std::wstring fullName = machineName.length() ?
 		machineName + L"\\" + accName : L".\\" + accName;*/
-	if (LookupAccountName(machineName.c_str(), accName.c_str(), (PSID)buf, &sidlen, domainName,
+	if (::LookupAccountName(machineName.c_str(), accName.c_str(), (PSID)buf, &sidlen, domainName,
 		&domainNameLen, &sidType)) {
 		return (PSID)buf;
 	} else {
@@ -611,7 +611,7 @@ SysOpResult SysHandler::GetSIDType(const PSID sid, SidType &sidType, const std::
 			if (domainNameBuf) {
 				swprintf(domainNameBuf, L"%s", domainName.c_str());
 				SID_NAME_USE sidUse;
-				if (LookupAccountSid(machineName.c_str(), sid, nameBuf, &nameLen, domainNameBuf, &domainNameLen, &sidUse)) {
+				if (::LookupAccountSid(machineName.c_str(), sid, nameBuf, &nameLen, domainNameBuf, &domainNameLen, &sidUse)) {
 					SAFE_ARR_DELETE(nameBuf);
 					SAFE_ARR_DELETE(domainNameBuf);
 					sidType = (SidType)sidUse;
@@ -639,7 +639,7 @@ SysOpResult SysHandler::GetRam(unsigned long long &freeRam,
 	MEMORYSTATUSEX statex;
 	memset(&statex, 0, sizeof(MEMORYSTATUSEX));
 	statex.dwLength = sizeof(statex);
-	if (GlobalMemoryStatusEx(&statex)) {
+	if (::GlobalMemoryStatusEx(&statex)) {
 		freeRam = statex.ullAvailPhys;
 		totalRam = statex.ullTotalPhys;
 		precentInUse = statex.dwMemoryLoad;
@@ -654,7 +654,7 @@ SysOpResult SysHandler::GetPageFile(unsigned long long &freePageFile,
 	MEMORYSTATUSEX statex;
 	memset(&statex, 0, sizeof(MEMORYSTATUSEX));
 	statex.dwLength = sizeof(statex);
-	if (GlobalMemoryStatusEx(&statex)) {
+	if (::GlobalMemoryStatusEx(&statex)) {
 		freePageFile = statex.ullAvailPageFile;
 		totalPageFile = statex.ullTotalPageFile;
 		return SysOpResult::Success;
@@ -668,7 +668,7 @@ SysOpResult SysHandler::GetVirtualMem(unsigned long long &freeVirtMem,
 	MEMORYSTATUSEX statex;
 	memset(&statex, 0, sizeof(MEMORYSTATUSEX));
 	statex.dwLength = sizeof(statex);
-	if (GlobalMemoryStatusEx(&statex)) {
+	if (::GlobalMemoryStatusEx(&statex)) {
 		freeVirtMem = statex.ullAvailVirtual;
 		totalVirtMem = statex.ullTotalVirtual;
 		return SysOpResult::Success;
@@ -680,7 +680,7 @@ SysOpResult SysHandler::GetVirtualMem(unsigned long long &freeVirtMem,
 PSID SysHandler::SIDFromStrSid(const std::wstring sidstr) const {
 	if (sidstr.length()) {
 		PSID tsid = 0;
-		if (ConvertStringSidToSid(sidstr.c_str(), &tsid)) {
+		if (::ConvertStringSidToSid(sidstr.c_str(), &tsid)) {
 			return tsid;
 		} else {
 			return 0;
@@ -693,7 +693,7 @@ PSID SysHandler::SIDFromStrSid(const std::wstring sidstr) const {
 std::wstring SysHandler::StrSIDFromSID(const PSID sid) const {
 	wchar_t* sbuf = 0;
 	std::wstring ret;
-	if (ConvertSidToStringSid(sid, &sbuf)) {
+	if (::ConvertSidToStringSid(sid, &sbuf)) {
 		ret = sbuf;
 		SAFE_LOCALFREE(sbuf);
 		return ret;
@@ -708,7 +708,7 @@ std::wstring SysHandler::GetAccountNameFromSID(const PSID sid, const std::wstrin
 		NEW_ARR_NULLIFY(nameBuf, wchar_t, nameLen + 1);
 		NEW_ARR_NULLIFY(domainNameBuf, wchar_t, domainNameLen + 1);
 		if (nameBuf && domainNameBuf) {
-			if (LookupAccountSid(machineName.c_str(), sid, nameBuf, &nameLen,
+			if (::LookupAccountSid(machineName.c_str(), sid, nameBuf, &nameLen,
 				domainNameBuf, &domainNameLen, &sidUse)) {
 				std::wstring ret = nameBuf;
 				SAFE_ARR_DELETE(nameBuf);
@@ -746,7 +746,7 @@ std::wstring SysHandler::GetAccountNameFromStrSID(const std::wstring strSid,
 		// wchar_t* nameBuf = (wchar_t*)calloc(nameLen + 1, (nameLen + 1) * sizeof(wchar_t));
 		// wchar_t* domainNameBuf = (wchar_t*)calloc(domainNameLen + 1, (domainNameLen + 1) * sizeof(wchar_t));
 		if (nameBuf && domainNameBuf) {
-			if (LookupAccountSid(machineName.c_str(), tpsid, nameBuf, &nameLen,
+			if (::LookupAccountSid(machineName.c_str(), tpsid, nameBuf, &nameLen,
 				domainNameBuf, &domainNameLen, &sidUse)) {
 				std::wstring ret = nameBuf;
 				SAFE_LOCALFREE(tpsid);
@@ -776,7 +776,7 @@ SysOpResult SysHandler::LocalGroupListFromUsername(std::vector<GroupDesc> &outGr
 	unsigned char* tmpbuf = 0;
 	unsigned long entriesRead = 0, totalEntries = 0, res = 0;
 	do {
-		res = NetUserGetLocalGroups(machineName.c_str(), userName.c_str(), 0, LG_INCLUDE_INDIRECT , &buf,
+		res = ::NetUserGetLocalGroups(machineName.c_str(), userName.c_str(), 0, LG_INCLUDE_INDIRECT , &buf,
 			MAX_PREFERRED_LENGTH, &entriesRead, &totalEntries);
 		if (NERR_Success == res || ERROR_MORE_DATA == res) {
 			if ((tmpbuf = buf) != 0) {
@@ -824,7 +824,7 @@ SysOpResult SysHandler::EnumLocalGroups(std::vector<GroupDesc> &groupList,
 	unsigned long resptr = 0;
 #endif
 	do {
-		res = NetLocalGroupEnum(machineName.c_str(), 1, &buf, MAX_PREFERRED_LENGTH, &entriesRead,
+		res = ::NetLocalGroupEnum(machineName.c_str(), 1, &buf, MAX_PREFERRED_LENGTH, &entriesRead,
 			&totalEntries, &resptr);
 		if (NERR_Success == res || ERROR_MORE_DATA == res) {
 			if ((tmpbuf = buf) != 0) {
@@ -866,7 +866,7 @@ SysOpResult SysHandler::EnumLocalGroups(std::vector<GroupDesc> &groupList,
 		resptr = 0;
 		for (i = 0; i < groupList.size(); ++i) {
 			do {
-				res = NetLocalGroupGetMembers(machineName.c_str(), groupList[i].GroupName.c_str(), 1,
+				res = ::NetLocalGroupGetMembers(machineName.c_str(), groupList[i].GroupName.c_str(), 1,
 					&buf, MAX_PREFERRED_LENGTH, &entriesRead, &totalEntries, &resptr);
 				if (NERR_Success == res || ERROR_MORE_DATA == res) {
 					if ((tmpbuf = buf) != 0) {
@@ -900,7 +900,7 @@ SysOpResult SysHandler::EnumAccounts(std::vector<AccountDesc> &accountList,
 	USER_INFO_20* tmpbuf = 0;
 	do {
 		SAFE_NetApiBufferFree(buf);
-		res = NetUserEnum(machineName.c_str(), 20,
+		res = ::NetUserEnum(machineName.c_str(), 20,
 			FILTER_TEMP_DUPLICATE_ACCOUNT | FILTER_NORMAL_ACCOUNT | FILTER_INTERDOMAIN_TRUST_ACCOUNT |
 			FILTER_WORKSTATION_TRUST_ACCOUNT | FILTER_SERVER_TRUST_ACCOUNT,
 			(unsigned char**)&buf, MAX_PREFERRED_LENGTH, &entriesRead, &totalEntries, &resHandle);
@@ -957,7 +957,7 @@ SysOpResult SysHandler::EnumAccounts(std::vector<AccountDesc> &accountList,
 	USER_INFO_4* buf4 = 0;
 	AccountDesc* rec = 0;
 	for (size_t i = 0; i < accountList.size(); ++i) {
-		res = NetUserGetInfo(machineName.c_str(), accountList[i].accountName.c_str(), 4,
+		res = ::NetUserGetInfo(machineName.c_str(), accountList[i].accountName.c_str(), 4,
 			(unsigned char**)&buf4);
 		if (NERR_Success == res) {
 			if (accountList[i].accountName == buf4->usri4_name) {

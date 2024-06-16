@@ -83,7 +83,7 @@ ProcResource ProcessHandler::StartProc(const std::wstring exepath, const std::ws
 	PROCESS_INFORMATION pi;
 	memset(&si, 0, sizeof(STARTUPINFO));
 	memset(&pi, 0, sizeof(PROCESS_INFORMATION));
-	if (CreateProcess((wchar_t*)exepath.c_str(), // Exe path
+	if (::CreateProcess((wchar_t*)exepath.c_str(), // Exe path
 		(wchar_t*)cmdline.c_str(),				 // Command line (prior space is mandatory)
 		NULL,									 // Process handle not inheritable
 		NULL,									 // Thread handle not inheritable
@@ -98,14 +98,14 @@ ProcResource ProcessHandler::StartProc(const std::wstring exepath, const std::ws
 		ret.si = si;
 		ret.pi = pi;
 		if (ProcAwait::Infinite == awaitTime) {
-			WaitForSingleObject(pi.hProcess, INFINITE);
-			GetExitCodeProcess(pi.hProcess, &ret.exitCode);
+			::WaitForSingleObject(pi.hProcess, INFINITE);
+			::GetExitCodeProcess(pi.hProcess, &ret.exitCode);
 			if (freeRes) {
 				FreeProcResources(ret);
 			}
 		} else if (ProcAwait::ExactTime == awaitTime) {
-			WaitForSingleObject(pi.hProcess, procAwaitTime);
-			GetExitCodeProcess(pi.hProcess, &ret.exitCode);
+			::WaitForSingleObject(pi.hProcess, procAwaitTime);
+			::GetExitCodeProcess(pi.hProcess, &ret.exitCode);
 			if (freeRes) {
 				FreeProcResources(ret);
 			}
@@ -119,7 +119,7 @@ ProcResource ProcessHandler::StartProc(const std::wstring exepath, const std::ws
 }
 
 bool ProcessHandler::FreeProcResources(const ProcResource& procRes, bool stopProc) {
-	bool funcres = CloseHandle(procRes.pi.hProcess) && CloseHandle(procRes.pi.hThread);
+	bool funcres = ::CloseHandle(procRes.pi.hProcess) && CloseHandle(procRes.pi.hThread);
 	if (stopProc) {
 		return StopProc(procRes.pid);
 	}
@@ -138,13 +138,13 @@ bool ProcessHandler::StopProc(const unsigned long pid,
 	}
 	for (size_t i = 0; i < procs.size(); ++i) {
 		if (procs[i].pid == pid) {
-			HANDLE hProc = OpenProcess(PROCESS_TERMINATE, false, pid);
+			HANDLE hProc = ::OpenProcess(PROCESS_TERMINATE, false, pid);
 			if (INVALID_HANDLE_VALUE != hProc) {
-				if (!TerminateProcess(hProc, 1)) {
-					CloseHandle(hProc);
+				if (!::TerminateProcess(hProc, 1)) {
+					::CloseHandle(hProc);
 					return false;
 				}
-				return CloseHandle(hProc);
+				return ::CloseHandle(hProc);
 			} else {
 				return false;
 			}
