@@ -185,7 +185,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::wstring address,
     return NetOpResult::Success;
 }
 
-/*  Send packets with increasing TTL until you get a reply from target host or max hops reached.
+/*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
 NetOpResult traceroute(std::vector<TracertResult> &results, const std::string address,
     const unsigned char maxHops, const unsigned short int tracertTimeout,
@@ -340,7 +340,7 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
     return NetOpResult::Success;
 }
 
-/*  Send packets with increasing TTL until you get a reply from target host or max hops reached.
+/*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
 NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring address,
     const unsigned char maxHops, const unsigned short int tracertTimeout,
@@ -350,7 +350,7 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring a
         timeoutBetweenPings);
 }
 
-/*  Send packets with increasing TTL until you get a reply from target host or max hops reached.
+/*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
 NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std::string address, const unsigned char maxHops) {
     TracertResult res;
@@ -478,7 +478,7 @@ NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std:
     return NetOpResult::Success;
 }
 
-/*  Send packets with increasing TTL until you get a reply from target host or max hops reached.
+/*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
 NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results,
     const std::wstring address, const unsigned char maxHops) {
