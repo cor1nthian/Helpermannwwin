@@ -307,11 +307,12 @@ NetOpResult ping(std::vector<PingResult> &results, const std::string address, co
 	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
 NetOpResult ping(std::vector<PingResult> &results, const std::wstring address, const unsigned short numAttempts = 4,
 	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
-NetOpResult traceroute(std::vector<TracertResult> &results, const std::string address, const unsigned char maxHops = 30,
-	const unsigned short int tracertTimeout = 1000, const bool doPings = true, const unsigned short int pingAttempts = 4,
-	const unsigned short int pingTimeout = 1000, const unsigned short int timeoutBetweenPings = 1000);
+NetOpResult traceroute(std::vector<TracertResult> &results, const std::string address,  
+	const unsigned char maxHops = 30, const bool doPings = true, const unsigned short int tracertTimeout = 1000,
+	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
+	const unsigned short int timeoutBetweenPings = 1000);
 NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring address, const unsigned char maxHops = 30,
-	const unsigned short int tracertTimeout = 1000, const bool doPings = true, const unsigned short int pingAttempts = 4,
+	const bool doPings = true, const unsigned short int tracertTimeout = 1000, const unsigned short int pingAttempts = 4,
 	const unsigned short int pingTimeout = 1000, const unsigned short int timeoutBetweenPings = 1000);
 NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results,
 	const std::string address, const unsigned char maxHops = 30);

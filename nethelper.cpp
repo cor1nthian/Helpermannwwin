@@ -187,9 +187,8 @@ NetOpResult ping(std::vector<PingResult> &results, const std::wstring address,
 
 /*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
-NetOpResult traceroute(std::vector<TracertResult> &results, const std::string address,
-    const unsigned char maxHops, const unsigned short int tracertTimeout,
-    const bool doPings, const unsigned short int pingAttempts,
+NetOpResult traceroute(std::vector<TracertResult> &results, const std::string address, const unsigned char maxHops,
+    const bool doPings, const unsigned short int tracertTimeout, const unsigned short int pingAttempts,
     const unsigned short int pingTimeout, const unsigned short int timeoutBetweenPings) {
     TracertResult trres;
     unsigned short int maxhops = maxHops;
@@ -342,11 +341,10 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
 
 /*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
-NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring address,
-    const unsigned char maxHops, const unsigned short int tracertTimeout,
-    const bool doPings, const unsigned short int pingAttempts, const unsigned short int timeout,
-    const unsigned short int timeoutBetweenPings) {
-    return traceroute(results, wstr2str(address), maxHops, tracertTimeout, doPings, pingAttempts, timeout,
+NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring address, const unsigned char maxHops,
+    const bool doPings, const unsigned short int tracertTimeout, const unsigned short int pingAttempts,
+    const unsigned short int timeout, const unsigned short int timeoutBetweenPings) {
+    return traceroute(results, wstr2str(address), maxHops, doPings, tracertTimeout, pingAttempts, timeout,
         timeoutBetweenPings);
 }
 
