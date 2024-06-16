@@ -6,12 +6,12 @@
 #define ICMP_MIN 8 
 
 #if defined(_WIN32) || defined(_WIN64)
-bool g_WSAStarted = false;
+    bool g_WSAStarted = false;
 #endif`
 
 NetOpResult ping(std::vector<PingResult> &results, const std::string address,
-    const unsigned short numAttempts, const unsigned short timeout,
-    const unsigned short timeoutBetweenPings) {
+    const unsigned short int numAttempts, const unsigned short int timeout,
+    const unsigned short int timeoutBetweenPings) {
     std::string pingtgt = address;
     unsigned char addrtestres = isStringIP(pingtgt);
     if (2 == addrtestres) {
@@ -98,7 +98,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::string address,
 }
 
 NetOpResult ping(std::vector<PingResult> &results, const std::wstring address,
-    const unsigned short numAttempts, const unsigned short timeout,
+    const unsigned short int numAttempts, const unsigned short int timeout,
     const unsigned short int timeoutBetweenPings) {
     std::wstring pingtgt = address;
     unsigned char addrtestres = isStringIP(pingtgt);

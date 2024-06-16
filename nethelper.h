@@ -76,7 +76,7 @@
 #define MAXTRACERTPINGS		32
 
 #if defined(_WIN32) || defined(_WIN64)
-extern bool g_WSAStarted;
+	extern bool g_WSAStarted;
 #endif
 
 enum class NetOpResult : unsigned char {
