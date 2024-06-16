@@ -225,7 +225,7 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
     }
 #endif
     unsigned char hops = 1;
-    unsigned long dwRetVal = 0;
+    unsigned long retVal = 0;
     char SendData[32] = "Data Buffer\0";
     void* ReplyBuffer = 0;
     unsigned long ReplySize = 0;
@@ -245,9 +245,9 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
             std::string taddr;
             do {
                 ip_option.Ttl = hops;
-                dwRetVal = IcmpSendEcho(hIcmpFile, Addr.sin_addr.s_addr, SendData, sizeof(SendData),
+                retVal = IcmpSendEcho(hIcmpFile, Addr.sin_addr.s_addr, SendData, sizeof(SendData),
                     &ip_option, ReplyBuffer, ReplySize, (unsigned long)tracerttimeout);
-                if (dwRetVal) {
+                if (retVal) {
                     memset(&trres, 0, sizeof(TracertResult));
                     ICMP_ECHO_REPLY* pEchoReply = (ICMP_ECHO_REPLY*)ReplyBuffer;
                     host = gethostbyaddr((char*)&pEchoReply->Address, 4, PF_INET);
@@ -261,7 +261,6 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
                             trres.AddressIPV4 = str2wstr(lookupIPAddress(host->h_name));
                             trres.Address = str2wstr(host->h_name);
                         } else {}
-                        // trres.AddressIPV4 = str2wstr(host->h_name);
                         printf("ttl: %d\t%s\n", hops, host->h_name);
                     } else {
                         taddr = inet_ntoa(*(struct in_addr*)&pEchoReply->Address);
@@ -274,13 +273,12 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
                             trres.AddressIPV4 = str2wstr(lookupIPAddress(taddr));
                             trres.Address = str2wstr(taddr);
                         } else {}
-                        // trres.Address = str2wstr(inet_ntoa(*(struct in_addr*)&pEchoReply->Address));
                         printf("ttl: %d\t%s\n", hops, inet_ntoa(*(struct in_addr*)&pEchoReply->Address));
                     }
                     trres.RoundTripTime = pEchoReply->RoundTripTime;
                     trres.TTL = pEchoReply->Options.Ttl;
                     results.push_back(trres);
-                    if (lower_copy(lookupIPAddress(trres.Address)) == str2wstr(lower_copy(tracerttgt))) {
+                    if (lookupIPAddress(trres.Address) == str2wstr(tracerttgt)) {
                         break;
                     }
                     ++hops;
@@ -483,6 +481,69 @@ NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results,
     return traceroute_RawSocket(results, wstr2str(address), maxHops);
 }
 
+NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const std::wstring portOrSvcName) {
+    std::string poslow = wstr2str(lower_copy(portOrSvcName));
+#if defined(_WIN32) || defined(_WIN64)
+    if (!g_WSAStarted) {
+        WSADATA wsd = { 0 };
+        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+            return NetOpResult::Fail;
+        }
+        g_WSAStarted = true;
+    }
+#endif
+    SOCKADDR* sockaddr_ip = 0;
+    SOCKADDR_IN* sockaddr_ipv4 = 0;
+    int iresult = 0, retval = 0;
+    unsigned long dwRetval = 0, ipbufferlength = 46;;
+    int i = 1;
+    addrinfo* result = 0;
+    addrinfo* ptr = 0;
+    addrinfo hints = { 0 };
+    memset(&hints, 0, sizeof(addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    HostNodeAddr hna;
+    if (!getaddrinfo(dnsName.c_str(), poslow.c_str(), &hints, &result)) {
+        for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+            switch (ptr->ai_family) {
+                case AF_UNSPEC: {} break;
+                case AF_INET: {
+                    hna.Address = str2wstr(inet_ntoa(((struct sockaddr_in*)ptr->ai_addr)->sin_addr));
+                } break;
+                case AF_INET6: {
+                    char addrv6[INET6_ADDRSTRLEN] = { 0 };
+                    inet_ntop(AF_INET6, &ptr->ai_addr, addrv6, INET6_ADDRSTRLEN);
+                    hna.Address = str2wstr(addrv6);
+                } break;
+                case AF_NETBIOS: {} break;
+                default: {} break;
+            }
+            hna.SocketType = ptr->ai_socktype;
+            hna.Protocol = ptr->ai_protocol;
+            node.Address.push_back(hna);
+        }
+    } else {
+        return NetOpResult::Fail;
+    }
+#if defined(_WIN32) || defined(_WIN64)
+    if (g_WSAStarted) {
+        if (WSACleanup()) {
+            // handle WSACleanup error
+            // int wsaerr = WSAGetLastError();
+        } else {
+            g_WSAStarted = false;
+        }
+    }
+#endif
+    return NetOpResult::Success;
+}
+
+NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName, const std::wstring portOrSvcName) {
+    return lookupIPAddresses(node, wstr2str(dnsName), portOrSvcName);
+}
+
 std::string lookupIPAddress(const std::string dnsName) {
     char* ret = (char*)calloc(15, 15 * sizeof(char));
     if (ret) {
@@ -612,7 +673,7 @@ std::string getHostname(const std::string ip, unsigned short int port) {
     }
 #endif
     struct sockaddr_in saGNI;
-    char hostname[NI_MAXHOST] = "none";
+    char hostname[NI_MAXHOST] = "none\0";
     char servInfo[NI_MAXSERV];
     saGNI.sin_family = AF_INET;
     saGNI.sin_addr.s_addr = inet_addr(ip.c_str());

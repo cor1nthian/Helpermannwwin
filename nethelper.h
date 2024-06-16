@@ -75,6 +75,30 @@
 #define MAXTRACERTHOPS		255
 #define MAXTRACERTPINGS		32
 
+const std::vector<unsigned short int> const gc_CommonPorts = {
+	80,     // HTTP
+	443,    // HTTPS
+	21,     // FTP
+	22,     // FTPS / SSH
+	53,     // DNS
+	110,    // POP3
+	995,    // POP3 SSL
+	143,    // IMAP
+	993,    // IMAP SSL
+	25,     // SMTP
+	26,     // SMTP
+	587,    // SMTP SSL
+	3306,   // MySQL
+	2082,   // cPanel
+	2083,   // cPanel SSL
+	2086,   // WHM(Webhost Manager)
+	2087,   // WHM(Webhost Manager) SSL
+	2095,   // Webmail
+	2096,   // Webmail SSL
+	2077,   // WebDAV / WebDisk
+	2078    // WebDAV/WebDisk SSL
+};
+
 #if defined(_WIN32) || defined(_WIN64)
 	extern bool g_WSAStarted;
 #endif
@@ -82,6 +106,53 @@
 enum class NetOpResult : unsigned char {
 	Success,
 	Fail
+};
+
+struct HostNodeAddr {
+	HostNodeAddr() { SocketType = 0; Protocol = 0; }
+	HostNodeAddr(const HostNodeAddr& other) {
+		SocketType = other.SocketType;
+		Protocol = other.Protocol;
+		Address = other.Address;
+	}
+	~HostNodeAddr() {}
+	HostNodeAddr& operator=(const HostNodeAddr& other) {
+		SocketType = other.SocketType;
+		Protocol = other.Protocol;
+		Address = other.Address;
+	}
+	bool operator==(const HostNodeAddr& other) const {
+		return (SocketType == other.SocketType &&
+			Protocol == other.Protocol &&
+			Address == other.Address);
+	}
+	bool operator!=(const HostNodeAddr &other) const {
+		return (SocketType != other.SocketType ||
+			Protocol != other.Protocol ||
+			Address != other.Address);
+	}
+	int SocketType;
+	int Protocol;
+	std::wstring Address;
+};
+
+struct HostNode {
+	HostNode() {}
+	HostNode(const HostNode &other) {
+		Address = other.Address;
+	}
+	~HostNode() {}
+	HostNode& operator=(const HostNode &other) {
+		Address = other.Address;
+		return *this;
+	}
+	bool operator==(const HostNode &other) const {
+		return(Address == other.Address);
+	}
+	bool operator!=(const HostNode &other) const {
+		return(Address != other.Address);
+	}
+	std::vector<HostNodeAddr> Address;
 };
 
 struct PingResult {
@@ -107,7 +178,7 @@ struct PingResult {
 			RoundTripTime == other.RoundTripTime &&
 			TTL == other.TTL);
 	}
-	bool operator!=(const PingResult& other) const {
+	bool operator!=(const PingResult &other) const {
 		return(Result != other.Result ||
 			RoundTripTime != other.RoundTripTime ||
 			TTL != other.TTL);
@@ -307,21 +378,22 @@ NetOpResult ping(std::vector<PingResult> &results, const std::string address, co
 	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
 NetOpResult ping(std::vector<PingResult> &results, const std::wstring address, const unsigned short numAttempts = 4,
 	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
-NetOpResult traceroute(std::vector<TracertResult> &results, const std::string address,  
-	const unsigned char maxHops = 30, const bool doPings = true, const unsigned short int tracertTimeout = 1000,
-	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
-	const unsigned short int timeoutBetweenPings = 1000);
+NetOpResult traceroute(std::vector<TracertResult> &results, const std::string address,  const unsigned char maxHops = 30,
+	const bool doPings = false, const unsigned short int tracertTimeout = 1000, const unsigned short int pingAttempts = 4,
+	const unsigned short int pingTimeout = 1000, const unsigned short int timeoutBetweenPings = 1000);
 NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring address, const unsigned char maxHops = 30,
-	const bool doPings = true, const unsigned short int tracertTimeout = 1000, const unsigned short int pingAttempts = 4,
+	const bool doPings = false, const unsigned short int tracertTimeout = 1000, const unsigned short int pingAttempts = 4,
 	const unsigned short int pingTimeout = 1000, const unsigned short int timeoutBetweenPings = 1000);
 NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results,
 	const std::string address, const unsigned char maxHops = 30);
 NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results,
 	const std::wstring address, const unsigned char maxHops = 30);
+NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const std::wstring portOrSvcName = L"80");
+NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName, const std::wstring portOrSvcName = L"80");
 std::string lookupIPAddress(const std::string dnsName);
 std::wstring lookupIPAddress(const std::wstring dnsName);
-std::string getHostname(const std::string ip, unsigned short int port = 27015);
-std::wstring getHostname(const std::wstring ip, unsigned short int port = 27015);
+std::string getHostname(const std::string ip, unsigned short int port = 80);
+std::wstring getHostname(const std::wstring ip, unsigned short int port = 80);
 unsigned short ICMPHeaderChecksum(unsigned short* buffer, int size);
 int decodeResponse(char* buf, int bytes, SOCKADDR_IN* from, int ttl);
 
