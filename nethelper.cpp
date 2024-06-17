@@ -492,8 +492,6 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const s
         g_WSAStarted = true;
     }
 #endif
-    SOCKADDR* sockaddr_ip = 0;
-    SOCKADDR_IN* sockaddr_ipv4 = 0;
     int iresult = 0, retval = 0;
     unsigned long dwRetval = 0, ipbufferlength = 46;;
     int i = 1;
@@ -511,17 +509,19 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const s
                 case AF_UNSPEC: {} break;
                 case AF_INET: {
                     hna.Address = str2wstr(inet_ntoa(((struct sockaddr_in*)ptr->ai_addr)->sin_addr));
+                    hna.AddrType = AddressType::IPv4;
                 } break;
                 case AF_INET6: {
                     char addrv6[INET6_ADDRSTRLEN] = { 0 };
                     inet_ntop(AF_INET6, &ptr->ai_addr, addrv6, INET6_ADDRSTRLEN);
                     hna.Address = str2wstr(addrv6);
+                    hna.AddrType = AddressType::IPv6;
                 } break;
                 case AF_NETBIOS: {} break;
                 default: {} break;
             }
-            hna.SocketType = ptr->ai_socktype;
-            hna.Protocol = ptr->ai_protocol;
+            hna.SockType = (SocketType)ptr->ai_socktype;
+            hna.Protocol = (NWProtocol)ptr->ai_protocol;
             node.Address.push_back(hna);
         }
     } else {

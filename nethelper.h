@@ -108,31 +108,79 @@ enum class NetOpResult : unsigned char {
 	Fail
 };
 
+enum class SocketType : unsigned long {
+	Stream = SOCK_STREAM,
+	Datagram = SOCK_DGRAM,
+	Raw = SOCK_RAW,
+	RDM = SOCK_RDM,
+	SeqPacket = SOCK_SEQPACKET
+};
+
+enum class AddressType : unsigned char {
+	IPv4,
+	IPv6,
+	NetBios
+};
+
+enum class NWProtocol : unsigned long {
+	HopOpts = IPPROTO::IPPROTO_HOPOPTS,
+	ICMP = IPPROTO::IPPROTO_ICMP,
+	IGMP = IPPROTO::IPPROTO_IGMP,
+	GMP = IPPROTO::IPPROTO_GGP,
+	TCP = IPPROTO::IPPROTO_TCP,
+	UDP = IPPROTO::IPPROTO_UDP,
+	PUP = IPPROTO::IPPROTO_PUP,
+	IDP = IPPROTO::IPPROTO_IDP,
+	RDP = IPPROTO::IPPROTO_RDP,
+	ESP = IPPROTO::IPPROTO_ESP,
+	AH = IPPROTO::IPPROTO_AH,
+	ND = IPPROTO::IPPROTO_ND,
+	ICLFXBM = IPPROTO::IPPROTO_ICLFXBM,
+	PIM = IPPROTO::IPPROTO_PIM,
+	PGM = IPPROTO::IPPROTO_PGM,
+	L2TP = IPPROTO::IPPROTO_L2TP,
+	SCTP = IPPROTO::IPPROTO_SCTP,
+	IPv6None = IPPROTO::IPPROTO_NONE,
+	IPv6DSTOPTS = IPPROTO::IPPROTO_DSTOPTS,
+	IPv6Routing = IPPROTO::IPPROTO_ROUTING,
+	IPv6Fragment = IPPROTO::IPPROTO_FRAGMENT,
+	ICMPv6 = IPPROTO::IPPROTO_ICMPV6,
+	IPV4 = IPPROTO::IPPROTO_IPV4,
+	IPV6 = IPPROTO::IPPROTO_IPV6
+};
+
+
 struct HostNodeAddr {
-	HostNodeAddr() { SocketType = 0; Protocol = 0; }
+	HostNodeAddr() { SockType = SocketType::Stream; Protocol = NWProtocol::HopOpts; AddrType = AddressType::IPv4; }
 	HostNodeAddr(const HostNodeAddr& other) {
-		SocketType = other.SocketType;
+		SockType = other.SockType;
 		Protocol = other.Protocol;
+		AddrType = other.AddrType;
 		Address = other.Address;
 	}
 	~HostNodeAddr() {}
 	HostNodeAddr& operator=(const HostNodeAddr& other) {
-		SocketType = other.SocketType;
+		SockType = other.SockType;
 		Protocol = other.Protocol;
+		AddrType = other.AddrType;
 		Address = other.Address;
+		return *this;
 	}
 	bool operator==(const HostNodeAddr& other) const {
-		return (SocketType == other.SocketType &&
+		return (SockType == other.SockType &&
 			Protocol == other.Protocol &&
+			AddrType == other.AddrType &&
 			Address == other.Address);
 	}
 	bool operator!=(const HostNodeAddr &other) const {
-		return (SocketType != other.SocketType ||
+		return (SockType != other.SockType ||
 			Protocol != other.Protocol ||
+			AddrType != other.AddrType ||
 			Address != other.Address);
 	}
-	int SocketType;
-	int Protocol;
+	SocketType SockType;
+	NWProtocol Protocol;
+	AddressType AddrType;
 	std::wstring Address;
 };
 
