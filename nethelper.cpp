@@ -49,7 +49,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::string address,
 #endif
     unsigned long ipaddr = INADDR_NONE;
     unsigned long retVal = 0;
-    char SendData[32] = "Data Buffer";
+    char SendData[32] = "Data Buffer\0";
     void* ReplyBuffer = 0;
     unsigned long ReplySize = 0;
     ipaddr = inet_addr(pingtgt.c_str());
@@ -68,6 +68,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::string address,
                         results.emplace_back(true, pEchoReply->RoundTripTime, pEchoReply->Options.Ttl);
                     } else {
                         // IcmpSendEcho failed
+                        results.emplace_back(false, 0, 0);
                     }
                     if (timeoutbwpings) {
                         Sleep(timeoutbwpings);
@@ -137,7 +138,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::wstring address,
 #endif
     unsigned long ipaddr = INADDR_NONE;
     unsigned long retVal = 0;
-    char SendData[32] = "Data Buffer";
+    char SendData[32] = "Data Buffer\0";
     void* ReplyBuffer = 0;
     unsigned long ReplySize = 0;
     ipaddr = inet_addr(wstr2str(pingtgt).c_str());
@@ -156,6 +157,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::wstring address,
                         results.emplace_back(true, pEchoReply->RoundTripTime, pEchoReply->Options.Ttl);
                     } else {
                         // IcmpSendEcho failed
+                        results.emplace_back(false, 0, 0);
                     }
                     if (timeoutbwpings) {
                         Sleep(timeoutbwpings);
@@ -236,16 +238,12 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
         if (ReplyBuffer != 0) {
             ip_option_information ip_option;
             memset(&ip_option, 0, sizeof(ip_option_information));
-            hostent* host = gethostbyname(tracerttgt.c_str());
-            if (!host) {
-                return NetOpResult::Fail;
-            }
-            SOCKADDR_IN Addr;
-            Addr.sin_addr.s_addr = *((u_long*)host->h_addr_list[0]);
+            unsigned long ipaddr = inet_addr(tracerttgt.c_str());
+            hostent* host = 0;
             std::string taddr;
             do {
                 ip_option.Ttl = hops;
-                retVal = IcmpSendEcho(hIcmpFile, Addr.sin_addr.s_addr, SendData, sizeof(SendData),
+                retVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData),
                     &ip_option, ReplyBuffer, ReplySize, (unsigned long)tracerttimeout);
                 if (retVal) {
                     memset(&trres, 0, sizeof(TracertResult));
@@ -254,31 +252,31 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
                     if (host) {
                         addrtestres = isStringIP(host->h_name);
                         if (0 == addrtestres) {
-                            trres.AddressIPV4 = str2wstr(host->h_name);
-                            trres.Address = str2wstr(getHostname(host->h_name));
+                            trres.AddressIPV4 = str2wstr(trim_copy(host->h_name));
+                            trres.Address = str2wstr(trim_copy(getHostname(host->h_name)));
                         } else if (1 == addrtestres) {
                         } else if (2 == addrtestres) {
                             trres.AddressIPV4 = str2wstr(lookupIPAddress(host->h_name));
                             trres.Address = str2wstr(host->h_name);
                         } else {}
-                        printf("ttl: %d\t%s\n", hops, host->h_name);
+                        // printf("ttl: %d\t%s\n", hops, host->h_name);
                     } else {
                         taddr = inet_ntoa(*(struct in_addr*)&pEchoReply->Address);
                         addrtestres = isStringIP(taddr);
                         if (0 == addrtestres) {
-                            trres.AddressIPV4 = str2wstr(taddr);
-                            trres.Address = str2wstr(getHostname(taddr));
+                            trres.AddressIPV4 = str2wstr(trim_copy(taddr));
+                            trres.Address = str2wstr(trim_copy(getHostname(taddr)));
                         } else if (1 == addrtestres) {
                         } else if (2 == addrtestres) {
-                            trres.AddressIPV4 = str2wstr(lookupIPAddress(taddr));
-                            trres.Address = str2wstr(taddr);
+                            trres.AddressIPV4 = str2wstr(trim_copy(lookupIPAddress(taddr)));
+                            trres.Address = str2wstr(trim_copy(taddr));
                         } else {}
-                        printf("ttl: %d\t%s\n", hops, inet_ntoa(*(struct in_addr*)&pEchoReply->Address));
+                        // printf("ttl: %d\t%s\n", hops, inet_ntoa(*(struct in_addr*)&pEchoReply->Address));
                     }
                     trres.RoundTripTime = pEchoReply->RoundTripTime;
                     trres.TTL = pEchoReply->Options.Ttl;
                     results.push_back(trres);
-                    if (lookupIPAddress(trres.Address) == str2wstr(tracerttgt)) {
+                    if (trres.AddressIPV4 == str2wstr(tracerttgt)) {
                         break;
                     }
                     ++hops;
@@ -292,7 +290,7 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
                         trres.TTL = 0;
                         trres.RoundTripTime = 0;
                         results.push_back(trres);
-                        printf("ttl: %d\t *\n", hops);
+                        // printf("ttl: %d\t *\n", hops);
                         ++hops;
                         continue;
                     }
@@ -344,6 +342,371 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring a
     const unsigned short int timeout, const unsigned short int timeoutBetweenPings) {
     return traceroute(results, wstr2str(address), maxHops, doPings, tracertTimeout, pingAttempts, timeout,
         timeoutBetweenPings);
+}
+
+/*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
+    Packets with TTL = 1 dont leave LAN */
+NetOpResult traceroute_MultipleEndPoints(std::vector<TracertResult> &results, const std::string address, const unsigned char maxHops,
+    const std::string portOrSvcName, const bool doPings, const unsigned short int tracertTimeout,
+    const unsigned short int pingAttempts, const unsigned short int pingTimeout,
+    const unsigned short int timeoutBetweenPings) {
+    TracertResult trres;
+    HostNode hn;
+    unsigned short int maxhops = maxHops;
+    if (!maxhops) {
+        maxhops = 1;
+    } else if (maxhops > MAXTRACERTHOPS) {
+        maxhops = MAXTRACERTHOPS;
+    }
+    unsigned short int tracerttimeout = tracertTimeout;
+    if (tracerttimeout > MAXTRACERTTIMEOUT) {
+        tracerttimeout = MAXTRACERTTIMEOUT;
+    }
+    unsigned short timeoutbwpings = timeoutBetweenPings;
+    if (timeoutbwpings > MAXTIMEOUTBWPINGS) {
+        timeoutbwpings = MAXTIMEOUTBWPINGS;
+    }
+    std::string tracerttgt = address;
+    unsigned char addrtestres = isStringIP(tracerttgt);
+    if (2 == addrtestres) {
+        tracerttgt = lookupIPAddress(tracerttgt);
+        if (!tracerttgt.length()) {
+            return NetOpResult::Fail;
+        }
+    } else if (3 == addrtestres) {
+        return NetOpResult::Fail;
+    }
+    if (NetOpResult::Success != lookupIPAddresses(hn, lower_copy(address), portOrSvcName)) {
+        return NetOpResult::Fail;
+    }
+#if defined(_WIN32) || defined(_WIN64)
+    if (!g_WSAStarted) {
+        WSADATA wsd = { 0 };
+        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+            return NetOpResult::Fail;
+        }
+        g_WSAStarted = true;
+    }
+#endif
+    bool stopflag = false;
+    unsigned char hops = 1;
+    unsigned long retVal = 0;
+    char SendData[32] = "Data Buffer\0";
+    void* ReplyBuffer = 0;
+    unsigned long ReplySize = 0;
+    HANDLE hIcmpFile = IcmpCreateFile();
+    if (hIcmpFile != INVALID_HANDLE_VALUE) {
+        ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
+        ReplyBuffer = malloc(ReplySize);
+        if (ReplyBuffer != 0) {
+            unsigned long ipaddr = inet_addr(tracerttgt.c_str());
+            ip_option_information ip_option;
+            memset(&ip_option, 0, sizeof(ip_option_information));
+            hostent* host = { 0 };
+            std::string taddr;
+            do {
+                ip_option.Ttl = hops;
+                retVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData),
+                    &ip_option, ReplyBuffer, ReplySize, (unsigned long)tracerttimeout);
+                if (retVal) {
+                    memset(&trres, 0, sizeof(TracertResult));
+                    ICMP_ECHO_REPLY* pEchoReply = (ICMP_ECHO_REPLY*)ReplyBuffer;
+                    host = gethostbyaddr((char*)&pEchoReply->Address, 4, PF_INET);
+                    if (host) {
+                        addrtestres = isStringIP(host->h_name);
+                        if (0 == addrtestres) {
+                            trres.AddressIPV4 = str2wstr(trim_copy(host->h_name));
+                            trres.Address = str2wstr(trim_copy(getHostname(host->h_name)));
+                        } else if (1 == addrtestres) {
+                        } else if (2 == addrtestres) {
+                            trres.AddressIPV4 = str2wstr(trim_copy(lookupIPAddress(host->h_name)));
+                            trres.Address = str2wstr(trim_copy(host->h_name));
+                        } else {}
+                        // printf("ttl: %d\t%s\n", hops, host->h_name);
+                    } else {
+                        taddr = inet_ntoa(*(struct in_addr*)&pEchoReply->Address);
+                        addrtestres = isStringIP(taddr);
+                        if (0 == addrtestres) {
+                            trres.AddressIPV4 = str2wstr(trim_copy(taddr));
+                            trres.Address = str2wstr(trim_copy(getHostname(taddr)));
+                        } else if (1 == addrtestres) {
+                        } else if (2 == addrtestres) {
+                            trres.AddressIPV4 = str2wstr(trim_copy(lookupIPAddress(taddr)));
+                            trres.Address = str2wstr(trim_copy(taddr));
+                        } else {}
+                        //printf("ttl: %d\t%s\n", hops, inet_ntoa(*(struct in_addr*)&pEchoReply->Address));
+                    }
+                    trres.RoundTripTime = pEchoReply->RoundTripTime;
+                    trres.TTL = pEchoReply->Options.Ttl;
+                    results.push_back(trres);
+                    for (size_t i = 0; i < hn.Address.size(); ++i) {
+                        if (trres.AddressIPV4 == hn.Address[i].Address) {
+                            stopflag = true;
+                            break;
+                        }
+                    }
+                    if (stopflag) {
+                        break;
+                    }
+                    ++hops;
+                } else {
+                    // IcmpSendEcho failed
+                    if (WSAETIMEDOUT == WSAGetLastError() ||
+                        WSA_QOS_ADMISSION_FAILURE == WSAGetLastError()) {
+                        trres.Address = L"*";
+                        trres.AddressIPV4 = L"";
+                        trres.AddressIPV6 = L"";
+                        trres.TTL = 0;
+                        trres.RoundTripTime = 0;
+                        results.push_back(trres);
+                        // printf("ttl: %d\t *\n", hops);
+                        ++hops;
+                        continue;
+                    }
+                }
+            } while (hops <= maxhops);
+        } else {
+            // Unable to allocate memory
+        }
+        SAFE_FREE(ReplyBuffer);
+        IcmpCloseHandle(hIcmpFile);
+        if (doPings) {
+            for (size_t i = 0; i < results.size(); ++i) {
+                if (results[i].Address != L"*") {
+                    if (results[i].AddressIPV4.length()) {
+                        if (NetOpResult::Success != ping(results[i].Pings, results[i].AddressIPV4,
+                            pingAttempts, pingTimeout, timeoutBetweenPings)) {
+                            return NetOpResult::Fail;
+                        }
+                    } else {
+                        if (NetOpResult::Success != ping(results[i].Pings, results[i].Address,
+                            pingAttempts, pingTimeout, timeoutBetweenPings)) {
+                            return NetOpResult::Fail;
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        // Unable to open handle. IcmpCreatefile returned error: %06d", GetLastError()
+    }
+#if defined(_WIN32) || defined(_WIN64)
+    if (g_WSAStarted) {
+        if (WSACleanup()) {
+            // handle WSACleanup error
+            // int wsaerr = WSAGetLastError();
+        } else {
+            g_WSAStarted = false;
+        }
+    }
+#endif
+    SAFE_FREE(ReplyBuffer);
+    return NetOpResult::Success;
+}
+
+/*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
+    Packets with TTL = 1 dont leave LAN */
+NetOpResult traceroute_MultipleEndPoints(std::vector<TracertResult> &results, const std::wstring address,
+    const std::wstring portOrSvcName, const unsigned char maxHops,
+    const bool doPings, const unsigned short int tracertTimeout,
+    const unsigned short int pingAttempts, const unsigned short int pingTimeout,
+    const unsigned short int timeoutBetweenPings) {
+    return(traceroute_MultipleEndPoints(results, wstr2str(address), maxHops, wstr2str(portOrSvcName), doPings, tracertTimeout,
+        pingAttempts, pingTimeout, timeoutBetweenPings));
+}
+
+/*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
+    Packets with TTL = 1 dont leave LAN */
+NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(std::map<std::wstring, std::vector<TracertResult>> &results,
+    const std::string address, const std::string portOrSvcName, const unsigned char maxHops, const bool doPings,
+    const bool strictEndPointMatch, const unsigned short int tracertTimeout,
+    const unsigned short int pingAttempts, const unsigned short int pingTimeout,
+    const unsigned short int timeoutBetweenPings) {
+    TracertResult trres;
+    HostNode hn;
+    unsigned short int maxhops = maxHops;
+    if (!maxhops) {
+        maxhops = 1;
+    } else if (maxhops > MAXTRACERTHOPS) {
+        maxhops = MAXTRACERTHOPS;
+    }
+    unsigned short int tracerttimeout = tracertTimeout;
+    if (tracerttimeout > MAXTRACERTTIMEOUT) {
+        tracerttimeout = MAXTRACERTTIMEOUT;
+    }
+    unsigned short timeoutbwpings = timeoutBetweenPings;
+    if (timeoutbwpings > MAXTIMEOUTBWPINGS) {
+        timeoutbwpings = MAXTIMEOUTBWPINGS;
+    }
+    std::string tracerttgt = address;
+    unsigned char addrtestres = isStringIP(tracerttgt);
+    if (2 == addrtestres) {
+        tracerttgt = lookupIPAddress(tracerttgt);
+        if (!tracerttgt.length()) {
+            return NetOpResult::Fail;
+        }
+    } else if (3 == addrtestres) {
+        return NetOpResult::Fail;
+    }
+    if (NetOpResult::Success != lookupIPAddresses(hn, lower_copy(address), portOrSvcName)) {
+        return NetOpResult::Fail;
+    }
+#if defined(_WIN32) || defined(_WIN64)
+    if (!g_WSAStarted) {
+        WSADATA wsd = { 0 };
+        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+            return NetOpResult::Fail;
+        }
+        g_WSAStarted = true;
+    }
+#endif
+    unsigned short int i = 0, j = 0;
+    bool stopflag = false;
+    unsigned char hops = 1;
+    unsigned long retVal = 0, ipaddr = INADDR_NONE;
+    char SendData[32] = "Data Buffer\0";
+    void* ReplyBuffer = 0;
+    unsigned long ReplySize = 0;
+    HANDLE hIcmpFile = IcmpCreateFile();
+    if (hIcmpFile != INVALID_HANDLE_VALUE) {
+        ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
+        ReplyBuffer = malloc(ReplySize);
+        if (ReplyBuffer != 0) {
+            ip_option_information ip_option;
+            hostent* host;
+            std::string taddr;
+            std::vector<TracertResult> resvec;
+            for (i = 0; i < hn.Address.size(); ++i) {
+                hops = 1;
+                resvec.clear();
+                memset(&ip_option, 0, sizeof(ip_option_information));
+                ipaddr = inet_addr(wstr2str(hn.Address[i].Address).c_str());
+                do {
+                    stopflag = false;
+                    ip_option.Ttl = hops;
+                    retVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData),
+                        &ip_option, ReplyBuffer, ReplySize, (unsigned long)tracerttimeout);
+                    if (retVal) {
+                        memset(&trres, 0, sizeof(TracertResult));
+                        ICMP_ECHO_REPLY* pEchoReply = (ICMP_ECHO_REPLY*)ReplyBuffer;
+                        host = gethostbyaddr((char*)&pEchoReply->Address, 4, PF_INET);
+                        if (host) {
+                            addrtestres = isStringIP(host->h_name);
+                            if (0 == addrtestres) {
+                                trres.AddressIPV4 = str2wstr(host->h_name);
+                                trres.Address = str2wstr(trim_copy(getHostname(host->h_name)));
+                            } else if (1 == addrtestres) {
+                            } else if (2 == addrtestres) {
+                                trres.AddressIPV4 = str2wstr(lookupIPAddress(host->h_name));
+                                trres.Address = str2wstr(host->h_name);
+                            } else {}
+                            // printf("ttl: %d\t%s\n", hops, host->h_name);
+                        } else {
+                            taddr = inet_ntoa(*(struct in_addr*)&pEchoReply->Address);
+                            addrtestres = isStringIP(taddr);
+                            if (0 == addrtestres) {
+                                trres.AddressIPV4 = str2wstr(trim_copy(taddr));
+                                trres.Address = str2wstr(trim_copy(getHostname(taddr)));
+                            } else if (1 == addrtestres) {
+                            } else if (2 == addrtestres) {
+                                trres.AddressIPV4 = str2wstr(trim_copy(lookupIPAddress(taddr)));
+                                trres.Address = str2wstr(trim_copy(taddr));
+                            } else {}
+                            // printf("ttl: %d\t%s\n", hops, inet_ntoa(*(struct in_addr*)&pEchoReply->Address));
+                        }
+                        trres.RoundTripTime = pEchoReply->RoundTripTime;
+                        trres.TTL = pEchoReply->Options.Ttl;
+                        resvec.push_back(trres);
+                        if (strictEndPointMatch) {
+                            if (trres.AddressIPV4 == hn.Address[i].Address) {
+                                stopflag = true;
+                                break;
+                            }
+                        } else {
+                            for (j = 0; j < hn.Address.size(); ++j) {
+                                // std::wstring tstr = trim_copy(lookupIPAddress(trres.Address));
+                                if (trres.AddressIPV4 == hn.Address[j].Address) {
+                                    stopflag = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (stopflag) {
+                            break;
+                        }
+                        ++hops;
+                    } else {
+                        // IcmpSendEcho failed
+                        if (WSAETIMEDOUT == WSAGetLastError() ||
+                            WSA_QOS_ADMISSION_FAILURE == WSAGetLastError()) {
+                            trres.Address = L"*";
+                            trres.AddressIPV4 = L"";
+                            trres.AddressIPV6 = L"";
+                            trres.TTL = 0;
+                            trres.RoundTripTime = 0;
+                            resvec.push_back(trres);
+                            //printf("ttl: %d\t *\n", hops);
+                            ++hops;
+                            continue;
+                        }
+                    }
+                } while (hops <= maxhops);
+                results[hn.Address[i].Address] = resvec;
+            }
+        } else {
+            // Unable to allocate memory
+            return NetOpResult::Fail;
+        }
+        SAFE_FREE(ReplyBuffer);
+        IcmpCloseHandle(hIcmpFile);
+        if (doPings) {
+            std::map<std::wstring, std::vector<TracertResult>>::iterator it;
+            for (it = results.begin(); it != results.end(); ++it) {
+                std::vector<TracertResult> temptracert = it->second;
+                for (j = 0; j < temptracert.size(); ++j) {
+                    if (temptracert[j].Address != L"*") {
+                        if (temptracert[j].AddressIPV4.length()) {
+                            if (NetOpResult::Success != ping(temptracert[j].Pings, temptracert[j].AddressIPV4,
+                                pingAttempts, pingTimeout, timeoutBetweenPings)) {
+                                return NetOpResult::Fail;
+                            }
+                        } else {
+                            if (NetOpResult::Success != ping(temptracert[j].Pings, temptracert[j].Address,
+                                pingAttempts, pingTimeout, timeoutBetweenPings)) {
+                                return NetOpResult::Fail;
+                            }
+                        }
+                        results[it->first] = temptracert;
+                    }
+                }
+            }
+        }
+    } else {
+        // Unable to open handle. IcmpCreatefile returned error: %06d", GetLastError()
+    }
+#if defined(_WIN32) || defined(_WIN64)
+    if (g_WSAStarted) {
+        if (WSACleanup()) {
+            // handle WSACleanup error
+            // int wsaerr = WSAGetLastError();
+        } else {
+            g_WSAStarted = false;
+        }
+    }
+#endif
+    SAFE_FREE(ReplyBuffer);
+    return NetOpResult::Success;
+}
+
+/*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
+    Packets with TTL = 1 dont leave LAN */
+NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(std::map<std::wstring, std::vector<TracertResult>> &results,
+    const std::wstring address, const std::wstring portOrSvcName, const unsigned char maxHops,
+    const bool doPings, const bool strictEndPointMatch, const unsigned short int tracertTimeout,
+    const unsigned short int pingAttempts, const unsigned short int pingTimeout,
+    const unsigned short int timeoutBetweenPings) {
+    return(traceroute_MultipleStartPointsMultipleEndPoints(results, wstr2str(address), wstr2str(portOrSvcName), maxHops,
+        doPings, strictEndPointMatch, tracertTimeout, pingAttempts, pingTimeout, timeoutBetweenPings));
 }
 
 /*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
@@ -481,8 +844,8 @@ NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results,
     return traceroute_RawSocket(results, wstr2str(address), maxHops);
 }
 
-NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const std::wstring portOrSvcName) {
-    std::string poslow = wstr2str(lower_copy(portOrSvcName));
+NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const std::string portOrSvcName) {
+    std::string poslow = lower_copy(portOrSvcName);
 #if defined(_WIN32) || defined(_WIN64)
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
@@ -541,7 +904,7 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const s
 }
 
 NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName, const std::wstring portOrSvcName) {
-    return lookupIPAddresses(node, wstr2str(dnsName), portOrSvcName);
+    return lookupIPAddresses(node, wstr2str(dnsName), wstr2str(portOrSvcName));
 }
 
 std::string lookupIPAddress(const std::string dnsName) {
@@ -763,19 +1126,19 @@ int decodeResponse(char* buf, int bytes, SOCKADDR_IN* from, int ttl) {
     iphdrlen = iphdr->headerlen * 4;
 
     if (bytes < iphdrlen + ICMP_MIN) {
-        printf("Too few bytes from %s\n", inet_ntoa(from->sin_addr));
+        // printf("Too few bytes from %s\n", inet_ntoa(from->sin_addr));
     }
     icmphdr = (ICMPHeader*)(buf + iphdrlen);
     switch (icmphdr->type) {
         case ICMP_ECHOREPLY: { // Response from destination
             lpHostent = gethostbyaddr((const char*)&from->sin_addr, AF_INET, sizeof(struct in_addr));
             if (lpHostent != 0) {
-                printf("%2d  %s (%s)\n", ttl, lpHostent->h_name, inet_ntoa(inaddr));
+                // printf("%2d  %s (%s)\n", ttl, lpHostent->h_name, inet_ntoa(inaddr));
                 return 1;
             }
         } break;
         case ICMP_TIMEOUT: { // Response from router along the way
-            printf("%2d  %s\n", ttl, inet_ntoa(inaddr));
+            // printf("%2d  %s\n", ttl, inet_ntoa(inaddr));
             return 0;
         } break;
         case ICMP_DESTUNREACH: { // Can't reach the destination at all
@@ -783,7 +1146,7 @@ int decodeResponse(char* buf, int bytes, SOCKADDR_IN* from, int ttl) {
             return 1;
         } break;
         default: {
-               printf("non-echo type %d recvd\n", icmphdr->type);
+               // printf("non-echo type %d recvd\n", icmphdr->type);
                return 1;
                break;
         } break;

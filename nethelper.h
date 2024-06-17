@@ -426,16 +426,36 @@ NetOpResult ping(std::vector<PingResult> &results, const std::string address, co
 NetOpResult ping(std::vector<PingResult> &results, const std::wstring address, const unsigned short numAttempts = 4,
 	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
 NetOpResult traceroute(std::vector<TracertResult> &results, const std::string address,  const unsigned char maxHops = 30,
-	const bool doPings = false, const unsigned short int tracertTimeout = 1000, const unsigned short int pingAttempts = 4,
+	const bool doPings = true, const unsigned short int tracertTimeout = 1000, const unsigned short int pingAttempts = 4,
 	const unsigned short int pingTimeout = 1000, const unsigned short int timeoutBetweenPings = 1000);
 NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring address, const unsigned char maxHops = 30,
-	const bool doPings = false, const unsigned short int tracertTimeout = 1000, const unsigned short int pingAttempts = 4,
+	const bool doPings = true, const unsigned short int tracertTimeout = 1000, const unsigned short int pingAttempts = 4,
 	const unsigned short int pingTimeout = 1000, const unsigned short int timeoutBetweenPings = 1000);
-NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results,
-	const std::string address, const unsigned char maxHops = 30);
-NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results,
-	const std::wstring address, const unsigned char maxHops = 30);
-NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const std::wstring portOrSvcName = L"80");
+NetOpResult traceroute_MultipleEndPoints(std::vector<TracertResult> &results, const std::string address,
+	const std::string portOrSvcName = "80", const unsigned char maxHops = 30,
+	const bool doPings = true, const unsigned short int tracertTimeout = 1000,
+	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
+	const unsigned short int timeoutBetweenPings = 1000);
+NetOpResult traceroute_MultipleEndPoints(std::vector<TracertResult> &results, const std::wstring address,
+	const std::wstring portOrSvcName = L"80", const unsigned char maxHops = 30,
+	const bool doPings = true, const unsigned short int tracertTimeout = 1000,
+	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
+	const unsigned short int timeoutBetweenPings = 1000);
+NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(std::map<std::wstring, std::vector<TracertResult>> &results,
+	const std::string address, const std::string portOrSvcName = "80", const unsigned char maxHops = 30,
+	const bool doPings = true, const bool strictEndPointMatch = true, const unsigned short int tracertTimeout = 1000,
+	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
+	const unsigned short int timeoutBetweenPings = 1000);
+NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(std::map<std::wstring, std::vector<TracertResult>> &results,
+	const std::wstring address, const std::wstring portOrSvcName = L"80", const unsigned char maxHops = 30,
+	const bool doPings = true, const bool strictEndPointMatch = false,  const unsigned short int tracertTimeout = 1000,
+	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
+	const unsigned short int timeoutBetweenPings = 1000);
+NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std::string address,
+	const unsigned char maxHops = 30);
+NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std::wstring address,
+	const unsigned char maxHops = 30);
+NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const std::string portOrSvcName = "80");
 NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName, const std::wstring portOrSvcName = L"80");
 std::string lookupIPAddress(const std::string dnsName);
 std::wstring lookupIPAddress(const std::wstring dnsName);
