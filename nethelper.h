@@ -149,7 +149,6 @@ enum class NWProtocol : unsigned long {
 	IPV6 = IPPROTO::IPPROTO_IPV6
 };
 
-
 struct HostNodeAddr {
 	HostNodeAddr() { SockType = SocketType::Stream; Protocol = NWProtocol::HopOpts; AddrType = AddressType::IPv4; }
 	HostNodeAddr(const HostNodeAddr& other) {
