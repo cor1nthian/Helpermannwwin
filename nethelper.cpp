@@ -346,7 +346,7 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring a
 
 /*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
-NetOpResult traceroute_MultipleEndPoints(std::vector<TracertResult> &results, const std::string address, const unsigned char maxHops,
+NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std::string address, const unsigned char maxHops,
     const std::string portOrSvcName, const bool doPings, const unsigned short int tracertTimeout,
     const unsigned short int pingAttempts, const unsigned short int pingTimeout,
     const unsigned short int timeoutBetweenPings) {
@@ -506,7 +506,7 @@ NetOpResult traceroute_MultipleEndPoints(std::vector<TracertResult> &results, co
 
 /*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
-NetOpResult traceroute_MultipleEndPoints(std::vector<TracertResult> &results, const std::wstring address,
+NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std::wstring address,
     const std::wstring portOrSvcName, const unsigned char maxHops,
     const bool doPings, const unsigned short int tracertTimeout,
     const unsigned short int pingAttempts, const unsigned short int pingTimeout,
@@ -517,7 +517,7 @@ NetOpResult traceroute_MultipleEndPoints(std::vector<TracertResult> &results, co
 
 /*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
-NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(std::map<std::wstring, std::vector<TracertResult>> &results,
+NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPS &results,
     const std::string address, const std::string portOrSvcName, const unsigned char maxHops, const bool doPings,
     const bool strictEndPointMatch, const unsigned short int tracertTimeout,
     const unsigned short int pingAttempts, const unsigned short int pingTimeout,
@@ -700,7 +700,7 @@ NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(std::map<std::wstrin
 
 /*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
-NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(std::map<std::wstring, std::vector<TracertResult>> &results,
+NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPS &results,
     const std::wstring address, const std::wstring portOrSvcName, const unsigned char maxHops,
     const bool doPings, const bool strictEndPointMatch, const unsigned short int tracertTimeout,
     const unsigned short int pingAttempts, const unsigned short int pingTimeout,

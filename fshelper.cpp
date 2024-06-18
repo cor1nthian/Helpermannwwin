@@ -297,11 +297,11 @@ std::wstring FSHandler::GetFileControlSum(const std::wstring filePath, const Has
 }
 
 bool FSHandler::PathExists(const std::wstring path) {
-	return (INVALID_FILE_ATTRIBUTES != GetFileAttributes(path.c_str()));
+	return (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(path.c_str()));
 }
 
 PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const {
-	if (INVALID_FILE_ATTRIBUTES == GetFileAttributes(objectPath.c_str())) {
+	if (INVALID_FILE_ATTRIBUTES == ::GetFileAttributes(objectPath.c_str())) {
 		return PartsOpResult::Fail;
 	}
 	ProcessHandler proc;
@@ -313,13 +313,14 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		}
 	}
 	unsigned long secinfolen = 0;
-	if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo), secDesc.daclInfo,
+	if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo), secDesc.daclInfo,
 		secinfolen, &secinfolen)) {
 		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
-			secDesc.daclInfo = LocalAlloc(LPTR, secinfolen);
+			secDesc.daclInfo = ::LocalAlloc(LPTR, secinfolen);
 			if (secDesc.daclInfo) {
-				if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo),
+				if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo),
 					secDesc.daclInfo, secinfolen, &secinfolen)) {
+					SAFE_LOCALFREE(secDesc.daclInfo);
 					return PartsOpResult::Fail;
 				}
 				secDesc.daclInfoSz = secinfolen;
@@ -329,13 +330,14 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		}
 	}
 	secinfolen = 0;
-	if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::SACLSecInfo), secDesc.saclInfo,
+	if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::SACLSecInfo), secDesc.saclInfo,
 		secinfolen, &secinfolen)) {
 		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
-			secDesc.saclInfo = LocalAlloc(LPTR, secinfolen);
+			secDesc.saclInfo = ::LocalAlloc(LPTR, secinfolen);
 			if (secDesc.saclInfo) {
-				if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::SACLSecInfo),
+				if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::SACLSecInfo),
 					secDesc.saclInfo, secinfolen, &secinfolen)) {
+					SAFE_LOCALFREE(secDesc.saclInfo);
 					return PartsOpResult::Fail;
 				}
 				secDesc.saclInfoSz = secinfolen;
@@ -345,13 +347,14 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		}
 	}
 	secinfolen = 0;
-	if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::OwnerSecInfo), secDesc.ownerInfo,
+	if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::OwnerSecInfo), secDesc.ownerInfo,
 		secinfolen, &secinfolen)) {
 		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
-			secDesc.ownerInfo = LocalAlloc(LPTR, secinfolen);
+			secDesc.ownerInfo = ::LocalAlloc(LPTR, secinfolen);
 			if (secDesc.ownerInfo) {
-				if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::OwnerSecInfo),
+				if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::OwnerSecInfo),
 					secDesc.ownerInfo, secinfolen, &secinfolen)) {
+					SAFE_LOCALFREE(secDesc.ownerInfo);
 					return PartsOpResult::Fail;
 				}
 				secDesc.ownerInfoSz = secinfolen;
@@ -361,13 +364,14 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		}
 	}
 	secinfolen = 0;
-	if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo), secDesc.primaryGroupInfo,
+	if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo), secDesc.primaryGroupInfo,
 		secinfolen, &secinfolen)) {
 		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
-			secDesc.primaryGroupInfo = LocalAlloc(LPTR, secinfolen);
+			secDesc.primaryGroupInfo = ::LocalAlloc(LPTR, secinfolen);
 			if (secDesc.primaryGroupInfo) {
-				if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo),
+				if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo),
 					secDesc.primaryGroupInfo, secinfolen, &secinfolen)) {
+					SAFE_LOCALFREE(secDesc.primaryGroupInfo);
 					return PartsOpResult::Fail;
 				}
 				secDesc.primaryGroupInfoSz = secinfolen;

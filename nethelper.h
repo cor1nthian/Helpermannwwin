@@ -439,12 +439,12 @@ NetOpResult traceroute_MultipleEndPoints(std::vector<TracertResult> &results, co
 	const bool doPings = true, const unsigned short int tracertTimeout = 1000,
 	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
 	const unsigned short int timeoutBetweenPings = 1000);
-NetOpResult traceroute_MultipleEndPoints(std::vector<TracertResult> &results, const std::wstring address,
+NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std::wstring address,
 	const std::wstring portOrSvcName = L"80", const unsigned char maxHops = 30,
 	const bool doPings = true, const unsigned short int tracertTimeout = 1000,
 	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
 	const unsigned short int timeoutBetweenPings = 1000);
-NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(std::map<std::wstring, std::vector<TracertResult>> &results,
+NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPS &results,
 	const std::string address, const std::string portOrSvcName = "80", const unsigned char maxHops = 30,
 	const bool doPings = true, const bool strictEndPointMatch = true, const unsigned short int tracertTimeout = 1000,
 	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
