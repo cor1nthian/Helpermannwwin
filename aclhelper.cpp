@@ -334,9 +334,22 @@ ACLOpResult ACLHandler::DACLGetPermissionMaskBySID(ACL* dacl, PSID sid, std::vec
 }
 
 ACLOpResult ACLHandler::DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const {
-    int daclPresent = false, daclDefaulted = false;
-    if (GetSecurityDescriptorDacl(secDesc, &daclPresent, &dacl, &daclDefaulted)) {
+    int daclPresent = 0, daclDefaulted = 0;
+    if (::GetSecurityDescriptorDacl(secDesc, &daclPresent, &dacl, &daclDefaulted)) {
         if (daclPresent && dacl) {
+            return ACLOpResult::Success;
+        } else {
+            return ACLOpResult::Fail;
+        }
+    } else {
+        return ACLOpResult::Fail;
+    }
+}
+
+ACLOpResult ACLHandler::SACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &sacl) const {
+    int saclPresent = 0, saclDefaulted = 0;
+    if (::GetSecurityDescriptorDacl(secDesc, &saclPresent, &sacl, &saclDefaulted)) {
+        if (saclPresent && sacl) {
             return ACLOpResult::Success;
         } else {
             return ACLOpResult::Fail;
@@ -348,14 +361,14 @@ ACLOpResult ACLHandler::DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc,
 
 ACLOpResult ACLHandler::CreateAbsoluteSecDesc(SecDesc &secDesc) const {
     if (!secDesc.absoluteSDInfo) {
-        secDesc.absoluteSDInfo = LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+        secDesc.absoluteSDInfo = ::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
         if (!secDesc.absoluteSDInfo) {
             return ACLOpResult::Fail;
         }
         secDesc.absoluteSDInfoSz = SECURITY_DESCRIPTOR_MIN_LENGTH;
     }
     unsigned long ownerinfosz = secDesc.ownerInfoSz, primgroupinfosz = secDesc.primaryGroupInfoSz;
-    if (MakeAbsoluteSD((SECURITY_DESCRIPTOR*)secDesc.daclInfo, (SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
+    if (::MakeAbsoluteSD((SECURITY_DESCRIPTOR*)secDesc.daclInfo, (SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
         &secDesc.absoluteSDInfoSz, (ACL*)secDesc.daclAbsInfo, &secDesc.daclAbsInfoSz, (ACL*)secDesc.saclAbsInfo,
         &secDesc.saclAbsInfoSz, secDesc.ownerInfo, &ownerinfosz, secDesc.primaryGroupInfo,
         &primgroupinfosz)) {
@@ -363,30 +376,30 @@ ACLOpResult ACLHandler::CreateAbsoluteSecDesc(SecDesc &secDesc) const {
     } else {
         if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
             if (secDesc.daclAbsInfoSz) {
-                secDesc.daclAbsInfo = LocalAlloc(LPTR, secDesc.daclAbsInfoSz);
+                secDesc.daclAbsInfo = ::LocalAlloc(LPTR, secDesc.daclAbsInfoSz);
                 if (!secDesc.daclAbsInfo) {
                     return ACLOpResult::Fail;
                 }
             }
             if (secDesc.saclAbsInfoSz) {
-                secDesc.saclAbsInfo = LocalAlloc(LPTR, secDesc.saclAbsInfoSz);
+                secDesc.saclAbsInfo = ::LocalAlloc(LPTR, secDesc.saclAbsInfoSz);
                 if (!secDesc.saclAbsInfo) {
                     return ACLOpResult::Fail;
                 }
             }
-            if (MakeAbsoluteSD((SECURITY_DESCRIPTOR*)secDesc.daclInfo, (SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
+            if (::MakeAbsoluteSD((SECURITY_DESCRIPTOR*)secDesc.daclInfo, (SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
                 &secDesc.absoluteSDInfoSz, (ACL*)secDesc.daclAbsInfo, &secDesc.daclAbsInfoSz, (ACL*)secDesc.saclAbsInfo,
                 &secDesc.saclAbsInfoSz, secDesc.ownerInfo, &secDesc.ownerInfoSz, secDesc.primaryGroupInfo,
                 &secDesc.primaryGroupInfoSz)) {
-                if (SetSecurityDescriptorOwner(secDesc.absoluteSDInfo, secDesc.ownerInfo, true)) {
-                    if (SetSecurityDescriptorGroup(secDesc.absoluteSDInfo, secDesc.primaryGroupInfo, true)) {
-                        if (MakeSelfRelativeSD(secDesc.absoluteSDInfo,
+                if (::SetSecurityDescriptorOwner(secDesc.absoluteSDInfo, secDesc.ownerInfo, true)) {
+                    if (::SetSecurityDescriptorGroup(secDesc.absoluteSDInfo, secDesc.primaryGroupInfo, true)) {
+                        if (::MakeSelfRelativeSD(secDesc.absoluteSDInfo,
                             secDesc.selfRelativeSDInfo, &secDesc.selfRelativeSDInfoSz)) {
                             return ACLOpResult::Success;
                         } else {
                             if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
-                                secDesc.selfRelativeSDInfo = LocalAlloc(LPTR, secDesc.selfRelativeSDInfoSz);
-                                if (MakeSelfRelativeSD(secDesc.absoluteSDInfo, secDesc.selfRelativeSDInfo, &secDesc.selfRelativeSDInfoSz)) {
+                                secDesc.selfRelativeSDInfo = ::LocalAlloc(LPTR, secDesc.selfRelativeSDInfoSz);
+                                if (::MakeSelfRelativeSD(secDesc.absoluteSDInfo, secDesc.selfRelativeSDInfo, &secDesc.selfRelativeSDInfoSz)) {
                                     return ACLOpResult::Success;
                                 } else {
                                     return ACLOpResult::Fail;
@@ -1655,6 +1668,14 @@ ACLOpResult ACLHandler::DACLRemoveACESID(ACL* &dacl, const PSID sid, const bool 
 
 ACLOpResult ACLHandler::DACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const {
     if (SetSecurityDescriptorDacl(secDesc, true, dacl, false)) {
+        return ACLOpResult::Success;
+    } else {
+        return ACLOpResult::Fail;
+    }
+}
+
+ACLOpResult ACLHandler::SACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* sacl) const {
+    if (SetSecurityDescriptorSacl(secDesc, true, sacl, false)) {
         return ACLOpResult::Success;
     } else {
         return ACLOpResult::Fail;

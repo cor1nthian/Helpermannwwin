@@ -313,12 +313,13 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		}
 	}
 	unsigned long secinfolen = 0;
-	if (!GetFileSecurity(objectPath.c_str(), DACL_SECURITY_INFORMATION, secDesc.daclInfo, secinfolen, &secinfolen)) {
+	if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo), secDesc.daclInfo,
+		secinfolen, &secinfolen)) {
 		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
 			secDesc.daclInfo = LocalAlloc(LPTR, secinfolen);
 			if (secDesc.daclInfo) {
-				if (!GetFileSecurity(objectPath.c_str(), DACL_SECURITY_INFORMATION, secDesc.daclInfo, secinfolen,
-					&secinfolen)) {
+				if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo),
+					secDesc.daclInfo, secinfolen, &secinfolen)) {
 					return PartsOpResult::Fail;
 				}
 				secDesc.daclInfoSz = secinfolen;
@@ -328,12 +329,13 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		}
 	}
 	secinfolen = 0;
-	if (!GetFileSecurity(objectPath.c_str(), SACL_SECURITY_INFORMATION, secDesc.saclInfo, secinfolen, &secinfolen)) {
+	if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::SACLSecInfo), secDesc.saclInfo,
+		secinfolen, &secinfolen)) {
 		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
 			secDesc.saclInfo = LocalAlloc(LPTR, secinfolen);
 			if (secDesc.saclInfo) {
-				if (!GetFileSecurity(objectPath.c_str(), SACL_SECURITY_INFORMATION, secDesc.saclInfo, secinfolen,
-					&secinfolen)) {
+				if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::SACLSecInfo),
+					secDesc.saclInfo, secinfolen, &secinfolen)) {
 					return PartsOpResult::Fail;
 				}
 				secDesc.saclInfoSz = secinfolen;
@@ -343,12 +345,13 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		}
 	}
 	secinfolen = 0;
-	if (!GetFileSecurity(objectPath.c_str(), OWNER_SECURITY_INFORMATION, secDesc.ownerInfo, secinfolen, &secinfolen)) {
+	if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::OwnerSecInfo), secDesc.ownerInfo,
+		secinfolen, &secinfolen)) {
 		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
 			secDesc.ownerInfo = LocalAlloc(LPTR, secinfolen);
 			if (secDesc.ownerInfo) {
-				if (!GetFileSecurity(objectPath.c_str(), OWNER_SECURITY_INFORMATION, secDesc.ownerInfo, secinfolen,
-					&secinfolen)) {
+				if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::OwnerSecInfo),
+					secDesc.ownerInfo, secinfolen, &secinfolen)) {
 					return PartsOpResult::Fail;
 				}
 				secDesc.ownerInfoSz = secinfolen;
@@ -358,12 +361,13 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		}
 	}
 	secinfolen = 0;
-	if (!GetFileSecurity(objectPath.c_str(), GROUP_SECURITY_INFORMATION, secDesc.primaryGroupInfo, secinfolen, &secinfolen)) {
+	if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo), secDesc.primaryGroupInfo,
+		secinfolen, &secinfolen)) {
 		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
 			secDesc.primaryGroupInfo = LocalAlloc(LPTR, secinfolen);
 			if (secDesc.primaryGroupInfo) {
-				if (!GetFileSecurity(objectPath.c_str(), OWNER_SECURITY_INFORMATION, secDesc.primaryGroupInfo,
-					secinfolen, &secinfolen)) {
+				if (!GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo),
+					secDesc.primaryGroupInfo, secinfolen, &secinfolen)) {
 					return PartsOpResult::Fail;
 				}
 				secDesc.primaryGroupInfoSz = secinfolen;
@@ -379,8 +383,130 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 	return PartsOpResult::Success;
 }
 
+PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const {
+	if (INVALID_FILE_ATTRIBUTES == ::GetFileAttributes(objectPath.c_str())) {
+		return PartsOpResult::Fail;
+	}
+	ProcessHandler proc;
+	unsigned long procid = proc.GetCurrentProcPid();
+	std::vector<std::wstring> privs = proc.GetProcPrivileges(procid);
+	if (!valInList(privs, L"SeSecurityPrivilege")) {
+		if (!proc.EnableSecurityPrivilege(procid)) {
+			return PartsOpResult::Fail;
+		}
+	}
+	if (!valInList(privs, L"SeTakeOwnershipPrivilege")) {
+		if (!proc.EnableTakeOwnershipPrivilege(procid)) {
+			return PartsOpResult::Fail;
+		}
+	}
+	ACLHandler aclh;
+	if (secDesc.daclInfo) {
+		ACL* acllist = 0;
+		if (ACLOpResult::Success != aclh.DACLFromSecurityDescriptor((SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
+			acllist)) {
+			return PartsOpResult::Fail;
+		}
+		SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+		if (!sd) {
+			SAFE_LOCALFREE(acllist);
+			return PartsOpResult::Fail;
+		}
+		if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
+			if (!::SetSecurityDescriptorDacl(sd, true, acllist, false)) {
+				SAFE_LOCALFREE(sd);
+				SAFE_LOCALFREE(acllist);
+				return PartsOpResult::Fail;
+			}
+		} else {
+			SAFE_LOCALFREE(sd);
+			SAFE_LOCALFREE(acllist);
+			return PartsOpResult::Fail;
+		}
+		if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo), &sd)) {
+			SAFE_LOCALFREE(sd);
+			SAFE_LOCALFREE(acllist);
+			return PartsOpResult::Fail;
+		}
+		SAFE_LOCALFREE(sd);
+		SAFE_LOCALFREE(acllist);
+	}
+	if (secDesc.saclInfo) {
+		ACL* acllist = 0;
+		if (ACLOpResult::Success != aclh.SACLFromSecurityDescriptor((SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
+			acllist)) {
+			return PartsOpResult::Fail;
+		}
+		if (acllist) {
+			SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+			if (!sd) {
+				SAFE_LOCALFREE(acllist);
+				return PartsOpResult::Fail;
+			}
+			if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
+				if (!::SetSecurityDescriptorDacl(sd, true, acllist, false)) {
+					SAFE_LOCALFREE(sd);
+					SAFE_LOCALFREE(acllist);
+					return PartsOpResult::Fail;
+				}
+			} else {
+				SAFE_LOCALFREE(sd);
+				SAFE_LOCALFREE(acllist);
+				return PartsOpResult::Fail;
+			}
+			if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::SACLSecInfo), &sd)) {
+				SAFE_LOCALFREE(sd);
+				SAFE_LOCALFREE(acllist);
+				return PartsOpResult::Fail;
+			}
+			SAFE_LOCALFREE(sd);
+			SAFE_LOCALFREE(acllist);
+		}
+	}
+	if (secDesc.ownerInfo) {
+		SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+		if (!sd) {
+			return PartsOpResult::Fail;
+		}
+		if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
+			int ownerDefaulted = 0;
+			if (!::SetSecurityDescriptorOwner(sd, secDesc.ownerInfo, ownerDefaulted)) {
+				return PartsOpResult::Fail;
+			}
+		} else {
+			SAFE_LOCALFREE(sd);
+			return PartsOpResult::Fail;
+		}
+		if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::OwnerSecInfo), sd)) {
+			return PartsOpResult::Fail;
+		}
+		SAFE_LOCALFREE(sd);
+	}
+	if (secDesc.primaryGroupInfo) {
+		SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+		if (!sd) {
+			return PartsOpResult::Fail;
+		}
+		if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
+			int groupDefaulted = 0;
+			if (!::SetSecurityDescriptorGroup(sd, secDesc.primaryGroupInfo, groupDefaulted)) {
+				return PartsOpResult::Fail;
+			}
+		} else {
+			SAFE_LOCALFREE(sd);
+			return PartsOpResult::Fail;
+		}
+		if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo),
+			secDesc.primaryGroupInfo)) {
+			return PartsOpResult::Fail;
+		}
+		SAFE_LOCALFREE(sd);
+	}
+	return PartsOpResult::Success;
+}
+
 PartsOpResult FSHandler::EnumFolderContents(FolderRecord &folderInfo, const std::wstring folderPath,
-	const bool getFileControlSums, const HashType hashType, const bool getFileSize) {
+	const bool getFileHashes, const HashType hashType, const bool getFileSize) {
 	if (PathExists(folderPath)) {
 		std::wstring seekpath = lower_copy(folderPath);
 		if (endsWith(folderPath, L"\\")) {
@@ -420,7 +546,7 @@ PartsOpResult FSHandler::EnumFolderContents(FolderRecord &folderInfo, const std:
 					filerec.fileName = lower_copy(fd.cFileName);
 					filerec.filePath = removeFromStart_copy(seekpath, fs_pathnolim) + L"\\" +
 						lower_copy(fd.cFileName);
-					if (getFileControlSums) {
+					if (getFileHashes) {
 						filerec.hash = GetFileControlSum(filerec.filePath, hashType);
 					}
 					if (getFileSize) {
