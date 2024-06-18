@@ -46,6 +46,8 @@
 #include <sstream>
 #include <vector>
 #include "strhelper.h"
+#include "aclhelper.h"
+#include "prochelper.h"
 #include "winerrhelper.h"
 
 // File system operation result
@@ -448,6 +450,7 @@ class FSHandler {
 			[in] string path to check
 			Returns true if path exists, false otherwise */
 		bool PathExists(const std::wstring path);
+		PartsOpResult GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const;
 		PartsOpResult EnumFolderContents(FolderRecord& folderInfo,
 			const std::wstring folderPath, const bool getFileControlSums = true,
 			const HashType hashType = HashType::SHA256, const bool getFileSize = true);

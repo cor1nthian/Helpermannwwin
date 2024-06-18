@@ -300,6 +300,85 @@ bool FSHandler::PathExists(const std::wstring path) {
 	return (INVALID_FILE_ATTRIBUTES != GetFileAttributes(path.c_str()));
 }
 
+PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const {
+	if (INVALID_FILE_ATTRIBUTES == GetFileAttributes(objectPath.c_str())) {
+		return PartsOpResult::Fail;
+	}
+	ProcessHandler proc;
+	unsigned long procid = proc.GetCurrentProcPid();
+	std::vector<std::wstring> privs = proc.GetProcPrivileges(procid);
+	if (!valInList(privs, L"SeSecurityPrivilege")) {
+		if (!proc.EnableSecurityPrivilege(procid)) {
+			return PartsOpResult::Fail;
+		}
+	}
+	unsigned long secinfolen = 0;
+	if (!GetFileSecurity(objectPath.c_str(), DACL_SECURITY_INFORMATION, secDesc.daclInfo, secinfolen, &secinfolen)) {
+		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
+			secDesc.daclInfo = LocalAlloc(LPTR, secinfolen);
+			if (secDesc.daclInfo) {
+				if (!GetFileSecurity(objectPath.c_str(), DACL_SECURITY_INFORMATION, secDesc.daclInfo, secinfolen,
+					&secinfolen)) {
+					return PartsOpResult::Fail;
+				}
+				secDesc.daclInfoSz = secinfolen;
+			} else {
+				return PartsOpResult::Fail;
+			}
+		}
+	}
+	secinfolen = 0;
+	if (!GetFileSecurity(objectPath.c_str(), SACL_SECURITY_INFORMATION, secDesc.saclInfo, secinfolen, &secinfolen)) {
+		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
+			secDesc.saclInfo = LocalAlloc(LPTR, secinfolen);
+			if (secDesc.saclInfo) {
+				if (!GetFileSecurity(objectPath.c_str(), SACL_SECURITY_INFORMATION, secDesc.saclInfo, secinfolen,
+					&secinfolen)) {
+					return PartsOpResult::Fail;
+				}
+				secDesc.saclInfoSz = secinfolen;
+			} else {
+				return PartsOpResult::Fail;
+			}
+		}
+	}
+	secinfolen = 0;
+	if (!GetFileSecurity(objectPath.c_str(), OWNER_SECURITY_INFORMATION, secDesc.ownerInfo, secinfolen, &secinfolen)) {
+		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
+			secDesc.ownerInfo = LocalAlloc(LPTR, secinfolen);
+			if (secDesc.ownerInfo) {
+				if (!GetFileSecurity(objectPath.c_str(), OWNER_SECURITY_INFORMATION, secDesc.ownerInfo, secinfolen,
+					&secinfolen)) {
+					return PartsOpResult::Fail;
+				}
+				secDesc.ownerInfoSz = secinfolen;
+			} else {
+				return PartsOpResult::Fail;
+			}
+		}
+	}
+	secinfolen = 0;
+	if (!GetFileSecurity(objectPath.c_str(), GROUP_SECURITY_INFORMATION, secDesc.primaryGroupInfo, secinfolen, &secinfolen)) {
+		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
+			secDesc.primaryGroupInfo = LocalAlloc(LPTR, secinfolen);
+			if (secDesc.primaryGroupInfo) {
+				if (!GetFileSecurity(objectPath.c_str(), OWNER_SECURITY_INFORMATION, secDesc.primaryGroupInfo,
+					secinfolen, &secinfolen)) {
+					return PartsOpResult::Fail;
+				}
+				secDesc.primaryGroupInfoSz = secinfolen;
+			} else {
+				return PartsOpResult::Fail;
+			}
+		}
+	}
+	ACLHandler aclh;
+	if (ACLOpResult::Success != aclh.CreateAbsoluteSecDesc(secDesc)) {
+		return PartsOpResult::Fail;
+	}
+	return PartsOpResult::Success;
+}
+
 PartsOpResult FSHandler::EnumFolderContents(FolderRecord &folderInfo, const std::wstring folderPath,
 	const bool getFileControlSums, const HashType hashType, const bool getFileSize) {
 	if (PathExists(folderPath)) {

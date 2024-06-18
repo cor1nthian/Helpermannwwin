@@ -354,10 +354,11 @@ ACLOpResult ACLHandler::CreateAbsoluteSecDesc(SecDesc &secDesc) const {
         }
         secDesc.absoluteSDInfoSz = SECURITY_DESCRIPTOR_MIN_LENGTH;
     }
+    unsigned long ownerinfosz = secDesc.ownerInfoSz, primgroupinfosz = secDesc.primaryGroupInfoSz;
     if (MakeAbsoluteSD((SECURITY_DESCRIPTOR*)secDesc.daclInfo, (SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
         &secDesc.absoluteSDInfoSz, (ACL*)secDesc.daclAbsInfo, &secDesc.daclAbsInfoSz, (ACL*)secDesc.saclAbsInfo,
-        &secDesc.saclAbsInfoSz, secDesc.ownerInfo, &secDesc.ownerInfoSz, secDesc.primaryGroupInfo,
-        &secDesc.primaryGroupInfoSz)) {
+        &secDesc.saclAbsInfoSz, secDesc.ownerInfo, &ownerinfosz, secDesc.primaryGroupInfo,
+        &primgroupinfosz)) {
         return ACLOpResult::Success;
     } else {
         if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
