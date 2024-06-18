@@ -449,7 +449,7 @@ class FSHandler {
 			Param:
 			[in] string path to check
 			Returns true if path exists, false otherwise */
-		bool PathExists(const std::wstring path);
+		bool PathExists(const std::wstring path) const;
 		PartsOpResult GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const;
 		PartsOpResult SetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const;
 		PartsOpResult EnumFolderContents(FolderRecord& folderInfo,
@@ -469,7 +469,7 @@ class FSHandler {
 			const bool getSize = true, const bool getControlSum = true,
 			const bool excludeEmptyFiles = false, const HashType hash = HashType::SHA256,
 			const std::vector<std::wstring> exclusions = std::vector<std::wstring>(),
-			const std::vector<PartitionDesc>* parts = 0);
+			const std::vector<PartitionDesc> *parts = 0);
 		/* Does the file search starting in given folder baaed on a filename. Filename supports regex expressions.
 			Param:
 			[in] search start path

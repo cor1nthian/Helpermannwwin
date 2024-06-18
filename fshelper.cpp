@@ -296,12 +296,12 @@ std::wstring FSHandler::GetFileControlSum(const std::wstring filePath, const Has
 	}
 }
 
-bool FSHandler::PathExists(const std::wstring path) {
+bool FSHandler::PathExists(const std::wstring path) const {
 	return (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(path.c_str()));
 }
 
 PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const {
-	if (INVALID_FILE_ATTRIBUTES == ::GetFileAttributes(objectPath.c_str())) {
+	if (!PathExists(objectPath)) {
 		return PartsOpResult::Fail;
 	}
 	ProcessHandler proc;
@@ -388,7 +388,7 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 }
 
 PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const {
-	if (INVALID_FILE_ATTRIBUTES == ::GetFileAttributes(objectPath.c_str())) {
+	if (!PathExists(objectPath)) {
 		return PartsOpResult::Fail;
 	}
 	ProcessHandler proc;

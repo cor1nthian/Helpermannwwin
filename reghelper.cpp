@@ -2558,6 +2558,7 @@ RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secD
 	} else {
 		rootKey = { 0 };
 	}
+	ACLHandler aclh;
 	ProcessHandler proc;
 	unsigned long procid = proc.GetCurrentProcPid();
 	std::vector<std::wstring> privs = proc.GetProcPrivileges(procid);
@@ -2590,21 +2591,29 @@ RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secD
 		res = ::RegSetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::DACLSecInfo),
 			secDesc.absoluteSDInfo);
 #else
-		ACLHandler aclh;
 		ACL* acllist = 0;
 		if (ACLOpResult::Success != aclh.DACLFromSecurityDescriptor((SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
 			acllist)) {
+			CLOSEKEY_NULLIFY(keyHandle);
 			return RegOpResult::Fail;
 		}
-		SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+		SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 		if (!sd) {
+			SAFE_LOCALFREE(acllist);
+			CLOSEKEY_NULLIFY(keyHandle);
 			return RegOpResult::Fail;
 		}
 		if (InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
 			if (!SetSecurityDescriptorDacl(sd, true, acllist, false)) {
+				SAFE_LOCALFREE(acllist);
+				SAFE_LOCALFREE(sd);
+				CLOSEKEY_NULLIFY(keyHandle);
 				return RegOpResult::Fail;
 			}
 		} else {
+			SAFE_LOCALFREE(acllist);
+			SAFE_LOCALFREE(sd);
+			CLOSEKEY_NULLIFY(keyHandle);
 			return RegOpResult::Fail;
 		}
 		res = ::RegSetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::DACLSecInfo),
@@ -2613,16 +2622,77 @@ RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secD
 		SAFE_LOCALFREE(sd);
 #endif
 		if (ERROR_SUCCESS == res) {
-			res = ::RegSetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::SACLSecInfo),
-				(SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo);
-			if (ERROR_SUCCESS == res || ERROR_ACCESS_DENIED == res) {
+			ACL* acllist = 0;
+			if (ACLOpResult::Success != aclh.SACLFromSecurityDescriptor((SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
+				acllist)) {
+				CLOSEKEY_NULLIFY(keyHandle);
+				return RegOpResult::Fail;
+			}
+			SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+			if (!sd) {
+				SAFE_LOCALFREE(acllist);
+				CLOSEKEY_NULLIFY(keyHandle);
+				return RegOpResult::Fail;
+			}
+			if (InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
+				if (!SetSecurityDescriptorSacl(sd, true, acllist, false)) {
+					SAFE_LOCALFREE(acllist);
+					SAFE_LOCALFREE(sd);
+					CLOSEKEY_NULLIFY(keyHandle);
+					return RegOpResult::Fail;
+				}
+			} else {
+				SAFE_LOCALFREE(acllist);
+				SAFE_LOCALFREE(sd);
+				CLOSEKEY_NULLIFY(keyHandle);
+				return RegOpResult::Fail;
+			}
+			res = ::RegSetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::SACLSecInfo), sd);
+			SAFE_LOCALFREE(sd);
+			if (ERROR_SUCCESS == res || ERROR_ACCESS_DENIED != res) {
+				SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+				if (!sd) {
+					SAFE_LOCALFREE(acllist);
+					CLOSEKEY_NULLIFY(keyHandle);
+					return RegOpResult::Fail;
+				}
+				if (InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
+					if (!SetSecurityDescriptorOwner(sd, secDesc.ownerInfo, false)) {
+						SAFE_LOCALFREE(sd);
+						CLOSEKEY_NULLIFY(keyHandle);
+						return RegOpResult::Fail;
+					}
+				} else {
+					SAFE_LOCALFREE(sd);
+					CLOSEKEY_NULLIFY(keyHandle);
+					return RegOpResult::Fail;
+				}
 				res = ::RegSetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::OwnerSecInfo),
 					secDesc.ownerInfo);
+				SAFE_LOCALFREE(sd);
 				if (ERROR_SUCCESS == res) {
+					SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+					if (!sd) {
+						SAFE_LOCALFREE(acllist);
+						CLOSEKEY_NULLIFY(keyHandle);
+						return RegOpResult::Fail;
+					}
+					if (InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
+						if (!SetSecurityDescriptorGroup(sd, secDesc.primaryGroupInfo, false)) {
+							SAFE_LOCALFREE(sd);
+							CLOSEKEY_NULLIFY(keyHandle);
+							return RegOpResult::Fail;
+						}
+					} else {
+						SAFE_LOCALFREE(sd);
+						CLOSEKEY_NULLIFY(keyHandle);
+						return RegOpResult::Fail;
+					}
 					res = ::RegSetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::GroupSecInfo),
 						secDesc.primaryGroupInfo);
-					if (ERROR_SUCCESS == res) {
-					} else {
+					SAFE_LOCALFREE(sd);
+					if (ERROR_SUCCESS != res) {
+						CLOSEKEY_NULLIFY(keyHandle);
 						return RegOpResult::Fail;
 					}
 				} else {

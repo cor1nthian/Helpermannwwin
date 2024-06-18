@@ -339,6 +339,9 @@ ACLOpResult ACLHandler::DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc,
         if (daclPresent && dacl) {
             return ACLOpResult::Success;
         } else {
+            if (dacl) {
+                SAFE_LOCALFREE(dacl);
+            }
             return ACLOpResult::Fail;
         }
     } else {
@@ -352,6 +355,9 @@ ACLOpResult ACLHandler::SACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc,
         if (saclPresent && sacl) {
             return ACLOpResult::Success;
         } else {
+            if (sacl) {
+                SAFE_LOCALFREE(sacl);
+            }
             return ACLOpResult::Fail;
         }
     } else {
@@ -378,12 +384,15 @@ ACLOpResult ACLHandler::CreateAbsoluteSecDesc(SecDesc &secDesc) const {
             if (secDesc.daclAbsInfoSz) {
                 secDesc.daclAbsInfo = ::LocalAlloc(LPTR, secDesc.daclAbsInfoSz);
                 if (!secDesc.daclAbsInfo) {
+                    SAFE_LOCALFREE(secDesc.absoluteSDInfo);
                     return ACLOpResult::Fail;
                 }
             }
             if (secDesc.saclAbsInfoSz) {
                 secDesc.saclAbsInfo = ::LocalAlloc(LPTR, secDesc.saclAbsInfoSz);
                 if (!secDesc.saclAbsInfo) {
+                    SAFE_LOCALFREE(secDesc.absoluteSDInfo);
+                    SAFE_LOCALFREE(secDesc.daclAbsInfo);
                     return ACLOpResult::Fail;
                 }
             }
@@ -399,14 +408,33 @@ ACLOpResult ACLHandler::CreateAbsoluteSecDesc(SecDesc &secDesc) const {
                         } else {
                             if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
                                 secDesc.selfRelativeSDInfo = ::LocalAlloc(LPTR, secDesc.selfRelativeSDInfoSz);
+                                if (!secDesc.selfRelativeSDInfo) {
+                                    SAFE_LOCALFREE(secDesc.absoluteSDInfo);
+                                    SAFE_LOCALFREE(secDesc.daclAbsInfo);
+                                    SAFE_LOCALFREE(secDesc.saclAbsInfo);
+                                    return ACLOpResult::Fail;
+                                }
                                 if (::MakeSelfRelativeSD(secDesc.absoluteSDInfo, secDesc.selfRelativeSDInfo, &secDesc.selfRelativeSDInfoSz)) {
                                     return ACLOpResult::Success;
                                 } else {
+                                    SAFE_LOCALFREE(secDesc.absoluteSDInfo);
+                                    SAFE_LOCALFREE(secDesc.daclAbsInfo);
+                                    SAFE_LOCALFREE(secDesc.saclAbsInfo);
                                     return ACLOpResult::Fail;
                                 }
                             }
                         }
+                    } else {
+                        SAFE_LOCALFREE(secDesc.absoluteSDInfo);
+                        SAFE_LOCALFREE(secDesc.daclAbsInfo);
+                        SAFE_LOCALFREE(secDesc.saclAbsInfo);
+                        return ACLOpResult::Fail;
                     }
+                } else {
+                    SAFE_LOCALFREE(secDesc.absoluteSDInfo);
+                    SAFE_LOCALFREE(secDesc.daclAbsInfo);
+                    SAFE_LOCALFREE(secDesc.saclAbsInfo);
+                    return ACLOpResult::Fail;
                 }
             }
         }
