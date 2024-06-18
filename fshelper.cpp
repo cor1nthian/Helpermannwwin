@@ -405,7 +405,7 @@ PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		}
 	}
 	ACLHandler aclh;
-	if (secDesc.daclInfo) {
+	if (secDesc.daclAbsInfo) {
 		ACL* acllist = 0;
 		if (ACLOpResult::Success != aclh.DACLFromSecurityDescriptor((SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
 			acllist)) {
@@ -427,7 +427,7 @@ PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring 
 			SAFE_LOCALFREE(acllist);
 			return PartsOpResult::Fail;
 		}
-		if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo), &sd)) {
+		if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo), sd)) {
 			SAFE_LOCALFREE(sd);
 			SAFE_LOCALFREE(acllist);
 			return PartsOpResult::Fail;
@@ -435,7 +435,7 @@ PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		SAFE_LOCALFREE(sd);
 		SAFE_LOCALFREE(acllist);
 	}
-	if (secDesc.saclInfo) {
+	if (secDesc.saclAbsInfo) {
 		ACL* acllist = 0;
 		if (ACLOpResult::Success != aclh.SACLFromSecurityDescriptor((SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
 			acllist)) {
@@ -448,7 +448,7 @@ PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring 
 				return PartsOpResult::Fail;
 			}
 			if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
-				if (!::SetSecurityDescriptorDacl(sd, true, acllist, false)) {
+				if (!::SetSecurityDescriptorSacl(sd, true, acllist, false)) {
 					SAFE_LOCALFREE(sd);
 					SAFE_LOCALFREE(acllist);
 					return PartsOpResult::Fail;
@@ -458,7 +458,7 @@ PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring 
 				SAFE_LOCALFREE(acllist);
 				return PartsOpResult::Fail;
 			}
-			if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::SACLSecInfo), &sd)) {
+			if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::SACLSecInfo), sd)) {
 				SAFE_LOCALFREE(sd);
 				SAFE_LOCALFREE(acllist);
 				return PartsOpResult::Fail;
@@ -500,8 +500,7 @@ PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring 
 			SAFE_LOCALFREE(sd);
 			return PartsOpResult::Fail;
 		}
-		if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo),
-			secDesc.primaryGroupInfo)) {
+		if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo), sd)) {
 			return PartsOpResult::Fail;
 		}
 		SAFE_LOCALFREE(sd);
