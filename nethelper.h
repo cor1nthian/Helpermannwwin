@@ -75,6 +75,9 @@
 #define MAXTRACERTHOPS		255
 #define MAXTRACERTPINGS		32
 
+#define TRACERTMULTIPLEEPS std::vector<TracertResult>
+#define TRACERTMULTIPLESPSEPS std::map<std::wstring, std::vector<TracertResult>>
+
 const std::vector<unsigned short int> const gc_CommonPorts = {
 	80,     // HTTP
 	443,    // HTTPS
