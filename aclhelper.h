@@ -469,6 +469,7 @@ class ACLHandler {
 			const unsigned char aceFlags) const;
 		ACLOpResult DACLAddCustomACE(ACL* &dacl, const PSID sid, const AceType aceTyoe, unsigned long aclMask,
 			const unsigned char aceFlags, const bool removeExistingBan = true) const;
+		ACLOpResult DACLAddFullControlAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddDeleteAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddExecuteAllowedPermissions(ACL*& dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddWriteAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
@@ -477,6 +478,7 @@ class ACLHandler {
 		ACLOpResult DACLAddWriteDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLAddExecuteDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLAddDeleteDeniedPermissions(ACL* &dacl, const PSID sid) const;
+		ACLOpResult DACLAddFullControlDeniedPermissions(ACL* &dacl, const PSID sid) const;
 		ACLOpResult DACLRegAddFullControlAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLRegAddQueryValueAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
 		ACLOpResult DACLRegAddSetValueAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
@@ -510,7 +512,7 @@ class ACLHandler {
 		ACLOpResult DACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const;
 		ACLOpResult SACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* sacl) const;
 	protected:
-
+		
 	private:
 		ACLOpResult BuildACE(ACE_HEADER* &ace, const PSID sid, const AceType aceType,
 			const ACCESS_MASK accessMask, const unsigned char aceFlags) const;

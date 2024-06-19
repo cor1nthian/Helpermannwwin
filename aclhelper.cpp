@@ -528,6 +528,14 @@ ACLOpResult ACLHandler::DACLAddCustomACE(ACL* &dacl, const PSID sid, const AceTy
     }
 }
 
+ACLOpResult ACLHandler::DACLAddFullControlAllowedPermissions(ACL* &dacl, const PSID sid,
+    const bool removeExistingBan) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, FILE_ALL_ACCESS);
+}
+
 ACLOpResult ACLHandler::DACLAddDeleteAllowedPermissions(ACL*& dacl, PSID sid, const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;
@@ -582,6 +590,13 @@ ACLOpResult ACLHandler::DACLAddDeleteDeniedPermissions(ACL*& dacl, PSID sid) con
         return ACLOpResult::Fail;
     }
     return DACLDenyPermissionSetter(dacl, sid, DELETE);
+}
+
+ACLOpResult ACLHandler::DACLAddFullControlDeniedPermissions(ACL* &dacl, const PSID sid) const {
+    if (!dacl) {
+        return ACLOpResult::Fail;
+    }
+    return DACLDenyPermissionSetter(dacl, sid, FILE_ALL_ACCESS);
 }
 
 ACLOpResult ACLHandler::DACLRegAddCreateLinkDeniedPermissions(ACL*& dacl, const PSID sid) const {

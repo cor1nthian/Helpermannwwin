@@ -289,41 +289,33 @@ class RegHandler {
 		RegHandler();
 		RegHandler(const RegHandler &other);
 		~RegHandler();
-		RegOpResult GetStrVal(const std::wstring valName, std::wstring &val,
-			const bool cleanupString = true, const HKEY *root = 0) const;
-		RegOpResult GetDWordVal(const std::wstring valName, unsigned long &val,
+		RegOpResult GetStrVal(const std::wstring valName, std::wstring &val, const bool cleanupString = true,
 			const HKEY *root = 0) const;
-		RegOpResult GetQWordVal(const std::wstring valName, unsigned long long &val,
+		RegOpResult GetDWordVal(const std::wstring valName, unsigned long &val, const HKEY *root = 0) const;
+		RegOpResult GetQWordVal(const std::wstring valName, unsigned long long &val, const HKEY *root = 0) const;
+		RegOpResult GetBinaryVal(const std::wstring valName, unsigned char* &buf, unsigned long &bufSz,
 			const HKEY *root = 0) const;
-		RegOpResult GetBinaryVal(const std::wstring valName, unsigned char* &buf,
-			unsigned long &bufSz, const HKEY *root = 0) const;
-		RegOpResult GetMultiStrVal(const std::wstring valName, wchar_t* &buf,
-			unsigned long &bufSz, const HKEY *root = 0) const;
-		RegOpResult GetMultiStrVal(const std::wstring valName,
-			std::vector<std::wstring> &val, const bool split = true,
+		RegOpResult GetMultiStrVal(const std::wstring valName, wchar_t* &buf, unsigned long &bufSz,
+			const HKEY *root = 0) const;
+		RegOpResult GetMultiStrVal(const std::wstring valName, std::vector<std::wstring> &val, const bool split = true,
 			const wchar_t* splitter = L"\n", const HKEY *root = 0) const;
-		RegOpResult GetResourceList(const std::wstring valName,
-			unsigned long long &val, const HKEY *root = 0) const;
-		RegOpResult GetVal(const std::wstring valName, unsigned char* &buf,
-			unsigned long &bufSz, RegValType &valType, const HKEY *root = 0) const;
-		RegOpResult GetValueType(const std::wstring valName, RegValType &valtype,
+		RegOpResult GetResourceList(const std::wstring valName, unsigned long long &val, const HKEY *root = 0) const;
+		RegOpResult GetVal(const std::wstring valName, unsigned char* &buf, unsigned long &bufSz, RegValType &valType,
 			const HKEY *root = 0) const;
-		RegOpResult CreateStrVal(const std::wstring valName, const std::wstring& val,
+		RegOpResult GetValueType(const std::wstring valName, RegValType &valtype, const HKEY *root = 0) const;
+		RegOpResult CreateStrVal(const std::wstring valName, const std::wstring& val, const HKEY *root = 0) const;
+		RegOpResult CreateDWordVal(const std::wstring valName, const unsigned long& val, const HKEY *root = 0) const;
+		RegOpResult CreateQWordVal(const std::wstring valName, const unsigned long long &val,
 			const HKEY *root = 0) const;
-		RegOpResult CreateDWordVal(const std::wstring valName, const unsigned long& val,
-			const HKEY *root = 0) const;
-		RegOpResult CreateQWordVal(const std::wstring valName,
-			const unsigned long long &val, const HKEY *root = 0) const;
 		RegOpResult CreateBinaryVal(const std::wstring valName, unsigned char* &buf,
 			unsigned long bufSz, const HKEY *root = 0) const;
-		RegOpResult CreateMultiStrVal(const std::wstring valName,
-			const std::vector<std::wstring> &val, const HKEY *root = 0) const;
+		RegOpResult CreateMultiStrVal(const std::wstring valName, const std::vector<std::wstring> &val,
+			const HKEY *root = 0) const;
 		RegOpResult AddItem2ExplorerContextMenu(const std::wstring itemName,
 			const std::wstring objectPath, const bool add2DirMenu = true, const bool add2DriveMenu = true,
 			const HKEY *root = 0) const;
-		RegOpResult RemoveItemFromExplorerContextMenu(const std::wstring itemName,
-			const bool removeFromDirMenu = true, const bool removeFromDriveMenu = true,
-			const HKEY *root = 0) const;
+		RegOpResult RemoveItemFromExplorerContextMenu(const std::wstring itemName, const bool removeFromDirMenu = true,
+			const bool removeFromDriveMenu = true, const HKEY *root = 0) const;
 		RegOpResult AddItem2DesktopContextMenu(const std::wstring itemName, const std::wstring objectPath,
 			const std::wstring subMenuName = L"My Menu", const std::wstring subCommandMenuName = L"MyMenu",
 			const std::wstring subCommandMenuNameAdd = L".mycmd", const std::wstring menuIconPath = L"shell32.dll,43",
@@ -334,11 +326,10 @@ class RegHandler {
 		RegOpResult GetSoftwareVersion(const std::wstring softwareName, std::vector<SOFTWAREVERSION> &versions,
 			const bool uniqueValues = true, const bool anySoftware = true, const HKEY *root = 0) const;
 		RegOpResult DeleteVal(const std::wstring valName, const HKEY *root = 0) const;
-		RegOpResult CopyVal(const std::wstring source,
-			const std::wstring destKeyName, const std::wstring destValName, const HKEY *root = 0) const;
-		RegOpResult MoveVal(const std::wstring source,
-			const std::wstring destKeyName, const std::wstring destValName,
-			const HKEY *root = 0) const;
+		RegOpResult CopyVal(const std::wstring source, const std::wstring destKeyName,
+			const std::wstring destValName, const HKEY *root = 0) const;
+		RegOpResult MoveVal(const std::wstring source, const std::wstring destKeyName,
+			const std::wstring destValName, const HKEY *root = 0) const;
 		RegOpResult SeekKey(const std::wstring keyName, std::vector<RegKeyDesc> &results,
 			const std::wstring startPath = L"", const bool acquireVals = false,
 			const unsigned long limitResults = 700, const bool cleanupStrings = true,
@@ -371,23 +362,19 @@ class RegHandler {
 		RegOpResult SetKeySecurity(const std::wstring keyName, SecDesc &secDesc, const HKEY *root = 0) const;
 		RegOpResult CreateKey(const std::wstring keyName, const bool createMissingKeys = true,
 			const HKEY *root = 0) const;
-		RegOpResult DeleteKey(const std::wstring keyName, const bool deleteSubKeys = true,
+		RegOpResult DeleteKey(const std::wstring keyName, const bool deleteSubKeys = true, const HKEY *root = 0) const;
+		RegOpResult CopyKey(const std::wstring source, const std::wstring destination, const bool copyVals = true,
 			const HKEY *root = 0) const;
-		RegOpResult CopyKey(const std::wstring source,
-			const std::wstring destination, const bool copyVals = true,
+		RegOpResult MoveKey(const std::wstring source, const std::wstring destination, const bool moveValues = true,
 			const HKEY *root = 0) const;
-		RegOpResult MoveKey(const std::wstring source, const std::wstring destination,
-			const bool moveValues = true, const HKEY *root = 0) const;
-		RegOpResult EnumUserProfileHives(std::vector<std::wstring> &hiveList,
-			const bool mountHives = true);
+		RegOpResult EnumUserProfileHives(std::vector<std::wstring> &hiveList, const bool mountHives = true);
 		RegOpResult MountHive_LoadKey(const std::wstring hivePath,
 			const RegLoadTarget loadTarget = RegLoadTarget::Users);
 		RegOpResult UnmountHive_UnloadKey(const std::wstring unloadKeyName,
 			const RegLoadTarget unloadTarget = RegLoadTarget::Users);
 		RegOpResult ConnectRegistry(const std::wstring remoteComputerName);
 		RegOpResult DisconnectRegistry(const HKEY connectedReg);
-		unsigned long long ReadResourceList(const unsigned char* &resListBuf,
-			const size_t bufSz) const;
+		unsigned long long ReadResourceList(const unsigned char* &resListBuf, const size_t bufSz) const;
 		std::vector<std::wstring> MultiStrBuf2Vector(const wchar_t* multiStrBuf,
 			const size_t bufSz) const;
 	protected:
