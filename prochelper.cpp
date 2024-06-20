@@ -2384,6 +2384,7 @@ std::vector<std::wstring> ProcessHandler::GetProcPrivileges(const unsigned long 
 										return ret;
 									}
 								}
+								memset(pbuf, 0, 64 * sizeof(wchar_t));
 							}
 							SAFE_ARR_DELETE(buf);
 							::CloseHandle(hToken);

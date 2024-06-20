@@ -3072,8 +3072,7 @@ RegOpResult RegHandler::UnmountHive_UnloadKey(const std::wstring unloadKeyName,
 		if (unloadKey) {
 			if (ERROR_SUCCESS == ::RegUnLoadKey(unloadKey, unloadKeyName.c_str())) {
 				for (auto &it : m_mountedHives) {
-					if (lower_copy(it.first) == lower_copy(unloadKeyName) &&
-						it.second == unloadKey) {
+					if (lower_copy(it.first) == lower_copy(unloadKeyName) && it.second == unloadKey) {
 						m_mountedHives.erase(it.first);
 						break;
 					}
@@ -3097,6 +3096,13 @@ RegOpResult RegHandler::ConnectRegistry(HKEY &connectedReg, const std::wstring u
 	if (checkPing) {
 		std::vector<PingResult> pingres;
 		if (NetOpResult::Success != ping(pingres, remoteComputerName, pingAttempts)) {
+			return RegOpResult::Fail;
+		}
+		bool pr = true;
+		for (size_t i = 0; i < pingres.size(); ++i) {
+			pr &= pingres[i].Result;
+		}
+		if (!pr) {
 			return RegOpResult::Fail;
 		}
 	}

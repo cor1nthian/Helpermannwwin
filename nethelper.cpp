@@ -187,6 +187,44 @@ NetOpResult ping(std::vector<PingResult> &results, const std::wstring address,
     return NetOpResult::Success;
 }
 
+NetOpResult ping_MultipleEndPoints(PINGMULTIPLEEPSA &results, const std::string address,
+    const std::string portOrSvcName, const unsigned short numAttempts,
+    const unsigned short timeout, const unsigned short timeoutBetweenPings) {
+    HostNode hn;
+    if (NetOpResult::Success != lookupIPAddresses(hn, lower_copy(address), portOrSvcName)) {
+        return NetOpResult::Fail;
+    }
+    std::vector<PingResult> tvec;
+    for (size_t i = 0; i < hn.Address.size(); ++i) {
+        if (NetOpResult::Success == ping(tvec, address, numAttempts, timeout, timeoutBetweenPings)) {
+            results[wstr2str(hn.Address[i].Address)] = tvec;
+            tvec.clear();
+        } else {
+            return NetOpResult::Fail;
+        }
+    }
+    return NetOpResult::Success;
+}
+
+NetOpResult ping_MultipleEndPoints(PINGMULTIPLEEPSW &results, const std::wstring address,
+    const std::wstring portOrSvcName, const unsigned short numAttempts,
+    const unsigned short timeout, const unsigned short timeoutBetweenPings) {
+    HostNode hn;
+    if (NetOpResult::Success != lookupIPAddresses(hn, lower_copy(address), portOrSvcName)) {
+        return NetOpResult::Fail;
+    }
+    std::vector<PingResult> tvec;
+    for (size_t i = 0; i < hn.Address.size(); ++i) {
+        if (NetOpResult::Success == ping(tvec, address, numAttempts, timeout, timeoutBetweenPings)) {
+            results[hn.Address[i].Address] = tvec;
+            tvec.clear();
+        } else {
+            return NetOpResult::Fail;
+        }
+    }
+    return NetOpResult::Success;
+}
+
 /*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
 NetOpResult traceroute(std::vector<TracertResult> &results, const std::string address, const unsigned char maxHops,
@@ -346,8 +384,9 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring a
 
 /*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
-NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std::string address, const unsigned char maxHops,
-    const std::string portOrSvcName, const bool doPings, const unsigned short int tracertTimeout,
+NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std::string address,
+    const unsigned char maxHops, const std::string portOrSvcName,
+    const bool doPings, const unsigned short int tracertTimeout,
     const unsigned short int pingAttempts, const unsigned short int pingTimeout,
     const unsigned short int timeoutBetweenPings) {
     TracertResult trres;
@@ -517,7 +556,7 @@ NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std:
 
 /*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
-NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPS &results,
+NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPSA &results,
     const std::string address, const std::string portOrSvcName, const unsigned char maxHops, const bool doPings,
     const bool strictEndPointMatch, const unsigned short int tracertTimeout,
     const unsigned short int pingAttempts, const unsigned short int pingTimeout,
@@ -651,7 +690,7 @@ NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEP
                         }
                     }
                 } while (hops <= maxhops);
-                results[hn.Address[i].Address] = resvec;
+                results[wstr2str(hn.Address[i].Address)] = resvec;
             }
         } else {
             // Unable to allocate memory
@@ -660,7 +699,7 @@ NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEP
         SAFE_FREE(ReplyBuffer);
         IcmpCloseHandle(hIcmpFile);
         if (doPings) {
-            std::map<std::wstring, std::vector<TracertResult>>::iterator it;
+            std::map<std::string, std::vector<TracertResult>>::iterator it;
             for (it = results.begin(); it != results.end(); ++it) {
                 std::vector<TracertResult> temptracert = it->second;
                 for (j = 0; j < temptracert.size(); ++j) {
@@ -700,13 +739,22 @@ NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEP
 
 /*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
     Packets with TTL = 1 dont leave LAN */
-NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPS &results,
+NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPSW &results,
     const std::wstring address, const std::wstring portOrSvcName, const unsigned char maxHops,
     const bool doPings, const bool strictEndPointMatch, const unsigned short int tracertTimeout,
     const unsigned short int pingAttempts, const unsigned short int pingTimeout,
     const unsigned short int timeoutBetweenPings) {
-    return(traceroute_MultipleStartPointsMultipleEndPoints(results, wstr2str(address), wstr2str(portOrSvcName), maxHops,
-        doPings, strictEndPointMatch, tracertTimeout, pingAttempts, pingTimeout, timeoutBetweenPings));
+    std::map <std::string, std::vector<TracertResult>> temptrmap;
+    if (NetOpResult::Success == traceroute_MultipleStartPointsMultipleEndPoints(temptrmap, wstr2str(address),
+        wstr2str(portOrSvcName), maxHops, doPings, strictEndPointMatch, tracertTimeout, pingAttempts, pingTimeout,
+        timeoutBetweenPings)) {
+        for (auto &it : temptrmap) {
+            results[str2wstr(it.first)] = it.second;
+        }
+        return NetOpResult::Success;
+    } else {
+        return NetOpResult::Fail;
+    }
 }
 
 /*  Send packets with increasing TTL until you get a reply from target host or max hops limit reached.
@@ -867,7 +915,7 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const s
     hints.ai_protocol = IPPROTO_TCP;
     HostNodeAddr hna;
     if (!getaddrinfo(dnsName.c_str(), poslow.c_str(), &hints, &result)) {
-        for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+        for (ptr = result; ptr != 0; ptr = ptr->ai_next) {
             switch (ptr->ai_family) {
                 case AF_UNSPEC: {} break;
                 case AF_INET: {

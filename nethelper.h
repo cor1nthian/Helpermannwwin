@@ -75,8 +75,11 @@
 #define MAXTRACERTHOPS		255
 #define MAXTRACERTPINGS		32
 
+#define PINGMULTIPLEEPSA std::map<std::string, std::vector<PingResult>>
+#define PINGMULTIPLEEPSW std::map<std::wstring, std::vector<PingResult>>
 #define TRACERTMULTIPLEEPS std::vector<TracertResult>
-#define TRACERTMULTIPLESPSEPS std::map<std::wstring, std::vector<TracertResult>>
+#define TRACERTMULTIPLESPSEPSA std::map<std::string, std::vector<TracertResult>>
+#define TRACERTMULTIPLESPSEPSW std::map<std::wstring, std::vector<TracertResult>>
 
 const std::vector<unsigned short int> const gc_CommonPorts = {
 	80,     // HTTP
@@ -428,13 +431,19 @@ NetOpResult ping(std::vector<PingResult> &results, const std::string address, co
 	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
 NetOpResult ping(std::vector<PingResult> &results, const std::wstring address, const unsigned short numAttempts = 4,
 	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
+NetOpResult ping_MultipleEndPoints(PINGMULTIPLEEPSA &results, const std::string address,
+	const std::string portOrSvcName = "80", const unsigned short numAttempts = 4,
+	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
+NetOpResult ping_MultipleEndPoints(PINGMULTIPLEEPSW &results, const std::wstring address,
+	const std::wstring portOrSvcName = L"80", const unsigned short numAttempts = 4,
+	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
 NetOpResult traceroute(std::vector<TracertResult> &results, const std::string address,  const unsigned char maxHops = 30,
 	const bool doPings = true, const unsigned short int tracertTimeout = 1000, const unsigned short int pingAttempts = 4,
 	const unsigned short int pingTimeout = 1000, const unsigned short int timeoutBetweenPings = 1000);
 NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring address, const unsigned char maxHops = 30,
 	const bool doPings = true, const unsigned short int tracertTimeout = 1000, const unsigned short int pingAttempts = 4,
 	const unsigned short int pingTimeout = 1000, const unsigned short int timeoutBetweenPings = 1000);
-NetOpResult traceroute_MultipleEndPoints(std::vector<TracertResult> &results, const std::string address,
+NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std::string address,
 	const std::string portOrSvcName = "80", const unsigned char maxHops = 30,
 	const bool doPings = true, const unsigned short int tracertTimeout = 1000,
 	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
@@ -444,12 +453,12 @@ NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std:
 	const bool doPings = true, const unsigned short int tracertTimeout = 1000,
 	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
 	const unsigned short int timeoutBetweenPings = 1000);
-NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPS &results,
+NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPSA &results,
 	const std::string address, const std::string portOrSvcName = "80", const unsigned char maxHops = 30,
 	const bool doPings = true, const bool strictEndPointMatch = true, const unsigned short int tracertTimeout = 1000,
 	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
 	const unsigned short int timeoutBetweenPings = 1000);
-NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(std::map<std::wstring, std::vector<TracertResult>> &results,
+NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPSW &results,
 	const std::wstring address, const std::wstring portOrSvcName = L"80", const unsigned char maxHops = 30,
 	const bool doPings = true, const bool strictEndPointMatch = false,  const unsigned short int tracertTimeout = 1000,
 	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
