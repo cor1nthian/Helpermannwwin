@@ -3079,12 +3079,15 @@ RegOpResult RegHandler::UnmountHive_UnloadKey(const std::wstring unloadKeyName,
 					}
 				}
 				return RegOpResult::Success;
+			} else {
+				return RegOpResult::Fail;
 			}
+		} else {
 			return RegOpResult::Fail;
 		}
+	} else {
 		return RegOpResult::Fail;
 	}
-	return RegOpResult::Fail;
 }
 
 RegOpResult RegHandler::ConnectRegistry(HKEY &connectedReg, const std::wstring userName, const std::wstring password,
@@ -3107,8 +3110,14 @@ RegOpResult RegHandler::ConnectRegistry(HKEY &connectedReg, const std::wstring u
 				} else {
 					return RegOpResult::Fail;
 				}
+			} else {
+				return RegOpResult::Fail;
 			}
+		} else {
+			return RegOpResult::Fail;
 		}
+	} else {
+		return RegOpResult::Fail;
 	}
 }
 
