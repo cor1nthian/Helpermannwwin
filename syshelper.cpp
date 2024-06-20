@@ -811,6 +811,24 @@ SysOpResult SysHandler::LocalGroupListFromStrSID(std::vector<GroupDesc> &outGrou
 	return SysOpResult::Success;
 }
 
+SysOpResult SysHandler::UserLogon(HANDLE &token, std::wstring userName, std::wstring password,
+	std::wstring domain) const {
+	if (LogonUser(userName.c_str(), domain.c_str(), password.c_str(), LOGON32_LOGON_NEW_CREDENTIALS,
+		LOGON32_PROVIDER_DEFAULT, &token)) {
+		return SysOpResult::Success;
+	} else {
+		return SysOpResult::Fail;
+	}
+}
+
+SysOpResult SysHandler::ImpersonateUser(HANDLE &token) const {
+	if (ImpersonateLoggedOnUser(token)) {
+		return SysOpResult::Success;
+	} else {
+		return SysOpResult::Fail;
+	}
+}
+
 SysOpResult SysHandler::EnumLocalGroups(std::vector<GroupDesc> &groupList,
 	const std::wstring machineName, const bool enumAccs,
 	const std::vector<AccountDesc> *accList) const {

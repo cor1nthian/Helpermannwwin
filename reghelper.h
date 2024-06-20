@@ -74,6 +74,7 @@
 #include <algorithm>
 #include <iterator>
 #include <regex>
+#include "nethelper.h"
 #include "syshelper.h"
 #include "strhelper.h"
 #include "winerrhelper.h"
@@ -332,26 +333,21 @@ class RegHandler {
 			const std::wstring destValName, const HKEY *root = 0) const;
 		RegOpResult SeekKey(const std::wstring keyName, std::vector<RegKeyDesc> &results,
 			const std::wstring startPath = L"", const bool acquireVals = false,
-			const unsigned long limitResults = 700, const bool cleanupStrings = true,
-			const HKEY *root = 0) const;
+			const unsigned long limitResults = 700, const bool cleanupStrings = true, const HKEY *root = 0) const;
 		RegOpResult SeekVal2(const std::wstring valName, std::vector<RegValDesc> &results,
-			const std::wstring startPath = L"", const bool acquireVals = false,
-			const unsigned long limitResults = 700, const bool cleanupStrings = true,
-			const HKEY *root = 0) const;
-		RegOpResult SeekVal(const std::wstring valName, std::vector<RegValDesc> &results,
-			const std::wstring startPath = L"", const bool acquireVals = false,
-			const unsigned long limitResults = 700, const bool cleanupStrings = true,
-			const HKEY *root = 0) const;
-		RegOpResult SeekVal(const std::wstring valName, std::vector<RegValDesc>& results,
-			const std::wstring startPath = L"", const RegValType valType = RegValType::Str,
-			const bool acquireVals = false, const unsigned long limitResults = 700,
+			const std::wstring startPath = L"", const bool acquireVals = false, const unsigned long limitResults = 700,
 			const bool cleanupStrings = true, const HKEY *root = 0) const;
-		RegOpResult AcquireValues(std::vector<RegKeyDesc> &keyList,
-			const unsigned long limitVals = 700, const bool cleanupStrings = true,
+		RegOpResult SeekVal(const std::wstring valName, std::vector<RegValDesc> &results,
+			const std::wstring startPath = L"", const bool acquireVals = false, const unsigned long limitResults = 700,
+			const bool cleanupStrings = true, const HKEY *root = 0) const;
+		RegOpResult SeekVal(const std::wstring valName, std::vector<RegValDesc> &results,
+			const std::wstring startPath = L"", const RegValType valType = RegValType::Str,
+			const bool acquireVals = false, const unsigned long limitResults = 700, const bool cleanupStrings = true,
 			const HKEY *root = 0) const;
-		RegOpResult AcquireValues(std::vector<RegValDesc> &valList,
-			const unsigned long limitVals = 700, const bool cleanupStrings = true,
-			const HKEY *root = 0) const;
+		RegOpResult AcquireValues(std::vector<RegKeyDesc> &keyList, const unsigned long limitVals = 700,
+			const bool cleanupStrings = true, const HKEY *root = 0) const;
+		RegOpResult AcquireValues(std::vector<RegValDesc> &valList, const unsigned long limitVals = 700,
+			const bool cleanupStrings = true, const HKEY *root = 0) const;
 		RegOpResult CreateValues(const std::vector<RegKeyDesc> &keyList, const HKEY *root = 0) const;
 		RegOpResult CreateValues(const std::vector<RegValDesc> &valList, const HKEY *root = 0) const;
 		RegOpResult DeleteValues(const std::vector<RegKeyDesc> &keyList, const HKEY *root = 0) const;
@@ -372,7 +368,8 @@ class RegHandler {
 			const RegLoadTarget loadTarget = RegLoadTarget::Users);
 		RegOpResult UnmountHive_UnloadKey(const std::wstring unloadKeyName,
 			const RegLoadTarget unloadTarget = RegLoadTarget::Users);
-		RegOpResult ConnectRegistry(const std::wstring remoteComputerName);
+		RegOpResult ConnectRegistry(HKEY &connectedNode, const std::wstring userName, const std::wstring password,
+			const std::wstring remoteComputerName, const bool checkPing = false, const unsigned char pingAttempts = 1);
 		RegOpResult DisconnectRegistry(const HKEY connectedReg);
 		unsigned long long ReadResourceList(const unsigned char* &resListBuf, const size_t bufSz) const;
 		std::vector<std::wstring> MultiStrBuf2Vector(const wchar_t* multiStrBuf,

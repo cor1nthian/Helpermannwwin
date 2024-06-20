@@ -126,8 +126,8 @@ RegOpResult RegHandler::GetStrVal(const std::wstring valName, std::wstring &val,
 				wchar_t* readBuf = (wchar_t*)malloc(buflen);
 				if (readBuf) {
 					memset(readBuf, 0, buflen);
-					if (ERROR_SUCCESS == ::RegQueryValueEx(keyHandle, valueName.c_str(), 0, 0,
-						(unsigned char*)readBuf, &buflen)) {
+					if (ERROR_SUCCESS == ::RegQueryValueEx(keyHandle, valueName.c_str(), 0, 0, (unsigned char*)readBuf,
+						&buflen)) {
 						val = readBuf;
 						if (cleanupString) {
 							val.erase(remove_if(val.begin(), val.end(),
@@ -3087,13 +3087,32 @@ RegOpResult RegHandler::UnmountHive_UnloadKey(const std::wstring unloadKeyName,
 	return RegOpResult::Fail;
 }
 
-RegOpResult ConnectRegistry(const std::wstring remoteComputerName) {
+RegOpResult RegHandler::ConnectRegistry(HKEY &connectedReg, const std::wstring userName, const std::wstring password,
+	const std::wstring remoteComputerName, const bool checkPing, const unsigned char pingAttempts) {
 	std::wstring machineName = startsWith(remoteComputerName, L"\\\\") ?
 		remoteComputerName : L"\\\\" + remoteComputerName;
-	return RegOpResult::Success;
+	if (checkPing) {
+		std::vector<PingResult> pingres;
+		if (NetOpResult::Success != ping(pingres, remoteComputerName, pingAttempts)) {
+			return RegOpResult::Fail;
+		}
+	}
+	HANDLE token = 0;
+	SysHandler sys;
+	if (SysOpResult::Success == sys.UserLogon(token, userName, password, remoteComputerName)) {
+		if (SysOpResult::Success == sys.ImpersonateUser(token)) {
+			if (ERROR_SUCCESS == ::RegConnectRegistry(machineName.c_str(), HKEY_LOCAL_MACHINE, &connectedReg)) {
+				if (connectedReg) {
+					return RegOpResult::Success;
+				} else {
+					return RegOpResult::Fail;
+				}
+			}
+		}
+	}
 }
 
-RegOpResult DisconnectRegistry(const HKEY connectedReg) {
+RegOpResult RegHandler::DisconnectRegistry(const HKEY connectedReg) {
 	::RegCloseKey(connectedReg);
 	return RegOpResult::Success;
 }
@@ -3218,13 +3237,18 @@ RegOpResult RegHandler::prepHKEYKeyPath(const HKEY& keyHandleSet, const std::wst
 	return assignHKEYKeyPath(keyPathSet, keyHandleSet, keyHandle, keyPath);
 }
 
-RegOpResult RegHandler::prepHKEYKeyPathValueName(HKEY& keyHandle,
-	const HKEY &keyHandleSet, const std::wstring &valPath,
+RegOpResult RegHandler::prepHKEYKeyPathValueName(HKEY &keyHandle, const HKEY &keyHandleSet, const std::wstring &valPath,
 	std::wstring &keyPath, std::wstring &valName) const {
 	bool spiltTrad = false;
 	std::vector<std::wstring> strSpl;
 	valName = removeFromStart_copy(valPath, L"\\");
-	HKEY hktest = { 0 }, hkres = { 0 };;;
+	HKEY hktest = { 0 }, hkres = { 0 };
+	if (keyHandleSet) {
+		hktest = keyHandleSet;
+		std::vector<std::wstring> svec = splitStr(valName, L"\\");
+		keyPath = joinStrs(svec, L"\\", 0, svec.size() - 1);
+		return assignHKEYKeyPath(keyPath, hktest, keyHandle, keyPath);
+	}
 	if (std::string::npos != valName.find(L"|")) {
 		strSpl = splitStr(valName, L"|");
 		keyPath = strSpl[0];

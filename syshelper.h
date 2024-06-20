@@ -115,7 +115,7 @@ bool CheckAccess(void* pAddress, size_t nSize) {
 	unsigned long long pCurrentAddress = (unsigned long long)pAddress;
 	unsigned long long pEndAdress = pCurrentAddress + (nSize - 1);
 	do {
-		ZeroMemory(&sMBI, sizeof(sMBI));
+		memset(&sMBI, 0, sizeof(sMBI));
 		::VirtualQuery((const void*)pCurrentAddress, &sMBI, sizeof(sMBI));
 		bRet = (sMBI.State & MEM_COMMIT)			// memory allocated and
 			&& !(sMBI.Protect & dwForbiddenArea)	// access to page allowed and
@@ -633,6 +633,9 @@ class SysHandler {
 			const std::wstring machineName = L".") const;
 		SysOpResult LocalGroupListFromStrSID(std::vector<GroupDesc> &outGroupList, const std::wstring strSID,
 			const std::wstring machineName = L".") const;
+		SysOpResult UserLogon(HANDLE &token, std::wstring userName, std::wstring password,
+			std::wstring domain = L".") const;
+		SysOpResult ImpersonateUser(HANDLE &token) const;
 		/* Enumerates local groups
 			Param:
 			[out] [mandatory] group desctiption vector to receive data
