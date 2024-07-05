@@ -234,38 +234,64 @@ struct SecDesc {
 		return *this;
 	}
 	SecDesc& operator=(SecDesc &&other) noexcept {
-		daclInfoSz = other.daclInfoSz;
-		other.daclInfoSz = 0;
-		daclAbsInfoSz = other.daclAbsInfoSz;
-		other.daclAbsInfoSz = 0;
-		saclInfoSz = other.saclInfoSz;
-		other.daclInfoSz = 0;
-		saclAbsInfoSz = other.saclAbsInfoSz;
-		other.saclAbsInfoSz = 0;
-		ownerInfoSz = other.ownerInfoSz;
-		other.ownerInfoSz = 0;
-		primaryGroupInfoSz = other.primaryGroupInfoSz;
-		other.primaryGroupInfoSz = 0;
-		absoluteSDInfoSz = other.absoluteSDInfoSz;
-		other.absoluteSDInfoSz = 0;
-		selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
-		other.selfRelativeSDInfoSz = 0;
-		daclInfo = other.daclInfo;
-		other.daclInfo = 0;
-		daclAbsInfo = other.daclAbsInfo;
-		other.daclAbsInfo = 0;
-		saclInfo = other.saclInfo;
-		other.saclInfo = 0;
-		saclAbsInfo = other.saclAbsInfo;
-		other.saclAbsInfo = 0;
-		ownerInfo = other.ownerInfo;
-		other.ownerInfo = 0;
-		primaryGroupInfo = other.primaryGroupInfo;
-		other.primaryGroupInfo = 0;
-		absoluteSDInfo = other.absoluteSDInfo;
-		other.absoluteSDInfo = 0;
-		selfRelativeSDInfo = other.selfRelativeSDInfo;
-		other.selfRelativeSDInfo = 0;
+		if (this != &other) {
+			if (daclInfo) {
+				SAFE_LOCALFREE(daclInfo);
+			}
+			if (daclAbsInfo) {
+				SAFE_LOCALFREE(daclAbsInfo);
+			}
+			if (saclInfo) {
+				SAFE_LOCALFREE(saclInfo);
+			}
+			if (saclAbsInfo) {
+				SAFE_LOCALFREE(saclAbsInfo);
+			}
+			if (ownerInfo) {
+				SAFE_LOCALFREE(ownerInfo);
+			}
+			if (primaryGroupInfo) {
+				SAFE_LOCALFREE(primaryGroupInfo);
+			}
+			if (absoluteSDInfo) {
+				SAFE_LOCALFREE(absoluteSDInfo);
+			}
+			if (selfRelativeSDInfo) {
+				SAFE_LOCALFREE(selfRelativeSDInfo);
+			}
+			daclInfoSz = other.daclInfoSz;
+			other.daclInfoSz = 0;
+			daclAbsInfoSz = other.daclAbsInfoSz;
+			other.daclAbsInfoSz = 0;
+			saclInfoSz = other.saclInfoSz;
+			other.daclInfoSz = 0;
+			saclAbsInfoSz = other.saclAbsInfoSz;
+			other.saclAbsInfoSz = 0;
+			ownerInfoSz = other.ownerInfoSz;
+			other.ownerInfoSz = 0;
+			primaryGroupInfoSz = other.primaryGroupInfoSz;
+			other.primaryGroupInfoSz = 0;
+			absoluteSDInfoSz = other.absoluteSDInfoSz;
+			other.absoluteSDInfoSz = 0;
+			selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
+			other.selfRelativeSDInfoSz = 0;
+			daclInfo = other.daclInfo;
+			other.daclInfo = 0;
+			daclAbsInfo = other.daclAbsInfo;
+			other.daclAbsInfo = 0;
+			saclInfo = other.saclInfo;
+			other.saclInfo = 0;
+			saclAbsInfo = other.saclAbsInfo;
+			other.saclAbsInfo = 0;
+			ownerInfo = other.ownerInfo;
+			other.ownerInfo = 0;
+			primaryGroupInfo = other.primaryGroupInfo;
+			other.primaryGroupInfo = 0;
+			absoluteSDInfo = other.absoluteSDInfo;
+			other.absoluteSDInfo = 0;
+			selfRelativeSDInfo = other.selfRelativeSDInfo;
+			other.selfRelativeSDInfo = 0;
+		}
 		return *this;
 	}
 	bool operator==(const SecDesc &other) const {

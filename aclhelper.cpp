@@ -152,6 +152,30 @@ SecDesc::SecDesc(SecDesc &&other) noexcept :
     primaryGroupInfoSz(std::exchange(other.primaryGroupInfoSz, 0)),
     absoluteSDInfoSz(std::exchange(other.absoluteSDInfoSz, 0)),
     selfRelativeSDInfoSz(std::exchange(other.selfRelativeSDInfoSz, 0)) {
+    if (daclInfo) {
+        SAFE_LOCALFREE(daclInfo);
+    }
+    if (daclAbsInfo) {
+        SAFE_LOCALFREE(daclAbsInfo);
+    }
+    if (saclInfo) {
+        SAFE_LOCALFREE(saclInfo);
+    }
+    if (saclAbsInfo) {
+        SAFE_LOCALFREE(saclAbsInfo);
+    }
+    if (ownerInfo) {
+        SAFE_LOCALFREE(ownerInfo);
+    }
+    if (primaryGroupInfo) {
+        SAFE_LOCALFREE(primaryGroupInfo);
+    }
+    if (absoluteSDInfo) {
+        SAFE_LOCALFREE(absoluteSDInfo);
+    }
+    if (selfRelativeSDInfo) {
+        SAFE_LOCALFREE(selfRelativeSDInfo);
+    }
     daclInfo = other.daclInfo;
     other.daclInfo = 0;
     daclAbsInfo = other.daclAbsInfo;
