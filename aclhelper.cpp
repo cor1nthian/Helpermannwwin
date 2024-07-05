@@ -143,6 +143,33 @@ SecDesc::SecDesc(const SecDesc &other) {
     }
 }
 
+SecDesc::SecDesc(SecDesc &&other) noexcept :
+    daclInfoSz(std::exchange(other.daclInfoSz, 0)),
+    daclAbsInfoSz(std::exchange(other.daclAbsInfoSz, 0)),
+    saclInfoSz(std::exchange(other.saclInfoSz, 0)),
+    saclAbsInfoSz(std::exchange(other.saclAbsInfoSz, 0)),
+    ownerInfoSz(std::exchange(other.ownerInfoSz, 0)),
+    primaryGroupInfoSz(std::exchange(other.primaryGroupInfoSz, 0)),
+    absoluteSDInfoSz(std::exchange(other.absoluteSDInfoSz, 0)),
+    selfRelativeSDInfoSz(std::exchange(other.selfRelativeSDInfoSz, 0)) {
+    daclInfo = other.daclInfo;
+    other.daclInfo = 0;
+    daclAbsInfo = other.daclAbsInfo;
+    other.daclAbsInfo = 0;
+    saclInfo = other.saclInfo;
+    other.saclInfo = 0;
+    saclAbsInfo = other.saclAbsInfo;
+    other.saclAbsInfo = 0;
+    ownerInfo = other.ownerInfo;
+    other.ownerInfo = 0;
+    primaryGroupInfo = other.primaryGroupInfo;
+    other.primaryGroupInfo = 0;
+    absoluteSDInfo = other.absoluteSDInfo;
+    other.absoluteSDInfo = 0;
+    selfRelativeSDInfo = other.selfRelativeSDInfo;
+    other.selfRelativeSDInfo = 0;
+}
+
 SecDesc::~SecDesc() {
     if (daclInfo) {
         SAFE_LOCALFREE(daclInfo);

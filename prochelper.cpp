@@ -2350,7 +2350,7 @@ std::vector<ProcDesc> ProcessHandler::GetProcessByExePath(const std::wstring exe
 }
 
 unsigned long ProcessHandler::GetCurrentProcPid() const {
-	return GetCurrentProcessId();
+	return ::GetCurrentProcessId();
 }
 
 std::vector<std::wstring> ProcessHandler::GetProcPrivileges(const unsigned long pid,
@@ -2373,7 +2373,7 @@ std::vector<std::wstring> ProcessHandler::GetProcPrivileges(const unsigned long 
 							wchar_t pbuf[64] = { 0 };
 							for (size_t i = 0; i < priv->PrivilegeCount; ++i) {
 								bufSize = 64;
-								if (priv->Privileges[i].Attributes) {
+								if (priv->Privileges[i].Attributes == SE_PRIVILEGE_ENABLED) {
 									luid = priv->Privileges[i].Luid;
 									if (::LookupPrivilegeName(0, &luid, pbuf, &bufSize)) {
 										ret.push_back(pbuf);

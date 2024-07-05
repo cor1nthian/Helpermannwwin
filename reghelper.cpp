@@ -3247,7 +3247,7 @@ inline std::wstring RegHandler::hkey2wstr(const HKEY key) const {
 	}
 }
 
-RegOpResult RegHandler::prepHKEYKeyPath(const HKEY& keyHandleSet, const std::wstring& keyPathSet,
+RegOpResult RegHandler::prepHKEYKeyPath(const HKEY &keyHandleSet, const std::wstring& keyPathSet,
 	HKEY &keyHandle, std::wstring &keyPath) const {
 	return assignHKEYKeyPath(keyPathSet, keyHandleSet, keyHandle, keyPath);
 }
@@ -3258,138 +3258,135 @@ RegOpResult RegHandler::prepHKEYKeyPathValueName(HKEY &keyHandle, const HKEY &ke
 	std::vector<std::wstring> strSpl;
 	valName = removeFromStart_copy(valPath, L"\\");
 	HKEY hktest = { 0 }, hkres = { 0 };
+	std::vector<std::wstring> keyPathSpl = splitStr(valName, L"\\");
+	std::wstring rootlow = lower_copy(keyPathSpl[0]);
+	std::wstring keyPathSplStr = joinStrs(keyPathSpl, L"\\", 1);
+	if (std::string::npos != valName.find(L"|")) {
+		std::vector<std::wstring> keyPathSplProp = splitStr(valName, L"|");
+		std::wstring keyPathProp = keyPathSplProp[0];
+		valName = keyPathSplProp[1];
+		keyPathSpl = splitStr(keyPathProp, L"\\");
+		rootlow = lower_copy(keyPathSpl[0]);
+		keyPathSplStr = joinStrs(keyPathSpl, L"\\", 1);
+	} else {
+	}
+	std::vector<std::wstring> strSplTest = keyPathSpl;
 	if (keyHandleSet) {
 		hktest = keyHandleSet;
-		std::vector<std::wstring> svec = splitStr(valName, L"\\");
-		keyPath = joinStrs(svec, L"\\", 0, svec.size() - 1);
-		return assignHKEYKeyPath(keyPath, hktest, keyHandle, keyPath);
-	}
-	if (std::string::npos != valName.find(L"|")) {
-		strSpl = splitStr(valName, L"|");
-		keyPath = strSpl[0];
-		valName = strSpl[1];
-		assignHKEYKeyPath(keyPath, hkres, hktest, keyPath);
-		if (ERROR_SUCCESS == RegOpenKey(hktest, keyPath.c_str(), &hkres)) {
-			RegCloseKey(hkres);
-			return assignHKEYKeyPath(keyPath, hktest, keyHandle, keyPath);
-		} else {
-			spiltTrad = true;
-		}
 	} else {
-		spiltTrad = true;
-	}
-	if (spiltTrad) {
-		if(std::wstring::npos != valPath.find(L"\\")) {
-			std::vector<std::wstring> strSpl = splitStr(valPath, L"\\");
-			std::vector<std::wstring> strSplTest = strSpl;
-			std::wstring val;
-			size_t idx = strSplTest.size();
-			unsigned long res = 0;
-			std::wstring tstr; // = joinStrs(strSplTest, L"\\", 1);
-			if (keyHandleSet) {
-				hktest = keyHandleSet;
-			} else {
-				if (lower_copy(strSplTest[0]) == L"hkey_current_user" || lower_copy(strSplTest[0]) == L"hkcu") {
-					hktest = HKEY_CURRENT_USER;
-					val = L"HKEY_CURRENT_USER\\";
-					strSplTest.erase(strSplTest.begin());
-					// tstr = joinStrs(strSplTest, L"\\");
-					// --idx;
-				} else if (lower_copy(strSplTest[0]) == L"hkey_current_config" || lower_copy(strSplTest[0]) == L"hkcc") {
-					hktest = HKEY_CURRENT_CONFIG;
-					val = L"HKEY_CURRENT_CONFIG\\";
-					strSplTest.erase(strSplTest.begin());
-					// tstr = joinStrs(strSplTest, L"\\");
-					// --idx;
-				} else if (lower_copy(strSplTest[0]) == L"hkey_local_machine" || lower_copy(strSplTest[0]) == L"hklm") {
-					hktest = HKEY_LOCAL_MACHINE;
-					val = L"HKEY_LOCAL_MACHINE\\";
-					strSplTest.erase(strSplTest.begin());
-					// --idx;
-				} else if (lower_copy(strSplTest[0]) == L"hkey_users" || lower_copy(strSplTest[0]) == L"hku") {
-					hktest = HKEY_USERS;
-					val = L"HKEY_USERS\\";
-					strSplTest.erase(strSplTest.begin());
-					// tstr = joinStrs(strSplTest, L"\\");
-					// --idx;
-				} else if (lower_copy(strSplTest[0]) == L"hkey_classes_root" || lower_copy(strSplTest[0]) == L"hkcr") {
-					hktest = HKEY_CLASSES_ROOT;
-					val = L"HKEY_CLASSES_ROOT\\";
-					strSplTest.erase(strSplTest.begin());
-					// tstr = joinStrs(strSplTest, L"\\");
-					// --idx;
-				}
-			}
-			std::wstring lastsec;
-			do {
-				tstr = joinStrs(strSplTest, L"\\");
-				res = ::RegOpenKeyEx(hktest, tstr.c_str(), 0, KEY_READ | getRightMod(), &hkres);
-				RegValType rvt;
-				if (ERROR_SUCCESS == res) {
-					if (ERROR_SUCCESS == ::RegQueryValueEx(hkres, lastsec.c_str(), 0, 0, 0, 0) &&
-						lastsec.length()) {
-						keyPath = tstr;
-						valName = removeFromStart_copy(removeFromStart_copy(valPath, val + tstr), L"\\");
-						CLOSEKEY_NULLIFY(hkres);
-						return assignHKEYKeyPath(keyPath, hktest, keyHandle, keyPath);
-					}
-					if (lastsec.length()) {
-						RegCloseKey(hkres);
-						break;
-					} else {
-						lastsec = strSplTest.back();
-						strSplTest.pop_back();
-						--idx;
-					}
-				} else {
-					if (hkres) {
-						RegCloseKey(hkres);
-					}
-					lastsec = strSplTest.back();
-					strSplTest.pop_back();
-					--idx;
-				}
-			} while (strSplTest.size());
-			keyPath = tstr;
-			valName = removeFromStart_copy(removeFromStart_copy(valPath, val + keyPath), L"\\");
-			// std::wstring fullstr = joinStrs(strSplTest, L"\\", idx);
-			// valName = joinStrs(strSpl, L"\\", idx);
-			// valName = joinStrs(strSplTest, L"\\", idx);  // removeFromStart_copy(fullstr, tstr);
+		if (L"hkey_local_machine" == rootlow || L"hklm" == rootlow) {
+			hktest = HKEY_LOCAL_MACHINE;
+			strSplTest.erase(strSplTest.begin());
+		} else if (L"hkey_current_user" == rootlow || L"hkcu" == rootlow) {
+			hktest = HKEY_CURRENT_USER;
+			strSplTest.erase(strSplTest.begin());
+		} else if (L"hkey_current_user_local_settings" == rootlow || L"hkculs" == rootlow) {
+			hktest = HKEY_CURRENT_USER_LOCAL_SETTINGS;
+			strSplTest.erase(strSplTest.begin());
+		} else if (L"hkey_classes_root" == rootlow || L"hkcr" == rootlow) {
+			hktest = HKEY_CLASSES_ROOT;
+			strSplTest.erase(strSplTest.begin());
+		} else if (L"hkey_current_config" == rootlow || L"hkcc" == rootlow) {
+			hktest = HKEY_CURRENT_CONFIG;
+			strSplTest.erase(strSplTest.begin());
+		} else if (L"hkey_users" == rootlow || L"hku" == rootlow) {
+			hktest = HKEY_USERS;
+			strSplTest.erase(strSplTest.begin());
+		} else if (L"hkey_dyn_data" == rootlow || L"hkdd" == rootlow) {
+			hktest = HKEY_DYN_DATA;
+			strSplTest.erase(strSplTest.begin());
+		} else if (L"hkey_performance_data" == rootlow || L"hkpd" == rootlow) {
+			hktest = HKEY_PERFORMANCE_DATA;
+			strSplTest.erase(strSplTest.begin());
+		} else if (L"hkey_performance_text" == rootlow || L"hkpt" == rootlow) {
+			hktest = HKEY_PERFORMANCE_TEXT;
+			strSplTest.erase(strSplTest.begin());
+		} else if (L"hkey_performance_nlstext" == rootlow || L"hkpnlt" == rootlow) {
+			hktest = HKEY_PERFORMANCE_NLSTEXT;
+			strSplTest.erase(strSplTest.begin());
 		} else {
-			keyPath = L"";
-			valName = valPath;
+			return RegOpResult::Fail;
 		}
 	}
-	return assignHKEYKeyPath(keyPath, hktest, keyHandle, keyPath);
+	unsigned long res = 0;
+	std::wstring lastsec, tstr, tvalname;
+	do {
+		tstr = joinStrs(strSplTest, L"\\");
+		res = ::RegOpenKeyEx(hktest, tstr.c_str(), 0, KEY_READ | getRightMod(), &hkres);
+		if (ERROR_SUCCESS == res) {
+			tvalname = removeFromBothSides_copy(removeFromStart_copy(keyPathSplStr, tstr), L"\\");
+			if (ERROR_SUCCESS == ::RegQueryValueEx(hkres, tvalname.c_str(), 0, 0, 0, 0) &&
+				lastsec.length()) {
+				keyHandle = hktest;
+				keyPath = tstr;
+				valName = tvalname;
+				CLOSEKEY_NULLIFY(hkres);
+				return RegOpResult::Success;
+			}
+		} else {
+			if (hkres) {
+				CLOSEKEY_NULLIFY(hkres);
+			}
+		}
+	} while (strSplTest.size());
+	keyPath = tstr;
+	valName = removeFromBothSides_copy(removeFromStart_copy(keyPathSplStr, tstr), L"\\");
+	return RegOpResult::Success;
 }
 
 RegOpResult RegHandler::assignHKEYKeyPath(const std::wstring keyPath, const HKEY &hkeySet,
 	HKEY &tgtHKEY, std::wstring &tgtKeyPath) const {
-	std::wstring rootlow;
+	std::wstring keyPathPrepped = removeFromBothSides_copy(keyPath, L"\\");
+	std::vector<std::wstring> keyPathPreppedSpl = splitStr(keyPathPrepped, L"\\");
+	std::wstring keyPathPreppedSplStr = joinStrs(keyPathPreppedSpl, L"\\", 1);
+	std::wstring rootlow = lower_copy(keyPathPreppedSpl[0]);
+	if (hkeySet) {
+		tgtHKEY = hkeySet;
+		if (std::wstring::npos != keyPath.find(L"\\")) {
+			tgtKeyPath = joinStrs(keyPathPreppedSpl, L"\\", 1);
+		} else {
+			tgtKeyPath = keyPathPrepped;
+		}
+		return RegOpResult::Success;
+	}
 	if (std::wstring::npos != keyPath.find(L"\\")) {
-		std::wstring keyPathPrepped = removeFromStart_copy(keyPath, L"\\");
+		std::wstring keyPathPrepped = removeFromEnd_copy(removeFromStart_copy(keyPath, L"\\"), L"\\");
 		std::vector<std::wstring> keyPathPreppedSpl = splitStr(keyPathPrepped, L"\\");
 		rootlow = lower_copy(keyPathPreppedSpl[0]);
 	} else {
 		rootlow = lower_copy(keyPath);
 		// rootlow = lower_copy(splitStr(removeFromStart_copy(keyPath, L"\\"), L"\\")[0]);
 	}
-	// std::wstring rootlow = lower_copy(splitStr(removeFromStart_copy(keyPath, L"\\"), L"\\")[0]);
-	if (rootlow == L"hkey_current_user" || rootlow == L"hkcu") {
-		tgtKeyPath = removeFromStart_copy(lower_copy(keyPath), rootlow + L"\\");
+	if (L"hkey_current_user" == rootlow || L"hkcu" == rootlow) {
+		tgtKeyPath = keyPathPreppedSplStr;
 		tgtHKEY = HKEY_CURRENT_USER;
-	} else if (rootlow == L"hkey_classes_root" || rootlow == L"hkcr") {
-		tgtKeyPath = removeFromStart_copy(lower_copy(keyPath), rootlow + L"\\");
+	} else if (L"hkey_current_user_local_settings" == rootlow || L"hkculs" == rootlow) {
+		tgtKeyPath = keyPathPreppedSplStr;
+		tgtHKEY = HKEY_CURRENT_USER_LOCAL_SETTINGS;
+	} else if (L"hkey_classes_root" == rootlow || L"hkcr" == rootlow) {
+		tgtKeyPath = keyPathPreppedSplStr;
 		tgtHKEY = HKEY_CLASSES_ROOT;
-	} else if (rootlow == L"hkey_local_machine" || rootlow == L"hklm") {
-		tgtKeyPath = removeFromStart_copy(lower_copy(keyPath), rootlow + L"\\");
+	} else if (L"hkey_local_machine" == rootlow || L"hklm" == rootlow) {
+		tgtKeyPath = keyPathPreppedSplStr;
 		tgtHKEY = HKEY_LOCAL_MACHINE;
-	} else if (rootlow == L"hkey_users" || rootlow == L"hku") {
-		tgtKeyPath = removeFromStart_copy(lower_copy(keyPath), rootlow + L"\\");
+	} else if (L"hkey_users" == rootlow || L"hku" == rootlow) {
+		tgtKeyPath = keyPathPreppedSplStr;
 		tgtHKEY = HKEY_USERS;
-	} else if (rootlow == L"hkey_current_config" || rootlow == L"hkcc") {
-		tgtKeyPath = removeFromStart_copy(lower_copy(keyPath), rootlow + L"\\");
-			tgtHKEY = HKEY_CURRENT_CONFIG;
+	} else if (L"hkey_current_config" == rootlow || L"hkcc" == rootlow) {
+		tgtKeyPath = keyPathPreppedSplStr;
+		tgtHKEY = HKEY_CURRENT_CONFIG;
+	} else if (L"hkey_dyn_data" == rootlow || L"hkdd" == rootlow) {
+		tgtKeyPath = keyPathPreppedSplStr;
+		tgtHKEY = HKEY_DYN_DATA;
+	} else if (L"hkey_performance_data" == rootlow || L"hkpd" == rootlow) {
+		tgtKeyPath = keyPathPreppedSplStr;
+		tgtHKEY = HKEY_PERFORMANCE_DATA;
+	} else if (L"hkey_performance_text" == rootlow || L"hkpt" == rootlow) {
+		tgtKeyPath = keyPathPreppedSplStr;
+		tgtHKEY = HKEY_PERFORMANCE_TEXT;
+	} else if (L"hkey_performance_nlstext" == rootlow || L"hkpnlt" == rootlow) {
+		tgtKeyPath = keyPathPreppedSplStr;
+		tgtHKEY = HKEY_PERFORMANCE_NLSTEXT;
 	} else {
 		if (hkeySet) {
 			tgtHKEY = hkeySet;

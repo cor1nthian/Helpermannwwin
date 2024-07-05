@@ -106,128 +106,166 @@ enum class ACLOpResult : unsigned char {
 struct SecDesc {
 	SecDesc();
 	SecDesc(const SecDesc &other);
+	SecDesc(SecDesc &&other) noexcept;
 	~SecDesc();
 	SecDesc& operator=(const SecDesc &other) {
+		if (this != &other) {
+			daclInfoSz = other.daclInfoSz;
+			daclAbsInfoSz = other.daclAbsInfoSz;
+			saclInfoSz = other.saclInfoSz;
+			saclAbsInfoSz = other.saclAbsInfoSz;
+			ownerInfoSz = other.ownerInfoSz;
+			primaryGroupInfoSz = other.primaryGroupInfoSz;
+			absoluteSDInfoSz = other.absoluteSDInfoSz;
+			selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
+			if (other.daclInfo) {
+				if (daclInfo && daclInfoSz) {
+					SAFE_LOCALFREE(daclInfo);
+				}
+				daclInfo = LocalAlloc(LPTR, daclInfoSz);
+				if (daclInfo) {
+					memcpy(daclInfo, other.daclInfo, daclInfoSz);
+				}
+			} else {
+				if (daclInfo && daclInfoSz) {
+					SAFE_LOCALFREE(daclInfo);
+				}
+				daclInfo = 0;
+			}
+			if (other.daclAbsInfo) {
+				if (daclAbsInfo && daclAbsInfoSz) {
+					SAFE_LOCALFREE(daclAbsInfo);
+				}
+				daclAbsInfo = LocalAlloc(LPTR, daclAbsInfoSz);
+				if (daclAbsInfo) {
+					memcpy(daclAbsInfo, other.daclAbsInfo, daclAbsInfoSz);
+				}
+			} else {
+				if (daclAbsInfo && daclAbsInfoSz) {
+					SAFE_LOCALFREE(daclAbsInfo);
+				}
+				daclAbsInfo = 0;
+			}
+			if (other.saclInfo) {
+				if (saclInfo && saclInfoSz) {
+					SAFE_LOCALFREE(saclInfo);
+				}
+				saclInfo = LocalAlloc(LPTR, saclInfoSz);
+				if (saclInfo) {
+					memcpy(saclInfo, other.saclInfo, saclInfoSz);
+				}
+			} else {
+				if (saclInfo && saclInfoSz) {
+					SAFE_LOCALFREE(saclInfo);
+				}
+				saclInfo = 0;
+			}
+			if (other.saclAbsInfo) {
+				if (saclAbsInfo && saclAbsInfoSz) {
+					SAFE_LOCALFREE(saclAbsInfo);
+				}
+				saclAbsInfo = LocalAlloc(LPTR, saclAbsInfoSz);
+				if (saclAbsInfo) {
+					memcpy(saclAbsInfo, other.saclAbsInfo, saclAbsInfoSz);
+				}
+			} else {
+				if (saclAbsInfo && saclAbsInfoSz) {
+					SAFE_LOCALFREE(saclAbsInfo);
+				}
+				saclAbsInfo = 0;
+			}
+			if (other.ownerInfo) {
+				if (ownerInfo && ownerInfoSz) {
+					SAFE_LOCALFREE(ownerInfo);
+				}
+				ownerInfo = LocalAlloc(LPTR, saclInfoSz);
+				if (ownerInfo) {
+					memcpy(ownerInfo, other.ownerInfo, ownerInfoSz);
+				}
+			} else {
+				if (ownerInfo && ownerInfoSz) {
+					SAFE_LOCALFREE(ownerInfo);
+				}
+				ownerInfo = 0;
+			}
+			if (other.primaryGroupInfo) {
+				if (primaryGroupInfo && primaryGroupInfoSz) {
+					SAFE_LOCALFREE(primaryGroupInfo);
+				}
+				primaryGroupInfo = LocalAlloc(LPTR, primaryGroupInfoSz);
+				if (primaryGroupInfo) {
+					memcpy(primaryGroupInfo, other.primaryGroupInfo, primaryGroupInfoSz);
+				}
+			} else {
+				if (primaryGroupInfo && primaryGroupInfoSz) {
+					SAFE_LOCALFREE(primaryGroupInfo);
+				}
+				primaryGroupInfo = 0;
+			}
+			if (other.absoluteSDInfo) {
+				if (absoluteSDInfo && absoluteSDInfoSz) {
+					SAFE_LOCALFREE(absoluteSDInfo);
+				}
+				absoluteSDInfo = LocalAlloc(LPTR, absoluteSDInfoSz);
+				if (absoluteSDInfo) {
+					memcpy(absoluteSDInfo, other.absoluteSDInfo, absoluteSDInfoSz);
+				}
+			} else {
+				if (absoluteSDInfo && absoluteSDInfoSz) {
+					SAFE_LOCALFREE(absoluteSDInfo);
+				}
+				absoluteSDInfo = 0;
+			}
+			if (other.selfRelativeSDInfo) {
+				if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
+					SAFE_LOCALFREE(absoluteSDInfo);
+				}
+				selfRelativeSDInfo = LocalAlloc(LPTR, absoluteSDInfoSz);
+				if (selfRelativeSDInfo) {
+					memcpy(selfRelativeSDInfo, other.selfRelativeSDInfo, selfRelativeSDInfoSz);
+				}
+			} else {
+				if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
+					SAFE_LOCALFREE(selfRelativeSDInfo);
+				}
+				selfRelativeSDInfo = 0;
+			}
+		}
+		return *this;
+	}
+	SecDesc& operator=(SecDesc &&other) noexcept {
 		daclInfoSz = other.daclInfoSz;
+		other.daclInfoSz = 0;
 		daclAbsInfoSz = other.daclAbsInfoSz;
+		other.daclAbsInfoSz = 0;
 		saclInfoSz = other.saclInfoSz;
+		other.daclInfoSz = 0;
 		saclAbsInfoSz = other.saclAbsInfoSz;
+		other.saclAbsInfoSz = 0;
 		ownerInfoSz = other.ownerInfoSz;
+		other.ownerInfoSz = 0;
 		primaryGroupInfoSz = other.primaryGroupInfoSz;
+		other.primaryGroupInfoSz = 0;
 		absoluteSDInfoSz = other.absoluteSDInfoSz;
+		other.absoluteSDInfoSz = 0;
 		selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
-		if (other.daclInfo) {
-			/* if (daclInfo && daclInfoSz) {
-				 SAFE_LOCALFREE(daclInfo);
-			}*/
-			daclInfo = LocalAlloc(LPTR, daclInfoSz);
-			if (daclInfo) {
-				memcpy(daclInfo, other.daclInfo, daclInfoSz);
-			}
-		} else {
-			/*if (daclInfo && daclInfoSz) {
-				SAFE_LOCALFREE(daclInfo);
-			}*/
-			daclInfo = 0;
-		}
-		if (other.daclAbsInfo) {
-			/* if (daclAbsInfo && daclAbsInfoSz) {
-				 SAFE_LOCALFREE(daclAbsInfo);
-			}*/
-			daclAbsInfo = LocalAlloc(LPTR, daclAbsInfoSz);
-			if (daclAbsInfo) {
-				memcpy(daclAbsInfo, other.daclAbsInfo, daclAbsInfoSz);
-			}
-		} else {
-			/*if (daclAbsInfo && daclAbsInfoSz) {
-				SAFE_LOCALFREE(daclAbsInfo);
-			}*/
-			daclAbsInfo = 0;
-		}
-		if (other.saclInfo) {
-			/*if (saclInfo && saclInfoSz) {
-				SAFE_LOCALFREE(saclInfo);
-			}*/
-			saclInfo = LocalAlloc(LPTR, saclInfoSz);
-			if (saclInfo) {
-				memcpy(saclInfo, other.saclInfo, saclInfoSz);
-			}
-		} else {
-			/*if (saclInfo && saclInfoSz) {
-				SAFE_LOCALFREE(saclInfo);
-			}*/
-			saclInfo = 0;
-		}
-		if (other.saclAbsInfo) {
-			/* if (saclAbsInfo && saclAbsInfoSz) {
-				 SAFE_LOCALFREE(saclAbsInfo);
-			}*/
-			saclAbsInfo = LocalAlloc(LPTR, saclAbsInfoSz);
-			if (saclAbsInfo) {
-				memcpy(saclAbsInfo, other.saclAbsInfo, saclAbsInfoSz);
-			}
-		} else {
-			/*if (saclAbsInfo && saclAbsInfoSz) {
-				SAFE_LOCALFREE(saclAbsInfo);
-			}*/
-			saclAbsInfo = 0;
-		}
-		if (other.ownerInfo) {
-			/*if (ownerInfo && ownerInfoSz) {
-				SAFE_LOCALFREE(ownerInfo);
-			}*/
-			ownerInfo = LocalAlloc(LPTR, saclInfoSz);
-			if (ownerInfo) {
-				memcpy(ownerInfo, other.ownerInfo, ownerInfoSz);
-			}
-		} else {
-			/*if (ownerInfo && ownerInfoSz) {
-				SAFE_LOCALFREE(ownerInfo);
-			}*/
-			ownerInfo = 0;
-		}
-		if (other.primaryGroupInfo) {
-			/*if (primaryGroupInfo && primaryGroupInfoSz) {
-				SAFE_LOCALFREE(primaryGroupInfo);
-			}*/
-			primaryGroupInfo = LocalAlloc(LPTR, primaryGroupInfoSz);
-			if (primaryGroupInfo) {
-				memcpy(primaryGroupInfo, other.primaryGroupInfo, primaryGroupInfoSz);
-			}
-		} else {
-			/*if (primaryGroupInfo && primaryGroupInfoSz) {
-				SAFE_LOCALFREE(primaryGroupInfo);
-			}*/
-			primaryGroupInfo = 0;
-		}
-		if (other.absoluteSDInfo) {
-			/*if (absoluteSDInfo && absoluteSDInfoSz) {
-				SAFE_LOCALFREE(absoluteSDInfo);
-			}*/
-			absoluteSDInfo = LocalAlloc(LPTR, absoluteSDInfoSz);
-			if (absoluteSDInfo) {
-				memcpy(absoluteSDInfo, other.absoluteSDInfo, absoluteSDInfoSz);
-			}
-		} else {
-			/*if (absoluteSDInfo && absoluteSDInfoSz) {
-				SAFE_LOCALFREE(absoluteSDInfo);
-			}*/
-			absoluteSDInfo = 0;
-		}
-		if (other.selfRelativeSDInfo) {
-			/*if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
-				SAFE_LOCALFREE(absoluteSDInfo);
-			}*/
-			selfRelativeSDInfo = LocalAlloc(LPTR, absoluteSDInfoSz);
-			if (selfRelativeSDInfo) {
-				memcpy(selfRelativeSDInfo, other.selfRelativeSDInfo, selfRelativeSDInfoSz);
-			}
-		} else {
-			/*if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
-				SAFE_LOCALFREE(selfRelativeSDInfo);
-			}*/
-			selfRelativeSDInfo = 0;
-		}
+		other.selfRelativeSDInfoSz = 0;
+		daclInfo = other.daclInfo;
+		other.daclInfo = 0;
+		daclAbsInfo = other.daclAbsInfo;
+		other.daclAbsInfo = 0;
+		saclInfo = other.saclInfo;
+		other.saclInfo = 0;
+		saclAbsInfo = other.saclAbsInfo;
+		other.saclAbsInfo = 0;
+		ownerInfo = other.ownerInfo;
+		other.ownerInfo = 0;
+		primaryGroupInfo = other.primaryGroupInfo;
+		other.primaryGroupInfo = 0;
+		absoluteSDInfo = other.absoluteSDInfo;
+		other.absoluteSDInfo = 0;
+		selfRelativeSDInfo = other.selfRelativeSDInfo;
+		other.selfRelativeSDInfo = 0;
 		return *this;
 	}
 	bool operator==(const SecDesc &other) const {
