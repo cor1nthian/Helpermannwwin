@@ -33,7 +33,7 @@ SecDesc::SecDesc(const SecDesc &other) {
         /* if (daclInfo && daclInfoSz) {
             SAFE_LOCALFREE(daclInfo);
         }*/
-        daclInfo = LocalAlloc(LPTR, daclInfoSz);
+        daclInfo = ::LocalAlloc(LPTR, daclInfoSz);
         if (daclInfo) {
             memcpy(daclInfo, other.daclInfo, daclInfoSz);
         }
@@ -47,7 +47,7 @@ SecDesc::SecDesc(const SecDesc &other) {
         /* if (daclAbsInfo && daclAbsInfoSz) {
              SAFE_LOCALFREE(daclAbsInfo);
         }*/
-        daclAbsInfo = LocalAlloc(LPTR, daclAbsInfoSz);
+        daclAbsInfo = ::LocalAlloc(LPTR, daclAbsInfoSz);
         if (daclAbsInfo) {
             memcpy(daclAbsInfo, other.daclAbsInfo, daclAbsInfoSz);
         }
@@ -61,7 +61,7 @@ SecDesc::SecDesc(const SecDesc &other) {
         /*if (saclInfo && saclInfoSz) {
             SAFE_LOCALFREE(saclInfo);
         }*/
-        saclInfo = LocalAlloc(LPTR, saclInfoSz);
+        saclInfo = ::LocalAlloc(LPTR, saclInfoSz);
         if (saclInfo) {
             memcpy(saclInfo, other.saclInfo, saclInfoSz);
         }
@@ -75,7 +75,7 @@ SecDesc::SecDesc(const SecDesc &other) {
         /* if (saclAbsInfo && saclAbsInfoSz) {
              SAFE_LOCALFREE(saclAbsInfo);
         }*/
-        saclAbsInfo = LocalAlloc(LPTR, saclAbsInfoSz);
+        saclAbsInfo = ::LocalAlloc(LPTR, saclAbsInfoSz);
         if (saclAbsInfo) {
             memcpy(saclAbsInfo, other.saclAbsInfo, saclAbsInfoSz);
         }
@@ -89,7 +89,7 @@ SecDesc::SecDesc(const SecDesc &other) {
         /*if (ownerInfo && ownerInfoSz) {
             SAFE_LOCALFREE(ownerInfo);
         }*/
-        ownerInfo = LocalAlloc(LPTR, saclInfoSz);
+        ownerInfo = ::LocalAlloc(LPTR, saclInfoSz);
         if (ownerInfo) {
             memcpy(ownerInfo, other.ownerInfo, ownerInfoSz);
         }
@@ -103,7 +103,7 @@ SecDesc::SecDesc(const SecDesc &other) {
         /*if (primaryGroupInfo && primaryGroupInfoSz) {
             SAFE_LOCALFREE(primaryGroupInfo);
         }*/
-        primaryGroupInfo = LocalAlloc(LPTR, primaryGroupInfoSz);
+        primaryGroupInfo = ::LocalAlloc(LPTR, primaryGroupInfoSz);
         if (primaryGroupInfo) {
             memcpy(primaryGroupInfo, other.primaryGroupInfo, primaryGroupInfoSz);
         }
@@ -117,7 +117,7 @@ SecDesc::SecDesc(const SecDesc &other) {
         /*if (absoluteSDInfo && absoluteSDInfoSz) {
             SAFE_LOCALFREE(absoluteSDInfo);
         }*/
-        absoluteSDInfo = LocalAlloc(LPTR, absoluteSDInfoSz);
+        absoluteSDInfo = ::LocalAlloc(LPTR, absoluteSDInfoSz);
         if (absoluteSDInfo) {
             memcpy(absoluteSDInfo, other.absoluteSDInfo, absoluteSDInfoSz);
         }
@@ -131,7 +131,7 @@ SecDesc::SecDesc(const SecDesc &other) {
         /*if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
             SAFE_LOCALFREE(absoluteSDInfo);
         }*/
-        selfRelativeSDInfo = LocalAlloc(LPTR, absoluteSDInfoSz);
+        selfRelativeSDInfo = ::LocalAlloc(LPTR, absoluteSDInfoSz);
         if (selfRelativeSDInfo) {
             memcpy(selfRelativeSDInfo, other.selfRelativeSDInfo, selfRelativeSDInfoSz);
         }
@@ -223,7 +223,9 @@ SecDesc::~SecDesc() {
 
 ACLHandler::ACLHandler() {}
 
-ACLHandler::ACLHandler(const ACLHandler& other) {}
+ACLHandler::ACLHandler(const ACLHandler &other) {}
+
+ACLHandler::ACLHandler(ACLHandler &&other) noexcept {}
 
 ACLHandler::~ACLHandler() {}
 

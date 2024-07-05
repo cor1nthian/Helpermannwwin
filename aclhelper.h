@@ -122,7 +122,7 @@ struct SecDesc {
 				if (daclInfo && daclInfoSz) {
 					SAFE_LOCALFREE(daclInfo);
 				}
-				daclInfo = LocalAlloc(LPTR, daclInfoSz);
+				daclInfo = ::LocalAlloc(LPTR, daclInfoSz);
 				if (daclInfo) {
 					memcpy(daclInfo, other.daclInfo, daclInfoSz);
 				}
@@ -136,7 +136,7 @@ struct SecDesc {
 				if (daclAbsInfo && daclAbsInfoSz) {
 					SAFE_LOCALFREE(daclAbsInfo);
 				}
-				daclAbsInfo = LocalAlloc(LPTR, daclAbsInfoSz);
+				daclAbsInfo = ::LocalAlloc(LPTR, daclAbsInfoSz);
 				if (daclAbsInfo) {
 					memcpy(daclAbsInfo, other.daclAbsInfo, daclAbsInfoSz);
 				}
@@ -150,7 +150,7 @@ struct SecDesc {
 				if (saclInfo && saclInfoSz) {
 					SAFE_LOCALFREE(saclInfo);
 				}
-				saclInfo = LocalAlloc(LPTR, saclInfoSz);
+				saclInfo = ::LocalAlloc(LPTR, saclInfoSz);
 				if (saclInfo) {
 					memcpy(saclInfo, other.saclInfo, saclInfoSz);
 				}
@@ -164,7 +164,7 @@ struct SecDesc {
 				if (saclAbsInfo && saclAbsInfoSz) {
 					SAFE_LOCALFREE(saclAbsInfo);
 				}
-				saclAbsInfo = LocalAlloc(LPTR, saclAbsInfoSz);
+				saclAbsInfo = ::LocalAlloc(LPTR, saclAbsInfoSz);
 				if (saclAbsInfo) {
 					memcpy(saclAbsInfo, other.saclAbsInfo, saclAbsInfoSz);
 				}
@@ -178,7 +178,7 @@ struct SecDesc {
 				if (ownerInfo && ownerInfoSz) {
 					SAFE_LOCALFREE(ownerInfo);
 				}
-				ownerInfo = LocalAlloc(LPTR, saclInfoSz);
+				ownerInfo = ::LocalAlloc(LPTR, ownerInfoSz);
 				if (ownerInfo) {
 					memcpy(ownerInfo, other.ownerInfo, ownerInfoSz);
 				}
@@ -192,7 +192,7 @@ struct SecDesc {
 				if (primaryGroupInfo && primaryGroupInfoSz) {
 					SAFE_LOCALFREE(primaryGroupInfo);
 				}
-				primaryGroupInfo = LocalAlloc(LPTR, primaryGroupInfoSz);
+				primaryGroupInfo = ::LocalAlloc(LPTR, primaryGroupInfoSz);
 				if (primaryGroupInfo) {
 					memcpy(primaryGroupInfo, other.primaryGroupInfo, primaryGroupInfoSz);
 				}
@@ -206,7 +206,7 @@ struct SecDesc {
 				if (absoluteSDInfo && absoluteSDInfoSz) {
 					SAFE_LOCALFREE(absoluteSDInfo);
 				}
-				absoluteSDInfo = LocalAlloc(LPTR, absoluteSDInfoSz);
+				absoluteSDInfo = ::LocalAlloc(LPTR, absoluteSDInfoSz);
 				if (absoluteSDInfo) {
 					memcpy(absoluteSDInfo, other.absoluteSDInfo, absoluteSDInfoSz);
 				}
@@ -218,9 +218,10 @@ struct SecDesc {
 			}
 			if (other.selfRelativeSDInfo) {
 				if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
-					SAFE_LOCALFREE(absoluteSDInfo);
+					LocalFree(selfRelativeSDInfo);
+					// SAFE_LOCALFREE(selfRelativeSDInfo);
 				}
-				selfRelativeSDInfo = LocalAlloc(LPTR, absoluteSDInfoSz);
+				selfRelativeSDInfo = ::LocalAlloc(LPTR, selfRelativeSDInfoSz);
 				if (selfRelativeSDInfo) {
 					memcpy(selfRelativeSDInfo, other.selfRelativeSDInfo, selfRelativeSDInfoSz);
 				}
@@ -518,7 +519,12 @@ class ACLHandler {
 	public:
 		ACLHandler();
 		ACLHandler(const ACLHandler &other);
+		ACLHandler(ACLHandler &&other) noexcept;
 		~ACLHandler();
+		ACLHandler& operator=(const ACLHandler &other) { return *this; }
+		ACLHandler& operator=(ACLHandler &&other) noexcept { return *this; }
+		bool operator==(const ACLHandler &other) const { return true; }
+		bool operator!=(const ACLHandler &other) const { return true; }
 		ACLOpResult SecurityDescriptor2StringSecurityDescriptor(unsigned char* &secDesc,
 			std::wstring &textSecDesc, SecInfo secInfo = SecInfo::DACLSecInfo) const;
 		ACLOpResult StringSecurityDescriptor2SecurityDescriptor(const std::wstring textSecDesc,
