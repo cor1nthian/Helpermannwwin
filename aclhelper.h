@@ -218,8 +218,7 @@ struct SecDesc {
 			}
 			if (other.selfRelativeSDInfo) {
 				if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
-					LocalFree(selfRelativeSDInfo);
-					// SAFE_LOCALFREE(selfRelativeSDInfo);
+					SAFE_LOCALFREE(selfRelativeSDInfo);
 				}
 				selfRelativeSDInfo = ::LocalAlloc(LPTR, selfRelativeSDInfoSz);
 				if (selfRelativeSDInfo) {
@@ -523,8 +522,8 @@ class ACLHandler {
 		~ACLHandler();
 		ACLHandler& operator=(const ACLHandler &other) { return *this; }
 		ACLHandler& operator=(ACLHandler &&other) noexcept { return *this; }
-		bool operator==(const ACLHandler &other) const { return true; }
-		bool operator!=(const ACLHandler &other) const { return true; }
+		bool operator==(const ACLHandler &other) const = delete;
+		bool operator!=(const ACLHandler &other) const = delete;
 		ACLOpResult SecurityDescriptor2StringSecurityDescriptor(unsigned char* &secDesc,
 			std::wstring &textSecDesc, SecInfo secInfo = SecInfo::DACLSecInfo) const;
 		ACLOpResult StringSecurityDescriptor2SecurityDescriptor(const std::wstring textSecDesc,
@@ -533,6 +532,7 @@ class ACLHandler {
 		ACLOpResult DACLWriteAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
 		ACLOpResult DACLExecuteAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
 		ACLOpResult DACLDeleteAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
+		ACLOpResult DACLFullControlAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
 		ACLOpResult DACLAddCustomAllowedACE(ACL* &dacl, const PSID sid, const unsigned long aclMask,
 			const unsigned char aceFlags, const bool removeExistingBan = true) const;
 		ACLOpResult DACLAddCustomDeniedACE(ACL* &dacl, const PSID sid, unsigned long aclMask,

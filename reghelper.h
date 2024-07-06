@@ -368,9 +368,10 @@ class RegHandler {
 			const RegLoadTarget loadTarget = RegLoadTarget::Users);
 		RegOpResult UnmountHive_UnloadKey(const std::wstring unloadKeyName,
 			const RegLoadTarget unloadTarget = RegLoadTarget::Users);
-		RegOpResult ConnectRegistry(HKEY &connectedNode, const std::wstring userName, const std::wstring password,
-			const std::wstring remoteComputerName, const bool checkPing = false, const unsigned char pingAttempts = 1);
-		RegOpResult DisconnectRegistry(const HKEY connectedReg);
+		RegOpResult ConnectRegistry(HKEY &connectedNode, const std::wstring userName,
+			const std::wstring password, const std::wstring remoteComputerName,
+			const bool checkPing = false, const unsigned char pingAttempts = 1);
+		RegOpResult DisconnectRegistry(HKEY connectedReg);
 		unsigned long long ReadResourceList(const unsigned char* &resListBuf, const size_t bufSz) const;
 		std::vector<std::wstring> MultiStrBuf2Vector(const wchar_t* multiStrBuf,
 			const size_t bufSz) const;

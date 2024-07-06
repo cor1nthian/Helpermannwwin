@@ -3127,9 +3127,13 @@ RegOpResult RegHandler::ConnectRegistry(HKEY &connectedReg, const std::wstring u
 	}
 }
 
-RegOpResult RegHandler::DisconnectRegistry(const HKEY connectedReg) {
-	::RegCloseKey(connectedReg);
-	return RegOpResult::Success;
+RegOpResult RegHandler::DisconnectRegistry(HKEY connectedReg) {
+	long res = CLOSEKEY_NULLIFY(connectedReg);
+	if (ERROR_SUCCESS == res) {
+		return RegOpResult::Success;
+	} else {
+		return RegOpResult::Fail;
+	}
 }
 
 std::wstring RegHandler::rebuildSearchKeyPath(const HKEY &root,

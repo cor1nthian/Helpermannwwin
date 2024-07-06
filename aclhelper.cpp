@@ -281,6 +281,10 @@ ACLOpResult ACLHandler::DACLDeleteAllowed(bool &allowed, const ACL* testACL, con
     return DACLPermissionGetter(allowed, testACL, sid, DELETE);
 }
 
+ACLOpResult ACLHandler::DACLFullControlAllowed(bool& allowed, const ACL* testACL, const PSID sid) const {
+    return DACLPermissionGetter(allowed, testACL, sid, FILE_ALL_ACCESS);
+}
+
 ACLOpResult ACLHandler::DACLGetSIDsByAceType(ACL* dacl, AceType reqAceType, std::vector<PERMISSION> &permissions,
     const std::wstring machineName) const {
     void* testace = 0;
@@ -297,6 +301,7 @@ ACLOpResult ACLHandler::DACLGetSIDsByAceType(ACL* dacl, AceType reqAceType, std:
                 sys.GetAccountNameFromStrSID(twsid, machineName), twsid), (AceType)vace->AceType);
         }
     }
+    return ACLOpResult::Success;
 }
 
 ACLOpResult ACLHandler::DACLGetPermissionBySID(ACL* dacl, PSID sid, std::vector<PERMISSION> &permissions,
