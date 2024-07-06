@@ -726,7 +726,8 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName,
 	const std::string portOrSvcName = "80");
 NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName,
 	const std::wstring portOrSvcName = L"80");
-NetOpResult getHostname_DNSQuery(std::wstring &hostName, const std::wstring ipAddr);
+NetOpResult getHostname_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
+	const std::wstring dnsAddr = L"8.8.8.8");
 std::wstring getDNSOpTextResult(const DNSResponseCode resultCode);
 std::string lookupIPAddress(const std::string dnsName);
 std::wstring lookupIPAddress(const std::wstring dnsName);

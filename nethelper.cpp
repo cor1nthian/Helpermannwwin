@@ -1149,18 +1149,40 @@ std::wstring getHostname(const std::wstring ip, unsigned short int port) {
     return str2wstr(hostname);
 }
 
-NetOpResult getHostname_DNSQuery(std::wstring &hostName, const std::wstring ipAddr) {
+NetOpResult getHostname_DNSQuery(std::wstring &hostName, const std::wstring ipAddr, const std::wstring dnsAddr) {
     unsigned char addrtestres = isStringIP(ipAddr);
     if (1 < addrtestres) {
         return NetOpResult::Fail;
     }
-    PDNS_RECORD dnsrec = { 0 };
-    DNSResponseCode dnsres = (DNSResponseCode)DnsQuery(ipAddr.c_str(),
-        static_cast<unsigned short>(DNSRecordType::PtrRec), 0, 0, &dnsrec, 0);
-    if (DNSResponseCode::NoError != dnsres) {
+    unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    if (0 != dnssrvaddrtestres) {
         return NetOpResult::Fail;
     }
-    hostName = dnsrec->Data.PTR.pNameHost;
+    std::wstring addrrev = reverseIPV4_copy(ipAddr);
+    IP4_ARRAY* srvList = (IP4_ARRAY*)::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
+    if (!srvList) {
+        return NetOpResult::Fail;
+    }
+    srvList->AddrCount = 1;
+    srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
+    PDNS_RECORD dnsrec = { 0 };
+    DNS_FREE_TYPE freetype;
+    unsigned long dnsres = ::DnsQuery(addrrev.c_str(), DNS_TYPE_PTR,
+        DNS_QUERY_STANDARD, srvList, &dnsrec, 0);
+    if (DNS_RCODE_NOERROR != dnsres) {
+        SAFE_LOCALFREE(srvList);
+        ::DnsRecordListFree(dnsrec, freetype);
+        return NetOpResult::Fail;
+    }
+    if(dnsrec) {
+        hostName = dnsrec->Data.PTR.pNameHost;
+    } else {
+        SAFE_LOCALFREE(srvList);
+        ::DnsRecordListFree(dnsrec, freetype);
+        return NetOpResult::Fail;
+    }
+    SAFE_LOCALFREE(srvList);
+    ::DnsRecordListFree(dnsrec, freetype);
     return NetOpResult::Success;
 }
 

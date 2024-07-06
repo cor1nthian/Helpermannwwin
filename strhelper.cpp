@@ -1369,9 +1369,65 @@ std::wstring joinStrs(const std::vector<std::wstring> strs, const std::wstring d
         }
         for (size_t i = si; i < ei; ++i) {
             ret = ret + strs[i] + delimiter;
-            // ret += delimiter;
         }
-        // ret = removeFromEnd_copy(ret, delimiter);
+        removeFromEnd(ret, delimiter);
+    }
+    return ret;
+}
+
+std::string reverseJoinStrs(const std::vector<std::string> strs, const std::string delimiter,
+    const size_t startIdx, const size_t endIdx) {
+    std::string ret;
+    if (strs.size()) {
+        size_t si = 0, ei = 0;
+        if (!endIdx || endIdx <= startIdx || endIdx >= strs.size()) {
+            ei = strs.size() - 1;
+        } else {
+            ei = endIdx;
+        }
+        if (startIdx >= strs.size() || startIdx >= ei) {
+            si = 0;
+        } else {
+            si = startIdx;
+        }
+        long long i = ei;
+        do {
+            ret += strs[i] + delimiter;
+            if (i == si) {
+                break;
+            } else {
+                --i;
+            }
+        } while(i != si);
+        removeFromEnd(ret, delimiter);
+    }
+    return ret;
+}
+
+std::wstring reverseJoinStrs(const std::vector<std::wstring> strs, const std::wstring delimiter,
+    const size_t startIdx, const size_t endIdx) {
+    std::wstring ret;
+    if (strs.size()) {
+        size_t si = 0, ei = 0;
+        if (!endIdx || endIdx <= startIdx || endIdx >= strs.size()) {
+            ei = strs.size() - 1;
+        } else {
+            ei = endIdx;
+        }
+        if (startIdx >= strs.size() || startIdx >= ei) {
+            si = 0;
+        } else {
+            si = startIdx;
+        }
+        long long i = ei;
+        do {
+            ret += strs[i] + delimiter;
+            if (i == si) {
+                break;
+            } else {
+                --i;
+            }
+        } while (i >= si);
         removeFromEnd(ret, delimiter);
     }
     return ret;
@@ -1843,6 +1899,30 @@ std::wstring reverseString_copy(const std::wstring str) {
     } else {
         return L"";
     }
+}
+
+void reverseIPV4(std::string &ipaddrstr) {
+
+}
+
+void reverseIPV4(std::wstring &ipaddrstr) {
+
+}
+
+std::string reverseIPV4_copy(const std::string ipaddrstr) {
+    std::vector<std::string> strSpl = splitStr(ipaddrstr, ".", false);
+    if (4 != strSpl.size()) {
+        return ipaddrstr;
+    }
+    return reverseJoinStrs(strSpl, ".");
+}
+
+std::wstring reverseIPV4_copy(const std::wstring ipaddrstr) {
+    std::vector<std::wstring> strSpl = splitStr(ipaddrstr, L".", false);
+    if (4 != strSpl.size()) {
+        return ipaddrstr;
+    }
+    return reverseJoinStrs(strSpl, L".");
 }
 
 std::string firstNumberFromString(const std::string line) {
