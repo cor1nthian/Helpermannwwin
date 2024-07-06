@@ -176,14 +176,14 @@ std::string replaceAll(const std::string source, const std::string replaceWhat, 
 std::wstring replaceAll(const std::wstring source, const std::wstring replaceWhat, const  std::wstring replaceWith);
 void replaceSubstr(std::string& source, const std::string replaceWhat, const std::string replaceWith, const bool ignoreCase = true);
 void replaceSubstr(std::wstring& source, const std::wstring replaceWhat, const std::wstring replaceWith, const bool ignoreCase = true);
-std::string replaceSubstr_copy(const std::string source,
-	const std::string replaceWhat,
-	const std::string replaceWith,
+std::string replaceSubstr_copy(const std::string source, const std::string replaceWhat, const std::string replaceWith,
 	const bool ignoreCase = true);
-std::wstring replaceSubstr_copy(const std::wstring source,
-	const std::wstring replaceWhat,
-	const std::wstring replaceWith,
+std::wstring replaceSubstr_copy(const std::wstring source, const std::wstring replaceWhat, const std::wstring replaceWith,
 	const bool ignoreCase = true);
+void reverseString(std::string &str);
+void reverseString(std::wstring &str);
+std::string reverseString_copy(const std::string str);
+std::wstring reverseString_copy(const std::wstring str);
 std::string firstNumberFromString(const std::string line);
 std::wstring firstNumberFromString(const std::wstring line);
 bool valInList(const std::vector<std::string> &list, const std::string val, const bool ignoreCase = true);

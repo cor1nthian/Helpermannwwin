@@ -1813,6 +1813,38 @@ std::wstring replaceSubstr_copy(const std::wstring source,
     return replaced;
 }
 
+void reverseString(std::string &str) {
+    if (str.length()) {
+        std::reverse(str.begin(), str.end());
+    }
+}
+
+void reverseString(std::wstring &str) {
+    if (str.length()) {
+        std::reverse(str.begin(), str.end());
+    }
+}
+
+std::string reverseString_copy(const std::string str) {
+    if (str.length()) {
+        std::string tstr = str;
+        std::reverse(tstr.begin(), tstr.end());
+        return tstr;
+    } else {
+        return "";
+    }
+}
+
+std::wstring reverseString_copy(const std::wstring str) {
+    if (str.length()) {
+        std::wstring tstr = str;
+        std::reverse(tstr.begin(), tstr.end());
+        return tstr;
+    } else {
+        return L"";
+    }
+}
+
 std::string firstNumberFromString(const std::string line) {
     const char* digits = "0123456789";
     size_t pos = line.find_first_of(digits);

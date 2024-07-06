@@ -1149,7 +1149,22 @@ std::wstring getHostname(const std::wstring ip, unsigned short int port) {
     return str2wstr(hostname);
 }
 
-std::wstring getDNSOpResult(const DNSResponseCode resultCode) {
+NetOpResult getHostname_DNSQuery(std::wstring &hostName, const std::wstring ipAddr) {
+    unsigned char addrtestres = isStringIP(ipAddr);
+    if (1 < addrtestres) {
+        return NetOpResult::Fail;
+    }
+    PDNS_RECORD dnsrec = { 0 };
+    DNSResponseCode dnsres = (DNSResponseCode)DnsQuery(ipAddr.c_str(),
+        static_cast<unsigned short>(DNSRecordType::PtrRec), 0, 0, &dnsrec, 0);
+    if (DNSResponseCode::NoError != dnsres) {
+        return NetOpResult::Fail;
+    }
+    hostName = dnsrec->Data.PTR.pNameHost;
+    return NetOpResult::Success;
+}
+
+std::wstring getDNSOpTextResult(const DNSResponseCode resultCode) {
     for (const auto &it : gc_DnsResultTest) {
         if (it.first == resultCode) {
             return it.second;

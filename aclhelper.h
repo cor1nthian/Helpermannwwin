@@ -87,10 +87,8 @@ enum class SecInfo : unsigned long {
 	SACLSecInfo = SACL_SECURITY_INFORMATION,
 	/* The Central Access Policy (CAP) identifier applicable on the object that is being
 	referenced. Each CAP identifier is stored in a SYSTEM_SCOPED_POLICY_ID_ACE type in the SACL of the SD.
-	Windows Server 2008 R2, Windows 7,
-	Windows Server 2008, Windows Vista,
-	Windows Server 2003 and Windows XP:
-	This bit flag is not available. */
+	Windows Server 2008 R2, Windows 7, Windows Server 2008, Windows Vista,
+	Windows Server 2003 and Windows XP: This bit flag is not available. */
 	ScopeSecInfo = SCOPE_SECURITY_INFORMATION,
 	// The DACL inherits ACEs from the parent object.
 	UnprotectedDACLSecInfo = UNPROTECTED_DACL_SECURITY_INFORMATION,

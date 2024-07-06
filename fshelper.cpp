@@ -8,8 +8,8 @@ const wchar_t* fs_pathnolim = L"\\\\?\\";
 const wchar_t* fs_pathsall = L"\\*";
 
 BinData::BinData() {
-	Platform = BinPlatform::DOS;
-	BitDepth = BinBitDepth::X16;
+	Platform = BinPlatform::PlatformUnknown;
+	BitDepth = BinBitDepth::BitDepthUnknown;
 }
 
 BinData::BinData(const BinData &other) {

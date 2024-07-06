@@ -726,11 +726,12 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName,
 	const std::string portOrSvcName = "80");
 NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName,
 	const std::wstring portOrSvcName = L"80");
+NetOpResult getHostname_DNSQuery(std::wstring &hostName, const std::wstring ipAddr);
+std::wstring getDNSOpTextResult(const DNSResponseCode resultCode);
 std::string lookupIPAddress(const std::string dnsName);
 std::wstring lookupIPAddress(const std::wstring dnsName);
 std::string getHostname(const std::string ip, unsigned short int port = 80);
 std::wstring getHostname(const std::wstring ip, unsigned short int port = 80);
-std::wstring getDNSOpResult(const DNSResponseCode resultCode);
 unsigned short ICMPHeaderChecksum(unsigned short* buffer, int size);
 int decodeResponse(char* buf, int bytes, SOCKADDR_IN* from, int ttl);
 
