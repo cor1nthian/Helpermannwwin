@@ -223,40 +223,40 @@ enum class DNSQueryOpts : unsigned long {
 		Windows 2000 Professional: This value is not supported. For similar functionality, use DNS_QUERY_CACHE_ONLY */
 	NoWireQuery = DNS_QUERY_NO_WIRE_QUERY,
 	/* Directs DNS to ignore the local name.
-		Windows 2000 Server and Windows 2000 Professional: This value is not supported. */
+		Windows 2000 Server and Windows 2000 Professional: This value is not supported */
 	NoLocalName = DNS_QUERY_NO_LOCAL_NAME,
 	/* Prevents the DNS query from consulting the HOSTS file.
-		Windows 2000 Server and Windows 2000 Professional: This value is not supported. */
+		Windows 2000 Server and Windows 2000 Professional: This value is not supported */
 	NoHostFile = DNS_QUERY_NO_HOSTS_FILE,
 	/* Prevents the DNS query from using NetBT for resolution.
-		Windows 2000 Server and Windows 2000 Professional: This value is not supported. */
+		Windows 2000 Server and Windows 2000 Professional: This value is not supported */
 	NoNetBT = DNS_QUERY_NO_NETBT,
 	/* Directs DNS to perform a query using the network only, bypassing local information.
-		Windows 2000 Server and Windows 2000 Professional: This value is not supported. */
+		Windows 2000 Server and Windows 2000 Professional: This value is not supported */
 	WireOnly = DNS_QUERY_WIRE_ONLY,
 	// Directs DNS to return the entire DNS response message.
-	// Windows 2000 Server and Windows 2000 Professional: This value is not supported.
+	// Windows 2000 Server and Windows 2000 Professional: This value is not supported
 	ReturnMesage = DNS_QUERY_RETURN_MESSAGE,
 	/* Prevents the query from using DNS and uses only Local Link Multicast Name Resolution(LLMNR).
-		Windows Vista and Windows Server 2008 or later.: This value is supported. */
+		Windows Vista and Windows Server 2008 or later.: This value is supported */
 	MulticastOnly = DNS_QUERY_MULTICAST_ONLY,
 	// Disable multicast
 	NoMulticast = DNS_QUERY_NO_MULTICAST,
 	// Prevents the DNS response from attaching suffixes to the submitted name in a name resolution process.
 	TreatAsFQDN = DNS_QUERY_TREAT_AS_FQDN,
 	/* Windows 7 only: Do not send A type queries if IPv4 addresses are not available on an interface and
-		do not send AAAA type queries if IPv6 addresses are not available. */
+		do not send AAAA type queries if IPv6 addresses are not available */
 	AddrConfig = DNS_QUERY_ADDRCONFIG,
 	/* Windows 7 only: Query both AAAA and A type records and return results for each.Results for A type
 		records are mapped into AAAA type. */
 	DualAddr = DNS_QUERY_DUAL_ADDR,
 	/*  If set, and if the response contains multiple records, records are stored with the TTL corresponding to
 		the minimum value TTL from among all records. When this option is set, "Do not change the TTL of
-		individual records" in the returned record set is not modified. */
+		individual records" in the returned record set is not modified */
 	DoNotResetTTLValues = DNS_QUERY_DONT_RESET_TTL_VALUES,
 	/* Disables International Domain Name (IDN) encoding support in the DnsQuery, DnsQueryEx, DnsModifyRecordsInSet,
 		and DnsReplaceRecordSet APIs. All punycode names are treated as ASCII and will be ASCII encoded on the wire.
-		All non-ASCII names are encoded in UTF8 on the wire. Windows 8 or later.: This value is supported. */
+		All non-ASCII names are encoded in UTF8 on the wire. Windows 8 or later: This value is supported */
 	DisableIDNEncoding = DNS_QUERY_DISABLE_IDN_ENCODING,
 	// Append multilabel
 	AppendMultilabel = DNS_QUERY_APPEND_MULTILABEL,
@@ -343,22 +343,22 @@ enum class DNSResponseCode : unsigned long {
 	BadTimestamp = DNS_RCODE_BADTIME
 };
 
-const std::map<DNSResponseCode, std::wstring> const gc_DnsErrorTest = {
-	DNSResponseCode::NoError, L"No error",
-	DNSResponseCode::FormatError, L"Format error",
-	DNSResponseCode::ServerFail, L"Server failure",
-	DNSResponseCode::NXDomain, L"Name error",
-	DNSResponseCode::NotImplmented, L"Not implmented",
-	DNSResponseCode::NotImplmented, L"Not implmented",
-	DNSResponseCode::Refused, L"Connection refused",
-	DNSResponseCode::YXDomain, L"Domain name should not exist",
-	DNSResponseCode::YXRRSet, L"Resource Record (RR) set should not exist",
-	DNSResponseCode::NXRRSet, L"Resource Record set does not exist",
-	DNSResponseCode::NotAuthorativr, L"Not authoritative for zone",
-	DNSResponseCode::NotZone, L"Name not in zone",
-	DNSResponseCode::BadSignature, L"Bad signature",
-	DNSResponseCode::BadKey, L"Bad key",
-	DNSResponseCode::BadTimestamp, L"Bad timestamp",
+const std::map<DNSResponseCode, std::wstring> const gc_DnsResultTest = {
+	{ DNSResponseCode::NoError, L"No error" },
+	{ DNSResponseCode::FormatError, L"Format error" },
+	{ DNSResponseCode::ServerFail, L"Server failure" },
+	{ DNSResponseCode::NXDomain, L"Name error" },
+	{ DNSResponseCode::NotImplmented, L"Not implmented" },
+	{ DNSResponseCode::NotImplmented, L"Not implmented" },
+	{ DNSResponseCode::Refused, L"Connection refused" },
+	{ DNSResponseCode::YXDomain, L"Domain name should not exist" },
+	{ DNSResponseCode::YXRRSet, L"Resource Record (RR) set should not exist" },
+	{ DNSResponseCode::NXRRSet, L"Resource Record set does not exist" },
+	{ DNSResponseCode::NotAuthorativr, L"Not authoritative for zone" },
+	{ DNSResponseCode::NotZone, L"Name not in zone" },
+	{ DNSResponseCode::BadSignature, L"Bad signature" },
+	{ DNSResponseCode::BadKey, L"Bad key" },
+	{ DNSResponseCode::BadTimestamp, L"Bad timestamp" },
 };
 
 enum class DNSProtocol : unsigned long {
@@ -730,6 +730,7 @@ std::string lookupIPAddress(const std::string dnsName);
 std::wstring lookupIPAddress(const std::wstring dnsName);
 std::string getHostname(const std::string ip, unsigned short int port = 80);
 std::wstring getHostname(const std::wstring ip, unsigned short int port = 80);
+std::wstring getDNSOpResult(const DNSResponseCode resultCode);
 unsigned short ICMPHeaderChecksum(unsigned short* buffer, int size);
 int decodeResponse(char* buf, int bytes, SOCKADDR_IN* from, int ttl);
 

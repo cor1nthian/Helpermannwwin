@@ -1149,6 +1149,15 @@ std::wstring getHostname(const std::wstring ip, unsigned short int port) {
     return str2wstr(hostname);
 }
 
+std::wstring getDNSOpResult(const DNSResponseCode resultCode) {
+    for (const auto &it : gc_DnsResultTest) {
+        if (it.first == resultCode) {
+            return it.second;
+        }
+    }
+    return L"";
+}
+
 unsigned short ICMPHeaderChecksum(unsigned short* buffer, int size) {
     unsigned long cksum = 0;
     while (size > 1) {
