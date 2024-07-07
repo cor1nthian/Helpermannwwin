@@ -1166,9 +1166,9 @@ NetOpResult getHostname_DNSQuery(std::wstring &hostName, const std::wstring ipAd
     srvList->AddrCount = 1;
     srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
     PDNS_RECORD dnsrec = { 0 };
-    DNS_FREE_TYPE freetype;
-    unsigned long dnsres = ::DnsQuery(addrrev.c_str(), DNS_TYPE_PTR,
-        DNS_QUERY_STANDARD, srvList, &dnsrec, 0);
+    DNS_FREE_TYPE freetype = DnsFreeRecordListDeep;
+    unsigned long dnsres = ::DnsQuery((addrrev + L".IN-ADDR.ARPA").c_str(), static_cast<unsigned short>(DNSRecordType::PtrRec),
+        static_cast<unsigned long>(DNSQueryOpts::BypassCache), srvList, &dnsrec, 0);
     if (DNS_RCODE_NOERROR != dnsres) {
         SAFE_LOCALFREE(srvList);
         ::DnsRecordListFree(dnsrec, freetype);
@@ -1186,13 +1186,96 @@ NetOpResult getHostname_DNSQuery(std::wstring &hostName, const std::wstring ipAd
     return NetOpResult::Success;
 }
 
+NetOpResult getIPV4Addr_DNSQuery(std::wstring &hostName, const std::wstring ipAddr, const std::wstring dnsAddr) {
+    unsigned char addrtestres = isStringIP(ipAddr);
+    if (2 != addrtestres) {
+        return NetOpResult::Fail;
+    }
+    unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    if (0 != dnssrvaddrtestres) {
+        return NetOpResult::Fail;
+    }
+    IP4_ARRAY* srvList = (IP4_ARRAY*)::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
+    if (!srvList) {
+        return NetOpResult::Fail;
+    }
+    srvList->AddrCount = 1;
+    srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
+    PDNS_RECORD dnsrec = { 0 };
+    DNS_FREE_TYPE freetype = DnsFreeRecordListDeep;
+    unsigned long dnsres = ::DnsQuery(ipAddr.c_str(), static_cast<unsigned short>(DNSRecordType::ARec),
+        static_cast<unsigned long>(DNSQueryOpts::BypassCache), srvList, &dnsrec, 0);
+    if (DNS_RCODE_NOERROR != dnsres) {
+        SAFE_LOCALFREE(srvList);
+        ::DnsRecordListFree(dnsrec, freetype);
+        return NetOpResult::Fail;
+    }
+    if (dnsrec) {
+        char buf[32] = { 0 };
+        inet_ntop(AF_INET, &dnsrec->Data.A.IpAddress, buf, INET_ADDRSTRLEN);
+        hostName = str2wstr(buf);
+    } else {
+        SAFE_LOCALFREE(srvList);
+        ::DnsRecordListFree(dnsrec, freetype);
+        return NetOpResult::Fail;
+    }
+    SAFE_LOCALFREE(srvList);
+    ::DnsRecordListFree(dnsrec, freetype);
+    return NetOpResult::Success;
+}
+
+NetOpResult getIPV6Addr_DNSQuery(std::wstring& hostName, const std::wstring ipAddr, const std::wstring dnsAddr) {
+    unsigned char addrtestres = isStringIP(ipAddr);
+    if (2 != addrtestres) {
+        return NetOpResult::Fail;
+    }
+    unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    if (0 != dnssrvaddrtestres) {
+        return NetOpResult::Fail;
+    }
+    IP4_ARRAY* srvList = (IP4_ARRAY*)::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
+    if (!srvList) {
+        return NetOpResult::Fail;
+    }
+    srvList->AddrCount = 1;
+    srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
+    PDNS_RECORD dnsrec = { 0 };
+    DNS_FREE_TYPE freetype = DnsFreeRecordListDeep;
+    unsigned long dnsres = ::DnsQuery(ipAddr.c_str(), static_cast<unsigned short>(DNSRecordType::AAAARec),
+        static_cast<unsigned long>(DNSQueryOpts::BypassCache), srvList, &dnsrec, 0);
+    if (DNS_RCODE_NOERROR != dnsres) {
+        SAFE_LOCALFREE(srvList);
+        ::DnsRecordListFree(dnsrec, freetype);
+        return NetOpResult::Fail;
+    }
+    if (dnsrec) {
+        char buf[32] = { 0 };
+        inet_ntop(AF_INET6, &dnsrec->Data.AAAA.Ip6Address, buf, INET_ADDRSTRLEN);
+        hostName = str2wstr(buf);
+    } else {
+        SAFE_LOCALFREE(srvList);
+        ::DnsRecordListFree(dnsrec, freetype);
+        return NetOpResult::Fail;
+    }
+    SAFE_LOCALFREE(srvList);
+    ::DnsRecordListFree(dnsrec, freetype);
+    return NetOpResult::Success;
+}
+
 std::wstring getDNSOpTextResult(const DNSResponseCode resultCode) {
+    std::wstring ret;
     for (const auto &it : gc_DnsResultTest) {
         if (it.first == resultCode) {
-            return it.second;
+            ret = it.second;
         }
     }
-    return L"";
+    if (!ret.length()) {
+        ret = getErrorDetails(static_cast<unsigned long>(resultCode), L"DNSQuery");
+    }
+#ifdef DNSHELPER_SHOWERRORMSGBOX
+    errorMsgBox(ret);
+#endif
+    return ret;
 }
 
 unsigned short ICMPHeaderChecksum(unsigned short* buffer, int size) {

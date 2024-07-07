@@ -1333,16 +1333,19 @@ std::string joinStrs(const std::vector<std::string> strs, const std::string deli
     const size_t startIdx, const size_t endIdx) {
     std::string ret;
     if (strs.size()) {
-        size_t si = 0, ei = 0;
+        size_t si = startIdx, ei = endIdx;
         if (!endIdx || endIdx <= startIdx || endIdx > strs.size()) {
             ei = strs.size();
         } else {
             ei = endIdx;
         }
-        if (startIdx >= strs.size() || startIdx >= ei) {
+        /*if (startIdx >= strs.size() || startIdx >= ei) {
             si = 0;
         } else {
             si = startIdx;
+        }*/
+        if (si >= strs.size()) {
+            return "";
         }
         for (size_t i = si; i < ei; ++i) {
             ret += strs[i] + delimiter;
@@ -1356,16 +1359,19 @@ std::wstring joinStrs(const std::vector<std::wstring> strs, const std::wstring d
     const size_t startIdx, const size_t endIdx) {
     std::wstring ret;
     if (strs.size()) {
-        size_t si = 0, ei = 0;
+        size_t si = startIdx, ei = endIdx;
         if (!endIdx || endIdx <= startIdx || endIdx >= strs.size()) {
             ei = strs.size();
         } else {
             ei = endIdx;
         }
-        if (startIdx >= strs.size() || startIdx >= ei) {
+        /*if (startIdx >= strs.size() || startIdx >= ei) {
             si = 0;
         } else {
             si = startIdx;
+        }*/
+        if (si >= strs.size()) {
+            return L"";
         }
         for (size_t i = si; i < ei; ++i) {
             ret = ret + strs[i] + delimiter;

@@ -40,9 +40,9 @@
 	#define _WINSOCKAPI_
 	#include <winsock2.h>	
 	#include <ws2tcpip.h>
+	#include <windns.h>
 	#include <iphlpapi.h>
 	#include <icmpapi.h>
-	#include <windns.h>
 	#include <Windows.h>
 	#include <stdio.h>
 #else
@@ -58,6 +58,10 @@
 
 #include "strhelper.h"
 #include "prochelper.h"
+
+#ifdef _DEBUG
+	#define DNSHELPER_SHOWERRORMSGBOX
+#endif
 
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
@@ -348,8 +352,7 @@ const std::map<DNSResponseCode, std::wstring> const gc_DnsResultTest = {
 	{ DNSResponseCode::FormatError, L"Format error" },
 	{ DNSResponseCode::ServerFail, L"Server failure" },
 	{ DNSResponseCode::NXDomain, L"Name error" },
-	{ DNSResponseCode::NotImplmented, L"Not implmented" },
-	{ DNSResponseCode::NotImplmented, L"Not implmented" },
+	{ DNSResponseCode::NotImplmented, L"Not implemented" },
 	{ DNSResponseCode::Refused, L"Connection refused" },
 	{ DNSResponseCode::YXDomain, L"Domain name should not exist" },
 	{ DNSResponseCode::YXRRSet, L"Resource Record (RR) set should not exist" },
@@ -412,14 +415,14 @@ enum class NWProtocol : unsigned long {
 
 struct HostNodeAddr {
 	HostNodeAddr() { SockType = SocketType::Stream; Protocol = NWProtocol::HopOpts; AddrType = AddressType::IPv4; }
-	HostNodeAddr(const HostNodeAddr& other) {
+	HostNodeAddr(const HostNodeAddr &other) {
 		SockType = other.SockType;
 		Protocol = other.Protocol;
 		AddrType = other.AddrType;
 		Address = other.Address;
 	}
 	~HostNodeAddr() {}
-	HostNodeAddr& operator=(const HostNodeAddr& other) {
+	HostNodeAddr& operator=(const HostNodeAddr &other) {
 		SockType = other.SockType;
 		Protocol = other.Protocol;
 		AddrType = other.AddrType;
@@ -727,6 +730,10 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName,
 NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName,
 	const std::wstring portOrSvcName = L"80");
 NetOpResult getHostname_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
+	const std::wstring dnsAddr = L"8.8.8.8");
+NetOpResult getIPV4Addr_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
+	const std::wstring dnsAddr = L"8.8.8.8");
+NetOpResult getIPV6Addr_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
 	const std::wstring dnsAddr = L"8.8.8.8");
 std::wstring getDNSOpTextResult(const DNSResponseCode resultCode);
 std::string lookupIPAddress(const std::string dnsName);

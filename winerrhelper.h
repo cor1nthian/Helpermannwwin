@@ -43,8 +43,7 @@
 void errorMsgBox(const std::wstring errormsg);
 void setLastError(const unsigned long code);
 unsigned long getLastErrorCode();
-std::wstring getErrorDetails(const unsigned long errcode,
-	const std::wstring funcName = L"",
+std::wstring getErrorDetails(const unsigned long errcode, const std::wstring funcName = L"",
 	const std::wstring additionalInfo = L"");
 
 #endif
