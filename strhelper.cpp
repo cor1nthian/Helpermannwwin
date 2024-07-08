@@ -1,5 +1,12 @@
 // #include <iostream>
-#include <ws2tcpip.h>
+#if defined(_WIN32) || defined(_WIN64) 
+    #include <ws2tcpip.h>
+#else
+    #include <sys/types.h>
+    #include <sys/socket.h>
+    #include <netdb.h>
+    #include <arpa/inet.h>
+#endif
 #include "strhelper.h"
 
 inline std::size_t wcslen_c(const wchar_t* line) {

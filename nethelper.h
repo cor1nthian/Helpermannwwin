@@ -212,7 +212,7 @@ enum class DNSQueryType : unsigned long {
 };
 
 enum class DNSQueryOpts : unsigned long {
-	// Standard query
+	// Standard query. Resets specified flags
 	Standard = DNS_QUERY_STANDARD,
 	// Returns truncated results. Does not retry under TCP
 	QueryAcceptTruncatedResponse = DNS_QUERY_ACCEPT_TRUNCATED_RESPONSE,
@@ -238,8 +238,8 @@ enum class DNSQueryOpts : unsigned long {
 	/* Directs DNS to perform a query using the network only, bypassing local information.
 		Windows 2000 Server and Windows 2000 Professional: This value is not supported */
 	WireOnly = DNS_QUERY_WIRE_ONLY,
-	// Directs DNS to return the entire DNS response message.
-	// Windows 2000 Server and Windows 2000 Professional: This value is not supported
+	/* Directs DNS to return the entire DNS response message.
+		Windows 2000 Server and Windows 2000 Professional: This value is not supported */
 	ReturnMesage = DNS_QUERY_RETURN_MESSAGE,
 	/* Prevents the query from using DNS and uses only Local Link Multicast Name Resolution(LLMNR).
 		Windows Vista and Windows Server 2008 or later.: This value is supported */
@@ -729,20 +729,29 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName,
 	const std::string portOrSvcName = "80");
 NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName,
 	const std::wstring portOrSvcName = L"80");
-NetOpResult getHostname_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
-	const std::wstring dnsAddr = L"8.8.8.8");
-NetOpResult getHostnameByIPV6_DNSQuery(std::wstring& hostName, const std::wstring ipAddr,
-	const std::wstring dnsAddr = L"8.8.8.8");
+NetOpResult getHostnameByIPV4_DNSQuery(std::string &hostName, const std::string ipAddr,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
+NetOpResult getHostnameByIPV4_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
+NetOpResult getHostnameByIPV6_DNSQuery(std::string &hostName, const std::string ipAddr,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
+NetOpResult getHostnameByIPV6_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
+NetOpResult getIPV4Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
 NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
-	const std::wstring dnsAddr = L"8.8.8.8");
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
+NetOpResult getIPV6Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
 NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
-	const std::wstring dnsAddr = L"8.8.8.8");
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
 std::wstring getDNSOpTextResult(const DNSResponseCode resultCode);
-std::string lookupIPAddress(const std::string dnsName);
-std::wstring lookupIPAddress(const std::wstring dnsName);
-std::string getHostname(const std::string ip, unsigned short int port = 80);
-std::wstring getHostname(const std::wstring ip, unsigned short int port = 80);
-std::string getHostname_IPV6(const std::string ip, unsigned short int port = 80);
+std::string lookupIPV4Address(const std::string dnsName);
+std::wstring lookupIPV4Address(const std::wstring dnsName);
+std::string getHostnameByIPV4(const std::string ip, unsigned short int port = 80);
+std::wstring getHostnameByIPV4(const std::wstring ip, unsigned short int port = 80);
+std::string getHostnameByIPV6(const std::string ip, unsigned short int port = 80);
+std::wstring getHostnameByIPV6(const std::wstring ip, unsigned short int port = 80);
 unsigned short ICMPHeaderChecksum(unsigned short* buffer, int size);
 int decodeResponse(char* buf, int bytes, SOCKADDR_IN* from, int ttl);
 
