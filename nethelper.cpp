@@ -1149,6 +1149,44 @@ std::wstring getHostname(const std::wstring ip, unsigned short int port) {
     return str2wstr(hostname);
 }
 
+std::string getHostname_IPV6(const std::string ip, unsigned short int port) {
+    /*unsigned char addrtestres = isStringIP(ip);
+    if (1 != addrtestres) {
+        return "";
+    }*/
+#if defined(_WIN32) || defined(_WIN64) 
+    if (!g_WSAStarted) {
+        WSADATA wsd = { 0 };
+        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+            return "";
+        }
+        g_WSAStarted = true;
+    }
+#endif
+    struct sockaddr_in6 saGNI;
+    memset(&saGNI, 0, sizeof(saGNI));
+    char hostname[NI_MAXHOST] = "none\0";
+    char servInfo[NI_MAXSERV] = { 0 };
+    saGNI.sin6_family = AF_INET6;
+    inet_pton(AF_INET6, ip.c_str(), &saGNI.sin6_addr);
+    saGNI.sin6_port = htons(port);
+    if (getnameinfo((struct sockaddr*)&saGNI, sizeof(saGNI), hostname, NI_MAXHOST, servInfo, NI_MAXSERV,
+        NI_NUMERICSERV)) {
+        // getnameinfo failed
+    }
+#if defined(_WIN32) || defined(_WIN64) 
+    if (g_WSAStarted) {
+        if (WSACleanup()) {
+            // handle WSACleanup error
+            // int wsaerr = WSAGetLastError();
+        } else {
+            g_WSAStarted = false;
+        }
+    }
+#endif
+    return hostname;
+}
+
 NetOpResult getHostname_DNSQuery(std::wstring &hostName, const std::wstring ipAddr, const std::wstring dnsAddr) {
     unsigned char addrtestres = isStringIP(ipAddr);
     if (1 < addrtestres) {
@@ -1186,8 +1224,46 @@ NetOpResult getHostname_DNSQuery(std::wstring &hostName, const std::wstring ipAd
     return NetOpResult::Success;
 }
 
-NetOpResult getIPV4Addr_DNSQuery(std::wstring &hostName, const std::wstring ipAddr, const std::wstring dnsAddr) {
+NetOpResult getHostnameByIPV6_DNSQuery(std::wstring &hostName, const std::wstring ipAddr, const std::wstring dnsAddr) {
     unsigned char addrtestres = isStringIP(ipAddr);
+    if (1 < addrtestres) {
+        return NetOpResult::Fail;
+    }
+    unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    if (0 != dnssrvaddrtestres) {
+        return NetOpResult::Fail;
+    }
+    std::wstring addrrev = reverseIPV6_copy(ipAddr);
+    IP4_ARRAY* srvList = (IP4_ARRAY*)::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
+    if (!srvList) {
+        return NetOpResult::Fail;
+    }
+    srvList->AddrCount = 1;
+    srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
+    PDNS_RECORD dnsrec = { 0 };
+    DNS_FREE_TYPE freetype = DnsFreeRecordListDeep;
+    unsigned long dnsres = ::DnsQuery((addrrev + L".ip6.arpa").c_str(),
+        static_cast<unsigned short>(DNSRecordType::PtrRec), static_cast<unsigned long>(DNSQueryOpts::BypassCache),
+        0, &dnsrec, 0);
+    if (DNS_RCODE_NOERROR != dnsres) {
+        SAFE_LOCALFREE(srvList);
+        ::DnsRecordListFree(dnsrec, freetype);
+        return NetOpResult::Fail;
+    }
+    if (dnsrec) {
+        hostName = dnsrec->Data.PTR.pNameHost;
+    } else {
+        SAFE_LOCALFREE(srvList);
+        ::DnsRecordListFree(dnsrec, freetype);
+        return NetOpResult::Fail;
+    }
+    SAFE_LOCALFREE(srvList);
+    ::DnsRecordListFree(dnsrec, freetype);
+    return NetOpResult::Success;
+}
+
+NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName, const std::wstring dnsAddr) {
+    unsigned char addrtestres = isStringIP(hostName);
     if (2 != addrtestres) {
         return NetOpResult::Fail;
     }
@@ -1213,7 +1289,7 @@ NetOpResult getIPV4Addr_DNSQuery(std::wstring &hostName, const std::wstring ipAd
     if (dnsrec) {
         char buf[32] = { 0 };
         inet_ntop(AF_INET, &dnsrec->Data.A.IpAddress, buf, INET_ADDRSTRLEN);
-        hostName = str2wstr(buf);
+        ipAddr = str2wstr(buf);
     } else {
         SAFE_LOCALFREE(srvList);
         ::DnsRecordListFree(dnsrec, freetype);
@@ -1224,8 +1300,8 @@ NetOpResult getIPV4Addr_DNSQuery(std::wstring &hostName, const std::wstring ipAd
     return NetOpResult::Success;
 }
 
-NetOpResult getIPV6Addr_DNSQuery(std::wstring& hostName, const std::wstring ipAddr, const std::wstring dnsAddr) {
-    unsigned char addrtestres = isStringIP(ipAddr);
+NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName, const std::wstring dnsAddr) {
+    unsigned char addrtestres = isStringIP(hostName);
     if (2 != addrtestres) {
         return NetOpResult::Fail;
     }
@@ -1250,8 +1326,8 @@ NetOpResult getIPV6Addr_DNSQuery(std::wstring& hostName, const std::wstring ipAd
     }
     if (dnsrec) {
         char buf[32] = { 0 };
-        inet_ntop(AF_INET6, &dnsrec->Data.AAAA.Ip6Address, buf, INET_ADDRSTRLEN);
-        hostName = str2wstr(buf);
+        inet_ntop(AF_INET6, &dnsrec->Data.AAAA.Ip6Address, buf, INET6_ADDRSTRLEN);
+        ipAddr = str2wstr(buf);
     } else {
         SAFE_LOCALFREE(srvList);
         ::DnsRecordListFree(dnsrec, freetype);

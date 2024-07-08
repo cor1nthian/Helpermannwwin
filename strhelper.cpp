@@ -1,4 +1,5 @@
-#include <iostream>
+// #include <iostream>
+#include <ws2tcpip.h>
 #include "strhelper.h"
 
 inline std::size_t wcslen_c(const wchar_t* line) {
@@ -615,34 +616,40 @@ std::wstring prepRegexString_copy(const std::wstring regexString) {
 
 std::string replaceAll(const std::string source, const std::string replaceWhat,
     const  std::string replaceWith) {
+    std::string tmp = source;
     if (source.length() >= replaceWhat.length() && !replaceWhat.empty()) {
         std::string tmp = source;
         size_t pos = 0;
         do {
-            pos = tmp.find(replaceWhat);
+            pos = tmp.find(replaceWhat, pos);
             if (std::wstring::npos == pos) {
                 return tmp;
             }
-            tmp.replace(pos, replaceWhat.length(), replaceWith);
+            tmp = tmp.replace(pos, replaceWhat.length(), replaceWith);
+            pos += replaceWith.length();
         } while (std::wstring::npos != tmp.find(replaceWhat));
+        return tmp;
     }
-    return source;
+    return tmp;
 }
 
 std::wstring replaceAll(const std::wstring source, const std::wstring replaceWhat,
     const std::wstring replaceWith) {
+    std::wstring tmp = source;
     if (source.length() >= replaceWhat.length() && !replaceWhat.empty()) {
         std::wstring tmp = source;
         size_t pos = 0;
         do {
-            pos = tmp.find(replaceWhat);
+            pos = tmp.find(replaceWhat, pos);
             if (std::wstring::npos == pos) {
                 return tmp;
             }
-            tmp.replace(pos, replaceWhat.length(), replaceWith);
+            tmp = tmp.replace(pos, replaceWhat.length(), replaceWith);
+            pos += replaceWith.length();
         } while (std::wstring::npos != tmp.find(replaceWhat));
+        return tmp;
     }
-    return source;
+    return tmp;
 }
 
 void removeFromStart(std::string& source, const std::string sequence, const bool ignoreCase) {
@@ -1907,28 +1914,138 @@ std::wstring reverseString_copy(const std::wstring str) {
     }
 }
 
-void reverseIPV4(std::string &ipaddrstr) {
-
+void reverseIPV4(std::string &ipAddrStr) {
+    std::vector<std::string> strSpl = splitStr(ipAddrStr, ".", false);
+    if (4 == strSpl.size()) {
+        ipAddrStr = reverseJoinStrs(strSpl, ".");
+    }
 }
 
-void reverseIPV4(std::wstring &ipaddrstr) {
-
+void reverseIPV4(std::wstring &ipAddrStr) {
+    std::vector<std::wstring> strSpl = splitStr(ipAddrStr, L".", false);
+    if (4 == strSpl.size()) {
+        ipAddrStr = reverseJoinStrs(strSpl, L".");
+    }
 }
 
-std::string reverseIPV4_copy(const std::string ipaddrstr) {
-    std::vector<std::string> strSpl = splitStr(ipaddrstr, ".", false);
+std::string reverseIPV4_copy(const std::string ipAddrStr) {
+    std::vector<std::string> strSpl = splitStr(ipAddrStr, ".", false);
     if (4 != strSpl.size()) {
-        return ipaddrstr;
+        return ipAddrStr;
     }
     return reverseJoinStrs(strSpl, ".");
 }
 
-std::wstring reverseIPV4_copy(const std::wstring ipaddrstr) {
-    std::vector<std::wstring> strSpl = splitStr(ipaddrstr, L".", false);
+std::wstring reverseIPV4_copy(const std::wstring ipAddrStr) {
+    std::vector<std::wstring> strSpl = splitStr(ipAddrStr, L".", false);
     if (4 != strSpl.size()) {
-        return ipaddrstr;
+        return ipAddrStr;
     }
     return reverseJoinStrs(strSpl, L".");
+}
+
+void reverseIPV6(std::string &ipAddrStr) {
+    char dot = '.';
+    std::string ret;
+    struct in6_addr addr;
+    inet_pton(AF_INET6, ipAddrStr.c_str(), &addr);
+    char buf[INET6_ADDRSTRLEN] = { 0 };
+    sprintf(buf, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+        addr.s6_addr[0], addr.s6_addr[1],
+        addr.s6_addr[2], addr.s6_addr[3],
+        addr.s6_addr[4], addr.s6_addr[5],
+        addr.s6_addr[6], addr.s6_addr[7],
+        addr.s6_addr[8], addr.s6_addr[9],
+        addr.s6_addr[10], addr.s6_addr[11],
+        addr.s6_addr[12], addr.s6_addr[13],
+        addr.s6_addr[14], addr.s6_addr[15]);
+    std::string addrstr = buf;
+    for (size_t i = 0; i < addrstr.size(); ++i) {
+        if (i < addrstr.size() - 1) {
+            ret = ret + addrstr[i] + ".";
+        } else {
+            ret = ret + addrstr[i];
+        }
+    }
+    ipAddrStr = reverseString_copy(ret);
+}
+
+void reverseIPV6(std::wstring &ipAddrStr) {
+    wchar_t dot = L'.';
+    std::wstring ret;
+    struct in6_addr addr;
+    inet_pton(AF_INET6, wstr2str(ipAddrStr).c_str(), &addr);
+    wchar_t buf[INET6_ADDRSTRLEN] = { 0 };
+    wsprintf(buf, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+        addr.s6_addr[0], addr.s6_addr[1],
+        addr.s6_addr[2], addr.s6_addr[3],
+        addr.s6_addr[4], addr.s6_addr[5],
+        addr.s6_addr[6], addr.s6_addr[7],
+        addr.s6_addr[8], addr.s6_addr[9],
+        addr.s6_addr[10], addr.s6_addr[11],
+        addr.s6_addr[12], addr.s6_addr[13],
+        addr.s6_addr[14], addr.s6_addr[15]);
+    std::wstring addrstr = buf;
+    for (size_t i = 0; i < addrstr.size(); ++i) {
+        if (i < addrstr.size() - 1) {
+            ret = ret + addrstr[i] + L".";
+        } else {
+            ret = ret + addrstr[i];
+        }
+    }
+    ipAddrStr = reverseString_copy(ret);
+}
+
+std::string reverseIPV6_copy(const std::string ipAddrStr) {
+    char dot = '.';
+    std::string ret;
+    struct in6_addr addr;
+    inet_pton(AF_INET6, ipAddrStr.c_str(), &addr);
+    char buf[INET6_ADDRSTRLEN] = { 0 };
+    sprintf(buf, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+        addr.s6_addr[0], addr.s6_addr[1],
+        addr.s6_addr[2], addr.s6_addr[3],
+        addr.s6_addr[4], addr.s6_addr[5],
+        addr.s6_addr[6], addr.s6_addr[7],
+        addr.s6_addr[8], addr.s6_addr[9],
+        addr.s6_addr[10], addr.s6_addr[11],
+        addr.s6_addr[12], addr.s6_addr[13],
+        addr.s6_addr[14], addr.s6_addr[15]);
+    std::string addrstr = buf;
+    for (size_t i = 0; i < addrstr.size(); ++i) {
+        if (i < addrstr.size() - 1) {
+            ret = ret + addrstr[i] + ".";
+        } else {
+            ret = ret + addrstr[i];
+        }
+    }
+    return reverseString_copy(ret);
+}
+
+std::wstring reverseIPV6_copy(const std::wstring ipAddrStr) {
+    wchar_t dot = L'.';
+    std::wstring ret;
+    struct in6_addr addr;
+    inet_pton(AF_INET6, wstr2str(ipAddrStr).c_str(), &addr);
+    wchar_t buf[INET6_ADDRSTRLEN] = { 0 };
+    wsprintf(buf, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+        addr.s6_addr[0], addr.s6_addr[1],
+        addr.s6_addr[2], addr.s6_addr[3],
+        addr.s6_addr[4], addr.s6_addr[5],
+        addr.s6_addr[6], addr.s6_addr[7],
+        addr.s6_addr[8], addr.s6_addr[9],
+        addr.s6_addr[10], addr.s6_addr[11],
+        addr.s6_addr[12], addr.s6_addr[13],
+        addr.s6_addr[14], addr.s6_addr[15]);
+    std::wstring addrstr = buf;
+    for (size_t i = 0; i < addrstr.size(); ++i) {
+        if (i < addrstr.size() - 1) {
+            ret = ret + addrstr[i] + L".";
+        } else {
+            ret = ret + addrstr[i];
+        }
+    }
+    return reverseString_copy(ret);
 }
 
 std::string firstNumberFromString(const std::string line) {
@@ -2045,7 +2162,7 @@ unsigned char isNumericDec(const std::wstring str) {
 unsigned char isStringIP(const std::wstring testStr) {
     std::basic_regex<wchar_t> ipv4regex(L"(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])");
     if (!(std::regex_match(testStr, ipv4regex))) {
-        std::basic_regex<wchar_t> ipv6regex(L"((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}");
+        std::basic_regex<wchar_t> ipv6regex(L"(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))");
         if (!(std::regex_match(testStr, ipv6regex))) {
             std::basic_regex<wchar_t> domainregex(L"^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$");
             if (!(std::regex_match(testStr, domainregex))) {
@@ -2069,7 +2186,7 @@ unsigned char isStringIP(const std::wstring testStr) {
 unsigned char isStringIP(const std::string testStr) {
     std::regex ipv4regex("(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])");
     if (!(std::regex_match(testStr, ipv4regex))) {
-        std::regex ipv6regex("((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}");
+        std::regex ipv6regex("(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))");
         if (!(std::regex_match(testStr, ipv6regex))) {
             // std::regex domainregex("^((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\-]{1,61}|[a-z0-9-]{1,30}\.[a-z]{2,})$");
             // std::regex domainregex("[a-zA-Z0-9][-a-zA-Z0-9]+[a-zA-Z0-9].[a-z]{2,5}(.[a-z]{3,5})?(.[a-z]{2,5})?$");
