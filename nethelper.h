@@ -334,7 +334,7 @@ enum class DNSResponseCode : unsigned long {
 	// RR set does not exist
 	NXRRSet = DNS_RCODE_NXRRSET,
 	// Not authoritative for zone
-	NotAuthorativr = DNS_RCODE_NOTAUTH,
+	NotAuthorative = DNS_RCODE_NOTAUTH,
 	// Name not in zone
 	NotZone = DNS_RCODE_NOTZONE,
 	// Bad Extension Mechanism for DNS (EDNS) version
