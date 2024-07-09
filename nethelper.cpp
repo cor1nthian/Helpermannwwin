@@ -892,7 +892,8 @@ NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results,
     return traceroute_RawSocket(results, wstr2str(address), maxHops);
 }
 
-NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const std::string portOrSvcName) {
+NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const std::string portOrSvcName,
+    const SocketType socketType, const NWProtocol protocol, const AddressFamily addressFamily) {
     std::string poslow = lower_copy(portOrSvcName);
 #if defined(_WIN32) || defined(_WIN64)
     if (!g_WSAStarted) {
@@ -910,9 +911,9 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const s
     addrinfo* ptr = 0;
     addrinfo hints = { 0 };
     memset(&hints, 0, sizeof(addrinfo));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_family = static_cast<int>(addressFamily); // AF_UNSPEC;
+    hints.ai_socktype = static_cast<int>(socketType); // SOCK_STREAM;
+    hints.ai_protocol = static_cast<int>(protocol); // IPPROTO_TCP;
     HostNodeAddr hna;
     if (!getaddrinfo(dnsName.c_str(), poslow.c_str(), &hints, &result)) {
         for (ptr = result; ptr != 0; ptr = ptr->ai_next) {
@@ -953,7 +954,8 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const s
     return NetOpResult::Success;
 }
 
-NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName, const std::wstring portOrSvcName) {
+NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName, const std::wstring portOrSvcName,
+    const SocketType socketType, const NWProtocol protocol, const AddressFamily addressFamily) {
     return lookupIPAddresses(node, wstr2str(dnsName), wstr2str(portOrSvcName));
 }
 

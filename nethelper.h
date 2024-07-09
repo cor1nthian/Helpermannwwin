@@ -127,6 +127,39 @@ enum class NetOpResult : unsigned char {
 	Fail
 };
 
+enum class AddressFamily : unsigned long {
+	Ubspecified = AF_UNSPEC,
+	IPV4 = AF_INET,
+	IPV6 = AF_INET6,
+	Unix = AF_UNIX,
+	ImpLink = AF_IMPLINK,
+	PUP = AF_PUP,
+	Chaos = AF_CHAOS,
+	NS = AF_NS,
+	IPX = AF_IPX,
+	ISO = AF_ISO,
+	OSI = AF_OSI,
+	ECMA = AF_ECMA,
+	Datakit = AF_DATAKIT,
+	CCITT = AF_CCITT,
+	SNA = AF_SNA,
+	DECnet= AF_DECnet,
+	DLI = AF_DLI,
+	LAT = AF_LAT,
+	Hylink = AF_HYLINK,
+	Appletalk = AF_APPLETALK,
+	NetBIOS = AF_NETBIOS,
+	Voiceview = AF_VOICEVIEW,
+	Firefox = AF_FIREFOX,
+	Unknown1 = AF_UNKNOWN1,
+	Ban = AF_BAN,
+	ATM = AF_ATM,
+	Cluster = AF_CLUSTER,
+	Fanily12844 = AF_12844,
+	IrDA = AF_IRDA,
+	NetDES = AF_NETDES
+};
+
 enum class DNSRecordType : unsigned long {
 	ARec = DNS_TYPE_A,
 	NSRec = DNS_TYPE_NS,
@@ -726,9 +759,11 @@ NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std:
 NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std::wstring address,
 	const unsigned char maxHops = 30);
 NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName,
-	const std::string portOrSvcName = "80");
-NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName,
-	const std::wstring portOrSvcName = L"80");
+	const std::string portOrSvcName = "80", const SocketType socketType = SocketType::Stream,
+	const NWProtocol protocol = NWProtocol::TCP, const AddressFamily addressFmaily = AddressFamily::IPV4);
+NetOpResult lookupIPAddresses(HostNode& node, const std::wstring dnsName,
+	const std::wstring portOrSvcName = L"80", const SocketType socketType = SocketType::Stream,
+	const NWProtocol protocol = NWProtocol::TCP, const AddressFamily addressFmaily = AddressFamily::IPV4);
 NetOpResult getHostnameByIPV4_DNSQuery(std::string &hostName, const std::string ipAddr,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
 NetOpResult getHostnameByIPV4_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
