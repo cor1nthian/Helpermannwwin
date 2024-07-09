@@ -41,7 +41,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::string address,
 #if defined(_WIN32) || defined(_WIN64) 
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return NetOpResult::Fail;
         }
         g_WSAStarted = true;
@@ -54,14 +54,14 @@ NetOpResult ping(std::vector<PingResult> &results, const std::string address,
     unsigned long ReplySize = 0;
     ipaddr = inet_addr(pingtgt.c_str());
     if (ipaddr != INADDR_NONE) {
-        HANDLE hIcmpFile = IcmpCreateFile();
+        HANDLE hIcmpFile = ::IcmpCreateFile();
         if (hIcmpFile != INVALID_HANDLE_VALUE) {
             ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
             ReplyBuffer = malloc(ReplySize);
             if (ReplyBuffer != 0) {
                 for (size_t i = 0; i < pingattempts; ++i) {
                     memset(ReplyBuffer, 0, ReplySize);
-                    retVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData), NULL, ReplyBuffer,
+                    retVal = ::IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData), NULL, ReplyBuffer,
                         ReplySize, (unsigned long)pingtimeout);
                     if (retVal != 0) {
                         ICMP_ECHO_REPLY* pEchoReply = (ICMP_ECHO_REPLY*)ReplyBuffer;
@@ -77,7 +77,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::string address,
             } else {
                 // Unable to allocate memory
             }
-            IcmpCloseHandle(hIcmpFile);
+            ::IcmpCloseHandle(hIcmpFile);
         } else {
             // Unable to open handle. IcmpCreatefile returned error: %06d", GetLastError()
         }
@@ -130,7 +130,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::wstring address,
 #if defined(_WIN32) || defined(_WIN64) 
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return NetOpResult::Fail;
         }
         g_WSAStarted = true;
@@ -143,14 +143,14 @@ NetOpResult ping(std::vector<PingResult> &results, const std::wstring address,
     unsigned long ReplySize = 0;
     ipaddr = inet_addr(wstr2str(pingtgt).c_str());
     if (ipaddr != INADDR_NONE) {
-        HANDLE hIcmpFile = IcmpCreateFile();
+        HANDLE hIcmpFile = ::IcmpCreateFile();
         if (hIcmpFile != INVALID_HANDLE_VALUE) {
             ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
             ReplyBuffer = malloc(ReplySize);
             if (ReplyBuffer != 0) {
                 for (size_t i = 0; i < pingattempts; ++i) {
                     memset(ReplyBuffer, 0, ReplySize);
-                    retVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData), NULL, ReplyBuffer,
+                    retVal = ::IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData), NULL, ReplyBuffer,
                         ReplySize, (unsigned long)pingtimeout);
                     if (retVal != 0) {
                         ICMP_ECHO_REPLY* pEchoReply = (ICMP_ECHO_REPLY*)ReplyBuffer;
@@ -166,7 +166,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::wstring address,
             } else {
                 // Unable to allocate memory
             }
-            IcmpCloseHandle(hIcmpFile);
+            ::IcmpCloseHandle(hIcmpFile);
         } else {
             // Unable to open handle. IcmpCreatefile returned error: %06d", GetLastError()
         }
@@ -176,7 +176,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::wstring address,
     SAFE_FREE(ReplyBuffer);
 #if defined(_WIN32) || defined(_WIN64) 
     if (g_WSAStarted) {
-        if (WSACleanup()) {
+        if (::WSACleanup()) {
             // handle WSACleanup error
             // int wsaerr = WSAGetLastError();
         } else {
@@ -258,7 +258,7 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
 #if defined(_WIN32) || defined(_WIN64)
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return NetOpResult::Fail;
         }
         g_WSAStarted = true;
@@ -269,7 +269,7 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
     char SendData[32] = "Data Buffer\0";
     void* ReplyBuffer = 0;
     unsigned long ReplySize = 0;
-    HANDLE hIcmpFile = IcmpCreateFile();
+    HANDLE hIcmpFile = ::IcmpCreateFile();
     if (hIcmpFile != INVALID_HANDLE_VALUE) {
         ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
         ReplyBuffer = malloc(ReplySize);
@@ -281,7 +281,7 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
             std::string taddr;
             do {
                 ip_option.Ttl = hops;
-                retVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData),
+                retVal = ::IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData),
                     &ip_option, ReplyBuffer, ReplySize, (unsigned long)tracerttimeout);
                 if (retVal) {
                     memset(&trres, 0, sizeof(TracertResult));
@@ -319,7 +319,7 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
                     }
                     ++hops;
                 } else {
-                    // IcmpSendEcho failed
+                    // ::IcmpSendEcho failed
                     if (WSAETIMEDOUT == WSAGetLastError() ||
                         WSA_QOS_ADMISSION_FAILURE == WSAGetLastError()) {
                         trres.Address = L"*";
@@ -338,7 +338,7 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
             // Unable to allocate memory
         }
         SAFE_FREE(ReplyBuffer);
-        IcmpCloseHandle(hIcmpFile);
+        ::IcmpCloseHandle(hIcmpFile);
         if (doPings) {
             for (size_t i = 0; i < results.size(); ++i) {
                 if (results[i].Address != L"*") {
@@ -361,7 +361,7 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
     }
 #if defined(_WIN32) || defined(_WIN64)
     if (g_WSAStarted) {
-        if (WSACleanup()) {
+        if (::WSACleanup()) {
             // handle WSACleanup error
             // int wsaerr = WSAGetLastError();
         } else {
@@ -421,7 +421,7 @@ NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std:
 #if defined(_WIN32) || defined(_WIN64)
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return NetOpResult::Fail;
         }
         g_WSAStarted = true;
@@ -433,7 +433,7 @@ NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std:
     char SendData[32] = "Data Buffer\0";
     void* ReplyBuffer = 0;
     unsigned long ReplySize = 0;
-    HANDLE hIcmpFile = IcmpCreateFile();
+    HANDLE hIcmpFile = ::IcmpCreateFile();
     if (hIcmpFile != INVALID_HANDLE_VALUE) {
         ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
         ReplyBuffer = malloc(ReplySize);
@@ -445,7 +445,7 @@ NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std:
             std::string taddr;
             do {
                 ip_option.Ttl = hops;
-                retVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData),
+                retVal = ::IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData),
                     &ip_option, ReplyBuffer, ReplySize, (unsigned long)tracerttimeout);
                 if (retVal) {
                     memset(&trres, 0, sizeof(TracertResult));
@@ -508,7 +508,7 @@ NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std:
             // Unable to allocate memory
         }
         SAFE_FREE(ReplyBuffer);
-        IcmpCloseHandle(hIcmpFile);
+        ::IcmpCloseHandle(hIcmpFile);
         if (doPings) {
             for (size_t i = 0; i < results.size(); ++i) {
                 if (results[i].Address != L"*") {
@@ -531,7 +531,7 @@ NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std:
     }
 #if defined(_WIN32) || defined(_WIN64)
     if (g_WSAStarted) {
-        if (WSACleanup()) {
+        if (::WSACleanup()) {
             // handle WSACleanup error
             // int wsaerr = WSAGetLastError();
         } else {
@@ -593,7 +593,7 @@ NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEP
 #if defined(_WIN32) || defined(_WIN64)
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return NetOpResult::Fail;
         }
         g_WSAStarted = true;
@@ -606,7 +606,7 @@ NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEP
     char SendData[32] = "Data Buffer\0";
     void* ReplyBuffer = 0;
     unsigned long ReplySize = 0;
-    HANDLE hIcmpFile = IcmpCreateFile();
+    HANDLE hIcmpFile = ::IcmpCreateFile();
     if (hIcmpFile != INVALID_HANDLE_VALUE) {
         ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
         ReplyBuffer = malloc(ReplySize);
@@ -623,7 +623,7 @@ NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEP
                 do {
                     stopflag = false;
                     ip_option.Ttl = hops;
-                    retVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData),
+                    retVal = ::IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData),
                         &ip_option, ReplyBuffer, ReplySize, (unsigned long)tracerttimeout);
                     if (retVal) {
                         memset(&trres, 0, sizeof(TracertResult));
@@ -675,7 +675,7 @@ NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEP
                         }
                         ++hops;
                     } else {
-                        // IcmpSendEcho failed
+                        // ::IcmpSendEcho failed
                         if (WSAETIMEDOUT == WSAGetLastError() ||
                             WSA_QOS_ADMISSION_FAILURE == WSAGetLastError()) {
                             trres.Address = L"*";
@@ -697,7 +697,7 @@ NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEP
             return NetOpResult::Fail;
         }
         SAFE_FREE(ReplyBuffer);
-        IcmpCloseHandle(hIcmpFile);
+        ::IcmpCloseHandle(hIcmpFile);
         if (doPings) {
             std::map<std::string, std::vector<TracertResult>>::iterator it;
             for (it = results.begin(); it != results.end(); ++it) {
@@ -725,7 +725,7 @@ NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEP
     }
 #if defined(_WIN32) || defined(_WIN64)
     if (g_WSAStarted) {
-        if (WSACleanup()) {
+        if (::WSACleanup()) {
             // handle WSACleanup error
             // int wsaerr = WSAGetLastError();
         } else {
@@ -778,7 +778,7 @@ NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std:
 #if defined(_WIN32) || defined(_WIN64)
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return NetOpResult::Fail;
         }
         g_WSAStarted = true;
@@ -874,7 +874,7 @@ NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std:
     SAFE_FREE(recvbuf);
 #if defined(_WIN32) || defined(_WIN64)
     if (g_WSAStarted) {
-        if (WSACleanup()) {
+        if (::WSACleanup()) {
             // handle WSACleanup error
             // int wsaerr = WSAGetLastError();
         } else {
@@ -898,22 +898,22 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const s
 #if defined(_WIN32) || defined(_WIN64)
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return NetOpResult::Fail;
         }
         g_WSAStarted = true;
     }
 #endif
     int iresult = 0, retval = 0;
-    unsigned long dwRetval = 0, ipbufferlength = 46;;
+    unsigned long dwRetval = 0, ipbufferlength = 46;
     int i = 1;
     addrinfo* result = 0;
     addrinfo* ptr = 0;
     addrinfo hints = { 0 };
     memset(&hints, 0, sizeof(addrinfo));
-    hints.ai_family = static_cast<int>(addressFamily); // AF_UNSPEC;
-    hints.ai_socktype = static_cast<int>(socketType); // SOCK_STREAM;
-    hints.ai_protocol = static_cast<int>(protocol); // IPPROTO_TCP;
+    hints.ai_family = static_cast<int>(addressFamily);
+    hints.ai_socktype = static_cast<int>(socketType);
+    hints.ai_protocol = static_cast<int>(protocol);
     HostNodeAddr hna;
     if (!getaddrinfo(dnsName.c_str(), poslow.c_str(), &hints, &result)) {
         for (ptr = result; ptr != 0; ptr = ptr->ai_next) {
@@ -943,7 +943,7 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const s
     }
 #if defined(_WIN32) || defined(_WIN64)
     if (g_WSAStarted) {
-        if (WSACleanup()) {
+        if (::WSACleanup()) {
             // handle WSACleanup error
             // int wsaerr = WSAGetLastError();
         } else {
@@ -970,7 +970,7 @@ std::string lookupIPV4Address(const std::string dnsName) {
 #if defined(_WIN32) || defined(_WIN64) 
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return "";
         }
         g_WSAStarted = true;
@@ -998,7 +998,7 @@ std::string lookupIPV4Address(const std::string dnsName) {
     }
 #if defined(_WIN32) || defined(_WIN64) 
     if (g_WSAStarted) {
-        if (WSACleanup()) {
+        if (::WSACleanup()) {
             // handle WSACleanup error
             // int wsaerr = WSAGetLastError();
         } else {
@@ -1024,7 +1024,7 @@ std::wstring lookupIPV4Address(const std::wstring dnsName) {
 #if defined(_WIN32) || defined(_WIN64) 
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return L"";
         }
         g_WSAStarted = true;
@@ -1052,7 +1052,7 @@ std::wstring lookupIPV4Address(const std::wstring dnsName) {
     }
 #if defined(_WIN32) || defined(_WIN64) 
     if (g_WSAStarted) {
-        if (WSACleanup()) {
+        if (::WSACleanup()) {
             // handle WSACleanup error
             // int wsaerr = WSAGetLastError();
         } else {
@@ -1081,7 +1081,7 @@ std::string getHostnameByIPV4(const std::string ip, unsigned short int port) {
 #if defined(_WIN32) || defined(_WIN64) 
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return "";
         }
         g_WSAStarted = true;
@@ -1099,7 +1099,7 @@ std::string getHostnameByIPV4(const std::string ip, unsigned short int port) {
     }
 #if defined(_WIN32) || defined(_WIN64) 
     if (g_WSAStarted) {
-        if (WSACleanup()) {
+        if (::WSACleanup()) {
             // handle WSACleanup error
             // int wsaerr = WSAGetLastError();
         } else {
@@ -1124,7 +1124,7 @@ std::wstring getHostnameByIPV4(const std::wstring ip, unsigned short int port) {
 #if defined(_WIN32) || defined(_WIN64) 
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return L"";
         }
         g_WSAStarted = true;
@@ -1142,7 +1142,7 @@ std::wstring getHostnameByIPV4(const std::wstring ip, unsigned short int port) {
     }
 #if defined(_WIN32) || defined(_WIN64) 
     if (g_WSAStarted) {
-        if (WSACleanup()) {
+        if (::WSACleanup()) {
             // handle WSACleanup error
             // int wsaerr = WSAGetLastError();
         } else {
@@ -1161,7 +1161,7 @@ std::string getHostnameByIPV6(const std::string ip, unsigned short int port) {
 #if defined(_WIN32) || defined(_WIN64) 
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return "";
         }
         g_WSAStarted = true;
@@ -1180,7 +1180,7 @@ std::string getHostnameByIPV6(const std::string ip, unsigned short int port) {
     }
 #if defined(_WIN32) || defined(_WIN64) 
     if (g_WSAStarted) {
-        if (WSACleanup()) {
+        if (::WSACleanup()) {
             // handle WSACleanup error
             // int wsaerr = WSAGetLastError();
         } else {
@@ -1199,7 +1199,7 @@ std::wstring getHostnameByIPV6(const std::wstring ip, unsigned short int port) {
 #if defined(_WIN32) || defined(_WIN64) 
     if (!g_WSAStarted) {
         WSADATA wsd = { 0 };
-        if (WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
             return L"";
         }
         g_WSAStarted = true;
@@ -1218,7 +1218,7 @@ std::wstring getHostnameByIPV6(const std::wstring ip, unsigned short int port) {
     }
 #if defined(_WIN32) || defined(_WIN64) 
     if (g_WSAStarted) {
-        if (WSACleanup()) {
+        if (::WSACleanup()) {
             // handle WSACleanup error
             // int wsaerr = WSAGetLastError();
         } else {

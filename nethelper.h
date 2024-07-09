@@ -155,7 +155,7 @@ enum class AddressFamily : unsigned long {
 	Ban = AF_BAN,
 	ATM = AF_ATM,
 	Cluster = AF_CLUSTER,
-	Fanily12844 = AF_12844,
+	Family12844 = AF_12844,
 	IrDA = AF_IRDA,
 	NetDES = AF_NETDES
 };
