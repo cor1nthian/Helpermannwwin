@@ -472,7 +472,7 @@ bool SysHandler::IsWow64Proc(const unsigned long pid, const unsigned long desire
 	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(
 		::GetModuleHandle(L"kernel32"), "IsWow64Process");
 	if (fnIsWow64Process) {
-		HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+		::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 		if (hProc && INVALID_HANDLE_VALUE != hProc && hProc) {
 			if (fnIsWow64Process(hProc, isWow64)) {
 				if (isWow64) {
@@ -811,7 +811,7 @@ SysOpResult SysHandler::LocalGroupListFromStrSID(std::vector<GroupDesc> &outGrou
 	return SysOpResult::Success;
 }
 
-SysOpResult SysHandler::UserLogon(HANDLE &token, std::wstring userName, std::wstring password,
+SysOpResult SysHandler::UserLogon(::HANDLE &token, std::wstring userName, std::wstring password,
 	std::wstring domain) const {
 	if (LogonUser(userName.c_str(), domain.c_str(), password.c_str(), LOGON32_LOGON_NEW_CREDENTIALS,
 		LOGON32_PROVIDER_DEFAULT, &token)) {
@@ -821,7 +821,7 @@ SysOpResult SysHandler::UserLogon(HANDLE &token, std::wstring userName, std::wst
 	}
 }
 
-SysOpResult SysHandler::ImpersonateUser(HANDLE &token) const {
+SysOpResult SysHandler::ImpersonateUser(::HANDLE &token) const {
 	if (ImpersonateLoggedOnUser(token)) {
 		return SysOpResult::Success;
 	} else {

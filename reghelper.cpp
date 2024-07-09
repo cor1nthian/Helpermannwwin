@@ -3106,7 +3106,7 @@ RegOpResult RegHandler::ConnectRegistry(HKEY &connectedReg, const std::wstring u
 			return RegOpResult::Fail;
 		}
 	}
-	HANDLE token = 0;
+	::HANDLE token = 0;
 	SysHandler sys;
 	if (SysOpResult::Success == sys.UserLogon(token, userName, password, remoteComputerName)) {
 		if (SysOpResult::Success == sys.ImpersonateUser(token)) {

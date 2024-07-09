@@ -139,7 +139,7 @@ bool ProcessHandler::StopProc(const unsigned long pid,
 	}
 	for (size_t i = 0; i < procs.size(); ++i) {
 		if (procs[i].pid == pid) {
-			HANDLE hProc = ::OpenProcess(PROCESS_TERMINATE, false, pid);
+			::HANDLE hProc = ::OpenProcess(PROCESS_TERMINATE, false, pid);
 			if (INVALID_HANDLE_VALUE != hProc) {
 				if (!::TerminateProcess(hProc, 1)) {
 					::CloseHandle(hProc);
@@ -167,7 +167,7 @@ bool ProcessHandler::StopProc(const std::wstring exepath,
 	}
 	for (size_t i = 0; i < procs.size(); ++i) {
 		if (lower_copy(procs[i].exepath) == lower_copy(exepath)) {
-			HANDLE hProc = ::OpenProcess(PROCESS_TERMINATE, false, procs[i].pid);
+			::HANDLE hProc = ::OpenProcess(PROCESS_TERMINATE, false, procs[i].pid);
 			if (INVALID_HANDLE_VALUE != hProc) {
 				if (!::TerminateProcess(hProc, 1)) {
 					::CloseHandle(hProc);
@@ -184,9 +184,9 @@ bool ProcessHandler::StopProc(const std::wstring exepath,
 
 bool ProcessHandler::EnableDebugPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -213,9 +213,9 @@ bool ProcessHandler::EnableDebugPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableBackupPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -242,9 +242,9 @@ bool ProcessHandler::EnableBackupPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableRestorePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -271,9 +271,9 @@ bool ProcessHandler::EnableRestorePrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableLockMemoryPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -300,9 +300,9 @@ bool ProcessHandler::EnableLockMemoryPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableIncreaseQuotaPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -329,9 +329,9 @@ bool ProcessHandler::EnableIncreaseQuotaPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableUnsolicitedInputPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -358,9 +358,9 @@ bool ProcessHandler::EnableUnsolicitedInputPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableMachineAccountPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -387,9 +387,9 @@ bool ProcessHandler::EnableMachineAccountPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableTcbPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -416,9 +416,9 @@ bool ProcessHandler::EnableTcbPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableSecurityPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -445,9 +445,9 @@ bool ProcessHandler::EnableSecurityPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableTakeOwnershipPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -474,9 +474,9 @@ bool ProcessHandler::EnableTakeOwnershipPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableLoadDriverPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -503,9 +503,9 @@ bool ProcessHandler::EnableLoadDriverPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableSystemProfilePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -532,9 +532,9 @@ bool ProcessHandler::EnableSystemProfilePrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableSystemTimePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -561,9 +561,9 @@ bool ProcessHandler::EnableSystemTimePrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableProfSingleProcessPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -590,9 +590,9 @@ bool ProcessHandler::EnableProfSingleProcessPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableIncBasePriorutyPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -619,9 +619,9 @@ bool ProcessHandler::EnableIncBasePriorutyPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableCreatePageFilePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -648,9 +648,9 @@ bool ProcessHandler::EnableCreatePageFilePrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableCreatePermanentPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -677,9 +677,9 @@ bool ProcessHandler::EnableCreatePermanentPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableShutdownPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -706,9 +706,9 @@ bool ProcessHandler::EnableShutdownPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableAuditPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -735,9 +735,9 @@ bool ProcessHandler::EnableAuditPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableSystemEnvironmentPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -764,9 +764,9 @@ bool ProcessHandler::EnableSystemEnvironmentPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableChangeNotifyPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -793,9 +793,9 @@ bool ProcessHandler::EnableChangeNotifyPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableRemoteShutdownPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -822,9 +822,9 @@ bool ProcessHandler::EnableRemoteShutdownPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableUndockPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -851,9 +851,9 @@ bool ProcessHandler::EnableUndockPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableSyncAgentPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -880,9 +880,9 @@ bool ProcessHandler::EnableSyncAgentPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableDelegationPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -909,9 +909,9 @@ bool ProcessHandler::EnableDelegationPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableManageVolumePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -938,9 +938,9 @@ bool ProcessHandler::EnableManageVolumePrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableImpersonatePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -967,9 +967,9 @@ bool ProcessHandler::EnableImpersonatePrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableCreateGlobalPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -996,9 +996,9 @@ bool ProcessHandler::EnableCreateGlobalPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableTrustedCredManAccessPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1025,9 +1025,9 @@ bool ProcessHandler::EnableTrustedCredManAccessPrivilege(const unsigned long pid
 
 bool ProcessHandler::EnableRelabelPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1054,9 +1054,9 @@ bool ProcessHandler::EnableRelabelPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableIncWorkingSetPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1083,9 +1083,9 @@ bool ProcessHandler::EnableIncWorkingSetPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableTimezonePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1112,9 +1112,9 @@ bool ProcessHandler::EnableTimezonePrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableCreateSymbolicLinkPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1141,9 +1141,9 @@ bool ProcessHandler::EnableCreateSymbolicLinkPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableDelegateSessionUserImpersonatePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1170,9 +1170,9 @@ bool ProcessHandler::EnableDelegateSessionUserImpersonatePrivilege(const unsigne
 
 bool ProcessHandler::EnableCreateTokenPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1199,9 +1199,9 @@ bool ProcessHandler::EnableCreateTokenPrivilege(const unsigned long pid,
 
 bool ProcessHandler::EnableAssignPrimaryTokenPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1228,9 +1228,9 @@ bool ProcessHandler::EnableAssignPrimaryTokenPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableAssignPrimaryTokenPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1257,9 +1257,9 @@ bool ProcessHandler::DisableAssignPrimaryTokenPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableCreateTokenPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1286,9 +1286,9 @@ bool ProcessHandler::DisableCreateTokenPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableDelegateSessionUserImpersonatePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1315,9 +1315,9 @@ bool ProcessHandler::DisableDelegateSessionUserImpersonatePrivilege(const unsign
 
 bool ProcessHandler::DisableCreateSymbolicLinkPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1344,9 +1344,9 @@ bool ProcessHandler::DisableCreateSymbolicLinkPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableTimezonePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1373,9 +1373,9 @@ bool ProcessHandler::DisableTimezonePrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableIncWorkingSetPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1402,9 +1402,9 @@ bool ProcessHandler::DisableIncWorkingSetPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableRelabelPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1431,9 +1431,9 @@ bool ProcessHandler::DisableRelabelPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableTrustedCredManAccessPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1460,9 +1460,9 @@ bool ProcessHandler::DisableTrustedCredManAccessPrivilege(const unsigned long pi
 
 bool ProcessHandler::DisableCreateGlobalPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1489,9 +1489,9 @@ bool ProcessHandler::DisableCreateGlobalPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableImpersonatePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1518,9 +1518,9 @@ bool ProcessHandler::DisableImpersonatePrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableManageVolumePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1547,9 +1547,9 @@ bool ProcessHandler::DisableManageVolumePrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableDelegationPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1576,9 +1576,9 @@ bool ProcessHandler::DisableDelegationPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableSyncAgentPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1605,9 +1605,9 @@ bool ProcessHandler::DisableSyncAgentPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableUndockPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1634,9 +1634,9 @@ bool ProcessHandler::DisableUndockPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableRemoteShutdownPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1663,9 +1663,9 @@ bool ProcessHandler::DisableRemoteShutdownPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableChangeNotifyPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1692,9 +1692,9 @@ bool ProcessHandler::DisableChangeNotifyPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableSystemEnvironmentPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1721,9 +1721,9 @@ bool ProcessHandler::DisableSystemEnvironmentPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableAuditPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1750,9 +1750,9 @@ bool ProcessHandler::DisableAuditPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableShutdownPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1779,9 +1779,9 @@ bool ProcessHandler::DisableShutdownPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableCreatePermanentPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1808,9 +1808,9 @@ bool ProcessHandler::DisableCreatePermanentPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableCreatePageFilePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1837,9 +1837,9 @@ bool ProcessHandler::DisableCreatePageFilePrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableIncBasePriorutyPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1866,9 +1866,9 @@ bool ProcessHandler::DisableIncBasePriorutyPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableProfSingleProcessPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1895,9 +1895,9 @@ bool ProcessHandler::DisableProfSingleProcessPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableSystemTimePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1924,9 +1924,9 @@ bool ProcessHandler::DisableSystemTimePrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableSystemProfilePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1953,9 +1953,9 @@ bool ProcessHandler::DisableSystemProfilePrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableLoadDriverPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -1982,9 +1982,9 @@ bool ProcessHandler::DisableLoadDriverPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableTakeOwnershipPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -2011,9 +2011,9 @@ bool ProcessHandler::DisableTakeOwnershipPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableSecurityPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -2040,9 +2040,9 @@ bool ProcessHandler::DisableSecurityPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableTcbPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -2069,9 +2069,9 @@ bool ProcessHandler::DisableTcbPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableMachineAccountPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -2098,9 +2098,9 @@ bool ProcessHandler::DisableMachineAccountPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableUnsolicitedInputPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -2127,9 +2127,9 @@ bool ProcessHandler::DisableUnsolicitedInputPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableBackupPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -2156,9 +2156,9 @@ bool ProcessHandler::DisableBackupPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableRestorePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -2185,9 +2185,9 @@ bool ProcessHandler::DisableRestorePrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableLockMemoryPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -2214,9 +2214,9 @@ bool ProcessHandler::DisableLockMemoryPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableIncreaseQuotaPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -2243,9 +2243,9 @@ bool ProcessHandler::DisableIncreaseQuotaPrivilege(const unsigned long pid,
 
 bool ProcessHandler::DisableDebugPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		LUID luid;
 		TOKEN_PRIVILEGES tkp;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
@@ -2291,7 +2291,7 @@ bool ProcessHandler::IsProcRunning(const std::wstring exepath,
 std::wstring ProcessHandler::GetProcessExePathByPid(const unsigned long pid,
 	const unsigned long desiredProcRights) {
 	std::wstring ret;
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (INVALID_HANDLE_VALUE != hProc) {
 		NEW_ARR_NULLIFY(buf, wchar_t, 2048);
 		// wchar_t* buf = (wchar_t*)calloc(2048, 2048 * sizeof(wchar_t));
@@ -2357,9 +2357,9 @@ unsigned long ProcessHandler::GetCurrentProcPid() const {
 std::vector<std::wstring> ProcessHandler::GetProcPrivileges(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
 	std::vector<std::wstring> ret;
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
 		if (INVALID_HANDLE_VALUE != hToken) {
 			unsigned long bufSize = 0, retval = NO_ERROR;
@@ -2416,27 +2416,28 @@ std::vector<std::wstring> ProcessHandler::GetProcPrivileges(const unsigned long 
 
 ProcOpResult ProcessHandler::GetProcUserSID(const unsigned long pid, PSID &sid,
 	const unsigned long desiredProcRights) const {
-	HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		HANDLE hToken = 0;
+		::HANDLE hToken = 0;
 		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
 		if (INVALID_HANDLE_VALUE != hToken) {
 			unsigned long bufSize = 0, retval = NO_ERROR;
 			if (!::GetTokenInformation(hToken, TokenUser, 0, 0, &bufSize)) {
 				retval = ::GetLastError();
 				if (retval == ERROR_INSUFFICIENT_BUFFER) {
-					TOKEN_USER* buf = (TOKEN_USER*)malloc(bufSize);
-					// NEW_ARR_NULLIFY(buf, unsigned char, bufSize * sizeof(unsigned char));
+					::TOKEN_USER* buf = (::TOKEN_USER*)malloc(bufSize);
 					if (buf) {
 						if (::GetTokenInformation(hToken, TokenUser, (void*)buf, bufSize, &bufSize)) {
-							sid = buf->User.Sid;
-							// free(buf);
-							// memcpy(&sid, &(((TOKEN_USER*)buf)->User.Sid), sizeof(SID));
-							// SAFE_ARR_DELETE(buf);
+							sid = (SID*)::LocalAlloc(LPTR, sizeof(SID));
+							if (!sid) {
+								return ProcOpResult::Fail;
+							}
+							memcpy(sid, buf->User.Sid, sizeof(SID));
+							// sid = buf->User.Sid;
+							SAFE_FREE(buf);
 							return ProcOpResult::Success;
 						}
-						// SAFE_ARR_DELETE(buf);
-						free(buf);
+						SAFE_FREE(buf);
 						return ProcOpResult::Fail;
 					}
 					return ProcOpResult::Fail;
@@ -2454,7 +2455,7 @@ ProcOpResult ProcessHandler::ListProcesses(std::vector<ProcDesc> &procList) {
 	bool recPlaced = false;
 	std::vector<ProcDesc> ret;
 	ProcDesc elem;
-	HANDLE hProcSnap = INVALID_HANDLE_VALUE;
+	::HANDLE hProcSnap = INVALID_HANDLE_VALUE;
 	PROCESSENTRY32 pe32;
 	hProcSnap = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (INVALID_HANDLE_VALUE != hProcSnap) {

@@ -54,7 +54,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::string address,
     unsigned long ReplySize = 0;
     ipaddr = inet_addr(pingtgt.c_str());
     if (ipaddr != INADDR_NONE) {
-        HANDLE hIcmpFile = ::IcmpCreateFile();
+        ::HANDLE hIcmpFile = ::IcmpCreateFile();
         if (hIcmpFile != INVALID_HANDLE_VALUE) {
             ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
             ReplyBuffer = malloc(ReplySize);
@@ -143,7 +143,7 @@ NetOpResult ping(std::vector<PingResult> &results, const std::wstring address,
     unsigned long ReplySize = 0;
     ipaddr = inet_addr(wstr2str(pingtgt).c_str());
     if (ipaddr != INADDR_NONE) {
-        HANDLE hIcmpFile = ::IcmpCreateFile();
+        ::HANDLE hIcmpFile = ::IcmpCreateFile();
         if (hIcmpFile != INVALID_HANDLE_VALUE) {
             ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
             ReplyBuffer = malloc(ReplySize);
@@ -269,7 +269,7 @@ NetOpResult traceroute(std::vector<TracertResult> &results, const std::string ad
     char SendData[32] = "Data Buffer\0";
     void* ReplyBuffer = 0;
     unsigned long ReplySize = 0;
-    HANDLE hIcmpFile = ::IcmpCreateFile();
+    ::HANDLE hIcmpFile = ::IcmpCreateFile();
     if (hIcmpFile != INVALID_HANDLE_VALUE) {
         ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
         ReplyBuffer = malloc(ReplySize);
@@ -433,7 +433,7 @@ NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std:
     char SendData[32] = "Data Buffer\0";
     void* ReplyBuffer = 0;
     unsigned long ReplySize = 0;
-    HANDLE hIcmpFile = ::IcmpCreateFile();
+    ::HANDLE hIcmpFile = ::IcmpCreateFile();
     if (hIcmpFile != INVALID_HANDLE_VALUE) {
         ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
         ReplyBuffer = malloc(ReplySize);
@@ -606,7 +606,7 @@ NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEP
     char SendData[32] = "Data Buffer\0";
     void* ReplyBuffer = 0;
     unsigned long ReplySize = 0;
-    HANDLE hIcmpFile = ::IcmpCreateFile();
+    ::HANDLE hIcmpFile = ::IcmpCreateFile();
     if (hIcmpFile != INVALID_HANDLE_VALUE) {
         ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
         ReplyBuffer = malloc(ReplySize);
