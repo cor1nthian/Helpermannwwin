@@ -357,7 +357,7 @@ const std::map<DNSResponseCode, std::wstring> const gc_DnsResultTest = {
 	{ DNSResponseCode::YXDomain, L"Domain name should not exist" },
 	{ DNSResponseCode::YXRRSet, L"Resource Record (RR) set should not exist" },
 	{ DNSResponseCode::NXRRSet, L"Resource Record set does not exist" },
-	{ DNSResponseCode::NotAuthorativr, L"Not authoritative for zone" },
+	{ DNSResponseCode::NotAuthorative, L"Not authoritative for zone" },
 	{ DNSResponseCode::NotZone, L"Name not in zone" },
 	{ DNSResponseCode::BadSignature, L"Bad signature" },
 	{ DNSResponseCode::BadKey, L"Bad key" },
