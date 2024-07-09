@@ -780,6 +780,12 @@ NetOpResult getIPV6Addr_DNSQuery(std::string &ipAddr, const std::string hostName
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
 NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
+NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::string objectName,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
+	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec, const std::wstring dnsAddr = L"");
+NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::wstring objectName,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
+	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec, const std::wstring dnsAddr = L"");
 std::wstring getDNSOpTextResult(const DNSResponseCode resultCode);
 std::string lookupIPV4Address(const std::string dnsName);
 std::wstring lookupIPV4Address(const std::wstring dnsName);

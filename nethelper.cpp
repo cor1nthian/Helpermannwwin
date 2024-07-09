@@ -1582,6 +1582,90 @@ NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostNa
     return NetOpResult::Success;
 }
 
+NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::string objectName,
+    const DNSQueryOpts queryOptions, const DNSRecordType dnsRecordType, const std::wstring dnsAddr) {
+    PDNS_RECORD dnsrec = { 0 };
+    queryResults = dnsrec;
+    unsigned char addrtestres = isStringIP(objectName);
+    if (3 == addrtestres) {
+        return NetOpResult::Fail;
+    }
+    void* dnsptr = 0;
+    if (dnsAddr.length()) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+        if (0 != dnssrvaddrtestres) {
+            return NetOpResult::Fail;
+        }
+        dnsptr = ::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
+        if (!dnsptr) {
+            return NetOpResult::Fail;
+        }
+        IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
+        srvList->AddrCount = 1;
+        srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
+    }
+    DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;
+    unsigned long dnsres = ::DnsQuery(str2wstr(objectName).c_str(), static_cast<unsigned short>(dnsRecordType),
+        static_cast<unsigned long>(queryOptions), dnsptr, &dnsrec, 0);
+    if (DNS_RCODE_NOERROR != dnsres) {
+        SAFE_LOCALFREE(dnsptr);
+        ::DnsRecordListFree(dnsrec, freetype);
+        return NetOpResult::Fail;
+    }
+    if (dnsrec) {
+        queryResults = dnsrec;
+    } else {
+        SAFE_LOCALFREE(dnsptr);
+        ::DnsRecordListFree(dnsrec, freetype);
+        return NetOpResult::Fail;
+    }
+    SAFE_LOCALFREE(dnsptr);
+    ::DnsRecordListFree(dnsrec, freetype);
+    return NetOpResult::Success;
+}
+
+NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::wstring objectName,
+    const DNSQueryOpts queryOptions, const DNSRecordType dnsRecordType, const std::wstring dnsAddr) {
+    PDNS_RECORD dnsrec = { 0 };
+    queryResults = dnsrec;
+    unsigned char addrtestres = isStringIP(objectName);
+    if (3 == addrtestres) {
+        return NetOpResult::Fail;
+    }
+    void* dnsptr = 0;
+    if (dnsAddr.length()) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+        if (0 != dnssrvaddrtestres) {
+            return NetOpResult::Fail;
+        }
+        dnsptr = ::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
+        if (!dnsptr) {
+            return NetOpResult::Fail;
+        }
+        IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
+        srvList->AddrCount = 1;
+        srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
+    }
+    DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;
+    unsigned long dnsres = ::DnsQuery(objectName.c_str(), static_cast<unsigned short>(dnsRecordType),
+        static_cast<unsigned long>(queryOptions), dnsptr, &dnsrec, 0);
+    if (DNS_RCODE_NOERROR != dnsres) {
+        SAFE_LOCALFREE(dnsptr);
+        ::DnsRecordListFree(dnsrec, freetype);
+        return NetOpResult::Fail;
+    }
+    if (dnsrec) {
+        queryResults = dnsrec;
+    } else {
+        SAFE_LOCALFREE(dnsptr);
+        ::DnsRecordListFree(dnsrec, freetype);
+        return NetOpResult::Fail;
+    }
+    SAFE_LOCALFREE(dnsptr);
+    ::DnsRecordListFree(dnsrec, freetype);
+    return NetOpResult::Success;
+}
+
 std::wstring getDNSOpTextResult(const DNSResponseCode resultCode) {
     std::wstring ret;
     for (const auto &it : gc_DnsResultTest) {
