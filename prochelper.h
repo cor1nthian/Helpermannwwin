@@ -156,7 +156,7 @@ class ProcessHandler {
 		ProcessHandler(const ProcessHandler &other);
 		~ProcessHandler();
 		ProcResource StartProc(const std::wstring exepath, const std::wstring args = L"",
-			const ProcAwait awaitTime = ProcAwait::NoWait, const unsigned long procAwaitTime = 0,
+			const ProcAwait awaitTime = ProcAwait::Infinite, const unsigned long procAwaitTime = 0,
 			const bool freeRes = true);
 		bool FreeProcResources(const ProcResource &procRes, bool stopProc = true);
 		bool StopProc(const unsigned long pid,

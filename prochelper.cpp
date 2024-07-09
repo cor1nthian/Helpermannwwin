@@ -110,6 +110,7 @@ ProcResource ProcessHandler::StartProc(const std::wstring exepath, const std::ws
 				FreeProcResources(ret);
 			}
 		} else if (ProcAwait::NoWait == awaitTime) {
+			::GetExitCodeProcess(pi.hProcess, &ret.exitCode);
 			if (freeRes) {
 				FreeProcResources(ret, false);
 			}

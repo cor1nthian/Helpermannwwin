@@ -56,26 +56,20 @@ enum class AceType : unsigned char {
 enum class SecInfo : unsigned long {
 	/* The resource properties of the object being referenced. The resource properties are
 	stored in SYSTEM_RESOURCE_ATTRIBUTE_ACE types in the SACL of the security descriptor.
-	Windows Server 2008 R2, Windows 7,
-	Windows Server 2008, Windows Vista,
-	Windows Server 2003 and Windows XP:
-	This bit flag is not available. */
+	Windows Server 2008 R2, Windows 7, Windows Server 2008, Windows Vista,
+	Windows Server 2003 and Windows XP: This bit flag is not available. */
 	AttributeSecInfo = ATTRIBUTE_SECURITY_INFORMATION,
 	/* All parts of the security descriptor. This is useful for backup and restore
 	software that needs to preserve the entire security descriptor.
-	Windows Server 2008 R2, Windows 7,
-	Windows Server 2008, Windows Vista,
-	Windows Server 2003 and Windows XP:
-	This bit flag is not available. */
+	Windows Server 2008 R2, Windows 7, Windows Server 2008, Windows Vista,
+	Windows Server 2003 and Windows XP: This bit flag is not available. */
 	BackupSecInfo = BACKUP_SECURITY_INFORMATION,
 	// The DACL of the object is being referenced.
 	DACLSecInfo = DACL_SECURITY_INFORMATION,
 	// The primary group identifier of the object is being referenced.
 	GroupSecInfo = GROUP_SECURITY_INFORMATION,
 	/* The mandatory integrity label is being referenced. The mandatory integrity label is an
-	ACE in the SACL of the object.
-	Windows Server 2003 and Windows XP:
-	This bit flag is not available. */
+	ACE in the SACL of the object. Windows Server 2003 and Windows XP: This bit flag is not available. */
 	LabelSecInfo = LABEL_SECURITY_INFORMATION,
 	// The owner identifier of the object is being referenced.
 	OwnerSecInfo = OWNER_SECURITY_INFORMATION,
