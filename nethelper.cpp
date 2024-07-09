@@ -935,7 +935,9 @@ NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName, const s
             hna.Protocol = (NWProtocol)ptr->ai_protocol;
             node.Address.push_back(hna);
         }
+        ::freeaddrinfo(result);
     } else {
+        ::freeaddrinfo(result);
         return NetOpResult::Fail;
     }
 #if defined(_WIN32) || defined(_WIN64)
