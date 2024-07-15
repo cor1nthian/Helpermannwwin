@@ -40,10 +40,11 @@
 	#define _WINSOCKAPI_
 	#include <winsock2.h>	
 	#include <ws2tcpip.h>
-	#include <windns.h>
 	#include <iphlpapi.h>
-	#include <icmpapi.h>
 	#include <Windows.h>
+	#include <windns.h>
+	#include <Mstcpip.h>
+	#include <icmpapi.h>
 	#include <stdio.h>
 #else
 	#include <netdb.h>
@@ -446,6 +447,108 @@ enum class NWProtocol : unsigned long {
 	IPV6 = IPPROTO::IPPROTO_IPV6
 };
 
+struct DNSIPV6 {
+	DNSIPV6() {
+		Version = 0x80000001;
+		Address = { 0 };
+	}
+	~DNSIPV6() {};
+	unsigned int Version;
+	struct sockaddr_in6 Address;
+};
+
+struct DNSQueryContext {
+	DNSQueryContext() {
+		RefCount = 0;
+		memset(&QueryName, 0, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
+		memset(&QueryResults, 0, sizeof(DNS_QUERY_RESULT));
+		memset(&QueryCancelContext, 0, sizeof(DNS_QUERY_CANCEL));
+		QueryType = 0;
+		QueryOptions = 0;
+		QueryResults;
+		QueryCancelContext;
+		QueryCompletedEvent = 0;
+	}
+	DNSQueryContext(const DNSQueryContext &other) {
+		RefCount = other.RefCount;
+		memcpy(&QueryName, &other.QueryName, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
+		QueryType = other.QueryType;
+		QueryOptions = other.QueryOptions;
+		QueryResults = other.QueryResults;
+		QueryCancelContext = other.QueryCancelContext;
+		QueryCompletedEvent = other.QueryCompletedEvent;
+	}
+	DNSQueryContext(DNSQueryContext &&other) noexcept {
+		RefCount = other.RefCount;
+		other.RefCount = 0;
+		memcpy(&QueryName, &other.QueryName, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
+		memset(&other.QueryName, 0, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
+		QueryType = other.QueryType;
+		other.QueryType = 0;
+		QueryOptions = other.QueryOptions;
+		other.QueryOptions = 0;
+		QueryResults = other.QueryResults;
+		other.QueryResults = { 0 };
+		QueryCancelContext = other.QueryCancelContext;
+		other.QueryCancelContext = { 0 };
+		QueryCompletedEvent = other.QueryCompletedEvent;
+		other.QueryCompletedEvent = 0;
+	}
+	~DNSQueryContext() {}
+	DNSQueryContext& operator=(const DNSQueryContext &other) {
+		RefCount = other.RefCount;
+		memcpy(&QueryName, &other.QueryName, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
+		QueryType = other.QueryType;
+		QueryOptions = other.QueryOptions;
+		QueryResults = other.QueryResults;
+		QueryCancelContext = other.QueryCancelContext;
+		QueryCompletedEvent = other.QueryCompletedEvent;
+		return *this;
+	}
+	DNSQueryContext& operator=(DNSQueryContext &&other) noexcept {
+		RefCount = other.RefCount;
+		other.RefCount = 0;
+		memcpy(&QueryName, &other.QueryName, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
+		memset(&other.QueryName, 0, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
+		QueryType = other.QueryType;
+		other.QueryType = 0;
+		QueryOptions = other.QueryOptions;
+		other.QueryOptions = 0;
+		QueryResults = other.QueryResults;
+		other.QueryResults = { 0 };
+		QueryCancelContext = other.QueryCancelContext;
+		other.QueryCancelContext = { 0 };
+		QueryCompletedEvent = other.QueryCompletedEvent;
+		other.QueryCompletedEvent = 0;
+		return *this;
+	}
+	bool operator==(const DNSQueryContext &other) const {
+		return((RefCount == other.RefCount &&
+			QueryType == other.QueryType &&
+			QueryOptions == other.QueryOptions &&
+			QueryCompletedEvent == other.QueryCompletedEvent) &&
+			!memcmp(&QueryResults, &other.QueryResults, sizeof(DNS_QUERY_RESULT)) &&
+			!memcmp(&QueryCancelContext, &other.QueryCancelContext, sizeof(DNS_QUERY_CANCEL)) &&
+			!memcmp(&QueryName, &other.QueryName, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t)));
+	}
+	bool operator!=(const DNSQueryContext &other) const {
+		return((RefCount != other.RefCount ||
+			QueryType != other.QueryType ||
+			QueryOptions != other.QueryOptions ||
+			QueryCompletedEvent != other.QueryCompletedEvent) ||
+			memcmp(&QueryResults, &other.QueryResults, sizeof(DNS_QUERY_RESULT)) ||
+			memcmp(&QueryCancelContext, &other.QueryCancelContext, sizeof(DNS_QUERY_CANCEL)) ||
+			memcmp(&QueryName, &other.QueryName, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t)));
+	}
+	unsigned long RefCount;
+	wchar_t QueryName[DNS_MAX_NAME_BUFFER_LENGTH];
+	unsigned short QueryType;
+	unsigned long QueryOptions;
+	DNS_QUERY_RESULT QueryResults;
+	DNS_QUERY_CANCEL QueryCancelContext;
+	HANDLE QueryCompletedEvent;
+};
+
 struct HostNodeAddr {
 	HostNodeAddr() { SockType = SocketType::Stream; Protocol = NWProtocol::HopOpts; AddrType = AddressType::IPv4; }
 	HostNodeAddr(const HostNodeAddr &other) {
@@ -786,6 +889,17 @@ NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::string objectNa
 NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::wstring objectName,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
 	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec, const std::wstring dnsAddr = L"");
+NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
+NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
+NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &hostNames, const std::wstring ipAddr,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
+NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring>&hostNames, const std::wstring ipAddr,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
+NetOpResult customDNSQueryEx(PDNS_RECORD& queryResults, const std::wstring queryName,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
+	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec, const std::wstring dnsAddr = L"");
 std::wstring getDNSOpTextResult(const DNSResponseCode resultCode);
 std::string lookupIPV4Address(const std::string dnsName);
 std::wstring lookupIPV4Address(const std::wstring dnsName);
@@ -793,6 +907,7 @@ std::string getHostnameByIPV4(const std::string ip, unsigned short int port = 80
 std::wstring getHostnameByIPV4(const std::wstring ip, unsigned short int port = 80);
 std::string getHostnameByIPV6(const std::string ip, unsigned short int port = 80);
 std::wstring getHostnameByIPV6(const std::wstring ip, unsigned short int port = 80);
+void __stdcall DNSQueryExQueryCompleteCallback(void* context, DNS_QUERY_RESULT* queryResult);
 unsigned short ICMPHeaderChecksum(unsigned short* buffer, int size);
 int decodeResponse(char* buf, int bytes, SOCKADDR_IN* from, int ttl);
 
