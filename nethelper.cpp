@@ -1453,17 +1453,39 @@ NetOpResult getIPV4Addr_DNSQuery(std::string &ipAddr, const std::string hostName
     return NetOpResult::Success;
 }
 
-NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
-    const DNSQueryOpts queryOptions, const std::wstring dnsAddr) {
+NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipV4Addr, const std::wstring hostName,
+    const DNSQueryOpts queryOptions, const std::wstring dnsIPV4Addr) {
     unsigned char addrtestres = isStringIP(hostName);
     if (2 != addrtestres) {
         return NetOpResult::Fail;
     }
     void* dnsptr = 0;
-    if (dnsAddr.length()) {
-        unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    std::wstring dnssrvip;
+    if (dnsIPV4Addr.length()) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
         if (0 != dnssrvaddrtestres) {
-            return NetOpResult::Fail;
+            if (2 == dnssrvaddrtestres) {
+                bool fl = true;
+                HostNode hn;
+                if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                    for (size_t i = 0; i < hn.Address.size(); ++i) {
+                        if (0 == isStringIP(hn.Address[i].Address)) {
+                            dnssrvip = hn.Address[i].Address;
+                            fl = false;
+                            break;
+                        }
+                    }
+                    if (fl) {
+                        return NetOpResult::Fail;
+                    }
+                } else {
+                    return NetOpResult::Fail;
+                }
+            } else {
+                return NetOpResult::Fail;
+            }
+        } else {
+            dnssrvip = dnsIPV4Addr;
         }
         dnsptr = ::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
         if (!dnsptr) {
@@ -1471,7 +1493,7 @@ NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostNa
         }
         IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
         srvList->AddrCount = 1;
-        srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
+        srvList->AddrArray[0] = inet_addr(wstr2str(dnssrvip).c_str());
     }
     PDNS_RECORD dnsrec = { 0 };
     DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;
@@ -1485,7 +1507,7 @@ NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostNa
     if (dnsrec) {
         char buf[32] = { 0 };
         inet_ntop(AF_INET, &dnsrec->Data.A.IpAddress, buf, INET_ADDRSTRLEN);
-        ipAddr = str2wstr(buf);
+        ipV4Addr = str2wstr(buf);
     } else {
         SAFE_LOCALFREE(dnsptr);
         ::DnsRecordListFree(dnsrec, freetype);
@@ -1558,7 +1580,6 @@ NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostNa
         IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
         srvList->AddrCount = 1;
         srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
-        }
     }
     PDNS_RECORD dnsrec = { 0 };
     DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;

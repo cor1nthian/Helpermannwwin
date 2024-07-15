@@ -864,7 +864,7 @@ NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std:
 NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName,
 	const std::string portOrSvcName = "80", const SocketType socketType = SocketType::Stream,
 	const NWProtocol protocol = NWProtocol::TCP, const AddressFamily addressFmaily = AddressFamily::IPV4);
-NetOpResult lookupIPAddresses(HostNode& node, const std::wstring dnsName,
+NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName,
 	const std::wstring portOrSvcName = L"80", const SocketType socketType = SocketType::Stream,
 	const NWProtocol protocol = NWProtocol::TCP, const AddressFamily addressFmaily = AddressFamily::IPV4);
 NetOpResult getHostnameByIPV4_DNSQuery(std::string &hostName, const std::string ipAddr,
