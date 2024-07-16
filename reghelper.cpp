@@ -3265,7 +3265,7 @@ RegOpResult RegHandler::prepHKEYKeyPathValueName(HKEY &keyHandle, const HKEY &ke
 	std::vector<std::wstring> keyPathSpl = splitStr(valName, L"\\");
 	std::wstring rootlow = lower_copy(keyPathSpl[0]);
 	std::wstring keyPathSplStr = joinStrs(keyPathSpl, L"\\", 1);
-	if (std::string::npos != valName.find(L"|")) {
+	/*if (std::string::npos != valName.find(L"|")) {
 		std::vector<std::wstring> keyPathSplProp = splitStr(valName, L"|");
 		std::wstring keyPathProp = keyPathSplProp[0];
 		valName = keyPathSplProp[1];
@@ -3273,7 +3273,7 @@ RegOpResult RegHandler::prepHKEYKeyPathValueName(HKEY &keyHandle, const HKEY &ke
 		rootlow = lower_copy(keyPathSpl[0]);
 		keyPathSplStr = joinStrs(keyPathSpl, L"\\", 1);
 	} else {
-	}
+	}*/
 	std::vector<std::wstring> strSplTest = keyPathSpl;
 	if (keyHandleSet) {
 		hktest = keyHandleSet;
@@ -3313,19 +3313,31 @@ RegOpResult RegHandler::prepHKEYKeyPathValueName(HKEY &keyHandle, const HKEY &ke
 		}
 	}
 	unsigned long res = 0;
-	std::wstring lastsec, tstr, tvalname;
+	std::wstring tstr, tvalname;
 	do {
 		tstr = joinStrs(strSplTest, L"\\");
 		res = ::RegOpenKeyEx(hktest, tstr.c_str(), 0, KEY_READ | getRightMod(), &hkres);
 		if (ERROR_SUCCESS == res) {
 			tvalname = removeFromBothSides_copy(removeFromStart_copy(keyPathSplStr, tstr), L"\\");
-			if (ERROR_SUCCESS == ::RegQueryValueEx(hkres, tvalname.c_str(), 0, 0, 0, 0) &&
-				lastsec.length()) {
+			if (ERROR_SUCCESS == ::RegQueryValueEx(hkres, tvalname.c_str(), 0, 0, 0, 0)) {
 				keyHandle = hktest;
 				keyPath = tstr;
 				valName = tvalname;
 				CLOSEKEY_NULLIFY(hkres);
 				return RegOpResult::Success;
+			} else {
+				if (std::wstring::npos != tvalname.find(L"|")) {
+					std::vector<std::wstring> tvalnameSpl = splitStr(tvalname, L"|");
+					if (ERROR_SUCCESS == ::RegQueryValueEx(hkres, tvalnameSpl.front().c_str(), 0, 0, 0, 0)) {
+						keyHandle = hktest;
+						keyPath = tstr;
+						valName = tvalnameSpl.front();
+						CLOSEKEY_NULLIFY(hkres);
+						return RegOpResult::Success;
+					}
+				} else {
+					return RegOpResult::Fail;
+				}
 			}
 		} else {
 			if (hkres) {
