@@ -439,7 +439,7 @@ enum class NWProtocol : unsigned long {
 	L2TP = IPPROTO::IPPROTO_L2TP,
 	SCTP = IPPROTO::IPPROTO_SCTP,
 	IPv6None = IPPROTO::IPPROTO_NONE,
-	IPv6DSTOPTS = IPPROTO::IPPROTO_DSTOPTS,
+	IPv6DSTOpts = IPPROTO::IPPROTO_DSTOPTS,
 	IPv6Routing = IPPROTO::IPPROTO_ROUTING,
 	IPv6Fragment = IPPROTO::IPPROTO_FRAGMENT,
 	ICMPv6 = IPPROTO::IPPROTO_ICMPV6,
@@ -456,6 +456,22 @@ struct DNSQueryContext {
 		memset(&QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
 		memset(&QueryResults, 0, sizeof(DNS_QUERY_RESULT));
 		memset(&QueryCancelContext, 0, sizeof(DNS_QUERY_CANCEL));
+	}
+	DNSQueryContext(const unsigned long refCount, const wchar_t* queryName, const unsigned long queryNameLen,
+		const unsigned short int queryType, const unsigned long queryOptions, const DNS_QUERY_RESULT queryRes,
+		const DNS_QUERY_CANCEL queryCancel, const HANDLE queryCompletedEvent) {
+		RefCount = refCount;
+		if (queryNameLen && queryNameLen <= (DNS_MAX_NAME_BUFFER_LENGTH + 16)) {
+			memset(&QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
+			memcpy(&QueryName, queryName, queryNameLen * sizeof(wchar_t));
+		} else {
+			memset(&QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
+		}
+		QueryType = queryType;
+		QueryOptions = queryOptions;
+		QueryCompletedEvent = queryCompletedEvent;
+		memcpy(&QueryResults, &queryRes, sizeof(DNS_QUERY_RESULT));
+		memcpy(&QueryCancelContext, &queryCancel, sizeof(DNS_QUERY_CANCEL));
 	}
 	DNSQueryContext(const DNSQueryContext &other) {
 		RefCount = other.RefCount;
@@ -545,12 +561,39 @@ struct HostNodeAddr {
 		AddrType = other.AddrType;
 		Address = other.Address;
 	}
+	HostNodeAddr(const SocketType sockType, const NWProtocol protocol, const AddressType addrType, const std::wstring address) {
+		SockType = sockType;
+		Protocol = protocol;
+		AddrType = addrType;
+		Address = address;
+	}
+	HostNodeAddr(HostNodeAddr &&other) noexcept {
+		SockType = other.SockType;
+		Protocol = other.Protocol;
+		AddrType = other.AddrType;
+		Address = other.Address;
+		other.Address.~basic_string();
+		memset(&other.SockType, 0, sizeof(SocketType));
+		memset(&other.Protocol, 0, sizeof(NWProtocol));
+		memset(&other.AddrType, 0, sizeof(AddressType));
+	}
 	~HostNodeAddr() {}
 	HostNodeAddr& operator=(const HostNodeAddr &other) {
 		SockType = other.SockType;
 		Protocol = other.Protocol;
 		AddrType = other.AddrType;
 		Address = other.Address;
+		return *this;
+	}
+	HostNodeAddr& operator=(HostNodeAddr &&other) noexcept {
+		SockType = other.SockType;
+		Protocol = other.Protocol;
+		AddrType = other.AddrType;
+		Address = other.Address;
+		memset(&other.SockType, 0, sizeof(SocketType));
+		memset(&other.Protocol, 0, sizeof(NWProtocol));
+		memset(&other.AddrType, 0, sizeof(AddressType));
+		other.Address.~basic_string();
 		return *this;
 	}
 	bool operator==(const HostNodeAddr& other) const {
@@ -576,9 +619,21 @@ struct HostNode {
 	HostNode(const HostNode &other) {
 		Address = other.Address;
 	}
+	HostNode(HostNode &&other) noexcept {
+		Address = other.Address;
+		other.Address.~vector();
+	}
+	HostNode(const std::vector<HostNodeAddr> addr) {
+		Address = addr;
+	}
 	~HostNode() {}
 	HostNode& operator=(const HostNode &other) {
 		Address = other.Address;
+		return *this;
+	}
+	HostNode& operator=(HostNode &&other) noexcept {
+		Address = other.Address;
+		other.Address.~vector();
 		return *this;
 	}
 	bool operator==(const HostNode &other) const {
@@ -602,10 +657,27 @@ struct PingResult {
 		RoundTripTime = other.RoundTripTime;
 		TTL = other.TTL;
 	}
+	PingResult(PingResult &&other) noexcept {
+		Result = other.Result;
+		RoundTripTime = other.RoundTripTime;
+		TTL = other.TTL;
+		other.Result = 0;
+		other.RoundTripTime = 0;
+		other.TTL = 0;
+	}
 	PingResult& operator=(const PingResult &other) {
 		Result = other.Result;
 		RoundTripTime = other.RoundTripTime;
 		TTL = other.TTL;
+		return *this;
+	}
+	PingResult& operator=(PingResult &&other) noexcept {
+		Result = other.Result;
+		RoundTripTime = other.RoundTripTime;
+		TTL = other.TTL;
+		other.Result = 0;
+		other.RoundTripTime = 0;
+		other.TTL = 0;
 		return *this;
 	}
 	bool operator==(const PingResult &other) const {
@@ -644,6 +716,19 @@ struct TracertResult {
 		AddressIPV6 = other.AddressIPV6;
 		Pings = other.Pings;
 	}
+	TracertResult(TracertResult &&other) noexcept {
+		TTL = other.TTL;
+		RoundTripTime = other.RoundTripTime;
+		Address = other.Address;
+		AddressIPV4 = other.AddressIPV4;
+		AddressIPV6 = other.AddressIPV6;
+		Pings = other.Pings;
+		other.TTL = 0;
+		other.RoundTripTime = 0;
+		other.Address.~basic_string();
+		other.AddressIPV4.~basic_string();
+		other.AddressIPV6.~basic_string();
+	}
 	TracertResult& operator=(const TracertResult &other) {
 		TTL = other.TTL;
 		RoundTripTime = other.RoundTripTime;
@@ -651,6 +736,21 @@ struct TracertResult {
 		AddressIPV4 = other.AddressIPV4;
 		AddressIPV6 = other.AddressIPV6;
 		Pings = other.Pings;
+		return *this;
+	}
+	TracertResult& operator=(TracertResult &&other) noexcept {
+		TTL = other.TTL;
+		RoundTripTime = other.RoundTripTime;
+		Address = other.Address;
+		AddressIPV4 = other.AddressIPV4;
+		AddressIPV6 = other.AddressIPV6;
+		Pings = other.Pings;
+		other.TTL = 0;
+		other.RoundTripTime = 0;
+		other.Pings.~vector();
+		other.Address.~basic_string();
+		other.AddressIPV4.~basic_string();
+		other.AddressIPV6.~basic_string();
 		return *this;
 	}
 	bool operator==(const TracertResult &other) const {
@@ -693,6 +793,20 @@ struct ICMPHeader {
 		seqnum = other.seqnum;
 		timestamp = other.timestamp;
 	}
+	ICMPHeader(ICMPHeader &&other) noexcept {
+		type = other.type;
+		code = other.code;
+		checksum = other.checksum;
+		id = other.id;
+		seqnum = other.seqnum;
+		timestamp = other.timestamp;
+		other.type = 0;
+		other.code = 0;
+		other.checksum = 0;
+		other.id = 0;
+		other.seqnum = 0;
+		other.timestamp = 0;
+	}
 	~ICMPHeader() {}
 	ICMPHeader& operator=(const ICMPHeader &other) {
 		type = other.type;
@@ -701,6 +815,21 @@ struct ICMPHeader {
 		id = other.id;
 		seqnum = other.seqnum;
 		timestamp = other.timestamp;
+		return *this;
+	}
+	ICMPHeader& operator=(ICMPHeader &&other) noexcept {
+		type = other.type;
+		code = other.code;
+		checksum = other.checksum;
+		id = other.id;
+		seqnum = other.seqnum;
+		timestamp = other.timestamp;
+		other.type = 0;
+		other.code = 0;
+		other.checksum = 0;
+		other.id = 0;
+		other.seqnum = 0;
+		other.timestamp = 0;
 		return *this;
 	}
 	bool operator==(const ICMPHeader &other) const {
@@ -742,6 +871,21 @@ struct IPHeader {
 		sourceIP = 0;
 		destIP = 0;
 	}
+	IPHeader(const unsigned int headerLen, const unsigned int ver, const unsigned char tos, const unsigned short int packlen,
+		const unsigned short int id, const unsigned short int packetflags, const unsigned char timetolive,
+		const unsigned char proto, const unsigned short int chksum, const unsigned int srcIP, const unsigned int destinationIP) {
+		headerlen = headerLen;
+		version = ver;
+		typeofoservice = tos;
+		packetlen = packlen;
+		identifier = id;
+		flags = packetflags;
+		ttl = timetolive;
+		protocol = proto;
+		checksum = chksum;
+		sourceIP = srcIP;
+		destIP = destinationIP;
+	}
 	IPHeader(const IPHeader &other) {
 		headerlen = other.headerlen;
 		version = other.version;
@@ -754,6 +898,30 @@ struct IPHeader {
 		checksum = other.checksum;
 		sourceIP = other.sourceIP;
 		destIP = other.destIP;
+	}
+	IPHeader(IPHeader &&other) noexcept {
+		headerlen = other.headerlen;
+		version = other.version;
+		typeofoservice = other.typeofoservice;
+		packetlen = other.packetlen;
+		identifier = other.identifier;
+		flags = other.flags;
+		ttl = other.ttl;
+		protocol = other.protocol;
+		checksum = other.checksum;
+		sourceIP = other.sourceIP;
+		destIP = other.destIP;
+		other.headerlen = 0;
+		other.version = 0;
+		other.typeofoservice = 0;
+		other.packetlen = 0;
+		other.identifier = 0;
+		other.flags = 0;
+		other.ttl = 0;
+		other.protocol = 0;
+		other.checksum = 0;
+		other.sourceIP = 0;
+		other.destIP = 0;
 	}
 	~IPHeader() {}
 	IPHeader& operator=(const IPHeader &other) {
@@ -768,6 +936,31 @@ struct IPHeader {
 		checksum = other.checksum;
 		sourceIP = other.sourceIP;
 		destIP = other.destIP;
+		return *this;
+	}
+	IPHeader& operator=(IPHeader &&other) noexcept {
+		headerlen = other.headerlen;
+		version = other.version;
+		typeofoservice = other.typeofoservice;
+		packetlen = other.packetlen;
+		identifier = other.identifier;
+		flags = other.flags;
+		ttl = other.ttl;
+		protocol = other.protocol;
+		checksum = other.checksum;
+		sourceIP = other.sourceIP;
+		destIP = other.destIP;
+		other.headerlen = 0;
+		other.version = 0;
+		other.typeofoservice = 0;
+		other.packetlen = 0;
+		other.identifier = 0;
+		other.flags = 0;
+		other.ttl = 0;
+		other.protocol = 0;
+		other.checksum = 0;
+		other.sourceIP = 0;
+		other.destIP = 0;
 		return *this;
 	}
 	bool operator==(const IPHeader &other) const {
