@@ -447,31 +447,19 @@ enum class NWProtocol : unsigned long {
 	IPV6 = IPPROTO::IPPROTO_IPV6
 };
 
-struct DNSIPV6 {
-	DNSIPV6() {
-		Version = 0x80000001;
-		Address = { 0 };
-	}
-	~DNSIPV6() {};
-	unsigned int Version;
-	struct sockaddr_in6 Address;
-};
-
 struct DNSQueryContext {
 	DNSQueryContext() {
 		RefCount = 0;
-		memset(&QueryName, 0, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
-		memset(&QueryResults, 0, sizeof(DNS_QUERY_RESULT));
-		memset(&QueryCancelContext, 0, sizeof(DNS_QUERY_CANCEL));
 		QueryType = 0;
 		QueryOptions = 0;
-		QueryResults;
-		QueryCancelContext;
 		QueryCompletedEvent = 0;
+		memset(&QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
+		memset(&QueryResults, 0, sizeof(DNS_QUERY_RESULT));
+		memset(&QueryCancelContext, 0, sizeof(DNS_QUERY_CANCEL));
 	}
 	DNSQueryContext(const DNSQueryContext &other) {
 		RefCount = other.RefCount;
-		memcpy(&QueryName, &other.QueryName, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
+		memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
 		QueryType = other.QueryType;
 		QueryOptions = other.QueryOptions;
 		QueryResults = other.QueryResults;
@@ -481,7 +469,7 @@ struct DNSQueryContext {
 	DNSQueryContext(DNSQueryContext &&other) noexcept {
 		RefCount = other.RefCount;
 		other.RefCount = 0;
-		memcpy(&QueryName, &other.QueryName, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
+		memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
 		memset(&other.QueryName, 0, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
 		QueryType = other.QueryType;
 		other.QueryType = 0;
@@ -497,7 +485,7 @@ struct DNSQueryContext {
 	~DNSQueryContext() {}
 	DNSQueryContext& operator=(const DNSQueryContext &other) {
 		RefCount = other.RefCount;
-		memcpy(&QueryName, &other.QueryName, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
+		memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
 		QueryType = other.QueryType;
 		QueryOptions = other.QueryOptions;
 		QueryResults = other.QueryResults;
@@ -529,7 +517,7 @@ struct DNSQueryContext {
 			QueryCompletedEvent == other.QueryCompletedEvent) &&
 			!memcmp(&QueryResults, &other.QueryResults, sizeof(DNS_QUERY_RESULT)) &&
 			!memcmp(&QueryCancelContext, &other.QueryCancelContext, sizeof(DNS_QUERY_CANCEL)) &&
-			!memcmp(&QueryName, &other.QueryName, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t)));
+			!memcmp(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t)));
 	}
 	bool operator!=(const DNSQueryContext &other) const {
 		return((RefCount != other.RefCount ||
@@ -538,10 +526,10 @@ struct DNSQueryContext {
 			QueryCompletedEvent != other.QueryCompletedEvent) ||
 			memcmp(&QueryResults, &other.QueryResults, sizeof(DNS_QUERY_RESULT)) ||
 			memcmp(&QueryCancelContext, &other.QueryCancelContext, sizeof(DNS_QUERY_CANCEL)) ||
-			memcmp(&QueryName, &other.QueryName, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t)));
+			memcmp(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t)));
 	}
 	unsigned long RefCount;
-	wchar_t QueryName[DNS_MAX_NAME_BUFFER_LENGTH];
+	wchar_t QueryName[DNS_MAX_NAME_BUFFER_LENGTH + 16];
 	unsigned short QueryType;
 	unsigned long QueryOptions;
 	DNS_QUERY_RESULT QueryResults;
@@ -889,17 +877,28 @@ NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::string objectNa
 NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::wstring objectName,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
 	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec, const std::wstring dnsAddr = L"");
-NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
+NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName, const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
-NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
-NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &hostNames, const std::wstring ipAddr,
+NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName, const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
-NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring>&hostNames, const std::wstring ipAddr,
+NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring>& ipAddrs, const std::string hostName, const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
-NetOpResult customDNSQueryEx(PDNS_RECORD& queryResults, const std::wstring queryName,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
-	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec, const std::wstring dnsAddr = L"");
+NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName, const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
+NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostName, const std::string ipV4Addr, const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsIPV4Addr = "");
+NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostName, const std::wstring ipV4Addr, const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsIPV4Addr = L"");
+NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &results, const std::string objectName, const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsIPV4Addr = "");
+NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &results, const std::wstring objectName, const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsIPV4Addr = L"");
+NetOpResult customDNSQueryEx(std::vector<DNS_RECORD> &queryResults, const std::string objectName, const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const DNSRecordType dnsRecordType = DNSRecordType::CNameRec,
+	const std::string dnsIPV4Addr = "");
+NetOpResult customDNSQueryEx(std::vector<DNS_RECORD> &queryResults, const std::wstring objectName, const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const DNSRecordType dnsRecordType = DNSRecordType::CNameRec,
+	const std::wstring dnsIPV4Addr = L"");
 std::wstring getDNSOpTextResult(const DNSResponseCode resultCode);
 std::string lookupIPV4Address(const std::string dnsName);
 std::wstring lookupIPV4Address(const std::wstring dnsName);

@@ -1230,17 +1230,39 @@ std::wstring getHostnameByIPV6(const std::wstring ip, unsigned short int port) {
 }
 
 NetOpResult getHostnameByIPV4_DNSQuery(std::string &hostName, const std::string ipAddr,
-    const DNSQueryOpts queryOptions, const std::string dnsAddr) {
+    const DNSQueryOpts queryOptions, const std::string dnsIPV4Addr) {
     unsigned char addrtestres = isStringIP(ipAddr);
     if (1 < addrtestres) {
         return NetOpResult::Fail;
     }
     std::string addrrev = reverseIPV4_copy(ipAddr);
     void* dnsptr = 0;
-    if (dnsAddr.length()) {
-        unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    std::wstring dnssrvip;
+    if (dnsIPV4Addr.length()) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
         if (0 != dnssrvaddrtestres) {
-            return NetOpResult::Fail;
+            if (2 == dnssrvaddrtestres) {
+                bool fl = true;
+                HostNode hn;
+                if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                    for (size_t i = 0; i < hn.Address.size(); ++i) {
+                        if (0 == isStringIP(hn.Address[i].Address)) {
+                            dnssrvip = hn.Address[i].Address;
+                            fl = false;
+                            break;
+                        }
+                    }
+                    if (fl) {
+                        return NetOpResult::Fail;
+                    }
+                } else {
+                    return NetOpResult::Fail;
+                }
+            } else {
+                return NetOpResult::Fail;
+            }
+        } else {
+            dnssrvip = str2wstr(dnsIPV4Addr);
         }
         dnsptr = ::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
         if (!dnsptr) {
@@ -1248,7 +1270,7 @@ NetOpResult getHostnameByIPV4_DNSQuery(std::string &hostName, const std::string 
         }
         IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
         srvList->AddrCount = 1;
-        srvList->AddrArray[0] = inet_addr(dnsAddr.c_str());
+        srvList->AddrArray[0] = inet_addr(wstr2str(dnssrvip).c_str());
     }
     PDNS_RECORD dnsrec = { 0 };
     DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;
@@ -1273,17 +1295,39 @@ NetOpResult getHostnameByIPV4_DNSQuery(std::string &hostName, const std::string 
 }
 
 NetOpResult getHostnameByIPV4_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
-    const DNSQueryOpts queryOptions, const std::wstring dnsAddr) {
+    const DNSQueryOpts queryOptions, const std::wstring dnsIPV4Addr) {
     unsigned char addrtestres = isStringIP(ipAddr);
     if (1 < addrtestres) {
         return NetOpResult::Fail;
     }
     std::wstring addrrev = reverseIPV4_copy(ipAddr);
     void* dnsptr = 0;
-    if (dnsAddr.length()) {
-        unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    std::wstring dnssrvip;
+    if (dnsIPV4Addr.length()) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
         if (0 != dnssrvaddrtestres) {
-            return NetOpResult::Fail;
+            if (2 == dnssrvaddrtestres) {
+                bool fl = true;
+                HostNode hn;
+                if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                    for (size_t i = 0; i < hn.Address.size(); ++i) {
+                        if (0 == isStringIP(hn.Address[i].Address)) {
+                            dnssrvip = hn.Address[i].Address;
+                            fl = false;
+                            break;
+                        }
+                    }
+                    if (fl) {
+                        return NetOpResult::Fail;
+                    }
+                } else {
+                    return NetOpResult::Fail;
+                }
+            } else {
+                return NetOpResult::Fail;
+            }
+        } else {
+            dnssrvip = dnsIPV4Addr;
         }
         dnsptr = ::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
         if (!dnsptr) {
@@ -1291,7 +1335,7 @@ NetOpResult getHostnameByIPV4_DNSQuery(std::wstring &hostName, const std::wstrin
         }
         IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
         srvList->AddrCount = 1;
-        srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
+        srvList->AddrArray[0] = inet_addr(wstr2str(dnssrvip).c_str());
     }
     PDNS_RECORD dnsrec = { 0 };
     DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;
@@ -1315,17 +1359,39 @@ NetOpResult getHostnameByIPV4_DNSQuery(std::wstring &hostName, const std::wstrin
 }
 
 NetOpResult getHostnameByIPV6_DNSQuery(std::string &hostName, const std::string ipAddr,
-    const DNSQueryOpts queryOptions, const std::string dnsAddr) {
+    const DNSQueryOpts queryOptions, const std::string dnsIPV4Addr) {
     unsigned char addrtestres = isStringIP(ipAddr);
     if (1 < addrtestres) {
         return NetOpResult::Fail;
     }
     std::string addrrev = reverseIPV6_copy(ipAddr);
     void* dnsptr = 0;
-    if (dnsAddr.length()) {
-        unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    std::wstring dnssrvip;
+    if (dnsIPV4Addr.length()) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
         if (0 != dnssrvaddrtestres) {
-            return NetOpResult::Fail;
+            if (2 == dnssrvaddrtestres) {
+                bool fl = true;
+                HostNode hn;
+                if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                    for (size_t i = 0; i < hn.Address.size(); ++i) {
+                        if (0 == isStringIP(hn.Address[i].Address)) {
+                            dnssrvip = hn.Address[i].Address;
+                            fl = false;
+                            break;
+                        }
+                    }
+                    if (fl) {
+                        return NetOpResult::Fail;
+                    }
+                } else {
+                    return NetOpResult::Fail;
+                }
+            } else {
+                return NetOpResult::Fail;
+            }
+        } else {
+            dnssrvip = str2wstr(dnsIPV4Addr);
         }
         dnsptr = ::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
         if (!dnsptr) {
@@ -1333,7 +1399,7 @@ NetOpResult getHostnameByIPV6_DNSQuery(std::string &hostName, const std::string 
         }
         IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
         srvList->AddrCount = 1;
-        srvList->AddrArray[0] = inet_addr(dnsAddr.c_str());
+        srvList->AddrArray[0] = inet_addr(wstr2str(dnssrvip).c_str());
     }
     PDNS_RECORD dnsrec = { 0 };
     DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;
@@ -1363,17 +1429,39 @@ NetOpResult getHostnameByIPV6_DNSQuery(std::string &hostName, const std::string 
 }
 
 NetOpResult getHostnameByIPV6_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
-    const DNSQueryOpts queryOptions, const std::wstring dnsAddr) {
+    const DNSQueryOpts queryOptions, const std::wstring dnsIPV4Addr) {
     unsigned char addrtestres = isStringIP(ipAddr);
     if (1 < addrtestres) {
         return NetOpResult::Fail;
     }
     std::wstring addrrev = reverseIPV6_copy(ipAddr);
     void* dnsptr = 0;
-    if (dnsAddr.length()) {
-        unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    std::wstring dnssrvip;
+    if (dnsIPV4Addr.length()) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
         if (0 != dnssrvaddrtestres) {
-            return NetOpResult::Fail;
+            if (2 == dnssrvaddrtestres) {
+                bool fl = true;
+                HostNode hn;
+                if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                    for (size_t i = 0; i < hn.Address.size(); ++i) {
+                        if (0 == isStringIP(hn.Address[i].Address)) {
+                            dnssrvip = hn.Address[i].Address;
+                            fl = false;
+                            break;
+                        }
+                    }
+                    if (fl) {
+                        return NetOpResult::Fail;
+                    }
+                } else {
+                    return NetOpResult::Fail;
+                }
+            } else {
+                return NetOpResult::Fail;
+            }
+        } else {
+            dnssrvip = dnsIPV4Addr;
         }
         dnsptr = ::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
         if (!dnsptr) {
@@ -1381,7 +1469,7 @@ NetOpResult getHostnameByIPV6_DNSQuery(std::wstring &hostName, const std::wstrin
         }
         IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
         srvList->AddrCount = 1;
-        srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
+        srvList->AddrArray[0] = inet_addr(wstr2str(dnssrvip).c_str());
     }
     PDNS_RECORD dnsrec = { 0 };
     DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;
@@ -1411,16 +1499,38 @@ NetOpResult getHostnameByIPV6_DNSQuery(std::wstring &hostName, const std::wstrin
 }
 
 NetOpResult getIPV4Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
-    const DNSQueryOpts queryOptions, const std::string dnsAddr) {
+    const DNSQueryOpts queryOptions, const std::string dnsIPV4Addr) {
     unsigned char addrtestres = isStringIP(hostName);
     if (2 != addrtestres) {
         return NetOpResult::Fail;
     }
     void* dnsptr = 0;
-    if (dnsAddr.length()) {
-        unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    std::wstring dnssrvip;
+    if (dnsIPV4Addr.length()) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
         if (0 != dnssrvaddrtestres) {
-            return NetOpResult::Fail;
+            if (2 == dnssrvaddrtestres) {
+                bool fl = true;
+                HostNode hn;
+                if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                    for (size_t i = 0; i < hn.Address.size(); ++i) {
+                        if (0 == isStringIP(hn.Address[i].Address)) {
+                            dnssrvip = hn.Address[i].Address;
+                            fl = false;
+                            break;
+                        }
+                    }
+                    if (fl) {
+                        return NetOpResult::Fail;
+                    }
+                } else {
+                    return NetOpResult::Fail;
+                }
+            } else {
+                return NetOpResult::Fail;
+            }
+        } else {
+            dnssrvip = str2wstr(dnsIPV4Addr);
         }
         dnsptr = ::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
         if (!dnsptr) {
@@ -1428,7 +1538,7 @@ NetOpResult getIPV4Addr_DNSQuery(std::string &ipAddr, const std::string hostName
         }
         IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
         srvList->AddrCount = 1;
-        srvList->AddrArray[0] = inet_addr(dnsAddr.c_str());
+        srvList->AddrArray[0] = inet_addr(wstr2str(dnssrvip).c_str());
     }
     PDNS_RECORD dnsrec = { 0 };
     DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;
@@ -1518,17 +1628,39 @@ NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipV4Addr, const std::wstring host
     return NetOpResult::Success;
 }
 
-NetOpResult getIPV6Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
-    const DNSQueryOpts queryOptions, const std::string dnsAddr) {
+NetOpResult getIPV6Addr_DNSQuery(std::string &ipV6Addr, const std::string hostName,
+    const DNSQueryOpts queryOptions, const std::string dnsIPV4Addr) {
     unsigned char addrtestres = isStringIP(hostName);
     if (2 != addrtestres) {
         return NetOpResult::Fail;
     }
     void* dnsptr = 0;
-    if (dnsAddr.length()) {
-        unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    std::wstring dnssrvip;
+    if (dnsIPV4Addr.length()) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
         if (0 != dnssrvaddrtestres) {
-            return NetOpResult::Fail;
+            if (2 == dnssrvaddrtestres) {
+                bool fl = true;
+                HostNode hn;
+                if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                    for (size_t i = 0; i < hn.Address.size(); ++i) {
+                        if (0 == isStringIP(hn.Address[i].Address)) {
+                            dnssrvip = hn.Address[i].Address;
+                            fl = false;
+                            break;
+                        }
+                    }
+                    if (fl) {
+                        return NetOpResult::Fail;
+                    }
+                } else {
+                    return NetOpResult::Fail;
+                }
+            } else {
+                return NetOpResult::Fail;
+            }
+        } else {
+            dnssrvip = str2wstr(dnsIPV4Addr);
         }
         dnsptr = ::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
         if (!dnsptr) {
@@ -1536,7 +1668,7 @@ NetOpResult getIPV6Addr_DNSQuery(std::string &ipAddr, const std::string hostName
         }
         IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
         srvList->AddrCount = 1;
-        srvList->AddrArray[0] = inet_addr(dnsAddr.c_str());
+        srvList->AddrArray[0] = inet_addr(wstr2str(dnssrvip).c_str());
     }
     PDNS_RECORD dnsrec = { 0 };
     DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;
@@ -1550,7 +1682,7 @@ NetOpResult getIPV6Addr_DNSQuery(std::string &ipAddr, const std::string hostName
     if (dnsrec) {
         char buf[INET6_ADDRSTRLEN] = { 0 };
         inet_ntop(AF_INET6, &dnsrec->Data.AAAA.Ip6Address, buf, INET6_ADDRSTRLEN);
-        ipAddr = buf;
+        ipV6Addr = buf;
     } else {
         SAFE_LOCALFREE(dnsptr);
         ::DnsRecordListFree(dnsrec, freetype);
@@ -1561,17 +1693,39 @@ NetOpResult getIPV6Addr_DNSQuery(std::string &ipAddr, const std::string hostName
     return NetOpResult::Success;
 }
 
-NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
-    const DNSQueryOpts queryOptions, const std::wstring dnsAddr) {
+NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipV6Addr, const std::wstring hostName,
+    const DNSQueryOpts queryOptions, const std::wstring dnsIPV4Addr) {
     unsigned char addrtestres = isStringIP(hostName);
     if (2 != addrtestres) {
         return NetOpResult::Fail;
     }
     void* dnsptr = 0;
-    if (dnsAddr.length()) {
-        unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    std::wstring dnssrvip;
+    if (dnsIPV4Addr.length()) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
         if (0 != dnssrvaddrtestres) {
-            return NetOpResult::Fail;
+            if (2 == dnssrvaddrtestres) {
+                bool fl = true;
+                HostNode hn;
+                if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                    for (size_t i = 0; i < hn.Address.size(); ++i) {
+                        if (0 == isStringIP(hn.Address[i].Address)) {
+                            dnssrvip = hn.Address[i].Address;
+                            fl = false;
+                            break;
+                        }
+                    }
+                    if (fl) {
+                        return NetOpResult::Fail;
+                    }
+                } else {
+                    return NetOpResult::Fail;
+                }
+            } else {
+                return NetOpResult::Fail;
+            }
+        } else {
+            dnssrvip = dnsIPV4Addr;
         }
         dnsptr = ::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
         if (!dnsptr) {
@@ -1579,7 +1733,7 @@ NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostNa
         }
         IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
         srvList->AddrCount = 1;
-        srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
+        srvList->AddrArray[0] = inet_addr(wstr2str(dnssrvip).c_str());
     }
     PDNS_RECORD dnsrec = { 0 };
     DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;
@@ -1593,7 +1747,7 @@ NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostNa
     if (dnsrec) {
         char buf[INET6_ADDRSTRLEN] = { 0 };
         inet_ntop(AF_INET6, &dnsrec->Data.AAAA.Ip6Address, buf, INET6_ADDRSTRLEN);
-        ipAddr = str2wstr(buf);
+        ipV6Addr = str2wstr(buf);
     } else {
         SAFE_LOCALFREE(dnsptr);
         ::DnsRecordListFree(dnsrec, freetype);
@@ -1605,7 +1759,7 @@ NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostNa
 }
 
 NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::string objectName,
-    const DNSQueryOpts queryOptions, const DNSRecordType dnsRecordType, const std::wstring dnsAddr) {
+    const DNSQueryOpts queryOptions, const DNSRecordType dnsRecordType, const std::wstring dnsIPV4Addr) {
     PDNS_RECORD dnsrec = { 0 };
     queryResults = dnsrec;
     unsigned char addrtestres = isStringIP(objectName);
@@ -1613,10 +1767,32 @@ NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::string objectNa
         return NetOpResult::Fail;
     }
     void* dnsptr = 0;
-    if (dnsAddr.length()) {
-        unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    std::wstring dnssrvip;
+    if (dnsIPV4Addr.length()) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
         if (0 != dnssrvaddrtestres) {
-            return NetOpResult::Fail;
+            if (2 == dnssrvaddrtestres) {
+                bool fl = true;
+                HostNode hn;
+                if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                    for (size_t i = 0; i < hn.Address.size(); ++i) {
+                        if (0 == isStringIP(hn.Address[i].Address)) {
+                            dnssrvip = hn.Address[i].Address;
+                            fl = false;
+                            break;
+                        }
+                    }
+                    if (fl) {
+                        return NetOpResult::Fail;
+                    }
+                } else {
+                    return NetOpResult::Fail;
+                }
+            } else {
+                return NetOpResult::Fail;
+            }
+        } else {
+            dnssrvip = dnsIPV4Addr;
         }
         dnsptr = ::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
         if (!dnsptr) {
@@ -1624,7 +1800,7 @@ NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::string objectNa
         }
         IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
         srvList->AddrCount = 1;
-        srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
+        srvList->AddrArray[0] = inet_addr(wstr2str(dnssrvip).c_str());
     }
     DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;
     unsigned long dnsres = ::DnsQuery(str2wstr(objectName).c_str(), static_cast<unsigned short>(dnsRecordType),
@@ -1647,7 +1823,7 @@ NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::string objectNa
 }
 
 NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::wstring objectName,
-    const DNSQueryOpts queryOptions, const DNSRecordType dnsRecordType, const std::wstring dnsAddr) {
+    const DNSQueryOpts queryOptions, const DNSRecordType dnsRecordType, const std::wstring dnsIPV4Addr) {
     PDNS_RECORD dnsrec = { 0 };
     queryResults = dnsrec;
     unsigned char addrtestres = isStringIP(objectName);
@@ -1655,10 +1831,32 @@ NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::wstring objectN
         return NetOpResult::Fail;
     }
     void* dnsptr = 0;
-    if (dnsAddr.length()) {
-        unsigned char dnssrvaddrtestres = isStringIP(dnsAddr);
+    std::wstring dnssrvip;
+    if (dnsIPV4Addr.length()) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
         if (0 != dnssrvaddrtestres) {
-            return NetOpResult::Fail;
+            if (2 == dnssrvaddrtestres) {
+                bool fl = true;
+                HostNode hn;
+                if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                    for (size_t i = 0; i < hn.Address.size(); ++i) {
+                        if (0 == isStringIP(hn.Address[i].Address)) {
+                            dnssrvip = hn.Address[i].Address;
+                            fl = false;
+                            break;
+                        }
+                    }
+                    if (fl) {
+                        return NetOpResult::Fail;
+                    }
+                } else {
+                    return NetOpResult::Fail;
+                }
+            } else {
+                return NetOpResult::Fail;
+            }
+        } else {
+            dnssrvip = dnsIPV4Addr;
         }
         dnsptr = ::LocalAlloc(LPTR, sizeof(IP4_ARRAY));
         if (!dnsptr) {
@@ -1666,7 +1864,7 @@ NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::wstring objectN
         }
         IP4_ARRAY* srvList = (IP4_ARRAY*)dnsptr;
         srvList->AddrCount = 1;
-        srvList->AddrArray[0] = inet_addr(wstr2str(dnsAddr).c_str());
+        srvList->AddrArray[0] = inet_addr(wstr2str(dnssrvip).c_str());
     }
     DNS_FREE_TYPE freetype = ::DnsFreeRecordListDeep;
     unsigned long dnsres = ::DnsQuery(objectName.c_str(), static_cast<unsigned short>(dnsRecordType),
@@ -1688,14 +1886,14 @@ NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::wstring objectN
     return NetOpResult::Success;
 }
 
-NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
-    const DNSQueryOpts queryOptions, const std::string dnsAddr) {
+NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName,
+    const bool async, const DNSQueryOpts queryOptions, const std::string dnsIPV4Addr) {
     unsigned long Error = ERROR_SUCCESS;
     DNSQueryContext* QueryContext = 0;
     DNS_QUERY_REQUEST DnsQueryRequest;
+    DnsQueryRequest.pDnsServerList = 0;
     unsigned long QueryTimeout = 5000; // 5 seconds
     wchar_t ServerIp[MAX_PATH];
-    DNS_ADDR_ARRAY DnsServerList;
     QueryContext = (DNSQueryContext*)malloc(sizeof(DNSQueryContext));
     if (!QueryContext) {
         return NetOpResult::Fail;
@@ -1706,7 +1904,9 @@ NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std
     if (!QueryContext->QueryCompletedEvent) {
         if (!::InterlockedDecrement(&QueryContext->RefCount)) {
             // ::CloseHandle(QueryContext->QueryCompletedEvent);
-            SAFE_FREE(QueryContext);
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
     }
@@ -1719,14 +1919,47 @@ NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std
     DnsQueryRequest.QueryType = QueryContext->QueryType;
     DnsQueryRequest.QueryOptions = (unsigned long long)QueryContext->QueryOptions;
     DnsQueryRequest.pQueryContext = QueryContext;
-    DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
-    if (dnsAddr.length()) {
+    if (async) {
+        DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
+    } else {
+        DnsQueryRequest.pQueryCompletionCallback = 0;
+    }
+    if (dnsIPV4Addr.length()) {
         int sockAddrStorLen = sizeof(SOCKADDR_STORAGE);
-        unsigned char addrestestres = isStringIP(dnsAddr);
-        if (0 != addrestestres) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
+        std::wstring dnssrvip;
+        SOCKADDR_STORAGE sockAddr;
+        if (2 == dnssrvaddrtestres) {
+            bool fl = true;
+            HostNode hn;
+            if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                for (size_t i = 0; i < hn.Address.size(); ++i) {
+                    if (0 == isStringIP(hn.Address[i].Address)) {
+                        dnssrvip = hn.Address[i].Address;
+                        fl = false;
+                        break;
+                    }
+                }
+                if (fl) {
+                    if (QueryContext) {
+                        SAFE_FREE(QueryContext);
+                    }
+                    return NetOpResult::Fail;
+                }
+            } else {
+                if (QueryContext) {
+                    SAFE_FREE(QueryContext);
+                }
+                return NetOpResult::Fail;
+            }
+        } else if (0 == dnssrvaddrtestres) {
+            dnssrvip = str2wstr(dnsIPV4Addr);
+        } else {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
-        SOCKADDR_STORAGE sockAddr;
         if (!g_WSAStarted) {
             WSADATA wsd = { 0 };
             if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
@@ -1734,8 +1967,11 @@ NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std
             }
             g_WSAStarted = true;
         }
-        if (WSAStringToAddress((wchar_t*)dnsAddr.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr, &sockAddrStorLen)) {
-            SAFE_FREE(QueryContext);
+        if (WSAStringToAddress((wchar_t*)dnssrvip.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr,
+            &sockAddrStorLen)) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
         if (g_WSAStarted) {
@@ -1746,37 +1982,94 @@ NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std
                 g_WSAStarted = false;
             }
         }
-        DnsQueryRequest.pDnsServerList->MaxCount = DNS_ADDR_MAX_SOCKADDR_LENGTH;
+        DnsQueryRequest.pDnsServerList = (DNS_ADDR_ARRAY*)malloc(sizeof(DNS_ADDR_ARRAY));
+        if (!DnsQueryRequest.pDnsServerList) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        DnsQueryRequest.pDnsServerList = (DNS_ADDR_ARRAY*)malloc(sizeof(DNS_ADDR_ARRAY));
+        if (!DnsQueryRequest.pDnsServerList) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        DnsQueryRequest.pDnsServerList->MaxCount = 1; // DNS_ADDR_MAX_SOCKADDR_LENGTH;
         DnsQueryRequest.pDnsServerList->AddrCount = 1;
         memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
     }
     ::InterlockedIncrement(&QueryContext->RefCount);
     Error = ::DnsQueryEx(&DnsQueryRequest, &QueryContext->QueryResults, &QueryContext->QueryCancelContext);
-    if (DNS_REQUEST_PENDING != Error) {
-        DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
-        SAFE_FREE(QueryContext);
-        return NetOpResult::Fail;
+    if (async) {
+        if (DNS_REQUEST_PENDING != Error) {
+            DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    } else {
+        if (ERROR_SUCCESS != Error) {
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
     }
-    if (WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
-        DNS_QUERY_CANCEL queryCancel;
-        ::DnsCancelQuery(&QueryContext->QueryCancelContext);
-        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+    if (async) {
+        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout);
+        if (!QueryContext->QueryResults.pQueryRecords && WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
+            ::DnsCancelQuery(&QueryContext->QueryCancelContext);
+            ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+        }
     }
     if (!::InterlockedDecrement(&QueryContext->RefCount)) {
         if (QueryContext->QueryCompletedEvent) {
             ::CloseHandle(QueryContext->QueryCompletedEvent);
         }
-        SAFE_FREE(QueryContext);
+        if (QueryContext->QueryResults.pQueryRecords) {
+            ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+        }
+        if (DnsQueryRequest.pDnsServerList) {
+            SAFE_FREE(DnsQueryRequest.pDnsServerList);
+        }
+        if (QueryContext) {
+            SAFE_FREE(QueryContext);
+        }
         return NetOpResult::Fail;
     }
     if (QueryContext->QueryResults.pQueryRecords) {
+        size_t ind = 0;
         for (size_t i = 0; i < QueryContext->QueryResults.pQueryRecords->wDataLength; i += sizeof(DNS_RECORD)) {
-            char buf[32] = { 0 };
-            inet_ntop(AF_INET, &QueryContext->QueryResults.pQueryRecords[i].Data.A.IpAddress, buf, INET_ADDRSTRLEN);
+            char buf[INET_ADDRSTRLEN] = { 0 };
+            inet_ntop(AF_INET, &QueryContext->QueryResults.pQueryRecords[ind].Data.A.IpAddress, buf, INET_ADDRSTRLEN);
             ipAddrs.push_back(str2wstr(buf));
+            ++ind;
         }
     }
-    SAFE_FREE(QueryContext);
+    if (QueryContext->QueryResults.pQueryRecords) {
+        ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+    }
+    if (DnsQueryRequest.pDnsServerList) {
+        SAFE_FREE(DnsQueryRequest.pDnsServerList);
+    }
+    if (QueryContext) {
+        SAFE_FREE(QueryContext);
+    }
     if (ipAddrs.size()) {
         return NetOpResult::Success;
     } else {
@@ -1784,14 +2077,14 @@ NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std
     }
 }
 
-NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring>& ipAddrs, const std::wstring hostName,
-    const DNSQueryOpts queryOptions, const std::string dnsAddr) {
+NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
+    const bool async, const DNSQueryOpts queryOptions, const std::wstring dnsIPV4Addr) {
     unsigned long Error = ERROR_SUCCESS;
     DNSQueryContext* QueryContext = 0;
     DNS_QUERY_REQUEST DnsQueryRequest;
+    DnsQueryRequest.pDnsServerList = 0;
     unsigned long QueryTimeout = 5000; // 5 seconds
     wchar_t ServerIp[MAX_PATH];
-    DNS_ADDR_ARRAY DnsServerList;
     QueryContext = (DNSQueryContext*)malloc(sizeof(DNSQueryContext));
     if (!QueryContext) {
         return NetOpResult::Fail;
@@ -1802,7 +2095,200 @@ NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring>& ipAddrs, const std
     if (!QueryContext->QueryCompletedEvent) {
         if (!::InterlockedDecrement(&QueryContext->RefCount)) {
             // ::CloseHandle(QueryContext->QueryCompletedEvent);
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    }
+    wsprintf(QueryContext->QueryName, L"%s", hostName.c_str());
+    QueryContext->QueryType = static_cast<unsigned long>(DNSRecordType::ARec);
+    QueryContext->QueryOptions = static_cast<unsigned long>(queryOptions);
+    memset(&DnsQueryRequest, 0, sizeof(DNS_QUERY_REQUEST));
+    DnsQueryRequest.Version = DNS_QUERY_REQUEST_VERSION1;
+    DnsQueryRequest.QueryName = QueryContext->QueryName;
+    DnsQueryRequest.QueryType = QueryContext->QueryType;
+    DnsQueryRequest.QueryOptions = (unsigned long long)QueryContext->QueryOptions;
+    DnsQueryRequest.pQueryContext = QueryContext;
+    if (async) {
+        DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
+    } else {
+        DnsQueryRequest.pQueryCompletionCallback = 0;
+    }
+    if (dnsIPV4Addr.length()) {
+        int sockAddrStorLen = sizeof(SOCKADDR_STORAGE);
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
+        std::wstring dnssrvip;
+        SOCKADDR_STORAGE sockAddr;
+        if (2 == dnssrvaddrtestres) {
+            bool fl = true;
+            HostNode hn;
+            if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                for (size_t i = 0; i < hn.Address.size(); ++i) {
+                    if (0 == isStringIP(hn.Address[i].Address)) {
+                        dnssrvip = hn.Address[i].Address;
+                        fl = false;
+                        break;
+                    }
+                }
+                if (fl) {
+                    if (QueryContext) {
+                        SAFE_FREE(QueryContext);
+                    }
+                    return NetOpResult::Fail;
+                }
+            } else {
+                if (QueryContext) {
+                    SAFE_FREE(QueryContext);
+                }
+                return NetOpResult::Fail;
+            }
+        } else if(0 == dnssrvaddrtestres) {
+            dnssrvip = dnsIPV4Addr;
+        } else {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        if (!g_WSAStarted) {
+            WSADATA wsd = { 0 };
+            if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
+                return NetOpResult::Fail;
+            }
+            g_WSAStarted = true;
+        }
+        if (WSAStringToAddress((wchar_t*)dnssrvip.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr,
+            &sockAddrStorLen)) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        if (g_WSAStarted) {
+            if (::WSACleanup()) {
+                // handle WSACleanup error
+                // int wsaerr = WSAGetLastError();
+            } else {
+                g_WSAStarted = false;
+            }
+        }
+        DnsQueryRequest.pDnsServerList = (DNS_ADDR_ARRAY*)malloc(sizeof(DNS_ADDR_ARRAY));
+        if (!DnsQueryRequest.pDnsServerList) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        DnsQueryRequest.pDnsServerList = (DNS_ADDR_ARRAY*)malloc(sizeof(DNS_ADDR_ARRAY));
+        if (!DnsQueryRequest.pDnsServerList) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        DnsQueryRequest.pDnsServerList->MaxCount = 1; // DNS_ADDR_MAX_SOCKADDR_LENGTH;
+        DnsQueryRequest.pDnsServerList->AddrCount = 1;
+        memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
+    }
+    ::InterlockedIncrement(&QueryContext->RefCount);
+    Error = ::DnsQueryEx(&DnsQueryRequest, &QueryContext->QueryResults, &QueryContext->QueryCancelContext);
+    if (async) {
+        if (DNS_REQUEST_PENDING != Error) {
+            DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    } else {
+        if (ERROR_SUCCESS != Error) {
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    }
+    if (async) {
+        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout);
+        if (!QueryContext->QueryResults.pQueryRecords && WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
+            ::DnsCancelQuery(&QueryContext->QueryCancelContext);
+            ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+        }
+    }
+    if (!::InterlockedDecrement(&QueryContext->RefCount)) {
+        if (QueryContext->QueryCompletedEvent) {
+            ::CloseHandle(QueryContext->QueryCompletedEvent);
+        }
+        if (QueryContext->QueryResults.pQueryRecords) {
+            ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+        }
+        if (DnsQueryRequest.pDnsServerList) {
+            SAFE_FREE(DnsQueryRequest.pDnsServerList);
+        }
+        if (QueryContext) {
             SAFE_FREE(QueryContext);
+        }
+        return NetOpResult::Fail;
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        size_t ind = 0;
+        for (size_t i = 0; i < QueryContext->QueryResults.pQueryRecords->wDataLength; i += sizeof(DNS_RECORD)) {
+            char buf[INET_ADDRSTRLEN] = { 0 };
+            inet_ntop(AF_INET, &QueryContext->QueryResults.pQueryRecords[ind].Data.A.IpAddress, buf, INET_ADDRSTRLEN);
+            ipAddrs.push_back(str2wstr(buf));
+            ++ind;
+        }
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+    }
+    if (DnsQueryRequest.pDnsServerList) {
+        SAFE_FREE(DnsQueryRequest.pDnsServerList);
+    }
+    if (QueryContext) {
+        SAFE_FREE(QueryContext);
+    }
+    if (ipAddrs.size()) {
+        return NetOpResult::Success;
+    } else {
+        return NetOpResult::Fail;
+    }
+}
+
+NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName,
+    const bool async, const DNSQueryOpts queryOptions, const std::string dnsIPV4Addr) {
+    unsigned long Error = ERROR_SUCCESS;
+    DNSQueryContext* QueryContext = 0;
+    DNS_QUERY_REQUEST DnsQueryRequest;
+    DnsQueryRequest.pDnsServerList = 0;
+    unsigned long QueryTimeout = 5000; // 5 seconds
+    wchar_t ServerIp[MAX_PATH];
+    QueryContext = (DNSQueryContext*)malloc(sizeof(DNSQueryContext));
+    if (!QueryContext) {
+        return NetOpResult::Fail;
+    }
+    ::InterlockedIncrement(&QueryContext->RefCount);
+    QueryContext->QueryResults.Version = DNS_QUERY_RESULTS_VERSION1;
+    QueryContext->QueryCompletedEvent = CreateEvent(0, 1, 0, 0);
+    if (!QueryContext->QueryCompletedEvent) {
+        if (!::InterlockedDecrement(&QueryContext->RefCount)) {
+            // ::CloseHandle(QueryContext->QueryCompletedEvent);
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
     }
@@ -1815,90 +2301,151 @@ NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring>& ipAddrs, const std
     DnsQueryRequest.QueryType = QueryContext->QueryType;
     DnsQueryRequest.QueryOptions = (unsigned long long)QueryContext->QueryOptions;
     DnsQueryRequest.pQueryContext = QueryContext;
-    DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
-    if (dnsAddr.length()) {
+    if (async) {
+        DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
+    } else {
+        DnsQueryRequest.pQueryCompletionCallback = 0;
+    }
+    if (dnsIPV4Addr.length()) {
         int sockAddrStorLen = sizeof(SOCKADDR_STORAGE);
-        unsigned char addrestestres = isStringIP(dnsAddr);
-        if (0 == addrestestres) {
-            SOCKADDR_STORAGE sockAddr;
-            if (!g_WSAStarted) {
-                WSADATA wsd = { 0 };
-                if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
+        std::wstring dnssrvip;
+        SOCKADDR_STORAGE sockAddr;
+        if (2 == dnssrvaddrtestres) {
+            bool fl = true;
+            HostNode hn;
+            if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                for (size_t i = 0; i < hn.Address.size(); ++i) {
+                    if (0 == isStringIP(hn.Address[i].Address)) {
+                        dnssrvip = hn.Address[i].Address;
+                        fl = false;
+                        break;
+                    }
+                }
+                if (fl) {
+                    if (QueryContext) {
+                        SAFE_FREE(QueryContext);
+                    }
                     return NetOpResult::Fail;
                 }
-                g_WSAStarted = true;
-            }
-            if (WSAStringToAddress((wchar_t*)dnsAddr.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr, &sockAddrStorLen)) {
-                SAFE_FREE(QueryContext);
+            } else {
+                if (QueryContext) {
+                    SAFE_FREE(QueryContext);
+                }
                 return NetOpResult::Fail;
             }
-            if (g_WSAStarted) {
-                if (::WSACleanup()) {
-                    // handle WSACleanup error
-                    // int wsaerr = WSAGetLastError();
-                } else {
-                    g_WSAStarted = false;
-                }
-            }
-            DnsQueryRequest.pDnsServerList->MaxCount = 1;
-            DnsQueryRequest.pDnsServerList->AddrCount = 1;
-            memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
-        } else if (1 == addrestestres) {
-            SOCKADDR_STORAGE sockAddr;
-            if (!g_WSAStarted) {
-                WSADATA wsd = { 0 };
-                if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
-                    return NetOpResult::Fail;
-                }
-                g_WSAStarted = true;
-            }
-            if (WSAStringToAddress((wchar_t*)dnsAddr.c_str(), AF_INET6, 0, (LPSOCKADDR)&sockAddr, &sockAddrStorLen)) {
-                SAFE_FREE(QueryContext);
-                return NetOpResult::Fail;
-            }
-            if (g_WSAStarted) {
-                if (::WSACleanup()) {
-                    // handle WSACleanup error
-                    // int wsaerr = WSAGetLastError();
-                } else {
-                    g_WSAStarted = false;
-                }
-            }
-            DnsQueryRequest.pDnsServerList->MaxCount = 1;
-            DnsQueryRequest.pDnsServerList->AddrCount = 1;
-            memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
+        } else if (0 == dnssrvaddrtestres) {
+            dnssrvip = str2wstr(dnsIPV4Addr);
         } else {
-            SAFE_FREE(QueryContext);
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
+        if (!g_WSAStarted) {
+            WSADATA wsd = { 0 };
+            if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
+                return NetOpResult::Fail;
+            }
+            g_WSAStarted = true;
+        }
+        if (WSAStringToAddress((wchar_t*)dnssrvip.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr,
+            &sockAddrStorLen)) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        if (g_WSAStarted) {
+            if (::WSACleanup()) {
+                // handle WSACleanup error
+                // int wsaerr = WSAGetLastError();
+            } else {
+                g_WSAStarted = false;
+            }
+        }
+        DnsQueryRequest.pDnsServerList = (DNS_ADDR_ARRAY*)malloc(sizeof(DNS_ADDR_ARRAY));
+        if (!DnsQueryRequest.pDnsServerList) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        DnsQueryRequest.pDnsServerList->MaxCount = 1; // DNS_ADDR_MAX_SOCKADDR_LENGTH;
+        DnsQueryRequest.pDnsServerList->AddrCount = 1;
+        memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
     }
     ::InterlockedIncrement(&QueryContext->RefCount);
     Error = ::DnsQueryEx(&DnsQueryRequest, &QueryContext->QueryResults, &QueryContext->QueryCancelContext);
-    if (DNS_REQUEST_PENDING != Error) {
-        DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
-        SAFE_FREE(QueryContext);
-        return NetOpResult::Success;
+    if (async) {
+        if (DNS_REQUEST_PENDING != Error) {
+            DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    } else {
+        if (ERROR_SUCCESS != Error) {
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
     }
-    if (WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
-        ::DnsCancelQuery(&QueryContext->QueryCancelContext);
-        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+    if (async) {
+        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout);
+        if (!QueryContext->QueryResults.pQueryRecords && WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
+            ::DnsCancelQuery(&QueryContext->QueryCancelContext);
+            ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+        }
     }
     if (!::InterlockedDecrement(&QueryContext->RefCount)) {
         if (QueryContext->QueryCompletedEvent) {
             ::CloseHandle(QueryContext->QueryCompletedEvent);
         }
-        SAFE_FREE(QueryContext);
+        if (QueryContext->QueryResults.pQueryRecords) {
+            ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+        }
+        if (DnsQueryRequest.pDnsServerList) {
+            SAFE_FREE(DnsQueryRequest.pDnsServerList);
+        }
+        if (QueryContext) {
+            SAFE_FREE(QueryContext);
+        }
         return NetOpResult::Fail;
     }
     if (QueryContext->QueryResults.pQueryRecords) {
+        size_t ind = 0;
         char buf[INET6_ADDRSTRLEN] = { 0 };
         for (size_t i = 0; i < QueryContext->QueryResults.pQueryRecords->wDataLength; i += sizeof(DNS_RECORD)) {
             memset(buf, 0, INET6_ADDRSTRLEN * sizeof(char));
             inet_ntop(AF_INET6, &QueryContext->QueryResults.pQueryRecords[i].Data.AAAA.Ip6Address, buf, INET6_ADDRSTRLEN);
             ipAddrs.push_back(str2wstr(buf));
+            ++ind;
         }
     }
-    SAFE_FREE(QueryContext);
+    if (QueryContext->QueryResults.pQueryRecords) {
+        ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+    }
+    if (DnsQueryRequest.pDnsServerList) {
+        SAFE_FREE(DnsQueryRequest.pDnsServerList);
+    }
+    if (QueryContext) {
+        SAFE_FREE(QueryContext);
+    }
     if (ipAddrs.size()) {
         return NetOpResult::Success;
     } else {
@@ -1906,31 +2453,32 @@ NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring>& ipAddrs, const std
     }
 }
 
-NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &hostNames, const std::wstring ipAddr,
-    const DNSQueryOpts queryOptions, const std::wstring dnsAddr) {
+NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring>& ipAddrs, const std::wstring hostName,
+    const bool async, const DNSQueryOpts queryOptions, const std::wstring dnsIPV4Addr) {
     unsigned long Error = ERROR_SUCCESS;
     DNSQueryContext* QueryContext = 0;
     DNS_QUERY_REQUEST DnsQueryRequest;
+    DnsQueryRequest.pDnsServerList = 0;
     unsigned long QueryTimeout = 5000; // 5 seconds
-    DNS_ADDR_ARRAY DnsServerList;
-    // QueryContext = (DNSQueryContext*)::HeapAlloc(::GetProcessHeap(), 0, sizeof(DNSQueryContext));
+    wchar_t ServerIp[MAX_PATH];
     QueryContext = (DNSQueryContext*)malloc(sizeof(DNSQueryContext));
     if (!QueryContext) {
         return NetOpResult::Fail;
     }
     ::InterlockedIncrement(&QueryContext->RefCount);
     QueryContext->QueryResults.Version = DNS_QUERY_RESULTS_VERSION1;
-    std::wstring queryName = reverseIPV6_copy(ipAddr) + L".ip6.arpa";
-    wsprintf(QueryContext->QueryName, L"%s", queryName.c_str());
     QueryContext->QueryCompletedEvent = CreateEvent(0, 1, 0, 0);
     if (!QueryContext->QueryCompletedEvent) {
         if (!::InterlockedDecrement(&QueryContext->RefCount)) {
             // ::CloseHandle(QueryContext->QueryCompletedEvent);
-            SAFE_FREE(QueryContext);
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
     }
-    QueryContext->QueryType = static_cast<unsigned long>(DNSRecordType::PtrRec);
+    wsprintf(QueryContext->QueryName, L"%s", hostName.c_str());
+    QueryContext->QueryType = static_cast<unsigned long>(DNSRecordType::AAAARec);
     QueryContext->QueryOptions = static_cast<unsigned long>(queryOptions);
     memset(&DnsQueryRequest, 0, sizeof(DNS_QUERY_REQUEST));
     DnsQueryRequest.Version = DNS_QUERY_REQUEST_VERSION1;
@@ -1938,15 +2486,47 @@ NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &hostNames, c
     DnsQueryRequest.QueryType = QueryContext->QueryType;
     DnsQueryRequest.QueryOptions = (unsigned long long)QueryContext->QueryOptions;
     DnsQueryRequest.pQueryContext = QueryContext;
-    // DnsQueryRequest.pQueryCompletionCallback = 0;
-    DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
-    if (dnsAddr.length()) {
+    if (async) {
+        DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
+    } else {
+        DnsQueryRequest.pQueryCompletionCallback = 0;
+    }
+    if (dnsIPV4Addr.length()) {
         int sockAddrStorLen = sizeof(SOCKADDR_STORAGE);
-        unsigned char addrestestres = isStringIP(dnsAddr);
-        if (0 != addrestestres) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
+        std::wstring dnssrvip;
+        SOCKADDR_STORAGE sockAddr;
+        if (2 == dnssrvaddrtestres) {
+            bool fl = true;
+            HostNode hn;
+            if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                for (size_t i = 0; i < hn.Address.size(); ++i) {
+                    if (0 == isStringIP(hn.Address[i].Address)) {
+                        dnssrvip = hn.Address[i].Address;
+                        fl = false;
+                        break;
+                    }
+                }
+                if (fl) {
+                    if (QueryContext) {
+                        SAFE_FREE(QueryContext);
+                    }
+                    return NetOpResult::Fail;
+                }
+            } else {
+                if (QueryContext) {
+                    SAFE_FREE(QueryContext);
+                }
+                return NetOpResult::Fail;
+            }
+        } else if (0 == dnssrvaddrtestres) {
+            dnssrvip = dnsIPV4Addr;
+        } else {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
-        SOCKADDR_STORAGE sockAddr;
         if (!g_WSAStarted) {
             WSADATA wsd = { 0 };
             if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
@@ -1954,8 +2534,11 @@ NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &hostNames, c
             }
             g_WSAStarted = true;
         }
-        if (WSAStringToAddress((wchar_t*)dnsAddr.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr, &sockAddrStorLen)) {
-            SAFE_FREE(QueryContext);
+        if (WSAStringToAddress((wchar_t*)dnssrvip.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr,
+            &sockAddrStorLen)) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
         if (g_WSAStarted) {
@@ -1968,31 +2551,79 @@ NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &hostNames, c
         }
         DnsQueryRequest.pDnsServerList = (DNS_ADDR_ARRAY*)malloc(sizeof(DNS_ADDR_ARRAY));
         if (!DnsQueryRequest.pDnsServerList) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
-        DnsQueryRequest.pDnsServerList->MaxCount = sizeof(DNS_ADDR_ARRAY); // 1;
+        DnsQueryRequest.pDnsServerList->MaxCount = 1; // DNS_ADDR_MAX_SOCKADDR_LENGTH;
         DnsQueryRequest.pDnsServerList->AddrCount = 1;
         memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
     }
     ::InterlockedIncrement(&QueryContext->RefCount);
     Error = ::DnsQueryEx(&DnsQueryRequest, &QueryContext->QueryResults, &QueryContext->QueryCancelContext);
-    if (DNS_REQUEST_PENDING != Error) {
-        DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
-        SAFE_FREE(DnsQueryRequest.pDnsServerList);
-        SAFE_FREE(QueryContext);
-        return NetOpResult::Fail;
+    if (async) {
+        if (DNS_REQUEST_PENDING != Error) {
+            DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    } else {
+        if (ERROR_SUCCESS != Error) {
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
     }
-    if (WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
-        ::DnsCancelQuery(&QueryContext->QueryCancelContext);
-        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+    if (async) {
+        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout);
+        if (!QueryContext->QueryResults.pQueryRecords && WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
+            ::DnsCancelQuery(&QueryContext->QueryCancelContext);
+            ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+        }
     }
     if (!::InterlockedDecrement(&QueryContext->RefCount)) {
         if (QueryContext->QueryCompletedEvent) {
             ::CloseHandle(QueryContext->QueryCompletedEvent);
         }
-        SAFE_FREE(DnsQueryRequest.pDnsServerList);
-        SAFE_FREE(QueryContext);
+        if (QueryContext->QueryResults.pQueryRecords) {
+            ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+        }
+        if (DnsQueryRequest.pDnsServerList) {
+            SAFE_FREE(DnsQueryRequest.pDnsServerList);
+        }
+        if (QueryContext) {
+            SAFE_FREE(QueryContext);
+        }
         return NetOpResult::Fail;
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        size_t ind = 0;
+        char buf[INET6_ADDRSTRLEN] = { 0 };
+        for (size_t i = 0; i < QueryContext->QueryResults.pQueryRecords->wDataLength; i += sizeof(DNS_RECORD)) {
+            memset(buf, 0, INET6_ADDRSTRLEN * sizeof(char));
+            inet_ntop(AF_INET6, &QueryContext->QueryResults.pQueryRecords[i].Data.AAAA.Ip6Address, buf, INET6_ADDRSTRLEN);
+            ipAddrs.push_back(str2wstr(buf));
+            ++ind;
+        }
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
     }
     if (DnsQueryRequest.pDnsServerList) {
         SAFE_FREE(DnsQueryRequest.pDnsServerList);
@@ -2000,37 +2631,42 @@ NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &hostNames, c
     if (QueryContext) {
         SAFE_FREE(QueryContext);
     }
-    if (hostNames.size()) {
+    if (ipAddrs.size()) {
         return NetOpResult::Success;
     } else {
         return NetOpResult::Fail;
     }
 }
 
-NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostNames, const std::wstring ipAddr,
-    const DNSQueryOpts queryOptions, const std::string dnsAddr) {
+NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostNames, const std::string ipV4Addr,
+    const bool async, const DNSQueryOpts queryOptions, const std::string dnsIPV4Addr) {
+    if (0 != isStringIP(ipV4Addr)) {
+        return NetOpResult::Fail;
+    }
     unsigned long Error = ERROR_SUCCESS;
     DNSQueryContext* QueryContext = 0;
     DNS_QUERY_REQUEST DnsQueryRequest;
+    DnsQueryRequest.pDnsServerList = 0;
     unsigned long QueryTimeout = 5000; // 5 seconds
     wchar_t ServerIp[MAX_PATH];
-    DNS_ADDR_ARRAY DnsServerList;
     QueryContext = (DNSQueryContext*)malloc(sizeof(DNSQueryContext));
     if (!QueryContext) {
         return NetOpResult::Fail;
     }
     ::InterlockedIncrement(&QueryContext->RefCount);
     QueryContext->QueryResults.Version = DNS_QUERY_RESULTS_VERSION1;
-    std::wstring queryName = reverseIPV4_copy(ipAddr) + L".in-addr.arpa";
-    wsprintf(QueryContext->QueryName, L"%s", queryName.c_str());
     QueryContext->QueryCompletedEvent = CreateEvent(0, 1, 0, 0);
     if (!QueryContext->QueryCompletedEvent) {
         if (!::InterlockedDecrement(&QueryContext->RefCount)) {
             // ::CloseHandle(QueryContext->QueryCompletedEvent);
-            SAFE_FREE(QueryContext);
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
     }
+    std::wstring addrrev = reverseIPV4_copy(str2wstr(ipV4Addr)) + L".in-addr.arpa";
+    wsprintf(QueryContext->QueryName, L"%s", addrrev.c_str());
     QueryContext->QueryType = static_cast<unsigned long>(DNSRecordType::PtrRec);
     QueryContext->QueryOptions = static_cast<unsigned long>(queryOptions);
     memset(&DnsQueryRequest, 0, sizeof(DNS_QUERY_REQUEST));
@@ -2039,14 +2675,47 @@ NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostNames, c
     DnsQueryRequest.QueryType = QueryContext->QueryType;
     DnsQueryRequest.QueryOptions = (unsigned long long)QueryContext->QueryOptions;
     DnsQueryRequest.pQueryContext = QueryContext;
-    DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
-    if (dnsAddr.length()) {
+    if (async) {
+        DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
+    } else {
+        DnsQueryRequest.pQueryCompletionCallback = 0;
+    }
+    if (dnsIPV4Addr.length()) {
         int sockAddrStorLen = sizeof(SOCKADDR_STORAGE);
-        unsigned char addrestestres = isStringIP(dnsAddr);
-        if (0 != addrestestres) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
+        std::wstring dnssrvip;
+        SOCKADDR_STORAGE sockAddr;
+        if (2 == dnssrvaddrtestres) {
+            bool fl = true;
+            HostNode hn;
+            if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                for (size_t i = 0; i < hn.Address.size(); ++i) {
+                    if (0 == isStringIP(hn.Address[i].Address)) {
+                        dnssrvip = hn.Address[i].Address;
+                        fl = false;
+                        break;
+                    }
+                }
+                if (fl) {
+                    if (QueryContext) {
+                        SAFE_FREE(QueryContext);
+                    }
+                    return NetOpResult::Fail;
+                }
+            } else {
+                if (QueryContext) {
+                    SAFE_FREE(QueryContext);
+                }
+                return NetOpResult::Fail;
+            }
+        } else if (0 == dnssrvaddrtestres) {
+            dnssrvip = str2wstr(dnsIPV4Addr);
+        } else {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
-        SOCKADDR_STORAGE sockAddr;
         if (!g_WSAStarted) {
             WSADATA wsd = { 0 };
             if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
@@ -2054,8 +2723,11 @@ NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostNames, c
             }
             g_WSAStarted = true;
         }
-        if (WSAStringToAddress((wchar_t*)dnsAddr.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr, &sockAddrStorLen)) {
-            SAFE_FREE(QueryContext);
+        if (WSAStringToAddress((wchar_t*)dnssrvip.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr,
+            &sockAddrStorLen)) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
         if (g_WSAStarted) {
@@ -2068,38 +2740,76 @@ NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostNames, c
         }
         DnsQueryRequest.pDnsServerList = (DNS_ADDR_ARRAY*)malloc(sizeof(DNS_ADDR_ARRAY));
         if (!DnsQueryRequest.pDnsServerList) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
-        DnsQueryRequest.pDnsServerList->MaxCount = sizeof(DNS_ADDR_ARRAY); // 1;
+        DnsQueryRequest.pDnsServerList->MaxCount = 1; // DNS_ADDR_MAX_SOCKADDR_LENGTH;
         DnsQueryRequest.pDnsServerList->AddrCount = 1;
         memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
     }
     ::InterlockedIncrement(&QueryContext->RefCount);
     Error = ::DnsQueryEx(&DnsQueryRequest, &QueryContext->QueryResults, &QueryContext->QueryCancelContext);
-    if (DNS_REQUEST_PENDING != Error) {
-        DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
-        SAFE_FREE(DnsQueryRequest.pDnsServerList);
-        SAFE_FREE(QueryContext);
-        return NetOpResult::Fail;
+    if (async) {
+        if (DNS_REQUEST_PENDING != Error) {
+            DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    } else {
+        if (ERROR_SUCCESS != Error) {
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
     }
-    if (WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
-        ::DnsCancelQuery(&QueryContext->QueryCancelContext);
-        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+    if (async) {
+        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout);
+        if (!QueryContext->QueryResults.pQueryRecords && WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
+            ::DnsCancelQuery(&QueryContext->QueryCancelContext);
+            ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+        }
     }
     if (!::InterlockedDecrement(&QueryContext->RefCount)) {
         if (QueryContext->QueryCompletedEvent) {
             ::CloseHandle(QueryContext->QueryCompletedEvent);
         }
-        SAFE_FREE(DnsQueryRequest.pDnsServerList);
-        SAFE_FREE(QueryContext);
+        if (QueryContext->QueryResults.pQueryRecords) {
+            ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+        }
+        if (DnsQueryRequest.pDnsServerList) {
+            SAFE_FREE(DnsQueryRequest.pDnsServerList);
+        }
+        if (QueryContext) {
+            SAFE_FREE(QueryContext);
+        }
         return NetOpResult::Fail;
     }
     if (QueryContext->QueryResults.pQueryRecords) {
         size_t ind = 0;
         for (size_t i = 0; i < QueryContext->QueryResults.pQueryRecords->wDataLength; i += sizeof(DNS_RECORD)) {
-            hostNames.push_back(QueryContext->QueryResults.pQueryRecords[ind].Data.Ptr.pNameHost);
+            hostNames.push_back(QueryContext->QueryResults.pQueryRecords[ind].Data.PTR.pNameHost);
             ++ind;
         }
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
     }
     if (DnsQueryRequest.pDnsServerList) {
         SAFE_FREE(DnsQueryRequest.pDnsServerList);
@@ -2114,30 +2824,590 @@ NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostNames, c
     }
 }
 
-NetOpResult customDNSQueryEx(PDNS_RECORD &queryResults, const std::wstring queryName,
-    const DNSQueryOpts queryOptions, const DNSRecordType dnsRecordType,
-    const std::wstring dnsAddr) {
+NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring>& hostNames, const std::wstring ipV4Addr,
+    const bool async, const DNSQueryOpts queryOptions, const std::wstring dnsIPV4Addr) {
+    if (0 != isStringIP(ipV4Addr)) {
+        return NetOpResult::Fail;
+    }
     unsigned long Error = ERROR_SUCCESS;
     DNSQueryContext* QueryContext = 0;
     DNS_QUERY_REQUEST DnsQueryRequest;
+    DnsQueryRequest.pDnsServerList = 0;
     unsigned long QueryTimeout = 5000; // 5 seconds
     wchar_t ServerIp[MAX_PATH];
-    DNS_ADDR_ARRAY DnsServerList;
     QueryContext = (DNSQueryContext*)malloc(sizeof(DNSQueryContext));
     if (!QueryContext) {
         return NetOpResult::Fail;
     }
     ::InterlockedIncrement(&QueryContext->RefCount);
     QueryContext->QueryResults.Version = DNS_QUERY_RESULTS_VERSION1;
-    wsprintf(QueryContext->QueryName, L"%s", queryName.c_str());
     QueryContext->QueryCompletedEvent = CreateEvent(0, 1, 0, 0);
     if (!QueryContext->QueryCompletedEvent) {
         if (!::InterlockedDecrement(&QueryContext->RefCount)) {
             // ::CloseHandle(QueryContext->QueryCompletedEvent);
-            SAFE_FREE(QueryContext);
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
     }
+    std::wstring addrrev = reverseIPV4_copy(ipV4Addr) + L".in-addr.arpa";
+    wsprintf(QueryContext->QueryName, L"%s", addrrev.c_str());
+    QueryContext->QueryType = static_cast<unsigned long>(DNSRecordType::PtrRec);
+    QueryContext->QueryOptions = static_cast<unsigned long>(queryOptions);
+    memset(&DnsQueryRequest, 0, sizeof(DNS_QUERY_REQUEST));
+    DnsQueryRequest.Version = DNS_QUERY_REQUEST_VERSION1;
+    DnsQueryRequest.QueryName = QueryContext->QueryName;
+    DnsQueryRequest.QueryType = QueryContext->QueryType;
+    DnsQueryRequest.QueryOptions = (unsigned long long)QueryContext->QueryOptions;
+    DnsQueryRequest.pQueryContext = QueryContext;
+    if (async) {
+        DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
+    } else {
+        DnsQueryRequest.pQueryCompletionCallback = 0;
+    }
+    if (dnsIPV4Addr.length()) {
+        int sockAddrStorLen = sizeof(SOCKADDR_STORAGE);
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
+        std::wstring dnssrvip;
+        SOCKADDR_STORAGE sockAddr;
+        if (2 == dnssrvaddrtestres) {
+            bool fl = true;
+            HostNode hn;
+            if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                for (size_t i = 0; i < hn.Address.size(); ++i) {
+                    if (0 == isStringIP(hn.Address[i].Address)) {
+                        dnssrvip = hn.Address[i].Address;
+                        fl = false;
+                        break;
+                    }
+                }
+                if (fl) {
+                    if (QueryContext) {
+                        SAFE_FREE(QueryContext);
+                    }
+                    return NetOpResult::Fail;
+                }
+            } else {
+                if (QueryContext) {
+                    SAFE_FREE(QueryContext);
+                }
+                return NetOpResult::Fail;
+            }
+        } else if (0 == dnssrvaddrtestres) {
+            dnssrvip = dnsIPV4Addr;
+        } else {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        if (!g_WSAStarted) {
+            WSADATA wsd = { 0 };
+            if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
+                return NetOpResult::Fail;
+            }
+            g_WSAStarted = true;
+        }
+        if (WSAStringToAddress((wchar_t*)dnssrvip.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr,
+            &sockAddrStorLen)) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        if (g_WSAStarted) {
+            if (::WSACleanup()) {
+                // handle WSACleanup error
+                // int wsaerr = WSAGetLastError();
+            } else {
+                g_WSAStarted = false;
+            }
+        }
+        DnsQueryRequest.pDnsServerList = (DNS_ADDR_ARRAY*)malloc(sizeof(DNS_ADDR_ARRAY));
+        if (!DnsQueryRequest.pDnsServerList) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        DnsQueryRequest.pDnsServerList->MaxCount = 1; // DNS_ADDR_MAX_SOCKADDR_LENGTH;
+        DnsQueryRequest.pDnsServerList->AddrCount = 1;
+        memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
+    }
+    ::InterlockedIncrement(&QueryContext->RefCount);
+    Error = ::DnsQueryEx(&DnsQueryRequest, &QueryContext->QueryResults, &QueryContext->QueryCancelContext);
+    if (async) {
+        if (DNS_REQUEST_PENDING != Error) {
+            DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    } else {
+        if (ERROR_SUCCESS != Error) {
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    }
+    if (async) {
+        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout);
+        if (!QueryContext->QueryResults.pQueryRecords && WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
+            ::DnsCancelQuery(&QueryContext->QueryCancelContext);
+            ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+        }
+    }
+    if (!::InterlockedDecrement(&QueryContext->RefCount)) {
+        if (QueryContext->QueryCompletedEvent) {
+            ::CloseHandle(QueryContext->QueryCompletedEvent);
+        }
+        if (QueryContext->QueryResults.pQueryRecords) {
+            ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+        }
+        if (DnsQueryRequest.pDnsServerList) {
+            SAFE_FREE(DnsQueryRequest.pDnsServerList);
+        }
+        if (QueryContext) {
+            SAFE_FREE(QueryContext);
+        }
+        return NetOpResult::Fail;
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        size_t ind = 0;
+        for (size_t i = 0; i < QueryContext->QueryResults.pQueryRecords->wDataLength; i += sizeof(DNS_RECORD)) {
+            hostNames.push_back(QueryContext->QueryResults.pQueryRecords[ind].Data.PTR.pNameHost);
+            ++ind;
+        }
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+    }
+    if (DnsQueryRequest.pDnsServerList) {
+        SAFE_FREE(DnsQueryRequest.pDnsServerList);
+    }
+    if (QueryContext) {
+        SAFE_FREE(QueryContext);
+    }
+    if (hostNames.size()) {
+        return NetOpResult::Success;
+    } else {
+        return NetOpResult::Fail;
+    }
+}
+
+NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &hostNames, const std::string ipV6Addr,
+    const bool async, const DNSQueryOpts queryOptions, const std::string dnsIPV4Addr) {
+    if (1 != isStringIP(ipV6Addr)) {
+        return NetOpResult::Fail;
+    }
+    unsigned long Error = ERROR_SUCCESS;
+    DNSQueryContext* QueryContext = 0;
+    DNS_QUERY_REQUEST DnsQueryRequest;
+    DnsQueryRequest.pDnsServerList = 0;
+    unsigned long QueryTimeout = 5000; // 5 seconds
+    wchar_t ServerIp[MAX_PATH];
+    QueryContext = (DNSQueryContext*)malloc(sizeof(DNSQueryContext));
+    if (!QueryContext) {
+        return NetOpResult::Fail;
+    }
+    ::InterlockedIncrement(&QueryContext->RefCount);
+    QueryContext->QueryResults.Version = DNS_QUERY_RESULTS_VERSION1;
+    QueryContext->QueryCompletedEvent = CreateEvent(0, 1, 0, 0);
+    if (!QueryContext->QueryCompletedEvent) {
+        if (!::InterlockedDecrement(&QueryContext->RefCount)) {
+            // ::CloseHandle(QueryContext->QueryCompletedEvent);
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    }
+    std::wstring addrrev = reverseIPV6_copy(str2wstr(ipV6Addr)) + L".ip6.arpa";
+    wsprintf(QueryContext->QueryName, L"%s", addrrev.c_str());
+    QueryContext->QueryType = static_cast<unsigned long>(DNSRecordType::PtrRec);
+    QueryContext->QueryOptions = static_cast<unsigned long>(queryOptions);
+    memset(&DnsQueryRequest, 0, sizeof(DNS_QUERY_REQUEST));
+    DnsQueryRequest.Version = DNS_QUERY_REQUEST_VERSION1;
+    DnsQueryRequest.QueryName = QueryContext->QueryName;
+    DnsQueryRequest.QueryType = QueryContext->QueryType;
+    DnsQueryRequest.QueryOptions = (unsigned long long)QueryContext->QueryOptions;
+    DnsQueryRequest.pQueryContext = QueryContext;
+    if (async) {
+        DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
+    } else {
+        DnsQueryRequest.pQueryCompletionCallback = 0;
+    }
+    if (dnsIPV4Addr.length()) {
+        int sockAddrStorLen = sizeof(SOCKADDR_STORAGE);
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
+        std::wstring dnssrvip;
+        SOCKADDR_STORAGE sockAddr;
+        if (2 == dnssrvaddrtestres) {
+            bool fl = true;
+            HostNode hn;
+            if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                for (size_t i = 0; i < hn.Address.size(); ++i) {
+                    if (0 == isStringIP(hn.Address[i].Address)) {
+                        dnssrvip = hn.Address[i].Address;
+                        fl = false;
+                        break;
+                    }
+                }
+                if (fl) {
+                    if (QueryContext) {
+                        SAFE_FREE(QueryContext);
+                    }
+                    return NetOpResult::Fail;
+                }
+            } else {
+                if (QueryContext) {
+                    SAFE_FREE(QueryContext);
+                }
+                return NetOpResult::Fail;
+            }
+        } else if (0 == dnssrvaddrtestres) {
+            dnssrvip = str2wstr(dnsIPV4Addr);
+        } else {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        if (!g_WSAStarted) {
+            WSADATA wsd = { 0 };
+            if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
+                return NetOpResult::Fail;
+            }
+            g_WSAStarted = true;
+        }
+        if (WSAStringToAddress((wchar_t*)dnssrvip.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr,
+            &sockAddrStorLen)) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        if (g_WSAStarted) {
+            if (::WSACleanup()) {
+                // handle WSACleanup error
+                // int wsaerr = WSAGetLastError();
+            } else {
+                g_WSAStarted = false;
+            }
+        }
+        DnsQueryRequest.pDnsServerList = (DNS_ADDR_ARRAY*)malloc(sizeof(DNS_ADDR_ARRAY));
+        if (!DnsQueryRequest.pDnsServerList) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        DnsQueryRequest.pDnsServerList->MaxCount = 1; // DNS_ADDR_MAX_SOCKADDR_LENGTH;
+        DnsQueryRequest.pDnsServerList->AddrCount = 1;
+        memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
+    }
+    ::InterlockedIncrement(&QueryContext->RefCount);
+    Error = ::DnsQueryEx(&DnsQueryRequest, &QueryContext->QueryResults, &QueryContext->QueryCancelContext);
+    if (async) {
+        if (DNS_REQUEST_PENDING != Error) {
+            DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    } else {
+        if (ERROR_SUCCESS != Error) {
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    }
+    if (async) {
+        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout);
+        if (!QueryContext->QueryResults.pQueryRecords && WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
+            ::DnsCancelQuery(&QueryContext->QueryCancelContext);
+            ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+        }
+    }
+    if (!::InterlockedDecrement(&QueryContext->RefCount)) {
+        if (QueryContext->QueryCompletedEvent) {
+            ::CloseHandle(QueryContext->QueryCompletedEvent);
+        }
+        if (QueryContext->QueryResults.pQueryRecords) {
+            ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+        }
+        if (DnsQueryRequest.pDnsServerList) {
+            SAFE_FREE(DnsQueryRequest.pDnsServerList);
+        }
+        if (QueryContext) {
+            SAFE_FREE(QueryContext);
+        }
+        return NetOpResult::Fail;
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        size_t ind = 0;
+        for (size_t i = 0; i < QueryContext->QueryResults.pQueryRecords->wDataLength; i += sizeof(DNS_RECORD)) {
+            hostNames.push_back(QueryContext->QueryResults.pQueryRecords[ind].Data.PTR.pNameHost);
+            ++ind;
+        }
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+    }
+    if (DnsQueryRequest.pDnsServerList) {
+        SAFE_FREE(DnsQueryRequest.pDnsServerList);
+    }
+    if (QueryContext) {
+        SAFE_FREE(QueryContext);
+    }
+    if (hostNames.size()) {
+        return NetOpResult::Success;
+    } else {
+        return NetOpResult::Fail;
+    }
+}
+
+NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &hostNames, const std::wstring ipV6Addr,
+    const bool async, const DNSQueryOpts queryOptions, const std::wstring dnsIPV4Addr) {
+    if (1 != isStringIP(ipV6Addr)) {
+        return NetOpResult::Fail;
+    }
+    unsigned long Error = ERROR_SUCCESS;
+    DNSQueryContext* QueryContext = 0;
+    DNS_QUERY_REQUEST DnsQueryRequest;
+    DnsQueryRequest.pDnsServerList = 0;
+    unsigned long QueryTimeout = 5000; // 5 seconds
+    wchar_t ServerIp[MAX_PATH];
+    QueryContext = (DNSQueryContext*)malloc(sizeof(DNSQueryContext));
+    if (!QueryContext) {
+        return NetOpResult::Fail;
+    }
+    ::InterlockedIncrement(&QueryContext->RefCount);
+    QueryContext->QueryResults.Version = DNS_QUERY_RESULTS_VERSION1;
+    QueryContext->QueryCompletedEvent = CreateEvent(0, 1, 0, 0);
+    if (!QueryContext->QueryCompletedEvent) {
+        if (!::InterlockedDecrement(&QueryContext->RefCount)) {
+            // ::CloseHandle(QueryContext->QueryCompletedEvent);
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    }
+    std::wstring addrrev = reverseIPV6_copy(ipV6Addr) + L".ip6.arpa";
+    wsprintf(QueryContext->QueryName, L"%s", addrrev.c_str());
+    QueryContext->QueryType = static_cast<unsigned long>(DNSRecordType::PtrRec);
+    QueryContext->QueryOptions = static_cast<unsigned long>(queryOptions);
+    memset(&DnsQueryRequest, 0, sizeof(DNS_QUERY_REQUEST));
+    DnsQueryRequest.Version = DNS_QUERY_REQUEST_VERSION1;
+    DnsQueryRequest.QueryName = QueryContext->QueryName;
+    DnsQueryRequest.QueryType = QueryContext->QueryType;
+    DnsQueryRequest.QueryOptions = (unsigned long long)QueryContext->QueryOptions;
+    DnsQueryRequest.pQueryContext = QueryContext;
+    if (async) {
+        DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
+    } else {
+        DnsQueryRequest.pQueryCompletionCallback = 0;
+    }
+    if (dnsIPV4Addr.length()) {
+        int sockAddrStorLen = sizeof(SOCKADDR_STORAGE);
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
+        std::wstring dnssrvip;
+        SOCKADDR_STORAGE sockAddr;
+        if (2 == dnssrvaddrtestres) {
+            bool fl = true;
+            HostNode hn;
+            if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                for (size_t i = 0; i < hn.Address.size(); ++i) {
+                    if (0 == isStringIP(hn.Address[i].Address)) {
+                        dnssrvip = hn.Address[i].Address;
+                        fl = false;
+                        break;
+                    }
+                }
+                if (fl) {
+                    if (QueryContext) {
+                        SAFE_FREE(QueryContext);
+                    }
+                    return NetOpResult::Fail;
+                }
+            } else {
+                if (QueryContext) {
+                    SAFE_FREE(QueryContext);
+                }
+                return NetOpResult::Fail;
+            }
+        } else if (0 == dnssrvaddrtestres) {
+            dnssrvip = dnsIPV4Addr;
+        } else {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        if (!g_WSAStarted) {
+            WSADATA wsd = { 0 };
+            if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
+                return NetOpResult::Fail;
+            }
+            g_WSAStarted = true;
+        }
+        if (WSAStringToAddress((wchar_t*)dnssrvip.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr,
+            &sockAddrStorLen)) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        if (g_WSAStarted) {
+            if (::WSACleanup()) {
+                // handle WSACleanup error
+                // int wsaerr = WSAGetLastError();
+            } else {
+                g_WSAStarted = false;
+            }
+        }
+        DnsQueryRequest.pDnsServerList = (DNS_ADDR_ARRAY*)malloc(sizeof(DNS_ADDR_ARRAY));
+        if (!DnsQueryRequest.pDnsServerList) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        DnsQueryRequest.pDnsServerList->MaxCount = 1; // DNS_ADDR_MAX_SOCKADDR_LENGTH;
+        DnsQueryRequest.pDnsServerList->AddrCount = 1;
+        memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
+    }
+    ::InterlockedIncrement(&QueryContext->RefCount);
+    Error = ::DnsQueryEx(&DnsQueryRequest, &QueryContext->QueryResults, &QueryContext->QueryCancelContext);
+    if (async) {
+        if (DNS_REQUEST_PENDING != Error) {
+            DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    } else {
+        if (ERROR_SUCCESS != Error) {
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    }
+    if (async) {
+        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout);
+        if (!QueryContext->QueryResults.pQueryRecords && WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
+            ::DnsCancelQuery(&QueryContext->QueryCancelContext);
+            ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+        }
+    }
+    if (!::InterlockedDecrement(&QueryContext->RefCount)) {
+        if (QueryContext->QueryCompletedEvent) {
+            ::CloseHandle(QueryContext->QueryCompletedEvent);
+        }
+        if (QueryContext->QueryResults.pQueryRecords) {
+            ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+        }
+        if (DnsQueryRequest.pDnsServerList) {
+            SAFE_FREE(DnsQueryRequest.pDnsServerList);
+        }
+        if (QueryContext) {
+            SAFE_FREE(QueryContext);
+        }
+        return NetOpResult::Fail;
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        size_t ind = 0;
+        for (size_t i = 0; i < QueryContext->QueryResults.pQueryRecords->wDataLength; i += sizeof(DNS_RECORD)) {
+            hostNames.push_back(QueryContext->QueryResults.pQueryRecords[ind].Data.PTR.pNameHost);
+            ++ind;
+        }
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+    }
+    if (DnsQueryRequest.pDnsServerList) {
+        SAFE_FREE(DnsQueryRequest.pDnsServerList);
+    }
+    if (QueryContext) {
+        SAFE_FREE(QueryContext);
+    }
+    if (hostNames.size()) {
+        return NetOpResult::Success;
+    } else {
+        return NetOpResult::Fail;
+    }
+}
+
+NetOpResult customDNSQueryEx(std::vector<DNS_RECORD> &queryResults, const std::string objectName,
+    const bool async, const DNSQueryOpts queryOptions, const DNSRecordType dnsRecordType,
+    const std::string dnsIPV4Addr) {
+    unsigned long Error = ERROR_SUCCESS;
+    DNSQueryContext* QueryContext = 0;
+    DNS_QUERY_REQUEST DnsQueryRequest;
+    DnsQueryRequest.pDnsServerList = 0;
+    unsigned long QueryTimeout = 5000; // 5 seconds
+    wchar_t ServerIp[MAX_PATH];
+    QueryContext = (DNSQueryContext*)malloc(sizeof(DNSQueryContext));
+    if (!QueryContext) {
+        return NetOpResult::Fail;
+    }
+    ::InterlockedIncrement(&QueryContext->RefCount);
+    QueryContext->QueryResults.Version = DNS_QUERY_RESULTS_VERSION1;
+    QueryContext->QueryCompletedEvent = CreateEvent(0, 1, 0, 0);
+    if (!QueryContext->QueryCompletedEvent) {
+        if (!::InterlockedDecrement(&QueryContext->RefCount)) {
+            // ::CloseHandle(QueryContext->QueryCompletedEvent);
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    }
+    wsprintf(QueryContext->QueryName, L"%s", objectName.c_str());
     QueryContext->QueryType = static_cast<unsigned long>(dnsRecordType);
     QueryContext->QueryOptions = static_cast<unsigned long>(queryOptions);
     memset(&DnsQueryRequest, 0, sizeof(DNS_QUERY_REQUEST));
@@ -2146,88 +3416,334 @@ NetOpResult customDNSQueryEx(PDNS_RECORD &queryResults, const std::wstring query
     DnsQueryRequest.QueryType = QueryContext->QueryType;
     DnsQueryRequest.QueryOptions = (unsigned long long)QueryContext->QueryOptions;
     DnsQueryRequest.pQueryContext = QueryContext;
-    DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
-    if (dnsAddr.length()) {
+    if (async) {
+        DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
+    } else {
+        DnsQueryRequest.pQueryCompletionCallback = 0;
+    }
+    if (dnsIPV4Addr.length()) {
         int sockAddrStorLen = sizeof(SOCKADDR_STORAGE);
-        unsigned char addrestestres = isStringIP(dnsAddr);
-        if (0 == addrestestres) {
-            SOCKADDR_STORAGE sockAddr;
-            if (!g_WSAStarted) {
-                WSADATA wsd = { 0 };
-                if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
+        std::wstring dnssrvip;
+        SOCKADDR_STORAGE sockAddr;
+        if (2 == dnssrvaddrtestres) {
+            bool fl = true;
+            HostNode hn;
+            if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                for (size_t i = 0; i < hn.Address.size(); ++i) {
+                    if (0 == isStringIP(hn.Address[i].Address)) {
+                        dnssrvip = hn.Address[i].Address;
+                        fl = false;
+                        break;
+                    }
+                }
+                if (fl) {
+                    if (QueryContext) {
+                        SAFE_FREE(QueryContext);
+                    }
                     return NetOpResult::Fail;
                 }
-                g_WSAStarted = true;
-            }
-            if (WSAStringToAddress((wchar_t*)dnsAddr.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr, &sockAddrStorLen)) {
-                SAFE_FREE(QueryContext);
+            } else {
+                if (QueryContext) {
+                    SAFE_FREE(QueryContext);
+                }
                 return NetOpResult::Fail;
             }
-            if (g_WSAStarted) {
-                if (::WSACleanup()) {
-                    // handle WSACleanup error
-                    // int wsaerr = WSAGetLastError();
-                } else {
-                    g_WSAStarted = false;
-                }
-            }
-            DnsQueryRequest.pDnsServerList->MaxCount = 1;
-            DnsQueryRequest.pDnsServerList->AddrCount = 1;
-            memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
-        } else if (1 == addrestestres) {
-            SOCKADDR_STORAGE sockAddr;
-            if (!g_WSAStarted) {
-                WSADATA wsd = { 0 };
-                if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
-                    return NetOpResult::Fail;
-                }
-                g_WSAStarted = true;
-            }
-            if (WSAStringToAddress((wchar_t*)dnsAddr.c_str(), AF_INET6, 0, (LPSOCKADDR)&sockAddr, &sockAddrStorLen)) {
-                SAFE_FREE(QueryContext);
-                return NetOpResult::Fail;
-            }
-            if (g_WSAStarted) {
-                if (::WSACleanup()) {
-                    // handle WSACleanup error
-                    // int wsaerr = WSAGetLastError();
-                } else {
-                    g_WSAStarted = false;
-                }
-            }
-            DnsQueryRequest.pDnsServerList->MaxCount = 1;
-            DnsQueryRequest.pDnsServerList->AddrCount = 1;
-            memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
+        } else if (0 == dnssrvaddrtestres) {
+            dnssrvip = str2wstr(dnsIPV4Addr);
         } else {
-            SAFE_FREE(QueryContext);
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
             return NetOpResult::Fail;
         }
+        if (!g_WSAStarted) {
+            WSADATA wsd = { 0 };
+            if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
+                return NetOpResult::Fail;
+            }
+            g_WSAStarted = true;
+        }
+        if (WSAStringToAddress((wchar_t*)dnssrvip.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr,
+            &sockAddrStorLen)) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        if (g_WSAStarted) {
+            if (::WSACleanup()) {
+                // handle WSACleanup error
+                // int wsaerr = WSAGetLastError();
+            } else {
+                g_WSAStarted = false;
+            }
+        }
+        DnsQueryRequest.pDnsServerList = (DNS_ADDR_ARRAY*)malloc(sizeof(DNS_ADDR_ARRAY));
+        if (!DnsQueryRequest.pDnsServerList) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        DnsQueryRequest.pDnsServerList->MaxCount = 1; // DNS_ADDR_MAX_SOCKADDR_LENGTH;
+        DnsQueryRequest.pDnsServerList->AddrCount = 1;
+        memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
     }
     ::InterlockedIncrement(&QueryContext->RefCount);
     Error = ::DnsQueryEx(&DnsQueryRequest, &QueryContext->QueryResults, &QueryContext->QueryCancelContext);
-    if (DNS_REQUEST_PENDING != Error) {
-        DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
-        SAFE_FREE(QueryContext);
-        return NetOpResult::Fail;
+    if (async) {
+        if (DNS_REQUEST_PENDING != Error) {
+            DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    } else {
+        if (ERROR_SUCCESS != Error) {
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
     }
-    if (WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
-        ::DnsCancelQuery(&QueryContext->QueryCancelContext);
-        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+    if (async) {
+        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout);
+        if (!QueryContext->QueryResults.pQueryRecords && WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
+            ::DnsCancelQuery(&QueryContext->QueryCancelContext);
+            ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+        }
     }
     if (!::InterlockedDecrement(&QueryContext->RefCount)) {
         if (QueryContext->QueryCompletedEvent) {
             ::CloseHandle(QueryContext->QueryCompletedEvent);
         }
-        SAFE_FREE(QueryContext);
+        if (QueryContext->QueryResults.pQueryRecords) {
+            ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+        }
+        if (DnsQueryRequest.pDnsServerList) {
+            SAFE_FREE(DnsQueryRequest.pDnsServerList);
+        }
+        if (QueryContext) {
+            SAFE_FREE(QueryContext);
+        }
         return NetOpResult::Fail;
     }
     if (QueryContext->QueryResults.pQueryRecords) {
-        queryResults = (PDNS_RECORD)malloc(QueryContext->QueryResults.pQueryRecords->wDataLength);
-        memcpy(queryResults, QueryContext->QueryResults.pQueryRecords, QueryContext->QueryResults.pQueryRecords->wDataLength);
+        size_t ind = 0;
+        for (size_t i = 0; i < QueryContext->QueryResults.pQueryRecords->wDataLength; i += sizeof(DNS_RECORD)) {
+            queryResults.push_back(QueryContext->QueryResults.pQueryRecords[ind]);
+            ++ind;
+        }
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+    }
+    if (DnsQueryRequest.pDnsServerList) {
+        SAFE_FREE(DnsQueryRequest.pDnsServerList);
+    }
+    if (QueryContext) {
         SAFE_FREE(QueryContext);
+    }
+    if (queryResults.size()) {
         return NetOpResult::Success;
     } else {
+        return NetOpResult::Fail;
+    }
+}
+
+NetOpResult customDNSQueryEx(std::vector<DNS_RECORD> &queryResults, const std::wstring objectName,
+    const bool async, const DNSQueryOpts queryOptions, const DNSRecordType dnsRecordType,
+    const std::wstring dnsIPV4Addr) {
+    unsigned long Error = ERROR_SUCCESS;
+    DNSQueryContext* QueryContext = 0;
+    DNS_QUERY_REQUEST DnsQueryRequest;
+    DnsQueryRequest.pDnsServerList = 0;
+    unsigned long QueryTimeout = 5000; // 5 seconds
+    wchar_t ServerIp[MAX_PATH];
+    QueryContext = (DNSQueryContext*)malloc(sizeof(DNSQueryContext));
+    if (!QueryContext) {
+        return NetOpResult::Fail;
+    }
+    ::InterlockedIncrement(&QueryContext->RefCount);
+    QueryContext->QueryResults.Version = DNS_QUERY_RESULTS_VERSION1;
+    QueryContext->QueryCompletedEvent = CreateEvent(0, 1, 0, 0);
+    if (!QueryContext->QueryCompletedEvent) {
+        if (!::InterlockedDecrement(&QueryContext->RefCount)) {
+            // ::CloseHandle(QueryContext->QueryCompletedEvent);
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    }
+    wsprintf(QueryContext->QueryName, L"%s", objectName.c_str());
+    QueryContext->QueryType = static_cast<unsigned long>(dnsRecordType);
+    QueryContext->QueryOptions = static_cast<unsigned long>(queryOptions);
+    memset(&DnsQueryRequest, 0, sizeof(DNS_QUERY_REQUEST));
+    DnsQueryRequest.Version = DNS_QUERY_REQUEST_VERSION1;
+    DnsQueryRequest.QueryName = QueryContext->QueryName;
+    DnsQueryRequest.QueryType = QueryContext->QueryType;
+    DnsQueryRequest.QueryOptions = (unsigned long long)QueryContext->QueryOptions;
+    DnsQueryRequest.pQueryContext = QueryContext;
+    if (async) {
+        DnsQueryRequest.pQueryCompletionCallback = DNSQueryExQueryCompleteCallback;
+    } else {
+        DnsQueryRequest.pQueryCompletionCallback = 0;
+    }
+    if (dnsIPV4Addr.length()) {
+        int sockAddrStorLen = sizeof(SOCKADDR_STORAGE);
+        unsigned char dnssrvaddrtestres = isStringIP(dnsIPV4Addr);
+        std::wstring dnssrvip;
+        SOCKADDR_STORAGE sockAddr;
+        if (2 == dnssrvaddrtestres) {
+            bool fl = true;
+            HostNode hn;
+            if (NetOpResult::Success == lookupIPAddresses(hn, dnsIPV4Addr)) {
+                for (size_t i = 0; i < hn.Address.size(); ++i) {
+                    if (0 == isStringIP(hn.Address[i].Address)) {
+                        dnssrvip = hn.Address[i].Address;
+                        fl = false;
+                        break;
+                    }
+                }
+                if (fl) {
+                    if (QueryContext) {
+                        SAFE_FREE(QueryContext);
+                    }
+                    return NetOpResult::Fail;
+                }
+            } else {
+                if (QueryContext) {
+                    SAFE_FREE(QueryContext);
+                }
+                return NetOpResult::Fail;
+            }
+        } else if (0 == dnssrvaddrtestres) {
+            dnssrvip = dnsIPV4Addr;
+        } else {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        if (!g_WSAStarted) {
+            WSADATA wsd = { 0 };
+            if (::WSAStartup(MAKEWORD(2, 2), &wsd)) {
+                return NetOpResult::Fail;
+            }
+            g_WSAStarted = true;
+        }
+        if (WSAStringToAddress((wchar_t*)dnssrvip.c_str(), AF_INET, 0, (LPSOCKADDR)&sockAddr,
+            &sockAddrStorLen)) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        if (g_WSAStarted) {
+            if (::WSACleanup()) {
+                // handle WSACleanup error
+                // int wsaerr = WSAGetLastError();
+            } else {
+                g_WSAStarted = false;
+            }
+        }
+        DnsQueryRequest.pDnsServerList = (DNS_ADDR_ARRAY*)malloc(sizeof(DNS_ADDR_ARRAY));
+        if (!DnsQueryRequest.pDnsServerList) {
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+        DnsQueryRequest.pDnsServerList->MaxCount = 1; // DNS_ADDR_MAX_SOCKADDR_LENGTH;
+        DnsQueryRequest.pDnsServerList->AddrCount = 1;
+        memcpy(DnsQueryRequest.pDnsServerList->AddrArray[0].MaxSa, &sockAddr, DNS_ADDR_MAX_SOCKADDR_LENGTH);
+    }
+    ::InterlockedIncrement(&QueryContext->RefCount);
+    Error = ::DnsQueryEx(&DnsQueryRequest, &QueryContext->QueryResults, &QueryContext->QueryCancelContext);
+    if (async) {
+        if (DNS_REQUEST_PENDING != Error) {
+            DNSQueryExQueryCompleteCallback(QueryContext, &QueryContext->QueryResults);
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    } else {
+        if (ERROR_SUCCESS != Error) {
+            if (QueryContext->QueryResults.pQueryRecords) {
+                ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+            }
+            if (DnsQueryRequest.pDnsServerList) {
+                SAFE_FREE(DnsQueryRequest.pDnsServerList);
+            }
+            if (QueryContext) {
+                SAFE_FREE(QueryContext);
+            }
+            return NetOpResult::Fail;
+        }
+    }
+    if (async) {
+        ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout);
+        if (!QueryContext->QueryResults.pQueryRecords && WAIT_TIMEOUT == ::WaitForSingleObject(QueryContext->QueryCompletedEvent, QueryTimeout)) {
+            ::DnsCancelQuery(&QueryContext->QueryCancelContext);
+            ::WaitForSingleObject(QueryContext->QueryCompletedEvent, INFINITE);
+        }
+    }
+    if (!::InterlockedDecrement(&QueryContext->RefCount)) {
+        if (QueryContext->QueryCompletedEvent) {
+            ::CloseHandle(QueryContext->QueryCompletedEvent);
+        }
+        if (QueryContext->QueryResults.pQueryRecords) {
+            ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+        }
+        if (DnsQueryRequest.pDnsServerList) {
+            SAFE_FREE(DnsQueryRequest.pDnsServerList);
+        }
+        if (QueryContext) {
+            SAFE_FREE(QueryContext);
+        }
+        return NetOpResult::Fail;
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        size_t ind = 0;
+        for (size_t i = 0; i < QueryContext->QueryResults.pQueryRecords->wDataLength; i += sizeof(DNS_RECORD)) {
+            queryResults.push_back(QueryContext->QueryResults.pQueryRecords[ind]);
+            ++ind;
+        }
+    }
+    if (QueryContext->QueryResults.pQueryRecords) {
+        ::DnsRecordListFree(QueryContext->QueryResults.pQueryRecords, ::DnsFreeRecordList);
+    }
+    if (DnsQueryRequest.pDnsServerList) {
+        SAFE_FREE(DnsQueryRequest.pDnsServerList);
+    }
+    if (QueryContext) {
         SAFE_FREE(QueryContext);
+    }
+    if (queryResults.size()) {
+        return NetOpResult::Success;
+    } else {
         return NetOpResult::Fail;
     }
 }
@@ -2255,14 +3771,10 @@ void __stdcall DNSQueryExQueryCompleteCallback(void* context, DNS_QUERY_RESULT* 
     } else {
 
     }
-    if (queryResult->pQueryRecords) {
-        ::DnsRecordListFree(queryResult->pQueryRecords, ::DnsFreeRecordList);
-    }
-    // ::SetEvent(queryContext->QueryCompletedEvent);
-    /*if (!::InterlockedDecrement(&queryContext->RefCount)) {
+    ::SetEvent(queryContext->QueryCompletedEvent);
+    if (!::InterlockedDecrement(&queryContext->RefCount)) {
         ::CloseHandle(queryContext->QueryCompletedEvent);
-    }*/
-    // SAFE_FREE(queryContext);
+    }
 }
 
 unsigned short ICMPHeaderChecksum(unsigned short* buffer, int size) {
