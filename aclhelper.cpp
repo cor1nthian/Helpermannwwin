@@ -147,20 +147,44 @@ SecDesc::SecDesc(const SecDesc &other) {
 
 SecDesc::SecDesc(SecDesc &&other) noexcept {
     if (this != &other) {
+        if (daclInfo) {
+            SAFE_LOCALFREE(daclInfo);
+        }
         daclInfo = other.daclInfo;
         other.daclInfo = 0;
+        if (daclAbsInfo) {
+            SAFE_LOCALFREE(daclAbsInfo);
+        }
         daclAbsInfo = other.daclAbsInfo;
         other.daclAbsInfo = 0;
+        if (saclInfo) {
+            SAFE_LOCALFREE(saclInfo);
+        }
         saclInfo = other.saclInfo;
         other.saclInfo = 0;
+        if (saclAbsInfo) {
+            SAFE_LOCALFREE(saclAbsInfo);
+        }
         saclAbsInfo = other.saclAbsInfo;
         other.saclAbsInfo = 0;
+        if (ownerInfo) {
+            SAFE_LOCALFREE(ownerInfo);
+        }
         ownerInfo = other.ownerInfo;
         other.ownerInfo = 0;
+        if (primaryGroupInfo) {
+            SAFE_LOCALFREE(primaryGroupInfo);
+        }
         primaryGroupInfo = other.primaryGroupInfo;
         other.primaryGroupInfo = 0;
+        if (absoluteSDInfo) {
+            SAFE_LOCALFREE(absoluteSDInfo);
+        }
         absoluteSDInfo = other.absoluteSDInfo;
         other.absoluteSDInfo = 0;
+        if (selfRelativeSDInfo) {
+            SAFE_LOCALFREE(selfRelativeSDInfo);
+        }
         selfRelativeSDInfo = other.selfRelativeSDInfo;
         other.selfRelativeSDInfo = 0;
         daclInfoSz = other.daclInfoSz;
@@ -337,22 +361,44 @@ SecDesc& SecDesc::operator=(const SecDesc &other) {
 
 SecDesc& SecDesc::operator=(SecDesc &&other) noexcept {
     if (this != &other) {
+        if (daclInfo) {
+            SAFE_LOCALFREE(daclInfo);
+        }
         daclInfo = other.daclInfo;
         other.daclInfo = 0;
+        if (daclAbsInfo) {
+            SAFE_LOCALFREE(daclAbsInfo);
+        }
         daclAbsInfo = other.daclAbsInfo;
         other.daclAbsInfo = 0;
+        if (saclInfo) {
+            SAFE_LOCALFREE(saclInfo);
+        }
         saclInfo = other.saclInfo;
         other.saclInfo = 0;
+        if (saclAbsInfo) {
+            SAFE_LOCALFREE(saclAbsInfo);
+        }
         saclAbsInfo = other.saclAbsInfo;
         other.saclAbsInfo = 0;
+        if (ownerInfo) {
+            SAFE_LOCALFREE(ownerInfo);
+        }
         ownerInfo = other.ownerInfo;
         other.ownerInfo = 0;
+        if (primaryGroupInfo) {
+            SAFE_LOCALFREE(primaryGroupInfo);
+        }
         primaryGroupInfo = other.primaryGroupInfo;
         other.primaryGroupInfo = 0;
+        if (absoluteSDInfo) {
+            SAFE_LOCALFREE(absoluteSDInfo);
+        }
         absoluteSDInfo = other.absoluteSDInfo;
         other.absoluteSDInfo = 0;
-        selfRelativeSDInfo = other.selfRelativeSDInfo;
-        other.selfRelativeSDInfo = 0;
+        if (selfRelativeSDInfo) {
+            SAFE_LOCALFREE(selfRelativeSDInfo);
+        }
         daclInfoSz = other.daclInfoSz;
         other.daclInfoSz = 0;
         daclAbsInfoSz = other.daclAbsInfoSz;
