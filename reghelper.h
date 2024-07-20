@@ -88,11 +88,11 @@ const void* const gc_wc_incorrectVal = (void*)L'Y';
 #pragma warning(disable : 4996)
 #pragma comment(lib, "Advapi32.lib")
 
-const void* const gc_ul_emptyVal = (void*)0xFFFFFF11;
-const void* const gc_ul_incorrectVal = (void*)11111111;
+const void* const gc_ul_emptyVal = (void*)0xABCD1234;
+const void* const gc_ul_incorrectVal = (void*)0xABCD5678;
 
-const void* const gc_ull_emptyVal = (void*)0xFFFFFF22;
-const void* const gc_ull_incorrectVal = (void*)22222222;
+const void* const gc_ull_emptyVal = (void*)0xABCDEF12;
+const void* const gc_ull_incorrectVal = (void*)0xABCD8765;
 
 const wchar_t* const gc_loadKeyNamePrefix = L"Loaded Hive ";
 
@@ -334,6 +334,8 @@ class RegHandler {
 		RegOpResult SeekKey(const std::wstring keyName, std::vector<RegKeyDesc> &results,
 			const std::wstring startPath = L"", const bool acquireVals = false,
 			const unsigned long limitResults = 700, const bool cleanupStrings = true, const HKEY *root = 0) const;
+		RegOpResult EnumKey(std::wstring keyName, RegKeyDesc &keyDesc, const bool acquireVals = false,
+			const unsigned long limitResults = 700, const bool cleanupStrings = true, const HKEY* root = 0) const;
 		RegOpResult SeekVal2(const std::wstring valName, std::vector<RegValDesc> &results,
 			const std::wstring startPath = L"", const bool acquireVals = false, const unsigned long limitResults = 700,
 			const bool cleanupStrings = true, const HKEY *root = 0) const;
@@ -344,14 +346,19 @@ class RegHandler {
 			const std::wstring startPath = L"", const RegValType valType = RegValType::Str,
 			const bool acquireVals = false, const unsigned long limitResults = 700, const bool cleanupStrings = true,
 			const HKEY *root = 0) const;
+		RegOpResult AcquireValues(RegKeyDesc &keyDesc, const unsigned long limitVals = 700,
+			const bool cleanupStrings = true, const HKEY *root = 0) const;
 		RegOpResult AcquireValues(std::vector<RegKeyDesc> &keyList, const unsigned long limitVals = 700,
 			const bool cleanupStrings = true, const HKEY *root = 0) const;
 		RegOpResult AcquireValues(std::vector<RegValDesc> &valList, const unsigned long limitVals = 700,
 			const bool cleanupStrings = true, const HKEY *root = 0) const;
+		RegOpResult CreateValues(const RegKeyDesc &keyDesc, const HKEY *root = 0) const;
 		RegOpResult CreateValues(const std::vector<RegKeyDesc> &keyList, const HKEY *root = 0) const;
 		RegOpResult CreateValues(const std::vector<RegValDesc> &valList, const HKEY *root = 0) const;
+		RegOpResult DeleteValues(const RegKeyDesc &keyDesc, const HKEY *root = 0) const;
 		RegOpResult DeleteValues(const std::vector<RegKeyDesc> &keyList, const HKEY *root = 0) const;
 		RegOpResult DeleteValues(const std::vector<RegValDesc> &valList, const HKEY *root = 0) const;
+		RegOpResult FreeValues(const RegKeyDesc &keyDesc, const HKEY *root = 0) const;
 		RegOpResult FreeValues(const std::vector<RegKeyDesc> &keyList, const HKEY *root = 0) const;
 		RegOpResult FreeValues(const std::vector<RegValDesc> &valList, const HKEY *root = 0) const;
 		RegOpResult GetKeySecurity(const std::wstring keyName, SecDesc &secDesc, const HKEY *root = 0) const;

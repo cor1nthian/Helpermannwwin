@@ -21,177 +21,165 @@ SecDesc::SecDesc() {
 }
 
 SecDesc::SecDesc(const SecDesc &other) {
-    daclInfoSz = other.daclInfoSz;
-    daclAbsInfoSz = other.daclAbsInfoSz;
-    saclInfoSz = other.saclInfoSz;
-    saclAbsInfoSz = other.saclAbsInfoSz;
-    ownerInfoSz = other.ownerInfoSz;
-    primaryGroupInfoSz = other.primaryGroupInfoSz;
-    absoluteSDInfoSz = other.absoluteSDInfoSz;
-    selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
-    if (other.daclInfo) {
-        /* if (daclInfo && daclInfoSz) {
-            SAFE_LOCALFREE(daclInfo);
-        }*/
-        daclInfo = ::LocalAlloc(LPTR, daclInfoSz);
-        if (daclInfo) {
-            memcpy(daclInfo, other.daclInfo, daclInfoSz);
+    if (this != &other) {
+        daclInfoSz = other.daclInfoSz;
+        daclAbsInfoSz = other.daclAbsInfoSz;
+        saclInfoSz = other.saclInfoSz;
+        saclAbsInfoSz = other.saclAbsInfoSz;
+        ownerInfoSz = other.ownerInfoSz;
+        primaryGroupInfoSz = other.primaryGroupInfoSz;
+        absoluteSDInfoSz = other.absoluteSDInfoSz;
+        selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
+        if (other.daclInfo) {
+            /* if (daclInfo && daclInfoSz) {
+                SAFE_LOCALFREE(daclInfo);
+            }*/
+            daclInfo = ::LocalAlloc(LPTR, daclInfoSz);
+            if (daclInfo) {
+                memcpy(daclInfo, other.daclInfo, daclInfoSz);
+            }
+        } else {
+            /*if (daclInfo && daclInfoSz) {
+                SAFE_LOCALFREE(daclInfo);
+            }*/
+            daclInfo = 0;
         }
-    } else {
-        /*if (daclInfo && daclInfoSz) {
-            SAFE_LOCALFREE(daclInfo);
-        }*/
-        daclInfo = 0;
-    }
-    if (other.daclAbsInfo) {
-        /* if (daclAbsInfo && daclAbsInfoSz) {
-             SAFE_LOCALFREE(daclAbsInfo);
-        }*/
-        daclAbsInfo = ::LocalAlloc(LPTR, daclAbsInfoSz);
-        if (daclAbsInfo) {
-            memcpy(daclAbsInfo, other.daclAbsInfo, daclAbsInfoSz);
+        if (other.daclAbsInfo) {
+            /* if (daclAbsInfo && daclAbsInfoSz) {
+                 SAFE_LOCALFREE(daclAbsInfo);
+            }*/
+            daclAbsInfo = ::LocalAlloc(LPTR, daclAbsInfoSz);
+            if (daclAbsInfo) {
+                memcpy(daclAbsInfo, other.daclAbsInfo, daclAbsInfoSz);
+            }
+        } else {
+            /*if (daclAbsInfo && daclAbsInfoSz) {
+                SAFE_LOCALFREE(daclAbsInfo);
+            }*/
+            daclAbsInfo = 0;
         }
-    } else {
-        /*if (daclAbsInfo && daclAbsInfoSz) {
-            SAFE_LOCALFREE(daclAbsInfo);
-        }*/
-        daclAbsInfo = 0;
-    }
-    if (other.saclInfo) {
-        /*if (saclInfo && saclInfoSz) {
-            SAFE_LOCALFREE(saclInfo);
-        }*/
-        saclInfo = ::LocalAlloc(LPTR, saclInfoSz);
-        if (saclInfo) {
-            memcpy(saclInfo, other.saclInfo, saclInfoSz);
+        if (other.saclInfo) {
+            /*if (saclInfo && saclInfoSz) {
+                SAFE_LOCALFREE(saclInfo);
+            }*/
+            saclInfo = ::LocalAlloc(LPTR, saclInfoSz);
+            if (saclInfo) {
+                memcpy(saclInfo, other.saclInfo, saclInfoSz);
+            }
+        } else {
+            /*if (saclInfo && saclInfoSz) {
+                SAFE_LOCALFREE(saclInfo);
+            }*/
+            saclInfo = 0;
         }
-    } else {
-        /*if (saclInfo && saclInfoSz) {
-            SAFE_LOCALFREE(saclInfo);
-        }*/
-        saclInfo = 0;
-    }
-    if (other.saclAbsInfo) {
-        /* if (saclAbsInfo && saclAbsInfoSz) {
-             SAFE_LOCALFREE(saclAbsInfo);
-        }*/
-        saclAbsInfo = ::LocalAlloc(LPTR, saclAbsInfoSz);
-        if (saclAbsInfo) {
-            memcpy(saclAbsInfo, other.saclAbsInfo, saclAbsInfoSz);
+        if (other.saclAbsInfo) {
+            /* if (saclAbsInfo && saclAbsInfoSz) {
+                 SAFE_LOCALFREE(saclAbsInfo);
+            }*/
+            saclAbsInfo = ::LocalAlloc(LPTR, saclAbsInfoSz);
+            if (saclAbsInfo) {
+                memcpy(saclAbsInfo, other.saclAbsInfo, saclAbsInfoSz);
+            }
+        } else {
+            /*if (saclAbsInfo && saclAbsInfoSz) {
+                SAFE_LOCALFREE(saclAbsInfo);
+            }*/
+            saclAbsInfo = 0;
         }
-    } else {
-        /*if (saclAbsInfo && saclAbsInfoSz) {
-            SAFE_LOCALFREE(saclAbsInfo);
-        }*/
-        saclAbsInfo = 0;
-    }
-    if (other.ownerInfo) {
-        /*if (ownerInfo && ownerInfoSz) {
-            SAFE_LOCALFREE(ownerInfo);
-        }*/
-        ownerInfo = ::LocalAlloc(LPTR, saclInfoSz);
-        if (ownerInfo) {
-            memcpy(ownerInfo, other.ownerInfo, ownerInfoSz);
+        if (other.ownerInfo) {
+            /*if (ownerInfo && ownerInfoSz) {
+                SAFE_LOCALFREE(ownerInfo);
+            }*/
+            ownerInfo = ::LocalAlloc(LPTR, saclInfoSz);
+            if (ownerInfo) {
+                memcpy(ownerInfo, other.ownerInfo, ownerInfoSz);
+            }
+        } else {
+            /*if (ownerInfo && ownerInfoSz) {
+                SAFE_LOCALFREE(ownerInfo);
+            }*/
+            ownerInfo = 0;
         }
-    } else {
-        /*if (ownerInfo && ownerInfoSz) {
-            SAFE_LOCALFREE(ownerInfo);
-        }*/
-        ownerInfo = 0;
-    }
-    if (other.primaryGroupInfo) {
-        /*if (primaryGroupInfo && primaryGroupInfoSz) {
-            SAFE_LOCALFREE(primaryGroupInfo);
-        }*/
-        primaryGroupInfo = ::LocalAlloc(LPTR, primaryGroupInfoSz);
-        if (primaryGroupInfo) {
-            memcpy(primaryGroupInfo, other.primaryGroupInfo, primaryGroupInfoSz);
+        if (other.primaryGroupInfo) {
+            /*if (primaryGroupInfo && primaryGroupInfoSz) {
+                SAFE_LOCALFREE(primaryGroupInfo);
+            }*/
+            primaryGroupInfo = ::LocalAlloc(LPTR, primaryGroupInfoSz);
+            if (primaryGroupInfo) {
+                memcpy(primaryGroupInfo, other.primaryGroupInfo, primaryGroupInfoSz);
+            }
+        } else {
+            /*if (primaryGroupInfo && primaryGroupInfoSz) {
+                SAFE_LOCALFREE(primaryGroupInfo);
+            }*/
+            primaryGroupInfo = 0;
         }
-    } else {
-        /*if (primaryGroupInfo && primaryGroupInfoSz) {
-            SAFE_LOCALFREE(primaryGroupInfo);
-        }*/
-        primaryGroupInfo = 0;
-    }
-    if (other.absoluteSDInfo) {
-        /*if (absoluteSDInfo && absoluteSDInfoSz) {
-            SAFE_LOCALFREE(absoluteSDInfo);
-        }*/
-        absoluteSDInfo = ::LocalAlloc(LPTR, absoluteSDInfoSz);
-        if (absoluteSDInfo) {
-            memcpy(absoluteSDInfo, other.absoluteSDInfo, absoluteSDInfoSz);
+        if (other.absoluteSDInfo) {
+            /*if (absoluteSDInfo && absoluteSDInfoSz) {
+                SAFE_LOCALFREE(absoluteSDInfo);
+            }*/
+            absoluteSDInfo = ::LocalAlloc(LPTR, absoluteSDInfoSz);
+            if (absoluteSDInfo) {
+                memcpy(absoluteSDInfo, other.absoluteSDInfo, absoluteSDInfoSz);
+            }
+        } else {
+            /*if (absoluteSDInfo && absoluteSDInfoSz) {
+                SAFE_LOCALFREE(absoluteSDInfo);
+            }*/
+            absoluteSDInfo = 0;
         }
-    } else {
-        /*if (absoluteSDInfo && absoluteSDInfoSz) {
-            SAFE_LOCALFREE(absoluteSDInfo);
-        }*/
-        absoluteSDInfo = 0;
-    }
-    if (other.selfRelativeSDInfo) {
-        /*if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
-            SAFE_LOCALFREE(absoluteSDInfo);
-        }*/
-        selfRelativeSDInfo = ::LocalAlloc(LPTR, absoluteSDInfoSz);
-        if (selfRelativeSDInfo) {
-            memcpy(selfRelativeSDInfo, other.selfRelativeSDInfo, selfRelativeSDInfoSz);
+        if (other.selfRelativeSDInfo) {
+            /*if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
+                SAFE_LOCALFREE(absoluteSDInfo);
+            }*/
+            selfRelativeSDInfo = ::LocalAlloc(LPTR, absoluteSDInfoSz);
+            if (selfRelativeSDInfo) {
+                memcpy(selfRelativeSDInfo, other.selfRelativeSDInfo, selfRelativeSDInfoSz);
+            }
+        } else {
+            /*if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
+                SAFE_LOCALFREE(selfRelativeSDInfo);
+            }*/
+            selfRelativeSDInfo = 0;
         }
-    } else {
-        /*if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
-            SAFE_LOCALFREE(selfRelativeSDInfo);
-        }*/
-        selfRelativeSDInfo = 0;
     }
 }
 
-SecDesc::SecDesc(SecDesc &&other) noexcept :
-    daclInfoSz(std::exchange(other.daclInfoSz, 0)),
-    daclAbsInfoSz(std::exchange(other.daclAbsInfoSz, 0)),
-    saclInfoSz(std::exchange(other.saclInfoSz, 0)),
-    saclAbsInfoSz(std::exchange(other.saclAbsInfoSz, 0)),
-    ownerInfoSz(std::exchange(other.ownerInfoSz, 0)),
-    primaryGroupInfoSz(std::exchange(other.primaryGroupInfoSz, 0)),
-    absoluteSDInfoSz(std::exchange(other.absoluteSDInfoSz, 0)),
-    selfRelativeSDInfoSz(std::exchange(other.selfRelativeSDInfoSz, 0)) {
-    if (daclInfo) {
-        SAFE_LOCALFREE(daclInfo);
+SecDesc::SecDesc(SecDesc &&other) noexcept {
+    if (this != &other) {
+        daclInfo = other.daclInfo;
+        other.daclInfo = 0;
+        daclAbsInfo = other.daclAbsInfo;
+        other.daclAbsInfo = 0;
+        saclInfo = other.saclInfo;
+        other.saclInfo = 0;
+        saclAbsInfo = other.saclAbsInfo;
+        other.saclAbsInfo = 0;
+        ownerInfo = other.ownerInfo;
+        other.ownerInfo = 0;
+        primaryGroupInfo = other.primaryGroupInfo;
+        other.primaryGroupInfo = 0;
+        absoluteSDInfo = other.absoluteSDInfo;
+        other.absoluteSDInfo = 0;
+        selfRelativeSDInfo = other.selfRelativeSDInfo;
+        other.selfRelativeSDInfo = 0;
+        daclInfoSz = other.daclInfoSz;
+        other.daclInfoSz = 0;
+        daclAbsInfoSz = other.daclAbsInfoSz;
+        other.daclAbsInfoSz = 0;
+        saclInfoSz = other.saclInfoSz;
+        other.daclInfoSz = 0;
+        saclAbsInfoSz = other.saclAbsInfoSz;
+        other.saclAbsInfoSz = 0;
+        ownerInfoSz = other.ownerInfoSz;
+        other.ownerInfoSz = 0;
+        primaryGroupInfoSz = other.primaryGroupInfoSz;
+        other.primaryGroupInfoSz = 0;
+        absoluteSDInfoSz = other.absoluteSDInfoSz;
+        other.absoluteSDInfoSz = 0;
+        selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
+        other.selfRelativeSDInfoSz = 0;
     }
-    if (daclAbsInfo) {
-        SAFE_LOCALFREE(daclAbsInfo);
-    }
-    if (saclInfo) {
-        SAFE_LOCALFREE(saclInfo);
-    }
-    if (saclAbsInfo) {
-        SAFE_LOCALFREE(saclAbsInfo);
-    }
-    if (ownerInfo) {
-        SAFE_LOCALFREE(ownerInfo);
-    }
-    if (primaryGroupInfo) {
-        SAFE_LOCALFREE(primaryGroupInfo);
-    }
-    if (absoluteSDInfo) {
-        SAFE_LOCALFREE(absoluteSDInfo);
-    }
-    if (selfRelativeSDInfo) {
-        SAFE_LOCALFREE(selfRelativeSDInfo);
-    }
-    daclInfo = other.daclInfo;
-    other.daclInfo = 0;
-    daclAbsInfo = other.daclAbsInfo;
-    other.daclAbsInfo = 0;
-    saclInfo = other.saclInfo;
-    other.saclInfo = 0;
-    saclAbsInfo = other.saclAbsInfo;
-    other.saclAbsInfo = 0;
-    ownerInfo = other.ownerInfo;
-    other.ownerInfo = 0;
-    primaryGroupInfo = other.primaryGroupInfo;
-    other.primaryGroupInfo = 0;
-    absoluteSDInfo = other.absoluteSDInfo;
-    other.absoluteSDInfo = 0;
-    selfRelativeSDInfo = other.selfRelativeSDInfo;
-    other.selfRelativeSDInfo = 0;
 }
 
 SecDesc::~SecDesc() {
@@ -221,11 +209,375 @@ SecDesc::~SecDesc() {
     }
 }
 
+SecDesc& SecDesc::operator=(const SecDesc &other) {
+    if (this != &other) {
+        daclInfoSz = other.daclInfoSz;
+        daclAbsInfoSz = other.daclAbsInfoSz;
+        saclInfoSz = other.saclInfoSz;
+        saclAbsInfoSz = other.saclAbsInfoSz;
+        ownerInfoSz = other.ownerInfoSz;
+        primaryGroupInfoSz = other.primaryGroupInfoSz;
+        absoluteSDInfoSz = other.absoluteSDInfoSz;
+        selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
+        if (other.daclInfo) {
+            if (daclInfo && daclInfoSz) {
+                SAFE_LOCALFREE(daclInfo);
+            }
+            daclInfo = ::LocalAlloc(LPTR, daclInfoSz);
+            if (daclInfo) {
+                memcpy(daclInfo, other.daclInfo, daclInfoSz);
+            }
+        } else {
+            if (daclInfo && daclInfoSz) {
+                SAFE_LOCALFREE(daclInfo);
+            }
+            daclInfo = 0;
+        }
+        if (other.daclAbsInfo) {
+            if (daclAbsInfo && daclAbsInfoSz) {
+                SAFE_LOCALFREE(daclAbsInfo);
+            }
+            daclAbsInfo = ::LocalAlloc(LPTR, daclAbsInfoSz);
+            if (daclAbsInfo) {
+                memcpy(daclAbsInfo, other.daclAbsInfo, daclAbsInfoSz);
+            }
+        } else {
+            if (daclAbsInfo && daclAbsInfoSz) {
+                SAFE_LOCALFREE(daclAbsInfo);
+            }
+            daclAbsInfo = 0;
+        }
+        if (other.saclInfo) {
+            if (saclInfo && saclInfoSz) {
+                SAFE_LOCALFREE(saclInfo);
+            }
+            saclInfo = ::LocalAlloc(LPTR, saclInfoSz);
+            if (saclInfo) {
+                memcpy(saclInfo, other.saclInfo, saclInfoSz);
+            }
+        } else {
+            if (saclInfo && saclInfoSz) {
+                SAFE_LOCALFREE(saclInfo);
+            }
+            saclInfo = 0;
+        }
+        if (other.saclAbsInfo) {
+            if (saclAbsInfo && saclAbsInfoSz) {
+                SAFE_LOCALFREE(saclAbsInfo);
+            }
+            saclAbsInfo = ::LocalAlloc(LPTR, saclAbsInfoSz);
+            if (saclAbsInfo) {
+                memcpy(saclAbsInfo, other.saclAbsInfo, saclAbsInfoSz);
+            }
+        } else {
+            if (saclAbsInfo && saclAbsInfoSz) {
+                SAFE_LOCALFREE(saclAbsInfo);
+            }
+            saclAbsInfo = 0;
+        }
+        if (other.ownerInfo) {
+            if (ownerInfo && ownerInfoSz) {
+                SAFE_LOCALFREE(ownerInfo);
+            }
+            ownerInfo = ::LocalAlloc(LPTR, ownerInfoSz);
+            if (ownerInfo) {
+                memcpy(ownerInfo, other.ownerInfo, ownerInfoSz);
+            }
+        } else {
+            if (ownerInfo && ownerInfoSz) {
+                SAFE_LOCALFREE(ownerInfo);
+            }
+            ownerInfo = 0;
+        }
+        if (other.primaryGroupInfo) {
+            if (primaryGroupInfo && primaryGroupInfoSz) {
+                SAFE_LOCALFREE(primaryGroupInfo);
+            }
+            primaryGroupInfo = ::LocalAlloc(LPTR, primaryGroupInfoSz);
+            if (primaryGroupInfo) {
+                memcpy(primaryGroupInfo, other.primaryGroupInfo, primaryGroupInfoSz);
+            }
+        } else {
+            if (primaryGroupInfo && primaryGroupInfoSz) {
+                SAFE_LOCALFREE(primaryGroupInfo);
+            }
+            primaryGroupInfo = 0;
+        }
+        if (other.absoluteSDInfo) {
+            if (absoluteSDInfo && absoluteSDInfoSz) {
+                SAFE_LOCALFREE(absoluteSDInfo);
+            }
+            absoluteSDInfo = ::LocalAlloc(LPTR, absoluteSDInfoSz);
+            if (absoluteSDInfo) {
+                memcpy(absoluteSDInfo, other.absoluteSDInfo, absoluteSDInfoSz);
+            }
+        } else {
+            if (absoluteSDInfo && absoluteSDInfoSz) {
+                SAFE_LOCALFREE(absoluteSDInfo);
+            }
+            absoluteSDInfo = 0;
+        }
+        if (other.selfRelativeSDInfo) {
+            if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
+                SAFE_LOCALFREE(selfRelativeSDInfo);
+            }
+            selfRelativeSDInfo = ::LocalAlloc(LPTR, selfRelativeSDInfoSz);
+            if (selfRelativeSDInfo) {
+                memcpy(selfRelativeSDInfo, other.selfRelativeSDInfo, selfRelativeSDInfoSz);
+            }
+        } else {
+            if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
+                SAFE_LOCALFREE(selfRelativeSDInfo);
+            }
+            selfRelativeSDInfo = 0;
+        }
+    }
+    return *this;
+}
+
+SecDesc& SecDesc::operator=(SecDesc &&other) noexcept {
+    if (this != &other) {
+        daclInfo = other.daclInfo;
+        other.daclInfo = 0;
+        daclAbsInfo = other.daclAbsInfo;
+        other.daclAbsInfo = 0;
+        saclInfo = other.saclInfo;
+        other.saclInfo = 0;
+        saclAbsInfo = other.saclAbsInfo;
+        other.saclAbsInfo = 0;
+        ownerInfo = other.ownerInfo;
+        other.ownerInfo = 0;
+        primaryGroupInfo = other.primaryGroupInfo;
+        other.primaryGroupInfo = 0;
+        absoluteSDInfo = other.absoluteSDInfo;
+        other.absoluteSDInfo = 0;
+        selfRelativeSDInfo = other.selfRelativeSDInfo;
+        other.selfRelativeSDInfo = 0;
+        daclInfoSz = other.daclInfoSz;
+        other.daclInfoSz = 0;
+        daclAbsInfoSz = other.daclAbsInfoSz;
+        other.daclAbsInfoSz = 0;
+        saclInfoSz = other.saclInfoSz;
+        other.daclInfoSz = 0;
+        saclAbsInfoSz = other.saclAbsInfoSz;
+        other.saclAbsInfoSz = 0;
+        ownerInfoSz = other.ownerInfoSz;
+        other.ownerInfoSz = 0;
+        primaryGroupInfoSz = other.primaryGroupInfoSz;
+        other.primaryGroupInfoSz = 0;
+        absoluteSDInfoSz = other.absoluteSDInfoSz;
+        other.absoluteSDInfoSz = 0;
+        selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
+        other.selfRelativeSDInfoSz = 0;
+    }
+    return *this;
+}
+
+bool SecDesc::operator==(const SecDesc& other) const {
+    bool bufeq = false, otheq = false, sideq = false;
+    if (daclInfo && other.daclInfo) {
+        if (daclInfoSz && other.daclInfoSz) {
+            bufeq = !memcmp(daclInfo, other.daclInfo, other.daclInfoSz);
+        } else {
+            bufeq = false;
+        }
+    } else {
+        if (daclInfo && !other.daclInfo) {
+            bufeq = false;
+        } else if (!daclInfo && other.daclInfo) {
+            bufeq = false;
+        } else if (!daclInfo && !other.daclInfo) {
+            bufeq = true;
+        }
+    }
+    if (daclAbsInfo && other.daclAbsInfo) {
+        if (daclAbsInfoSz && other.daclAbsInfoSz) {
+            bufeq &= !memcmp(daclAbsInfo, other.daclAbsInfo, other.daclAbsInfoSz);
+        } else {
+            bufeq &= false;
+        }
+    } else {
+        if (daclAbsInfo && !other.daclAbsInfo) {
+            bufeq &= false;
+        } else if (!daclAbsInfo && other.daclAbsInfo) {
+            bufeq &= false;
+        } else if (!daclAbsInfo && !other.daclAbsInfo) {
+            bufeq &= true;
+        }
+    }
+    if (saclInfo && other.saclInfo) {
+        if (saclInfoSz && other.saclInfoSz) {
+            bufeq &= !memcmp(saclInfo, other.saclInfo, other.saclInfoSz);
+        } else {
+            bufeq &= false;
+        }
+    } else {
+        if (saclInfo && !other.saclInfo) {
+            bufeq &= false;
+        } else if (!saclInfo && other.saclInfo) {
+            bufeq &= false;
+        } else if (!saclInfo && !other.saclInfo) {
+            bufeq &= true;
+        }
+    }
+    if (saclAbsInfo && other.saclAbsInfo) {
+        if (saclAbsInfoSz && other.saclAbsInfoSz) {
+            bufeq &= !memcmp(saclAbsInfo, other.saclAbsInfo, other.saclAbsInfoSz);
+        } else {
+            bufeq &= false;
+        }
+    } else {
+        if (saclAbsInfo && !other.saclAbsInfo) {
+            bufeq &= false;
+        } else if (!saclAbsInfo && other.saclAbsInfo) {
+            bufeq &= false;
+        } else if (!saclAbsInfo && !other.saclAbsInfo) {
+            bufeq &= true;
+        }
+    }
+    if (absoluteSDInfo && other.absoluteSDInfo) {
+        if (absoluteSDInfoSz && other.absoluteSDInfoSz) {
+            bufeq &= !memcmp(absoluteSDInfo, other.absoluteSDInfo, other.absoluteSDInfoSz);
+        } else {
+            bufeq &= false;
+        }
+    } else {
+        if (absoluteSDInfo && !other.absoluteSDInfo) {
+            bufeq &= false;
+        } else if (!absoluteSDInfo && other.absoluteSDInfo) {
+            bufeq &= false;
+        } else if (!absoluteSDInfo && !other.absoluteSDInfo) {
+            bufeq &= true;
+        }
+    }
+    if (selfRelativeSDInfo && other.selfRelativeSDInfo) {
+        if (selfRelativeSDInfoSz && other.selfRelativeSDInfoSz) {
+            bufeq &= !memcmp(selfRelativeSDInfo, other.selfRelativeSDInfo, other.selfRelativeSDInfoSz);
+        } else {
+            bufeq &= false;
+        }
+    } else {
+        if (selfRelativeSDInfo && !other.selfRelativeSDInfo) {
+            bufeq &= false;
+        } else if (!selfRelativeSDInfo && other.selfRelativeSDInfo) {
+            bufeq &= false;
+        } else if (!selfRelativeSDInfo && !other.selfRelativeSDInfo) {
+            bufeq &= true;
+        }
+    }
+    otheq = (daclInfoSz == other.daclInfoSz &&
+        saclInfoSz == other.saclInfoSz &&
+        ownerInfoSz == other.ownerInfoSz &&
+        primaryGroupInfoSz == other.primaryGroupInfoSz &&
+        absoluteSDInfoSz == other.absoluteSDInfoSz &&
+        selfRelativeSDInfoSz == other.selfRelativeSDInfoSz);
+    sideq = (::EqualSid(ownerInfo, other.ownerInfo) && ::EqualSid(primaryGroupInfo, other.primaryGroupInfo));
+    return (bufeq && otheq && sideq);
+}
+
+bool SecDesc::operator!=(const SecDesc& other) const {
+    bool bufneq = false, othneq = false, sidneq = false;
+    if (daclInfo && other.daclInfo) {
+        if (daclInfoSz && other.daclInfoSz) {
+            bufneq = memcmp(daclInfo, other.daclInfo, other.daclInfoSz);
+        } else {
+            bufneq = true;
+        }
+    } else {
+        if (daclInfo && !other.daclInfo) {
+            bufneq = true;
+        } else if (!daclInfo && other.daclInfo) {
+            bufneq = true;
+        } else if (!daclInfo && !other.daclInfo) {
+            bufneq = false;
+        }
+    }
+    if (daclAbsInfo && other.daclAbsInfo) {
+        if (daclAbsInfoSz && other.daclAbsInfoSz) {
+            bufneq |= memcmp(daclAbsInfo, other.daclAbsInfo, other.daclAbsInfoSz);
+        } else {
+            bufneq |= true;
+        }
+    } else {
+        if (daclAbsInfo && !other.daclAbsInfo) {
+            bufneq |= true;
+        } else if (!daclAbsInfo && other.daclAbsInfo) {
+            bufneq |= true;
+        } else if (!daclAbsInfo && !other.daclAbsInfo) {
+            bufneq |= false;
+        }
+    }
+    if (saclInfo && other.saclInfo) {
+        if (saclInfoSz && other.saclInfoSz) {
+            bufneq |= memcmp(saclInfo, other.saclInfo, other.saclInfoSz);
+        } else {
+            bufneq |= true;
+        }
+    } else {
+        if (saclInfo && !other.saclInfo) {
+            bufneq |= true;
+        } else if (!saclInfo && other.saclInfo) {
+            bufneq |= true;
+        } else if (!saclInfo && !other.saclInfo) {
+            bufneq |= false;
+        }
+    }
+    if (saclAbsInfo && other.saclAbsInfo) {
+        if (saclAbsInfoSz && other.saclAbsInfoSz) {
+            bufneq |= memcmp(saclAbsInfo, other.saclAbsInfo, other.saclAbsInfoSz);
+        } else {
+            bufneq |= true;
+        }
+    } else {
+        if (saclAbsInfo && !other.saclAbsInfo) {
+            bufneq |= true;
+        } else if (!saclAbsInfo && other.saclAbsInfo) {
+            bufneq |= true;
+        } else if (!saclAbsInfo && !other.saclAbsInfo) {
+            bufneq |= false;
+        }
+    }
+    if (absoluteSDInfo && other.absoluteSDInfo) {
+        if (absoluteSDInfoSz && other.absoluteSDInfoSz) {
+            bufneq |= memcmp(absoluteSDInfo, other.absoluteSDInfo, other.absoluteSDInfoSz);
+        } else {
+            bufneq |= true;
+        }
+    } else {
+        if (absoluteSDInfo && !other.absoluteSDInfo) {
+            bufneq |= true;
+        } else if (!absoluteSDInfo && other.absoluteSDInfo) {
+            bufneq |= true;
+        } else if (!absoluteSDInfo && !other.absoluteSDInfo) {
+            bufneq |= false;
+        }
+    }
+    if (selfRelativeSDInfo && other.selfRelativeSDInfo) {
+        if (selfRelativeSDInfoSz && other.selfRelativeSDInfoSz) {
+            bufneq |= memcmp(selfRelativeSDInfo, other.selfRelativeSDInfo, other.selfRelativeSDInfoSz);
+        } else {
+            bufneq |= true;
+        }
+    } else {
+        if (selfRelativeSDInfo && !other.selfRelativeSDInfo) {
+            bufneq |= true;
+        } else if (!selfRelativeSDInfo && other.selfRelativeSDInfo) {
+            bufneq |= true;
+        } else if (!selfRelativeSDInfo && !other.selfRelativeSDInfo) {
+            bufneq |= false;
+        }
+    }
+    othneq = (daclInfoSz != other.daclInfoSz ||
+        saclInfoSz != other.saclInfoSz ||
+        ownerInfoSz != other.ownerInfoSz ||
+        primaryGroupInfoSz != other.primaryGroupInfoSz ||
+        absoluteSDInfoSz != other.absoluteSDInfoSz ||
+        selfRelativeSDInfoSz != other.selfRelativeSDInfoSz);
+    sidneq = (!::EqualSid(ownerInfo, other.ownerInfo) || !::EqualSid(primaryGroupInfo, other.primaryGroupInfo));
+    return (bufneq || othneq || sidneq);
+}
+
 ACLHandler::ACLHandler() {}
-
-ACLHandler::ACLHandler(const ACLHandler &other) {}
-
-ACLHandler::ACLHandler(ACLHandler &&other) noexcept {}
 
 ACLHandler::~ACLHandler() {}
 

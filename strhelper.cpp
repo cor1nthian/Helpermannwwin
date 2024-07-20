@@ -669,7 +669,7 @@ void removeFromStart(std::string& source, const std::string sequence, const bool
                 }
             }
         } else {
-            source = "";
+            // source = "";
         }
     } else {
         if (source != sequence) {
@@ -679,7 +679,7 @@ void removeFromStart(std::string& source, const std::string sequence, const bool
                 }
             }
         } else {
-            source = "";
+            // source = "";
         }
     }
 }
@@ -694,7 +694,7 @@ void removeFromStart(std::wstring& source, const std::wstring sequence, const bo
                 }
             }
         } else {
-            source = L"";
+            // source = L"";
         }
     } else {
         if (source != sequence) {
@@ -704,7 +704,7 @@ void removeFromStart(std::wstring& source, const std::wstring sequence, const bo
                 }
             }
         } else {
-            source = L"";
+            // source = L"";
         }
     }
 }
@@ -729,7 +729,7 @@ void removeFromEnd(std::string& source, const std::string sequence, const bool i
                 }
             }
         } else {
-            source = "";
+            // source = "";
         }
     }
 }
@@ -745,7 +745,7 @@ void removeFromEnd(std::wstring& source, const std::wstring sequence, const bool
                     }
                 }
             } else {
-                source = L"";
+                 // source = L"";
             }
         }
     } else {
@@ -787,7 +787,7 @@ std::string removeFromStart_copy(const std::string source, const std::string seq
                 return source;
             }
         } else {
-            return "";
+            return source;
         }
     } else {
         if (source != sequence) {
@@ -801,7 +801,7 @@ std::string removeFromStart_copy(const std::string source, const std::string seq
                 return source;
             }
         } else {
-            return "";
+            return source;
         }
     }
 }
@@ -820,7 +820,7 @@ std::wstring removeFromStart_copy(const std::wstring source, const std::wstring 
                 return source;
             }
         } else {
-            return L"";
+            return source;
         }
     } else {
         if (source != sequence) {
@@ -834,7 +834,7 @@ std::wstring removeFromStart_copy(const std::wstring source, const std::wstring 
                 return source;
             }
         } else {
-            return L"";
+            return source;
         }
     }
 }
@@ -849,7 +849,7 @@ std::string removeFromEnd_copy(const std::string source, const std::string seque
                 return source;
             }
         } else {
-            return "";
+            return source;
         }
     } else {
         if (source != sequence && (source.length() > sequence.length())) {
@@ -859,7 +859,7 @@ std::string removeFromEnd_copy(const std::string source, const std::string seque
                 return source;
             }
         } else {
-            return "";
+            return source;
         }
     }
 }
@@ -874,7 +874,7 @@ std::wstring removeFromEnd_copy(const std::wstring source, const std::wstring se
                 return source;
             }
         } else {
-            return L"";
+            return source;
         }
     } else {
         if (source != sequence && (source.length() > sequence.length())) {
@@ -884,7 +884,7 @@ std::wstring removeFromEnd_copy(const std::wstring source, const std::wstring se
                 return source;
             }
         } else {
-            return L"";
+            return source;
         }
     }
 }

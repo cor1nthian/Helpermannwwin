@@ -36,6 +36,7 @@
 
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
+
 #pragma comment(lib, "Kernel32.lib")
 
 #include <Windows.h>
@@ -60,25 +61,15 @@ enum class ProcAwait : unsigned char {
 
 struct ProcResource {
 	ProcResource();
+	ProcResource(const unsigned long PID, unsigned long ExitCode, STARTUPINFO SI,
+		PROCESS_INFORMATION PI);
 	ProcResource(const ProcResource &other);
+	ProcResource(ProcResource &&other) noexcept;
 	~ProcResource();
-	ProcResource& operator=(const ProcResource &other) {
-		pid = other.pid;
-		exitCode = other.exitCode;
-		memcpy(&si, &other.si, sizeof(STARTUPINFO));
-		memcpy(&pi, &other.pi, sizeof(PROCESS_INFORMATION));
-		return *this;
-	}
-	bool operator==(const ProcResource& other) const {
-		return(pid == other.pid && exitCode == other.exitCode &&
-			!memcmp(&si, &other.si, sizeof(STARTUPINFO)) &&
-			!memcmp(&pi, &other.pi, sizeof(PROCESS_INFORMATION)));
-	}
-	bool operator!=(const ProcResource& other) const {
-		return(pid != other.pid || exitCode != other.exitCode ||
-			memcmp(&si, &other.si, sizeof(STARTUPINFO)) ||
-			memcmp(&pi, &other.pi, sizeof(PROCESS_INFORMATION)));
-	}
+	ProcResource& operator=(const ProcResource &other);
+	ProcResource& operator=(ProcResource &&other) noexcept;
+	bool operator==(const ProcResource &other) const;
+	bool operator!=(const ProcResource &other) const;
 	unsigned long pid;
 	unsigned long exitCode;
 	STARTUPINFO si;
@@ -98,46 +89,12 @@ struct ProcDesc {
 		const long threadpriority,
 		const std::wstring pathexe);
 	ProcDesc(const ProcDesc &other);
+	ProcDesc(ProcDesc &&other) noexcept;
 	~ProcDesc();
-	ProcDesc& operator=(const ProcDesc &other) {
-		size = other.size;
-		usage = other.usage;
-		pid = other.pid;
-		threadnum = other.threadnum;
-		parentPid = other.parentPid;
-		flags = other.flags;
-		moduleId = other.moduleId;
-		defHeapId = other.defHeapId;
-		threadPriority = other.threadPriority;
-		exepath = other.exepath;
-		return *this;
-	}
-	bool operator==(const ProcDesc &other) const {
-		return (size == other.size &&
-			usage == other.usage &&
-			pid == other.pid &&
-			threadnum == other.threadnum &&
-			parentPid == other.parentPid &&
-			flags == other.flags &&
-			moduleId == other.moduleId &&
-			defHeapId == other.defHeapId &&
-			threadPriority == other.threadPriority &&
-			(exepath == other.exepath &&
-				lower_copy(exepath) == lower_copy(other.exepath)));
-	}
-	bool operator!=(const ProcDesc& other) const {
-		return (size != other.size ||
-			usage != other.usage ||
-			pid != other.pid ||
-			threadnum != other.threadnum ||
-			parentPid != other.parentPid ||
-			flags != other.flags ||
-			moduleId != other.moduleId ||
-			defHeapId != other.defHeapId ||
-			threadPriority != other.threadPriority ||
-			(exepath != other.exepath ||
-				lower_copy(exepath) != lower_copy(other.exepath)));
-	}
+	ProcDesc& operator=(const ProcDesc& other);
+	ProcDesc& operator=(ProcDesc &&other) noexcept;
+	bool operator==(const ProcDesc& other) const;
+	bool operator!=(const ProcDesc& other) const;
 	unsigned long size;
 	unsigned long usage;
 	unsigned long pid;
@@ -153,16 +110,19 @@ struct ProcDesc {
 class ProcessHandler {
 	public:
 		ProcessHandler();
-		ProcessHandler(const ProcessHandler &other);
+		ProcessHandler(const ProcessHandler &other) = delete;
+		ProcessHandler(ProcessHandler &&other) noexcept = delete;
+		ProcessHandler& operator=(const ProcessHandler &other) = delete;
+		ProcessHandler& operator=(ProcessHandler &other) noexcept = delete;
 		~ProcessHandler();
+		bool operator==(const ProcessHandler &other) const = delete;
+		bool operator!=(const ProcessHandler &other) const = delete;
 		ProcResource StartProc(const std::wstring exepath, const std::wstring args = L"",
 			const ProcAwait awaitTime = ProcAwait::Infinite, const unsigned long procAwaitTime = 0,
 			const bool freeRes = true);
 		bool FreeProcResources(const ProcResource &procRes, bool stopProc = true);
-		bool StopProc(const unsigned long pid,
-			const std::vector<ProcDesc> *proclist = 0);
-		bool StopProc(const std::wstring exepath,
-			const std::vector<ProcDesc> *proclist = 0);
+		bool StopProc(const unsigned long pid, const std::vector<ProcDesc> *proclist = 0);
+		bool StopProc(const std::wstring exepath, const std::vector<ProcDesc> *proclist = 0);
 		bool EnableDebugPrivilege(const unsigned long pid,
 			const unsigned long desiredProcRights = PROCESS_ALL_ACCESS) const;
 		bool EnableBackupPrivilege(const unsigned long pid,

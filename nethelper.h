@@ -129,7 +129,7 @@ enum class NetOpResult : unsigned char {
 };
 
 enum class AddressFamily : unsigned long {
-	Ubspecified = AF_UNSPEC,
+	Unspecified = AF_UNSPEC,
 	IPV4 = AF_INET,
 	IPV6 = AF_INET6,
 	Unix = AF_UNIX,
@@ -448,102 +448,17 @@ enum class NWProtocol : unsigned long {
 };
 
 struct DNSQueryContext {
-	DNSQueryContext() {
-		RefCount = 0;
-		QueryType = 0;
-		QueryOptions = 0;
-		QueryCompletedEvent = 0;
-		memset(&QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-		memset(&QueryResults, 0, sizeof(DNS_QUERY_RESULT));
-		memset(&QueryCancelContext, 0, sizeof(DNS_QUERY_CANCEL));
-	}
+	DNSQueryContext();
 	DNSQueryContext(const unsigned long refCount, const wchar_t* queryName, const unsigned long queryNameLen,
 		const unsigned short int queryType, const unsigned long queryOptions, const DNS_QUERY_RESULT queryRes,
-		const DNS_QUERY_CANCEL queryCancel, const HANDLE queryCompletedEvent) {
-		RefCount = refCount;
-		if (queryNameLen && queryNameLen <= (DNS_MAX_NAME_BUFFER_LENGTH + 16)) {
-			memset(&QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-			memcpy(&QueryName, queryName, queryNameLen * sizeof(wchar_t));
-		} else {
-			memset(&QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-		}
-		QueryType = queryType;
-		QueryOptions = queryOptions;
-		QueryCompletedEvent = queryCompletedEvent;
-		memcpy(&QueryResults, &queryRes, sizeof(DNS_QUERY_RESULT));
-		memcpy(&QueryCancelContext, &queryCancel, sizeof(DNS_QUERY_CANCEL));
-	}
-	DNSQueryContext(const DNSQueryContext &other) {
-		RefCount = other.RefCount;
-		memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-		QueryType = other.QueryType;
-		QueryOptions = other.QueryOptions;
-		QueryResults = other.QueryResults;
-		QueryCancelContext = other.QueryCancelContext;
-		QueryCompletedEvent = other.QueryCompletedEvent;
-	}
-	DNSQueryContext(DNSQueryContext &&other) noexcept {
-		RefCount = other.RefCount;
-		other.RefCount = 0;
-		memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-		memset(&other.QueryName, 0, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
-		QueryType = other.QueryType;
-		other.QueryType = 0;
-		QueryOptions = other.QueryOptions;
-		other.QueryOptions = 0;
-		QueryResults = other.QueryResults;
-		other.QueryResults = { 0 };
-		QueryCancelContext = other.QueryCancelContext;
-		other.QueryCancelContext = { 0 };
-		QueryCompletedEvent = other.QueryCompletedEvent;
-		other.QueryCompletedEvent = 0;
-	}
-	~DNSQueryContext() {}
-	DNSQueryContext& operator=(const DNSQueryContext &other) {
-		RefCount = other.RefCount;
-		memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-		QueryType = other.QueryType;
-		QueryOptions = other.QueryOptions;
-		QueryResults = other.QueryResults;
-		QueryCancelContext = other.QueryCancelContext;
-		QueryCompletedEvent = other.QueryCompletedEvent;
-		return *this;
-	}
-	DNSQueryContext& operator=(DNSQueryContext &&other) noexcept {
-		RefCount = other.RefCount;
-		other.RefCount = 0;
-		memcpy(&QueryName, &other.QueryName, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
-		memset(&other.QueryName, 0, DNS_MAX_NAME_BUFFER_LENGTH * sizeof(wchar_t));
-		QueryType = other.QueryType;
-		other.QueryType = 0;
-		QueryOptions = other.QueryOptions;
-		other.QueryOptions = 0;
-		QueryResults = other.QueryResults;
-		other.QueryResults = { 0 };
-		QueryCancelContext = other.QueryCancelContext;
-		other.QueryCancelContext = { 0 };
-		QueryCompletedEvent = other.QueryCompletedEvent;
-		other.QueryCompletedEvent = 0;
-		return *this;
-	}
-	bool operator==(const DNSQueryContext &other) const {
-		return((RefCount == other.RefCount &&
-			QueryType == other.QueryType &&
-			QueryOptions == other.QueryOptions &&
-			QueryCompletedEvent == other.QueryCompletedEvent) &&
-			!memcmp(&QueryResults, &other.QueryResults, sizeof(DNS_QUERY_RESULT)) &&
-			!memcmp(&QueryCancelContext, &other.QueryCancelContext, sizeof(DNS_QUERY_CANCEL)) &&
-			!memcmp(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t)));
-	}
-	bool operator!=(const DNSQueryContext &other) const {
-		return((RefCount != other.RefCount ||
-			QueryType != other.QueryType ||
-			QueryOptions != other.QueryOptions ||
-			QueryCompletedEvent != other.QueryCompletedEvent) ||
-			memcmp(&QueryResults, &other.QueryResults, sizeof(DNS_QUERY_RESULT)) ||
-			memcmp(&QueryCancelContext, &other.QueryCancelContext, sizeof(DNS_QUERY_CANCEL)) ||
-			memcmp(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t)));
-	}
+		const DNS_QUERY_CANCEL queryCancel, const HANDLE queryCompletedEvent);
+	DNSQueryContext(const DNSQueryContext &other);
+	DNSQueryContext(DNSQueryContext&& other) noexcept;
+	~DNSQueryContext();
+	DNSQueryContext& operator=(const DNSQueryContext &other);
+	DNSQueryContext& operator=(DNSQueryContext &&other) noexcept;
+	bool operator==(const DNSQueryContext &other) const;
+	bool operator!=(const DNSQueryContext &other) const;
 	unsigned long RefCount;
 	wchar_t QueryName[DNS_MAX_NAME_BUFFER_LENGTH + 16];
 	unsigned short QueryType;
@@ -554,60 +469,16 @@ struct DNSQueryContext {
 };
 
 struct HostNodeAddr {
-	HostNodeAddr() { SockType = SocketType::Stream; Protocol = NWProtocol::HopOpts; AddrType = AddressType::IPv4; }
-	HostNodeAddr(const HostNodeAddr &other) {
-		SockType = other.SockType;
-		Protocol = other.Protocol;
-		AddrType = other.AddrType;
-		Address = other.Address;
-	}
-	HostNodeAddr(const SocketType sockType, const NWProtocol protocol, const AddressType addrType, const std::wstring address) {
-		SockType = sockType;
-		Protocol = protocol;
-		AddrType = addrType;
-		Address = address;
-	}
-	HostNodeAddr(HostNodeAddr &&other) noexcept {
-		SockType = other.SockType;
-		Protocol = other.Protocol;
-		AddrType = other.AddrType;
-		Address = other.Address;
-		other.Address.~basic_string();
-		memset(&other.SockType, 0, sizeof(SocketType));
-		memset(&other.Protocol, 0, sizeof(NWProtocol));
-		memset(&other.AddrType, 0, sizeof(AddressType));
-	}
-	~HostNodeAddr() {}
-	HostNodeAddr& operator=(const HostNodeAddr &other) {
-		SockType = other.SockType;
-		Protocol = other.Protocol;
-		AddrType = other.AddrType;
-		Address = other.Address;
-		return *this;
-	}
-	HostNodeAddr& operator=(HostNodeAddr &&other) noexcept {
-		SockType = other.SockType;
-		Protocol = other.Protocol;
-		AddrType = other.AddrType;
-		Address = other.Address;
-		memset(&other.SockType, 0, sizeof(SocketType));
-		memset(&other.Protocol, 0, sizeof(NWProtocol));
-		memset(&other.AddrType, 0, sizeof(AddressType));
-		other.Address.~basic_string();
-		return *this;
-	}
-	bool operator==(const HostNodeAddr& other) const {
-		return (SockType == other.SockType &&
-			Protocol == other.Protocol &&
-			AddrType == other.AddrType &&
-			Address == other.Address);
-	}
-	bool operator!=(const HostNodeAddr &other) const {
-		return (SockType != other.SockType ||
-			Protocol != other.Protocol ||
-			AddrType != other.AddrType ||
-			Address != other.Address);
-	}
+	HostNodeAddr();
+	HostNodeAddr(const SocketType sockType, const NWProtocol protocol, const AddressType addrType,
+		const std::wstring address);
+	HostNodeAddr(const HostNodeAddr &other);
+	HostNodeAddr(HostNodeAddr &&other) noexcept;
+	~HostNodeAddr();
+	HostNodeAddr& operator=(const HostNodeAddr &other);
+	HostNodeAddr& operator=(HostNodeAddr &&other) noexcept;
+	bool operator==(const HostNodeAddr &other) const;
+	bool operator!=(const HostNodeAddr &other) const;
 	SocketType SockType;
 	NWProtocol Protocol;
 	AddressType AddrType;
@@ -615,159 +486,45 @@ struct HostNodeAddr {
 };
 
 struct HostNode {
-	HostNode() {}
-	HostNode(const HostNode &other) {
-		Address = other.Address;
-	}
-	HostNode(HostNode &&other) noexcept {
-		Address = other.Address;
-		other.Address.~vector();
-	}
-	HostNode(const std::vector<HostNodeAddr> addr) {
-		Address = addr;
-	}
-	~HostNode() {}
-	HostNode& operator=(const HostNode &other) {
-		Address = other.Address;
-		return *this;
-	}
-	HostNode& operator=(HostNode &&other) noexcept {
-		Address = other.Address;
-		other.Address.~vector();
-		return *this;
-	}
-	bool operator==(const HostNode &other) const {
-		return(Address == other.Address);
-	}
-	bool operator!=(const HostNode &other) const {
-		return(Address != other.Address);
-	}
+	HostNode();
+	HostNode(const std::vector<HostNodeAddr> address);
+	HostNode(const HostNode &other);
+	HostNode(HostNode&& other) noexcept;
+	~HostNode();
+	HostNode& operator=(const HostNode& other);
+	HostNode& operator=(HostNode&& other) noexcept;
+	bool operator==(const HostNode& other) const;
+	bool operator!=(const HostNode& other) const;
 	std::vector<HostNodeAddr> Address;
 };
 
 struct PingResult {
-	PingResult() { Result = false; RoundTripTime = 0; TTL = 0;  }
-	PingResult(const bool result, const unsigned short int rtt, const unsigned short int ttl) {
-		Result = result;
-		RoundTripTime = rtt;
-		TTL = ttl;
-	}
-	PingResult(const PingResult &other) {
-		Result = other.Result;
-		RoundTripTime = other.RoundTripTime;
-		TTL = other.TTL;
-	}
-	PingResult(PingResult &&other) noexcept {
-		Result = other.Result;
-		RoundTripTime = other.RoundTripTime;
-		TTL = other.TTL;
-		other.Result = 0;
-		other.RoundTripTime = 0;
-		other.TTL = 0;
-	}
-	PingResult& operator=(const PingResult &other) {
-		Result = other.Result;
-		RoundTripTime = other.RoundTripTime;
-		TTL = other.TTL;
-		return *this;
-	}
-	PingResult& operator=(PingResult &&other) noexcept {
-		Result = other.Result;
-		RoundTripTime = other.RoundTripTime;
-		TTL = other.TTL;
-		other.Result = 0;
-		other.RoundTripTime = 0;
-		other.TTL = 0;
-		return *this;
-	}
-	bool operator==(const PingResult &other) const {
-		return(Result == other.Result &&
-			RoundTripTime == other.RoundTripTime &&
-			TTL == other.TTL);
-	}
-	bool operator!=(const PingResult &other) const {
-		return(Result != other.Result ||
-			RoundTripTime != other.RoundTripTime ||
-			TTL != other.TTL);
-	}
-	~PingResult() {}
+	PingResult();
+	PingResult(const bool result, const unsigned short int rtt, const unsigned short int ttl);
+	PingResult(const PingResult& other);
+	PingResult(PingResult&& other) noexcept;
+	~PingResult();
+	PingResult& operator=(const PingResult& other);
+	PingResult& operator=(PingResult&& other) noexcept;
+	bool operator==(const PingResult& other) const;
+	bool operator!=(const PingResult& other) const;
 	bool Result;
 	unsigned short int TTL;
 	unsigned short int RoundTripTime;
 };
 
 struct TracertResult {
-	TracertResult() { TTL = 0; RoundTripTime = 0; }
+	TracertResult();
 	TracertResult(const std::wstring address, const std::wstring addressv4,
 		const std::wstring addressv6, const unsigned short int ttl,
-		const unsigned short int rtt, const std::vector<PingResult> pings) {
-		TTL = ttl;
-		RoundTripTime = rtt;
-		Address = address;
-		AddressIPV4 = addressv4;
-		AddressIPV6 = addressv6;
-		Pings = pings;
-	}
-	TracertResult(const TracertResult &other) {
-		TTL = other.TTL;
-		RoundTripTime = other.RoundTripTime;
-		Address = other.Address;
-		AddressIPV4 = other.AddressIPV4;
-		AddressIPV6 = other.AddressIPV6;
-		Pings = other.Pings;
-	}
-	TracertResult(TracertResult &&other) noexcept {
-		TTL = other.TTL;
-		RoundTripTime = other.RoundTripTime;
-		Address = other.Address;
-		AddressIPV4 = other.AddressIPV4;
-		AddressIPV6 = other.AddressIPV6;
-		Pings = other.Pings;
-		other.TTL = 0;
-		other.RoundTripTime = 0;
-		other.Address.~basic_string();
-		other.AddressIPV4.~basic_string();
-		other.AddressIPV6.~basic_string();
-	}
-	TracertResult& operator=(const TracertResult &other) {
-		TTL = other.TTL;
-		RoundTripTime = other.RoundTripTime;
-		Address = other.Address;
-		AddressIPV4 = other.AddressIPV4;
-		AddressIPV6 = other.AddressIPV6;
-		Pings = other.Pings;
-		return *this;
-	}
-	TracertResult& operator=(TracertResult &&other) noexcept {
-		TTL = other.TTL;
-		RoundTripTime = other.RoundTripTime;
-		Address = other.Address;
-		AddressIPV4 = other.AddressIPV4;
-		AddressIPV6 = other.AddressIPV6;
-		Pings = other.Pings;
-		other.TTL = 0;
-		other.RoundTripTime = 0;
-		other.Pings.~vector();
-		other.Address.~basic_string();
-		other.AddressIPV4.~basic_string();
-		other.AddressIPV6.~basic_string();
-		return *this;
-	}
-	bool operator==(const TracertResult &other) const {
-		return(Pings == other.Pings && TTL == other.TTL &&
-			RoundTripTime == other.RoundTripTime &&
-			lower_copy(Address) == lower_copy(other.Address) &&
-			lower_copy(AddressIPV4) == lower_copy(other.AddressIPV4) &&
-			lower_copy(AddressIPV6) == lower_copy(other.AddressIPV6));
-	}
-	bool operator!=(const TracertResult &other) const {
-		return(Pings != other.Pings || TTL != other.TTL ||
-			RoundTripTime != other.RoundTripTime ||
-			lower_copy(Address) != lower_copy(other.Address) ||
-			lower_copy(AddressIPV4) != lower_copy(other.AddressIPV4) ||
-			lower_copy(AddressIPV6) != lower_copy(other.AddressIPV6));
-	}
-	~TracertResult() {}
+		const unsigned short int rtt, const std::vector<PingResult> pings);
+	TracertResult(const TracertResult& other);
+	TracertResult(TracertResult&& other) noexcept;
+	TracertResult& operator=(const TracertResult& other);
+	TracertResult& operator=(TracertResult &&other) noexcept;
+	bool operator==(const TracertResult &other) const;
+	bool operator!=(const TracertResult &other) const;
+	~TracertResult();
 	unsigned short int TTL;
 	unsigned short int RoundTripTime;
 	std::wstring Address;
@@ -777,77 +534,16 @@ struct TracertResult {
 };
 
 struct ICMPHeader {
-	ICMPHeader() {
-		type = 0;
-		code = 0;
-		checksum = 0;
-		id = 0;
-		seqnum = 0;
-		timestamp = 0;
-	}
-	ICMPHeader(const ICMPHeader &other) {
-		type = other.type;
-		code = other.code;
-		checksum = other.checksum;
-		id = other.id;
-		seqnum = other.seqnum;
-		timestamp = other.timestamp;
-	}
-	ICMPHeader(ICMPHeader &&other) noexcept {
-		type = other.type;
-		code = other.code;
-		checksum = other.checksum;
-		id = other.id;
-		seqnum = other.seqnum;
-		timestamp = other.timestamp;
-		other.type = 0;
-		other.code = 0;
-		other.checksum = 0;
-		other.id = 0;
-		other.seqnum = 0;
-		other.timestamp = 0;
-	}
-	~ICMPHeader() {}
-	ICMPHeader& operator=(const ICMPHeader &other) {
-		type = other.type;
-		code = other.code;
-		checksum = other.checksum;
-		id = other.id;
-		seqnum = other.seqnum;
-		timestamp = other.timestamp;
-		return *this;
-	}
-	ICMPHeader& operator=(ICMPHeader &&other) noexcept {
-		type = other.type;
-		code = other.code;
-		checksum = other.checksum;
-		id = other.id;
-		seqnum = other.seqnum;
-		timestamp = other.timestamp;
-		other.type = 0;
-		other.code = 0;
-		other.checksum = 0;
-		other.id = 0;
-		other.seqnum = 0;
-		other.timestamp = 0;
-		return *this;
-	}
-	bool operator==(const ICMPHeader &other) const {
-		return (type == other.type &&
-			code == other.code &&
-			checksum == other.checksum &&
-			id == other.id &&
-			seqnum == other.seqnum &&
-			timestamp == other.timestamp);
-	}
-	bool operator!=(const ICMPHeader &other) const {
-		return (type != other.type ||
-			code != other.code ||
-			checksum != other.checksum ||
-			id != other.id ||
-			seqnum != other.seqnum ||
-			timestamp != other.timestamp);
-	}
+	ICMPHeader();
+	ICMPHeader(const unsigned char Type, const unsigned char Code, const unsigned short int Checksum,
+		const unsigned long ID, const unsigned short int SeqNum, const unsigned long Timestamp);
+	ICMPHeader(const ICMPHeader &other);
+	ICMPHeader(ICMPHeader&& other) noexcept;
+	~ICMPHeader();
+	ICMPHeader& operator=(const ICMPHeader &other);
+	ICMPHeader& operator=(ICMPHeader &&other) noexcept;
+	bool operator==(const ICMPHeader &other) const;
+	bool operator!=(const ICMPHeader &other) const;
 	unsigned char type;				// ICMP message type
 	unsigned char code;				// Sub code
 	unsigned short checksum;		// Checksum
@@ -858,137 +554,18 @@ struct ICMPHeader {
 };
 
 struct IPHeader {
-	IPHeader() {
-		headerlen = 4;
-		version = 4;
-		typeofoservice = 0;
-		packetlen = 0;
-		identifier = 0;
-		flags = 0;
-		ttl = 0;
-		protocol = 0;
-		checksum = 0;
-		sourceIP = 0;
-		destIP = 0;
-	}
+	IPHeader();
 	IPHeader(const unsigned int headerLen, const unsigned int ver, const unsigned char tos, const unsigned short int packlen,
 		const unsigned short int id, const unsigned short int packetflags, const unsigned char timetolive,
-		const unsigned char proto, const unsigned short int chksum, const unsigned int srcIP, const unsigned int destinationIP) {
-		headerlen = headerLen;
-		version = ver;
-		typeofoservice = tos;
-		packetlen = packlen;
-		identifier = id;
-		flags = packetflags;
-		ttl = timetolive;
-		protocol = proto;
-		checksum = chksum;
-		sourceIP = srcIP;
-		destIP = destinationIP;
-	}
-	IPHeader(const IPHeader &other) {
-		headerlen = other.headerlen;
-		version = other.version;
-		typeofoservice = other.typeofoservice;
-		packetlen = other.packetlen;
-		identifier = other.identifier;
-		flags = other.flags;
-		ttl = other.ttl;
-		protocol = other.protocol;
-		checksum = other.checksum;
-		sourceIP = other.sourceIP;
-		destIP = other.destIP;
-	}
-	IPHeader(IPHeader &&other) noexcept {
-		headerlen = other.headerlen;
-		version = other.version;
-		typeofoservice = other.typeofoservice;
-		packetlen = other.packetlen;
-		identifier = other.identifier;
-		flags = other.flags;
-		ttl = other.ttl;
-		protocol = other.protocol;
-		checksum = other.checksum;
-		sourceIP = other.sourceIP;
-		destIP = other.destIP;
-		other.headerlen = 0;
-		other.version = 0;
-		other.typeofoservice = 0;
-		other.packetlen = 0;
-		other.identifier = 0;
-		other.flags = 0;
-		other.ttl = 0;
-		other.protocol = 0;
-		other.checksum = 0;
-		other.sourceIP = 0;
-		other.destIP = 0;
-	}
-	~IPHeader() {}
-	IPHeader& operator=(const IPHeader &other) {
-		headerlen = other.headerlen;
-		version = other.version;
-		typeofoservice = other.typeofoservice;
-		packetlen = other.packetlen;
-		identifier = other.identifier;
-		flags = other.flags;
-		ttl = other.ttl;
-		protocol = other.protocol;
-		checksum = other.checksum;
-		sourceIP = other.sourceIP;
-		destIP = other.destIP;
-		return *this;
-	}
-	IPHeader& operator=(IPHeader &&other) noexcept {
-		headerlen = other.headerlen;
-		version = other.version;
-		typeofoservice = other.typeofoservice;
-		packetlen = other.packetlen;
-		identifier = other.identifier;
-		flags = other.flags;
-		ttl = other.ttl;
-		protocol = other.protocol;
-		checksum = other.checksum;
-		sourceIP = other.sourceIP;
-		destIP = other.destIP;
-		other.headerlen = 0;
-		other.version = 0;
-		other.typeofoservice = 0;
-		other.packetlen = 0;
-		other.identifier = 0;
-		other.flags = 0;
-		other.ttl = 0;
-		other.protocol = 0;
-		other.checksum = 0;
-		other.sourceIP = 0;
-		other.destIP = 0;
-		return *this;
-	}
-	bool operator==(const IPHeader &other) const {
-		return (headerlen == other.headerlen &&
-			version == other.version &&
-			typeofoservice == other.typeofoservice &&
-			packetlen == other.packetlen &&
-			identifier == other.identifier &&
-			flags == other.flags &&
-			ttl == other.ttl &&
-			protocol == other.protocol &&
-			checksum == other.checksum &&
-			sourceIP == other.sourceIP &&
-			destIP == other.destIP);
-	}
-	bool operator!=(const IPHeader &other) const {
-		return (headerlen != other.headerlen ||
-			version != other.version ||
-			typeofoservice != other.typeofoservice ||
-			packetlen != other.packetlen ||
-			identifier != other.identifier ||
-			flags != other.flags ||
-			ttl != other.ttl ||
-			protocol != other.protocol ||
-			checksum != other.checksum ||
-			sourceIP != other.sourceIP ||
-			destIP != other.destIP);
-	}
+		const unsigned char proto, const unsigned short int chksum, const unsigned int srcIP,
+		const unsigned int destinationIP);
+	IPHeader(const IPHeader &other);
+	IPHeader(IPHeader &&other) noexcept;
+	~IPHeader();
+	IPHeader& operator=(const IPHeader &other);
+	IPHeader& operator=(IPHeader &&other) noexcept;
+	bool operator==(const IPHeader &other) const;
+	bool operator!=(const IPHeader &other) const;
 	unsigned int   headerlen;		// Length of the header
 	unsigned int   version;			// Version of IP
 	unsigned char  typeofoservice;	// Type of service
@@ -1043,55 +620,63 @@ NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std:
 NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std::wstring address,
 	const unsigned char maxHops = 30);
 NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName,
-	const std::string portOrSvcName = "80", const SocketType socketType = SocketType::Stream,
-	const NWProtocol protocol = NWProtocol::TCP, const AddressFamily addressFmaily = AddressFamily::IPV4);
+	const std::string portOrSvcName = "80", const AddressFamily addressFmaily = AddressFamily::IPV4,
+	const SocketType socketType = SocketType::Stream, const NWProtocol protocol = NWProtocol::TCP);
 NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName,
-	const std::wstring portOrSvcName = L"80", const SocketType socketType = SocketType::Stream,
-	const NWProtocol protocol = NWProtocol::TCP, const AddressFamily addressFmaily = AddressFamily::IPV4);
+	const std::wstring portOrSvcName = L"80", const AddressFamily addressFmaily = AddressFamily::IPV4, 
+	const SocketType socketType = SocketType::Stream, const NWProtocol protocol = NWProtocol::TCP);
 NetOpResult getHostnameByIPV4_DNSQuery(std::string &hostName, const std::string ipAddr,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
+	const std::string dnsAddr = "", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
 NetOpResult getHostnameByIPV4_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
+	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
 NetOpResult getHostnameByIPV6_DNSQuery(std::string &hostName, const std::string ipAddr,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
+	const std::string dnsAddr = "", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
 NetOpResult getHostnameByIPV6_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
+	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
 NetOpResult getIPV4Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
+	const std::string dnsAddr = "", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
 NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
+	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
 NetOpResult getIPV6Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
+	const std::string dnsAddr = "", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
 NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
+	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
 NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::string objectName,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
-	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec, const std::wstring dnsAddr = L"");
+	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
+	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec);
 NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::wstring objectName,
+	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
+	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec);
+NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName, const std::string dnsAddr = "",
+	const bool async = true, const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
+NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName, const std::wstring dnsAddr = L"",
+	const bool async = true, const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
+NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring>& ipAddrs, const std::string hostName,
+	const std::string dnsAddr = "", const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
+NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
+	const std::wstring dnsAddr = L"", const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
+NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostName, const std::string ipV4Addr,
+	const std::string dnsIPV4Addr = "", const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
+NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostName, const std::wstring ipV4Addr,
+	const std::wstring dnsIPV4Addr = L"", const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
+NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &results, const std::string objectName,
+	const std::string dnsIPV4Addr = "", const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
+NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &results, const std::wstring objectName,
+	const std::wstring dnsIPV4Addr = L"", const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
+NetOpResult customDNSQueryEx(std::vector<DNS_RECORD> &queryResults, const std::string objectName,
+	const std::string dnsIPV4Addr = "", const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
-	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec, const std::wstring dnsAddr = L"");
-NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName, const bool async = true,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
-NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName, const bool async = true,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
-NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring>& ipAddrs, const std::string hostName, const bool async = true,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsAddr = "");
-NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName, const bool async = true,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsAddr = L"");
-NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostName, const std::string ipV4Addr, const bool async = true,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsIPV4Addr = "");
-NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostName, const std::wstring ipV4Addr, const bool async = true,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsIPV4Addr = L"");
-NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &results, const std::string objectName, const bool async = true,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::string dnsIPV4Addr = "");
-NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &results, const std::wstring objectName, const bool async = true,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const std::wstring dnsIPV4Addr = L"");
-NetOpResult customDNSQueryEx(std::vector<DNS_RECORD> &queryResults, const std::string objectName, const bool async = true,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const DNSRecordType dnsRecordType = DNSRecordType::CNameRec,
-	const std::string dnsIPV4Addr = "");
-NetOpResult customDNSQueryEx(std::vector<DNS_RECORD> &queryResults, const std::wstring objectName, const bool async = true,
-	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache, const DNSRecordType dnsRecordType = DNSRecordType::CNameRec,
-	const std::wstring dnsIPV4Addr = L"");
+	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec);
+NetOpResult customDNSQueryEx(std::vector<DNS_RECORD> &queryResults, const std::wstring objectName,
+	const std::wstring dnsIPV4Addr = L"", const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
+	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec);
 std::wstring getDNSOpTextResult(const DNSResponseCode resultCode);
 std::string lookupIPV4Address(const std::string dnsName);
 std::wstring lookupIPV4Address(const std::wstring dnsName);

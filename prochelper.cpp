@@ -7,14 +7,81 @@ ProcResource::ProcResource() {
 	memset(&pi, 0, sizeof(PROCESS_INFORMATION));
 }
 
-ProcResource::ProcResource(const ProcResource& other) {
-	pid = other.pid;
-	exitCode = other.exitCode;
-	memcpy(&si, &other.si, sizeof(STARTUPINFO));
-	memcpy(&pi, &other.pi, sizeof(PROCESS_INFORMATION));
+ProcResource::ProcResource(const unsigned long PID, unsigned long ExitCode, STARTUPINFO SI,
+	PROCESS_INFORMATION PI) {
+	pid = PID;
+	exitCode = ExitCode;
+	memcpy(&si, &SI, sizeof(STARTUPINFO));
+	memcpy(&pi, &PI, sizeof(PROCESS_INFORMATION));
+}
+
+ProcResource::ProcResource(const ProcResource &other) {
+	if (this != &other) {
+		pid = other.pid;
+		exitCode = other.exitCode;
+		memcpy(&si, &other.si, sizeof(STARTUPINFO));
+		memcpy(&pi, &other.pi, sizeof(PROCESS_INFORMATION));
+	}
+}
+
+ProcResource::ProcResource(ProcResource &&other) noexcept {
+	if (this != &other) {
+		pid = other.pid;
+		other.pid = 0;
+		exitCode = other.exitCode;
+		other.exitCode = 0;
+		memcpy(&si, &other.si, sizeof(STARTUPINFO));
+		memset(&other.si, 0, sizeof(STARTUPINFO));
+		memcpy(&pi, &other.pi, sizeof(PROCESS_INFORMATION));
+		memset(&other.pi, 0, sizeof(PROCESS_INFORMATION));
+	}
 }
 
 ProcResource::~ProcResource() {}
+
+ProcResource& ProcResource::operator=(const ProcResource& other) {
+	if (this != &other) {
+		pid = other.pid;
+		exitCode = other.exitCode;
+		memcpy(&si, &other.si, sizeof(STARTUPINFO));
+		memcpy(&pi, &other.pi, sizeof(PROCESS_INFORMATION));
+	}
+	return *this;
+}
+
+ProcResource& ProcResource::operator=(ProcResource&& other) noexcept {
+	if (this != &other) {
+		pid = other.pid;
+		other.pid = 0;
+		exitCode = other.exitCode;
+		other.exitCode = 0;
+		memcpy(&si, &other.si, sizeof(STARTUPINFO));
+		memset(&other.si, 0, sizeof(STARTUPINFO));
+		memcpy(&pi, &other.pi, sizeof(PROCESS_INFORMATION));
+		memset(&other.pi, 0, sizeof(PROCESS_INFORMATION));
+	}
+	return *this;
+}
+
+bool ProcResource::operator==(const ProcResource& other) const {
+	if (this != &other) {
+		return(pid == other.pid && exitCode == other.exitCode &&
+			!memcmp(&si, &other.si, sizeof(STARTUPINFO)) &&
+			!memcmp(&pi, &other.pi, sizeof(PROCESS_INFORMATION)));
+	} else {
+		return true;
+	}
+}
+
+bool ProcResource::operator!=(const ProcResource& other) const {
+	if (this != &other) {
+		return(pid != other.pid || exitCode != other.exitCode ||
+			memcmp(&si, &other.si, sizeof(STARTUPINFO)) ||
+			memcmp(&pi, &other.pi, sizeof(PROCESS_INFORMATION)));
+	} else {
+		return false;
+	}
+}
 
 ProcDesc::ProcDesc() {
 	size = 0;
@@ -50,28 +117,124 @@ ProcDesc::ProcDesc(const unsigned long sz,
 	exepath = pathexe;
 }
 
-ProcDesc::ProcDesc(const ProcDesc& other) {
-	size = other.size;
-	usage = other.usage;
-	pid = other.pid;
-	threadnum = other.threadnum;
-	parentPid = other.parentPid;
-	flags = other.flags;
-	moduleId = other.moduleId;
-	defHeapId = other.defHeapId;
-	threadPriority = other.threadPriority;
-	exepath = other.exepath;
+ProcDesc::ProcDesc(const ProcDesc &other) {
+	if (this != &other) {
+		size = other.size;
+		usage = other.usage;
+		pid = other.pid;
+		threadnum = other.threadnum;
+		parentPid = other.parentPid;
+		flags = other.flags;
+		moduleId = other.moduleId;
+		defHeapId = other.defHeapId;
+		threadPriority = other.threadPriority;
+		exepath = other.exepath;
+	}
+}
+
+ProcDesc::ProcDesc(ProcDesc &&other) noexcept {
+	if (this != &other) {
+		size = other.size;
+		other.size = 0;
+		usage = other.usage;
+		other.usage = 0;
+		pid = other.pid;
+		other.pid = 0;
+		threadnum = other.threadnum;
+		other.threadnum = 0;
+		parentPid = other.parentPid;
+		other.parentPid = 0;
+		flags = other.flags;
+		other.flags = 0;
+		moduleId = other.moduleId;
+		other.moduleId = 0;
+		defHeapId = other.defHeapId;
+		other.defHeapId = 0;
+		threadPriority = other.threadPriority;
+		other.threadPriority = 0;
+		exepath = other.exepath;
+		other.exepath.~basic_string();
+	}
 }
 
 ProcDesc::~ProcDesc() {}
 
-ProcessHandler::ProcessHandler() {
-
+ProcDesc& ProcDesc::operator=(const ProcDesc& other) {
+	if (this != &other) {
+		size = other.size;
+		usage = other.usage;
+		pid = other.pid;
+		threadnum = other.threadnum;
+		parentPid = other.parentPid;
+		flags = other.flags;
+		moduleId = other.moduleId;
+		defHeapId = other.defHeapId;
+		threadPriority = other.threadPriority;
+		exepath = other.exepath;
+	}
+	return *this;
 }
 
-ProcessHandler::ProcessHandler(const ProcessHandler &other) {
-
+ProcDesc& ProcDesc::operator=(ProcDesc&& other) noexcept {
+	if (this != &other) {
+		size = other.size;
+		other.size = 0;
+		usage = other.usage;
+		other.usage = 0;
+		pid = other.pid;
+		other.pid = 0;
+		threadnum = other.threadnum;
+		other.threadnum = 0;
+		parentPid = other.parentPid;
+		other.parentPid = 0;
+		flags = other.flags;
+		other.flags = 0;
+		moduleId = other.moduleId;
+		other.moduleId = 0;
+		defHeapId = other.defHeapId;
+		other.defHeapId = 0;
+		threadPriority = other.threadPriority;
+		other.defHeapId = 0;
+		exepath = other.exepath;
+		other.exepath.~basic_string();
+	}
+	return *this;
 }
+
+bool ProcDesc::operator==(const ProcDesc& other) const {
+	if (this != &other) {
+		return (size == other.size &&
+			usage == other.usage &&
+			pid == other.pid &&
+			threadnum == other.threadnum &&
+			parentPid == other.parentPid &&
+			flags == other.flags &&
+			moduleId == other.moduleId &&
+			defHeapId == other.defHeapId &&
+			threadPriority == other.threadPriority &&
+			lower_copy(exepath) == lower_copy(other.exepath));
+	} else {
+		return true;
+	}
+}
+bool ProcDesc::operator!=(const ProcDesc& other) const {
+	if (this != &other) {
+		return (size != other.size ||
+			usage != other.usage ||
+			pid != other.pid ||
+			threadnum != other.threadnum ||
+			parentPid != other.parentPid ||
+			flags != other.flags ||
+			moduleId != other.moduleId ||
+			defHeapId != other.defHeapId ||
+			threadPriority != other.threadPriority ||
+			lower_copy(exepath) != lower_copy(other.exepath));
+	} else {
+		return false;
+	}
+}
+
+ProcessHandler::ProcessHandler() {}
 
 ProcessHandler::~ProcessHandler() {}
 
@@ -83,16 +246,16 @@ ProcResource ProcessHandler::StartProc(const std::wstring exepath, const std::ws
 	PROCESS_INFORMATION pi;
 	memset(&si, 0, sizeof(STARTUPINFO));
 	memset(&pi, 0, sizeof(PROCESS_INFORMATION));
-	if (::CreateProcess((wchar_t*)exepath.c_str(), // Exe path
-		(wchar_t*)cmdline.c_str(),				 // Command line (prior space is mandatory)
-		NULL,									 // Process handle not inheritable
-		NULL,									 // Thread handle not inheritable
-		true,							         // Set handle inheritance to TRUE
-		CREATE_NEW_PROCESS_GROUP,				 // Creates new process group
-		0,										 // Use parent's environment block
-		0,										 // Use parent's starting directory 
-		&si,							         // Pointer to STARTUPINFO structure
-		&pi)									 // Pointer to PROCESS_INFORMATION structure
+	if (::CreateProcess((wchar_t*)exepath.c_str(),	// Exe path
+		(wchar_t*)cmdline.c_str(),					// Command line (prior space is mandatory)
+		NULL,										// Process handle not inheritable
+		NULL,										// Thread handle not inheritable
+		true,										// Set handle inheritance to TRUE
+		CREATE_NEW_PROCESS_GROUP,					// Creates new process group
+		0,											// Use parent's environment block
+		0,											// Use parent's starting directory 
+		&si,										// Pointer to STARTUPINFO structure
+		&pi)										// Pointer to PROCESS_INFORMATION structure
 		) {
 		ret.pid = pi.dwProcessId;
 		ret.si = si;
@@ -2374,7 +2537,7 @@ std::vector<std::wstring> ProcessHandler::GetProcPrivileges(const unsigned long 
 							wchar_t pbuf[64] = { 0 };
 							for (size_t i = 0; i < priv->PrivilegeCount; ++i) {
 								bufSize = 64;
-								if (priv->Privileges[i].Attributes == SE_PRIVILEGE_ENABLED) {
+								if (priv->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED) {
 									luid = priv->Privileges[i].Luid;
 									if (::LookupPrivilegeName(0, &luid, pbuf, &bufSize)) {
 										ret.push_back(pbuf);

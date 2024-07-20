@@ -1185,7 +1185,9 @@ RegOpResult RegHandler::GetSoftwareVersion(const std::wstring softwareName,
 			}
 		}
 	}
-	FreeValues(softwareKeys);
+	if (RegOpResult::Success != FreeValues(softwareKeys)) {
+		return RegOpResult::Fail;
+	}
 	if(versions.size()) {
 		return RegOpResult::Success;
 	} else {
@@ -1312,7 +1314,7 @@ RegOpResult RegHandler::MoveVal(const std::wstring source,
 }
 
 RegOpResult RegHandler::SeekVal(const std::wstring valName,
-	std::vector<RegValDesc>& results, const std::wstring startPath,
+	std::vector<RegValDesc> &results, const std::wstring startPath,
 	const RegValType valType, const bool acquireVals, const unsigned long limitResults,
 	const bool cleanupStrings, const HKEY* root) const {
 	if (valName.length()) {
@@ -1558,6 +1560,114 @@ RegOpResult RegHandler::SeekKey(const std::wstring keyName, std::vector<RegKeyDe
 	return RegOpResult::Success;
 }
 
+RegOpResult RegHandler::EnumKey(std::wstring keyName, RegKeyDesc &keyDesc, const bool acquireVals,
+	const unsigned long limitResults, const bool cleanupStrings, const HKEY *root) const {
+	if (keyName.length()) {
+		unsigned long resAcquired = 0;
+		std::wstring path = keyName;
+		if (path == L"") {
+			path = L"HKEY_LOCAL_MACHINE\\";
+		}
+		// REGHELPERKEYBEGIN
+		HKEY keyHandle = { 0 }, rootKey = { 0 };
+		std::wstring keyPath, valueName = keyName;
+		std::vector<std::wstring> strSpl;
+		if (root) {
+			rootKey = *root;
+		} else {
+			rootKey = { 0 };
+		}
+		prepHKEYKeyPath(rootKey, path, rootKey, keyPath);
+		if (ERROR_SUCCESS == ::RegOpenKeyEx(rootKey, keyPath.c_str(), 0,
+			KEY_READ | KEY_QUERY_VALUE | getRightMod(), &keyHandle)) {
+			keyDesc.keyPath = hkey2wstr(rootKey) + keyPath;
+			keyDesc.keyName = splitStr(keyPath, L"\\").back();
+			wchar_t			achClass[MAX_PATH] = L"";
+			wchar_t			achValue[REG_MAX_VALUE_NAME] = { 0 }; // buffer for value name
+			wchar_t			achKey[256] = { 0 };				  // buffer for subkey name
+			unsigned long	cbName = 0;							  // size of name string 
+			unsigned long	cchValue = REG_MAX_VALUE_NAME;		  // buffer for class name 
+			unsigned long	cchClassName = MAX_PATH;			  // size of class string 
+			unsigned long	cSubKeys = 0;						  // number of subkeys 
+			unsigned long	cbMaxSubKey = 0;					  // longest subkey size 
+			unsigned long	cchMaxClass = 0;					  // longest class string 
+			unsigned long	cValues = 0;					      // number of values for key 
+			unsigned long	cchMaxValue = 0;					  // longest value name 
+			unsigned long	cbMaxValueData = 0;					  // longest value data 
+			unsigned long	cbSecurityDescriptor = 0;		      // size of security descriptor 
+			// FILETIME		ftLastWriteTime;					  // last write time
+			unsigned long	dataType = 0;
+			std::wstring seekpath;
+			if (ERROR_SUCCESS == ::RegQueryInfoKey(
+				keyHandle,				 // key handle 
+				achClass,				 // buffer for class name 
+				&cchClassName,			 // size of class string 
+				NULL,				 	 // reserved 
+				&cSubKeys,				 // number of subkeys 
+				&cbMaxSubKey,            // longest subkey size 
+				&cchMaxClass,            // longest class string 
+				&cValues,                // number of values for this key 
+				&cchMaxValue,            // longest value name 
+				&cbMaxValueData,         // longest value data 
+				&cbSecurityDescriptor,   // security descriptor 
+				0 /* &ftLastWriteTime */)		 // last write time
+				) {
+				if (cSubKeys) {
+					for (size_t i = 0; i < cSubKeys; ++i) {
+						cbName = REG_MAX_KEY_LENGTH;
+						::RegEnumKeyEx(keyHandle, i, achKey, &cbName, 0, 0, 0, 0 /* &ftLastWriteTime */);
+						seekpath = hkey2wstr(rootKey);
+						if (keyPath.length()) {
+							if (endsWith(keyPath, L"\\")) {
+								seekpath += removeFromStart_copy(keyPath, L"\\") + achKey;
+							} else {
+								seekpath += removeFromStart_copy(keyPath, L"\\") + L"\\" + achKey;
+							}
+						} else {
+							seekpath += removeFromStart_copy(keyPath, L"\\") + achKey;
+						}
+						RegKeyDesc tkey;
+						tkey.keyPath = seekpath;
+						tkey.keyName = splitStr(achKey, L"\\").back();
+						EnumKey(tkey.keyPath, tkey, acquireVals, limitResults, cleanupStrings, root);
+						keyDesc.keys.push_back(tkey);
+					}
+				}
+				if (cValues) {
+					unsigned long buflen = REG_READBUFSZ;
+					for (size_t i = 0; i < cValues; ++i) {
+						cchValue = REG_MAX_VALUE_NAME;
+						achValue[0] = 0;
+						::RegEnumValue(keyHandle, i, achValue, &cchValue, 0, &dataType, 0, &buflen);
+						RegValDesc elem;
+						elem.valPath = hkey2wstr(rootKey);
+						if (wcslen_c(achValue)) {
+							elem.valPath += keyPath + L"\\" + std::wstring(achValue);
+							elem.valName = achValue;
+							elem.valDataSz = buflen;
+							elem.valType = static_cast<RegValType>(dataType);
+							if (std::find(keyDesc.values.begin(), keyDesc.values.end(), elem) ==
+								keyDesc.values.end()) {
+								keyDesc.values.push_back(elem);
+							}
+						}
+					}
+				}
+			}
+			CLOSEKEY_NULLIFY(keyHandle);
+		} else {
+			if (keyHandle) {
+				CLOSEKEY_NULLIFY(keyHandle);
+			}
+			return RegOpResult::Fail;
+		}
+		if (acquireVals) {
+			return AcquireValues(keyDesc, limitResults, cleanupStrings, root);
+		}
+	}
+	return RegOpResult::Fail;
+}
+
 RegOpResult RegHandler::SeekVal2(const std::wstring valName,
 	std::vector<RegValDesc> &results, const std::wstring startPath,
 	const bool acquireVals, const unsigned long limitResults ,
@@ -1664,9 +1774,8 @@ RegOpResult RegHandler::SeekVal2(const std::wstring valName,
 	return RegOpResult::Success;
 }
 
-RegOpResult RegHandler::SeekVal(const std::wstring valName,
-	std::vector<RegValDesc> &results, const std::wstring startPath,
-	const bool acquireVals, const unsigned long limitResults, const bool cleanupStrings,
+RegOpResult RegHandler::SeekVal(const std::wstring valName, std::vector<RegValDesc> &results,
+	const std::wstring startPath, const bool acquireVals, const unsigned long limitResults, const bool cleanupStrings,
 	const HKEY *root) const {
 	if (valName.length()) {
 		unsigned long resAcquired = 0;
@@ -2142,6 +2251,23 @@ RegOpResult RegHandler::SeekValRecType(const std::wstring valName,
 	return RegOpResult::Fail;
 }
 
+RegOpResult RegHandler::AcquireValues(RegKeyDesc &keyDesc, const unsigned long limitVals, const bool cleanupStrings,
+	const HKEY *root) const {
+	RegOpResult opres;
+	if (keyDesc.keys.size()) {
+		opres = AcquireValues(keyDesc.keys, limitVals, cleanupStrings, root);
+		if (RegOpResult::Success != opres) {
+			return opres;
+		}
+	}
+	if (keyDesc.values.size()) {
+		opres = AcquireValues(keyDesc.values, limitVals, cleanupStrings, root);
+		if (RegOpResult::Success != opres) {
+			return opres;
+		}
+	}
+}
+
 RegOpResult RegHandler::AcquireValues(std::vector<RegKeyDesc> &keyList,
 	const unsigned long limitVals, const bool cleanupStrings,
 	const HKEY *root) const {
@@ -2353,6 +2479,23 @@ RegOpResult RegHandler::AcquireValues(std::vector<RegValDesc> &valList,
 	return RegOpResult::Success;
 }
 
+RegOpResult RegHandler::CreateValues(const RegKeyDesc &keyDesc, const HKEY* root) const {
+	RegOpResult opres;
+	if (keyDesc.keys.size()) {
+		opres = CreateValues(keyDesc.keys, root);
+		if (RegOpResult::Success != opres) {
+			return opres;
+		}
+	}
+	if (keyDesc.values.size()) {
+		opres = CreateValues(keyDesc.values, root);
+		if (RegOpResult::Success != opres) {
+			return opres;
+		}
+	}
+	return RegOpResult::Success;
+}
+
 RegOpResult RegHandler::CreateValues(const std::vector<RegKeyDesc> &keyList, const HKEY *root) const {
 	RegOpResult opres;
 	for (size_t i = 0; i < keyList.size(); ++i) {
@@ -2404,6 +2547,23 @@ RegOpResult RegHandler::CreateValues(const std::vector<RegValDesc> &valList,
 	return RegOpResult::Success;
 }
 
+RegOpResult RegHandler::FreeValues(const RegKeyDesc &keyDesc, const HKEY *root) const {
+	RegOpResult opres;
+	if (keyDesc.keys.size()) {
+		opres = FreeValues(keyDesc.keys, root);
+		if (RegOpResult::Success != opres) {
+			return opres;
+		}
+	}
+	if (keyDesc.values.size()) {
+		opres = FreeValues(keyDesc.values, root);
+		if (RegOpResult::Success != opres) {
+			return opres;
+		}
+	}
+	return RegOpResult::Success;
+}
+
 RegOpResult RegHandler::FreeValues(const std::vector<RegKeyDesc> &keyList, const HKEY *root) const {
 	RegOpResult opres;
 	for (size_t i = 0; i < keyList.size(); ++i) {
@@ -2432,6 +2592,8 @@ RegOpResult RegHandler::FreeValues(const std::vector<RegValDesc> &valList,
 				itemunconst.FreeData();
 			}
 		}
+	} else {
+		return RegOpResult::Fail;
 	}
 	return RegOpResult::Success;
 }
@@ -2767,6 +2929,23 @@ RegOpResult RegHandler::CreateKey(const std::wstring keyName, const bool createM
 		}
 	}
 	return RegOpResult::Fail;
+}
+
+RegOpResult RegHandler::DeleteValues(const RegKeyDesc &keyDesc, const HKEY *root) const {
+	RegOpResult opres;
+	if (keyDesc.keys.size()) {
+		opres = DeleteValues(keyDesc.keys, root);
+		if (RegOpResult::Success != opres) {
+			return opres;
+		}
+	}
+	if (keyDesc.values.size()) {
+		opres = DeleteValues(keyDesc.values, root);
+		if (RegOpResult::Success != opres) {
+			return opres;
+		}
+	}
+	return RegOpResult::Success;
 }
 
 RegOpResult RegHandler::DeleteValues(const std::vector<RegKeyDesc>& keyList, const HKEY* root) const {
@@ -3238,6 +3417,8 @@ std::wstring RegHandler::pickMenuModNum(const std::wstring subMenuKey, const HKE
 inline std::wstring RegHandler::hkey2wstr(const HKEY key) const {
 	if (key == HKEY_CURRENT_USER) {
 		return L"HKEY_CURRENT_USER\\";
+	} else if (key == HKEY_CURRENT_USER_LOCAL_SETTINGS) {
+		return L"HKEY_CURRENT_USER_LOCAL_SETTINGS\\";
 	} else if (key == HKEY_LOCAL_MACHINE) {
 		return L"HKEY_LOCAL_MACHINE\\";
 	} else if (key == HKEY_CLASSES_ROOT) {
@@ -3246,6 +3427,14 @@ inline std::wstring RegHandler::hkey2wstr(const HKEY key) const {
 		return L"HKEY_USERS\\";
 	} else if (key == HKEY_CURRENT_CONFIG) {
 		return L"HKEY_CURRENT_CONFIG\\";
+	} else if (key == HKEY_PERFORMANCE_NLSTEXT) {
+		return L"HKEY_PERFORMANCE_NLSTEXT\\";
+	} else if (key == HKEY_PERFORMANCE_TEXT) {
+		return L"HKEY_PERFORMANCE_TEXT\\";
+	} else if (key == HKEY_PERFORMANCE_DATA) {
+		return L"HKEY_PERFORMANCE_DATA\\";
+	} else if (key == HKEY_DYN_DATA) {
+		return L"HKEY_DYN_DATA\\";
 	} else {
 		return L"";
 	}
@@ -3275,6 +3464,9 @@ RegOpResult RegHandler::prepHKEYKeyPathValueName(HKEY &keyHandle, const HKEY &ke
 	} else {
 	}*/
 	std::vector<std::wstring> strSplTest = keyPathSpl;
+	if (strSplTest.size() > 1) {
+		strSplTest.erase(strSplTest.end() - 1);
+	}
 	if (keyHandleSet) {
 		hktest = keyHandleSet;
 	} else {
@@ -3318,7 +3510,7 @@ RegOpResult RegHandler::prepHKEYKeyPathValueName(HKEY &keyHandle, const HKEY &ke
 		tstr = joinStrs(strSplTest, L"\\");
 		res = ::RegOpenKeyEx(hktest, tstr.c_str(), 0, KEY_READ | getRightMod(), &hkres);
 		if (ERROR_SUCCESS == res) {
-			tvalname = removeFromBothSides_copy(removeFromStart_copy(keyPathSplStr, tstr), L"\\");
+			tvalname = removeFromStart_copy(removeFromStart_copy(valPath, rootlow + L"\\" + tstr), L"\\");
 			if (ERROR_SUCCESS == ::RegQueryValueEx(hkres, tvalname.c_str(), 0, 0, 0, 0)) {
 				keyHandle = hktest;
 				keyPath = tstr;
@@ -3334,6 +3526,14 @@ RegOpResult RegHandler::prepHKEYKeyPathValueName(HKEY &keyHandle, const HKEY &ke
 						valName = tvalnameSpl.front();
 						CLOSEKEY_NULLIFY(hkres);
 						return RegOpResult::Success;
+					} else {
+						if (ERROR_SUCCESS == ::RegQueryValueEx(hkres, tvalname.c_str(), 0, 0, 0, 0)) {
+							keyHandle = hktest;
+							keyPath = tstr;
+							valName = tvalname;
+							CLOSEKEY_NULLIFY(hkres);
+							return RegOpResult::Success;
+						}
 					}
 				} else {
 					return RegOpResult::Fail;
@@ -3344,7 +3544,8 @@ RegOpResult RegHandler::prepHKEYKeyPathValueName(HKEY &keyHandle, const HKEY &ke
 				CLOSEKEY_NULLIFY(hkres);
 			}
 		}
-	} while (strSplTest.size());
+		strSplTest.pop_back();
+	} while (strSplTest.size() > 1);
 	keyPath = tstr;
 	valName = removeFromBothSides_copy(removeFromStart_copy(keyPathSplStr, tstr), L"\\");
 	return RegOpResult::Success;

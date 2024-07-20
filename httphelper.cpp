@@ -5,10 +5,6 @@ const size_t replySize = 1024;
 
 HTTPHelper::HTTPHelper() {}
 
-HTTPHelper::HTTPHelper(const HTTPHelper& other) {
-
-}
-
 HTTPHelper::~HTTPHelper() {}
 
 bool HTTPHelper::GetHTTPSResponse(const std::string address, std::string &res, std::string requri) const {
