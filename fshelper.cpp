@@ -12,12 +12,62 @@ BinData::BinData() {
 	BitDepth = BinBitDepth::BitDepthUnknown;
 }
 
+BinData::BinData(const BinBitDepth bitDepth, const BinPlatform binPlatform) {
+	BitDepth = bitDepth;
+	Platform = binPlatform;
+}
+
 BinData::BinData(const BinData &other) {
-	Platform = other.Platform;
-	BitDepth = other.BitDepth;
+	if (this != &other) {
+		Platform = other.Platform;
+		BitDepth = other.BitDepth;
+	}
+}
+
+BinData::BinData(BinData&& other) noexcept {
+	if (this != &other) {
+		Platform = other.Platform;
+		other.Platform = BinPlatform::PlatformUnknown;
+		BitDepth = other.BitDepth;
+		other.BitDepth = BinBitDepth::BitDepthUnknown;
+	}
 }
 
 BinData::~BinData() {}
+
+BinData& BinData::operator=(const BinData& other) {
+	if (this != &other) {
+		BitDepth = other.BitDepth;
+		Platform = other.Platform;
+	}
+	return *this;
+}
+
+BinData& BinData::operator=(BinData &&other) noexcept {
+	if (this != &other) {
+		Platform = other.Platform;
+		other.Platform = BinPlatform::PlatformUnknown;
+		BitDepth = other.BitDepth;
+		other.BitDepth = BinBitDepth::BitDepthUnknown;
+	}
+	return *this;
+}
+
+bool BinData::operator==(const BinData& other) const {
+	if (this != &other) {
+		return (BitDepth == other.BitDepth && Platform == other.Platform);
+	} else {
+		return true;
+	}
+}
+
+bool BinData::operator!=(const BinData& other) const {
+	if (this != &other) {
+		return (BitDepth != other.BitDepth || Platform != other.Platform);
+	} else {
+		return false;
+	}
+}
 
 FileRecord::FileRecord() {
 	size = 0;

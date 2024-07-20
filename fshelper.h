@@ -71,7 +71,7 @@ enum class BinPlatform : unsigned char {
 	PlatformUnknown
 };
 
-enum class BinBitDepth {
+enum class BinBitDepth : unsigned char {
 	X16,
 	X32,
 	X64,
@@ -87,20 +87,14 @@ enum class HashType : unsigned long {
 
 struct BinData {
 	BinData();
+	BinData(const BinBitDepth bitDepth, const BinPlatform binPlatform);
 	BinData(const BinData &other);
+	BinData(BinData &&other) noexcept;
 	~BinData();
-	BinData& operator=(const BinData &other) {
-		BitDepth = other.BitDepth;
-		Platform = other.Platform;
-	}
-	bool operator==(const BinData &other) const {
-		return (BitDepth == other.BitDepth &&
-			Platform == other.Platform);
-	}
-	bool operator!=(const BinData &other) const {
-		return (BitDepth != other.BitDepth ||
-			Platform != other.Platform);
-	}
+	BinData& operator=(const BinData &other);
+	BinData& operator=(BinData &&other) noexcept;
+	bool operator==(const BinData &other) const;
+	bool operator!=(const BinData &other) const;
 	BinBitDepth BitDepth;
 	BinPlatform Platform;
 };
