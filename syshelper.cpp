@@ -491,8 +491,6 @@ GroupDesc::~GroupDesc() {}
 
 SysHandler::SysHandler() {}
 
-SysHandler::SysHandler(const SysHandler &other) {}
-
 SysHandler::~SysHandler() {}
 
 std::wstring SysHandler::GetMachineName() const {

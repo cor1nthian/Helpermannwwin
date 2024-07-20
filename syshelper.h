@@ -490,8 +490,13 @@ struct GroupDesc {
 class SysHandler {
 	public:
 		SysHandler();
-		SysHandler(const SysHandler &other);
+		SysHandler(const SysHandler &other) = delete;
+		SysHandler(SysHandler &&other) noexcept = delete;
 		~SysHandler();
+		SysHandler& operator=(const SysHandler &other) = delete;
+		SysHandler& operator=(SysHandler &&other) = delete;
+		bool operator==(const SysHandler& other) const = delete;
+		bool operator!=(const SysHandler& other) const = delete;
 		/* Gets machine name
 			Param:
 			None
