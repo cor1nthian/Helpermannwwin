@@ -172,35 +172,16 @@ std::vector<WKSid> GetWellKnownStrSIDs(PSID domainSID = 0);
 const std::vector<WKSid> const gc_WellKnownStrSIDs = GetWellKnownStrSIDs();
 
 struct WKSid {
-	WKSid() {}
+	WKSid();
 	WKSid(std::wstring strsid,
-		std::wstring sidname, std::wstring sidnameorig) {
-		StrSID = strsid;
-		SIDName = sidname;
-		SIDNameOrig = sidnameorig;
-	}
-	WKSid(const WKSid &other) {
-		StrSID = other.StrSID;
-		SIDName = other.SIDName;
-		SIDNameOrig = other.SIDNameOrig;
-	}
-	WKSid& operator=(const WKSid &other) {
-		StrSID = other.StrSID;
-		SIDName = other.SIDName;
-		SIDNameOrig = other.SIDNameOrig;
-		return *this;
-	}
-	bool operator==(const WKSid &other) const {
-		return (lower_copy(StrSID) == lower_copy(other.StrSID) &&
-			lower_copy(SIDName) == lower_copy(other.SIDName) &&
-			lower_copy(SIDNameOrig) == lower_copy(other.SIDNameOrig));
-	}
-	bool operator!=(const WKSid &other) const {
-		return (lower_copy(StrSID) != lower_copy(other.StrSID) ||
-			lower_copy(SIDName) != lower_copy(other.SIDName) ||
-			lower_copy(SIDNameOrig) != lower_copy(other.SIDNameOrig));
-	}
-	~WKSid() {}
+		std::wstring sidname, std::wstring sidnameorig);
+	WKSid(const WKSid &other);
+	WKSid(WKSid &&other) noexcept;
+	~WKSid();
+	WKSid& operator=(const WKSid &other);
+	WKSid& operator=(WKSid &&other) noexcept;
+	bool operator==(const WKSid &other) const;
+	bool operator!=(const WKSid &other) const;
 	std::wstring StrSID;
 	std::wstring SIDName;
 	std::wstring SIDNameOrig;

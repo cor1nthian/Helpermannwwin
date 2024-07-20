@@ -313,6 +313,73 @@ std::vector<WKSid> GetWellKnownStrSIDs(PSID domainSID) {
 	return ret;
 }
 
+WKSid::WKSid() {}
+
+WKSid::WKSid(std::wstring strsid,
+	std::wstring sidname, std::wstring sidnameorig) {
+	StrSID = strsid;
+	SIDName = sidname;
+	SIDNameOrig = sidnameorig;
+}
+
+WKSid::WKSid(const WKSid& other) {
+	StrSID = other.StrSID;
+	SIDName = other.SIDName;
+	SIDNameOrig = other.SIDNameOrig;
+}
+
+WKSid::WKSid(WKSid &&other) noexcept {
+	StrSID = other.StrSID;
+	other.StrSID.~basic_string();
+	SIDName = other.SIDName;
+	other.SIDName.~basic_string();
+	SIDNameOrig = other.SIDNameOrig;
+	other.SIDNameOrig.~basic_string();
+}
+
+WKSid::~WKSid() {}
+
+WKSid& WKSid::operator=(const WKSid &other) {
+	if (this != &other) {
+		StrSID = other.StrSID;
+		SIDName = other.SIDName;
+		SIDNameOrig = other.SIDNameOrig;
+	}
+	return *this;
+}
+
+WKSid& WKSid::operator=(WKSid &&other) noexcept {
+	if (this != &other) {
+		StrSID = other.StrSID;
+		other.StrSID.~basic_string();
+		SIDName = other.SIDName;
+		other.SIDName.~basic_string();
+		SIDNameOrig = other.SIDNameOrig;
+		other.SIDNameOrig.~basic_string();
+	}
+	return *this;
+}
+
+bool WKSid::operator==(const WKSid& other) const {
+	if (this != &other) {
+		return (lower_copy(StrSID) == lower_copy(other.StrSID) &&
+			lower_copy(SIDName) == lower_copy(other.SIDName) &&
+			lower_copy(SIDNameOrig) == lower_copy(other.SIDNameOrig));
+	} else {
+		return true;
+	}
+}
+
+bool WKSid::operator!=(const WKSid& other) const {
+	if (this != &other) {
+		return (lower_copy(StrSID) != lower_copy(other.StrSID) ||
+			lower_copy(SIDName) != lower_copy(other.SIDName) ||
+			lower_copy(SIDNameOrig) != lower_copy(other.SIDNameOrig));
+	} else {
+		return false;
+	}
+}
+
 AccountDesc::AccountDesc() {
 	ncNormalAcc = false;
 	ncTempDupAcc = false;
