@@ -451,35 +451,15 @@ struct AccountDesc {
 
 struct GroupDesc {
 	GroupDesc();
+	GroupDesc(const bool isADGroyp, const std::wstring groupName, const std::wstring groupStrSid,
+		const std::wstring comment, const std::vector<AccountDesc> accounts);
 	GroupDesc(const GroupDesc &other);
+	GroupDesc(GroupDesc &&other) noexcept;
 	~GroupDesc();
-	GroupDesc& operator=(const GroupDesc &other) {
-		IsADGroup = other.IsADGroup;
-		GroupName = other.GroupName;
-		GroupStrSid = other.GroupStrSid;
-		Comment = other.Comment;
-		return *this;
-	}
-	bool operator==(const GroupDesc &other) const {
-		return ((GroupName == other.GroupName &&
-				lower_copy(GroupName) == lower_copy(other.GroupName) &&
-			(GroupStrSid == other.GroupStrSid &&
-				lower_copy(GroupName) == lower_copy(other.GroupName)) &&
-			(Comment == other.Comment &&
-				lower_copy(Comment) == lower_copy(other.Comment))) &&
-			IsADGroup == other.IsADGroup &&
-			Accounts == other.Accounts);
-	}
-	bool operator!=(const GroupDesc& other) const {
-		return ((GroupName != other.GroupName ||
-				lower_copy(GroupName) == lower_copy(other.GroupName)) ||
-			(GroupStrSid != other.GroupStrSid ||
-				lower_copy(GroupName) != lower_copy(other.GroupName)) ||
-			(Comment != other.Comment ||
-				lower_copy(Comment) != lower_copy(other.Comment)) ||
-			IsADGroup != other.IsADGroup ||
-			Accounts != other.Accounts);
-	}
+	GroupDesc& operator=(const GroupDesc &other);
+	GroupDesc& operator=(GroupDesc &&other) noexcept;
+	bool operator==(const GroupDesc &other) const;
+	bool operator!=(const GroupDesc &other) const;
 	bool IsADGroup;
 	std::wstring GroupName;
 	std::wstring GroupStrSid;
@@ -523,8 +503,7 @@ class SysHandler {
 			[in] [mandatory] process id
 			[in] [optional] [default - PROCESS_ALL_ACCESS] roghts to open requested process
 			Returns true if current x86 process runs under Wow64 environment, false otherwise */
-		bool IsWow64Proc(const unsigned long pid,
-			const unsigned long desiredProcRights = PROCESS_ALL_ACCESS) const;
+		bool IsWow64Proc(const unsigned long pid, const unsigned long desiredProcRights = PROCESS_ALL_ACCESS) const;
 		/* Converts string SID to SID type
 			Param:
 			[in] [mandatory] account string SID

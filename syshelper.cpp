@@ -480,14 +480,86 @@ GroupDesc::GroupDesc() {
 	IsADGroup = false;
 }
 
+GroupDesc::GroupDesc(const bool isADGroup, const std::wstring groupName, const std::wstring groupStrSid,
+	const std::wstring comment, const std::vector<AccountDesc> accounts) {
+	IsADGroup = isADGroup;
+	GroupName = groupName;
+	GroupStrSid = groupStrSid;
+	Comment = comment;
+	Accounts = accounts;
+}
+
 GroupDesc::GroupDesc(const GroupDesc &other) {
-	IsADGroup = other.IsADGroup;
-	GroupName = other.GroupName;
-	GroupStrSid = other.GroupStrSid;
-	Comment = other.Comment;
+	if (this != &other) {
+		IsADGroup = other.IsADGroup;
+		GroupName = other.GroupName;
+		GroupStrSid = other.GroupStrSid;
+		Comment = other.Comment;
+	}
+}
+
+GroupDesc::GroupDesc(GroupDesc &&other) noexcept {
+	if (this != &other) {
+		IsADGroup = other.IsADGroup;
+		other.IsADGroup = false;
+		GroupName = other.GroupName;
+		other.GroupName.~basic_string();
+		GroupStrSid = other.GroupStrSid;
+		other.GroupStrSid.~basic_string();
+		Comment = other.Comment;
+		other.Comment.~basic_string();
+	}
 }
 
 GroupDesc::~GroupDesc() {}
+
+GroupDesc& GroupDesc::operator=(const GroupDesc &other) {
+	if (this != &other) {
+		IsADGroup = other.IsADGroup;
+		GroupName = other.GroupName;
+		GroupStrSid = other.GroupStrSid;
+		Comment = other.Comment;
+	}
+	return *this;
+}
+
+GroupDesc& GroupDesc::operator=(GroupDesc &&other) noexcept {
+	if (this != &other) {
+		IsADGroup = other.IsADGroup;
+		other.IsADGroup = false;
+		GroupName = other.GroupName;
+		other.GroupName.~basic_string();
+		GroupStrSid = other.GroupStrSid;
+		other.GroupStrSid.~basic_string();
+		Comment = other.Comment;
+		other.Comment.~basic_string();
+	}
+	return *this;
+}
+
+bool GroupDesc::operator==(const GroupDesc& other) const {
+	if (this != &other) {
+		return (lower_copy(GroupName) == lower_copy(other.GroupName) &&
+				lower_copy(GroupName) == lower_copy(other.GroupName) &&
+				lower_copy(Comment) == lower_copy(other.Comment) &&
+				IsADGroup == other.IsADGroup &&
+				Accounts == other.Accounts);
+	} else {
+		return true;
+	}
+}
+
+bool GroupDesc::operator!=(const GroupDesc& other) const {
+	if (this != &other) {
+		return (lower_copy(GroupName) != lower_copy(other.GroupName) ||
+				lower_copy(GroupName) != lower_copy(other.GroupName) ||
+				lower_copy(Comment) != lower_copy(other.Comment) ||
+				IsADGroup != other.IsADGroup ||
+				Accounts != other.Accounts);
+	} else {
+		return false;
+	}
+}
 
 SysHandler::SysHandler() {}
 
