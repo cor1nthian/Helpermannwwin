@@ -347,32 +347,6 @@ bool ProcessHandler::StopProc(const std::wstring exepath,
 
 bool ProcessHandler::EnableDebugPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
 	return privilegeController(pid, SE_DEBUG_NAME, true, desiredProcRights);
-
-	/*::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;*/
 }
 
 bool ProcessHandler::EnableBackupPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
