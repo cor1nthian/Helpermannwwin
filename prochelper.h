@@ -112,9 +112,9 @@ class ProcessHandler {
 		ProcessHandler();
 		ProcessHandler(const ProcessHandler &other) = delete;
 		ProcessHandler(ProcessHandler &&other) noexcept = delete;
+		~ProcessHandler();
 		ProcessHandler& operator=(const ProcessHandler &other) = delete;
 		ProcessHandler& operator=(ProcessHandler &other) noexcept = delete;
-		~ProcessHandler();
 		bool operator==(const ProcessHandler &other) const = delete;
 		bool operator!=(const ProcessHandler &other) const = delete;
 		ProcResource StartProc(const std::wstring exepath, const std::wstring args = L"",
@@ -284,7 +284,8 @@ class ProcessHandler {
 	protected:
 
 	private:
-
+		bool privilegeController(const unsigned long pid, const std::wstring privName,
+			const bool enable = true, const unsigned long desiredProcRights = PROCESS_ALL_ACCESS) const;
 };
 
 #endif // _PROCESS_HELPER_H

@@ -99,41 +99,20 @@ struct BinData {
 	BinPlatform Platform;
 };
 
-/* File description struct
-Operators are defined in the header file,
-constructors and destructor are defined in the source code file */
+// File description struct
 struct FileRecord {
 	// File description struct constructor
 	FileRecord();
 	// File description struct copy constructor
 	FileRecord(const FileRecord &other);
+	// File description struct move constructor
+	FileRecord(FileRecord &&other) noexcept;
 	// File description struct destructor
 	~FileRecord();
-	FileRecord& operator=(const FileRecord& other) {
-		fileName = other.fileName;
-		filePath = other.filePath;
-		hash = other.hash;
-		size = other.size;
-		return *this;
-	}
-	bool operator==(const FileRecord& other) const {
-		return (hash == other.hash &&
-			size == other.size &&
-#if defined (_WIN32) || defined (_WIN64)
-			lower_copy(filePath) == lower_copy(other.filePath));
-#else
-			filePath == other.filePath);
-#endif
-	}
-	bool operator!=(const FileRecord& other) const {
-		return (hash != other.hash ||
-			size != other.size ||
-#if defined (_WIN32) || defined (_WIN64)
-			lower_copy(filePath) != lower_copy(other.filePath));
-#else
-			filePath != other.filePath);
-#endif
-	}
+	FileRecord& operator=(const FileRecord &other);
+	FileRecord& operator=(FileRecord &&other) noexcept;
+	bool operator==(const FileRecord &other) const;
+	bool operator!=(const FileRecord &other) const;
 	// Name of a file
 	std::wstring fileName;
 	// Path to a file
@@ -152,190 +131,33 @@ struct FolderRecord {
 	FolderRecord();
 	// Folder description struct copy constructor
 	FolderRecord(const FolderRecord &other);
+	FolderRecord(FolderRecord &&other) noexcept;
 	// Folder description struct destructor
 	~FolderRecord();
-	FolderRecord& operator=(const FolderRecord &other) {
-		folderName = other.folderName;
-		folderPath = other.folderPath;
-		files = other.files;
-		folders = other.folders;
-		return *this;
-	}
-	bool operator==(const FolderRecord &other) const {
-		return (files == other.files &&
-			folders == other.folders &&
-#if defined (_WIN32) || defined (_WIN64)
-			lower_copy(folderName) == lower_copy(other.folderName) &&
-#else
-			folderName == other.folderName) &&
-#endif
-#if defined (_WIN32) || defined (_WIN64)
-			lower_copy(folderPath) == lower_copy(other.folderPath));
-#else
-			folderPath == other.folderPath);
-#endif
-	}
-	bool operator!=(const FolderRecord &other) const {
-		return (files != other.files ||
-			folders != other.folders ||
-#if defined (_WIN32) || defined (_WIN64)
-			lower_copy(folderName) != lower_copy(other.folderName) ||
-#else
-			folderName == other.folderName) ||
-#endif
-#if defined (_WIN32) || defined (_WIN64)
-			lower_copy(folderPath) != lower_copy(other.folderPath));
-#else
-			folderPath != other.folderPath);
-#endif
-	}
+	FolderRecord& operator=(const FolderRecord &other);
+	FolderRecord& operator=(const FolderRecord &&other) noexcept;
+	bool operator==(const FolderRecord &other) const;
+	bool operator!=(const FolderRecord &other) const;
 	std::wstring folderName;
 	std::wstring folderPath;
 	std::vector<FileRecord> files;
 	std::vector<FolderRecord> folders;
 };
 
-/* Partition description struct
-Operators are defined in the header file,
-constructors and destructor are defined in the source code file */
+// Partition description struct
 struct PartitionDesc {
 	// Partition description struct constructor
 	PartitionDesc();
 	// Partition description struct copy constructor
 	PartitionDesc(const PartitionDesc &other);
+	// Partition description struct move constructor
+	PartitionDesc(PartitionDesc &&other) noexcept;
 	// Partition description struct destructor
 	~PartitionDesc();
-	PartitionDesc& operator=(const PartitionDesc& other) {
-		partLetter = other.partLetter;
-		drivePath = other.drivePath;
-		volumeSerial = other.volumeSerial;
-		volumeSerialStr = other.volumeSerialStr;
-		volumeLabel = other.volumeLabel;
-		fsName = other.fsName;
-		spaceFree = other.spaceFree;
-		spaceTotal = other.spaceTotal;
-		maxComponentLen = other.maxComponentLen;
-		caseSensitiveSearch = other.caseSensitiveSearch;
-		casePreservedMames = other.casePreservedMames;
-		unicodeFNames = other.unicodeFNames;
-		persistentACLS = other.persistentACLS;
-		supportFileCompress = other.supportFileCompress;
-		supportQuota = other.supportQuota;
-		supportSparseFile = other.supportSparseFile;
-		supportReparsePoints = other.supportReparsePoints;
-		supportRemoteStorage = other.supportRemoteStorage;
-		supportPosixUnlinkRename = other.supportPosixUnlinkRename;
-		supportObjectIds = other.supportObjectIds;
-		supportEncryption = other.supportEncryption;
-		supportNamedStreams = other.supportNamedStreams;
-		supportTransactions = other.supportTransactions;
-		supportHardLink = other.supportHardLink;
-		suportExtendAttrib = other.suportExtendAttrib;
-		supportFileIdOpen = other.supportFileIdOpen;
-		supportUSNJournal = other.supportUSNJournal;
-		supportIntegrityStream = other.supportIntegrityStream;
-		supportBlockRefCount = other.supportBlockRefCount;
-		supportSparseVdl = other.supportSparseVdl;
-		supportGhosting = other.supportGhosting;
-		returnCleanupResInfo = other.returnCleanupResInfo;
-		volumeCompressed = other.volumeCompressed;
-		volumeReadOnly = other.volumeReadOnly;
-		volumeDax = other.volumeDax;
-		seqWriteOnce = other.seqWriteOnce;
-		return *this;
-	}
-	bool operator==(const PartitionDesc &other) const {
-		return ((partLetter == other.partLetter &&
-				lower_copy(partLetter) == lower_copy(other.partLetter)) &&
-			(drivePath == other.drivePath &&
-				lower_copy(drivePath) == lower_copy(other.drivePath)) &&
-			(volumePath == other.volumePath &&
-				lower_copy(volumePath) == lower_copy(other.volumePath)) &&
-			volumeSerial == other.volumeSerial &&
-			(volumeSerialStr == other.volumeSerialStr &&
-				lower_copy(volumeSerialStr) == lower_copy(other.volumeSerialStr)) &&
-			(volumeLabel == other.volumeLabel &&
-				lower_copy(volumeLabel) == lower_copy(other.volumeLabel)) &&
-			(fsName == other.fsName &&
-				lower_copy(fsName) == lower_copy(other.fsName)) &&
-			spaceFree == other.spaceFree &&
-			spaceTotal == other.spaceTotal &&
-			fsName == other.fsName &&
-			maxComponentLen == other.maxComponentLen &&
-			caseSensitiveSearch == other.caseSensitiveSearch &&
-			casePreservedMames == other.casePreservedMames &&
-			unicodeFNames == other.unicodeFNames &&
-			persistentACLS == other.persistentACLS &&
-			supportFileCompress == other.supportFileCompress &&
-			supportQuota == other.supportQuota &&
-			supportSparseFile == other.supportSparseFile &&
-			supportReparsePoints == other.supportReparsePoints &&
-			supportRemoteStorage == other.supportRemoteStorage &&
-			supportPosixUnlinkRename == other.supportPosixUnlinkRename &&
-			supportObjectIds == other.supportObjectIds &&
-			supportEncryption == other.supportEncryption &&
-			supportNamedStreams == other.supportNamedStreams &&
-			supportTransactions == other.supportTransactions &&
-			supportHardLink == other.supportHardLink &&
-			suportExtendAttrib == other.suportExtendAttrib &&
-			supportFileIdOpen == other.supportFileIdOpen &&
-			supportUSNJournal == other.supportUSNJournal &&
-			supportIntegrityStream == other.supportIntegrityStream &&
-			supportBlockRefCount == other.supportBlockRefCount &&
-			supportSparseVdl == other.supportSparseVdl &&
-			supportGhosting == other.supportGhosting &&
-			returnCleanupResInfo == other.returnCleanupResInfo &&
-			volumeCompressed == other.volumeCompressed &&
-			volumeReadOnly == other.volumeReadOnly &&
-			volumeDax == other.volumeDax &&
-			seqWriteOnce == other.seqWriteOnce);
-	}
-	bool operator!=(const PartitionDesc& other) const {
-		return ((partLetter != other.partLetter ||
-				lower_copy(partLetter) != lower_copy(other.partLetter)) ||
-			(drivePath != other.drivePath ||
-				lower_copy(drivePath) != lower_copy(other.drivePath)) ||
-			(volumePath != other.volumePath ||
-				lower_copy(volumePath) != lower_copy(other.volumePath)) ||
-			volumeSerial != other.volumeSerial ||
-			(volumeSerialStr != other.volumeSerialStr ||
-				lower_copy(volumeSerialStr) != lower_copy(other.volumeSerialStr)) ||
-			(volumeLabel != other.volumeLabel ||
-				lower_copy(volumeLabel) != lower_copy(other.volumeLabel)) ||
-			(fsName != other.fsName ||
-				lower_copy(fsName) != lower_copy(other.fsName)) ||
-			spaceFree != other.spaceFree ||
-			spaceTotal != other.spaceTotal ||
-			fsName != other.fsName ||
-			maxComponentLen != other.maxComponentLen ||
-			caseSensitiveSearch != other.caseSensitiveSearch ||
-			casePreservedMames != other.casePreservedMames ||
-			unicodeFNames != other.unicodeFNames ||
-			persistentACLS != other.persistentACLS ||
-			supportFileCompress != other.supportFileCompress ||
-			supportQuota != other.supportQuota ||
-			supportSparseFile != other.supportSparseFile ||
-			supportReparsePoints != other.supportReparsePoints ||
-			supportRemoteStorage != other.supportRemoteStorage ||
-			supportPosixUnlinkRename != other.supportPosixUnlinkRename ||
-			supportObjectIds != other.supportObjectIds ||
-			supportEncryption != other.supportEncryption ||
-			supportNamedStreams != other.supportNamedStreams ||
-			supportTransactions != other.supportTransactions ||
-			supportHardLink != other.supportHardLink ||
-			suportExtendAttrib != other.suportExtendAttrib ||
-			supportFileIdOpen != other.supportFileIdOpen ||
-			supportUSNJournal != other.supportUSNJournal ||
-			supportIntegrityStream != other.supportIntegrityStream ||
-			supportBlockRefCount != other.supportBlockRefCount ||
-			supportSparseVdl != other.supportSparseVdl ||
-			supportGhosting != other.supportGhosting ||
-			returnCleanupResInfo != other.returnCleanupResInfo ||
-			volumeCompressed != other.volumeCompressed ||
-			volumeReadOnly != other.volumeReadOnly ||
-			volumeDax != other.volumeDax ||
-			seqWriteOnce != other.seqWriteOnce);
-	}
+	PartitionDesc& operator=(const PartitionDesc &other);
+	PartitionDesc& operator=(PartitionDesc &&other) noexcept;
+	bool operator==(const PartitionDesc& other) const;
+	bool operator!=(const PartitionDesc& other) const;
 	// True if volume supports case sensitive search
 	bool caseSensitiveSearch;
 	// True if volume supports case preserved names
@@ -415,8 +237,18 @@ class FSHandler {
 	public:
 		// File system handler constructor
 		FSHandler();
-		// File system handler copy constructor
-		FSHandler(const FSHandler &other);
+		// File system handler copy constructor disabled
+		FSHandler(const FSHandler &other) = delete;
+		// File system handler move constructor disabled
+		FSHandler(FSHandler &&other) noexcept = delete;
+		// File system handler operator = (copt) disabled
+		FSHandler& operator=(const FSHandler &other) = delete;
+		// File system handler operator = (move) disabled
+		FSHandler& operator=(FSHandler &&other) noexcept = delete;
+		// File system handler equality comparison disabled
+		bool operator==(const FSHandler &other) const = delete;
+		// File system handler inequality comparison disabled
+		bool operator!=(const FSHandler &other) const = delete;
 		// File system handler destructor
 		~FSHandler();
 		/* Lists all available partitions, providing description for each one

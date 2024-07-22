@@ -282,8 +282,8 @@ ProcResource ProcessHandler::StartProc(const std::wstring exepath, const std::ws
 	return ret;
 }
 
-bool ProcessHandler::FreeProcResources(const ProcResource& procRes, bool stopProc) {
-	bool funcres = ::CloseHandle(procRes.pi.hProcess) && CloseHandle(procRes.pi.hThread);
+bool ProcessHandler::FreeProcResources(const ProcResource &procRes, bool stopProc) {
+	bool funcres = ::CloseHandle(procRes.pi.hProcess) && ::CloseHandle(procRes.pi.hThread);
 	if (stopProc) {
 		return StopProc(procRes.pid);
 	}
@@ -291,7 +291,7 @@ bool ProcessHandler::FreeProcResources(const ProcResource& procRes, bool stopPro
 }
 
 bool ProcessHandler::StopProc(const unsigned long pid,
-	const std::vector<ProcDesc>* proclist) {
+	const std::vector<ProcDesc> *proclist) {
 	std::vector<ProcDesc> procs;
 	if (proclist) {
 		procs = *proclist;
@@ -318,7 +318,7 @@ bool ProcessHandler::StopProc(const unsigned long pid,
 }
 
 bool ProcessHandler::StopProc(const std::wstring exepath,
-	const std::vector<ProcDesc>* proclist) {
+	const std::vector<ProcDesc> *proclist) {
 	bool ret = false;
 	std::vector<ProcDesc> procs;
 	if (proclist) {
@@ -345,9 +345,10 @@ bool ProcessHandler::StopProc(const std::wstring exepath,
 	return true;
 }
 
-bool ProcessHandler::EnableDebugPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+bool ProcessHandler::EnableDebugPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_DEBUG_NAME, true, desiredProcRights);
+
+	/*::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
 		::HANDLE hToken = 0;
 		LUID luid;
@@ -371,2066 +372,327 @@ bool ProcessHandler::EnableDebugPrivilege(const unsigned long pid,
 		::CloseHandle(hProc);
 		return false;
 	}
-	return false;
+	return false;*/
 }
 
-bool ProcessHandler::EnableBackupPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_BACKUP_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableBackupPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_BACKUP_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableRestorePrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_RESTORE_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableRestorePrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_RESTORE_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableLockMemoryPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_LOCK_MEMORY_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableLockMemoryPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_LOCK_MEMORY_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableIncreaseQuotaPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_INCREASE_QUOTA_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableIncreaseQuotaPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_INCREASE_QUOTA_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableUnsolicitedInputPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_UNSOLICITED_INPUT_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_UNSOLICITED_INPUT_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableMachineAccountPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_MACHINE_ACCOUNT_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_MACHINE_ACCOUNT_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableTcbPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_TCB_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableTcbPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_TCB_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableSecurityPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_SECURITY_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableSecurityPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_SECURITY_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableTakeOwnershipPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_TAKE_OWNERSHIP_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableTakeOwnershipPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_TAKE_OWNERSHIP_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableLoadDriverPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_LOAD_DRIVER_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableLoadDriverPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_LOAD_DRIVER_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableSystemProfilePrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_SYSTEM_PROFILE_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableSystemProfilePrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_SYSTEM_PROFILE_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableSystemTimePrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_SYSTEMTIME_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableSystemTimePrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_SYSTEMTIME_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableProfSingleProcessPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_PROF_SINGLE_PROCESS_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_PROF_SINGLE_PROCESS_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableIncBasePriorutyPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_INC_BASE_PRIORITY_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_INC_BASE_PRIORITY_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableCreatePageFilePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_CREATE_PAGEFILE_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_CREATE_PAGEFILE_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableCreatePermanentPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_CREATE_PERMANENT_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_CREATE_PERMANENT_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableShutdownPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableShutdownPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_SHUTDOWN_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableAuditPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_AUDIT_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableAuditPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_AUDIT_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableSystemEnvironmentPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_SYSTEM_ENVIRONMENT_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_SYSTEM_ENVIRONMENT_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableChangeNotifyPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_CHANGE_NOTIFY_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableChangeNotifyPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_CHANGE_NOTIFY_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableRemoteShutdownPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_REMOTE_SHUTDOWN_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_REMOTE_SHUTDOWN_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableUndockPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_UNDOCK_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableUndockPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_UNDOCK_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableSyncAgentPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_SYNC_AGENT_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableSyncAgentPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_SYNC_AGENT_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableDelegationPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_ENABLE_DELEGATION_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_ENABLE_DELEGATION_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableManageVolumePrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_MANAGE_VOLUME_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableManageVolumePrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_MANAGE_VOLUME_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableImpersonatePrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_IMPERSONATE_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableImpersonatePrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_IMPERSONATE_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableCreateGlobalPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_CREATE_GLOBAL_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_CREATE_GLOBAL_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableTrustedCredManAccessPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_TRUSTED_CREDMAN_ACCESS_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_TRUSTED_CREDMAN_ACCESS_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableRelabelPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_RELABEL_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableRelabelPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_RELABEL_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableIncWorkingSetPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_INC_WORKING_SET_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableIncWorkingSetPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_INC_WORKING_SET_NAME, true, desiredProcRights);
 }
 
-bool ProcessHandler::EnableTimezonePrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_TIME_ZONE_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::EnableTimezonePrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_TIME_ZONE_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableCreateSymbolicLinkPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_CREATE_SYMBOLIC_LINK_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_CREATE_SYMBOLIC_LINK_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableDelegateSessionUserImpersonatePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_DELEGATE_SESSION_USER_IMPERSONATE_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_DELEGATE_SESSION_USER_IMPERSONATE_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableCreateTokenPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_CREATE_TOKEN_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_CREATE_TOKEN_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::EnableAssignPrimaryTokenPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_ASSIGNPRIMARYTOKEN_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_ASSIGNPRIMARYTOKEN_NAME, true, desiredProcRights);
 }
 
 bool ProcessHandler::DisableAssignPrimaryTokenPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_ASSIGNPRIMARYTOKEN_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_ASSIGNPRIMARYTOKEN_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableCreateTokenPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_CREATE_TOKEN_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_CREATE_TOKEN_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableDelegateSessionUserImpersonatePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_DELEGATE_SESSION_USER_IMPERSONATE_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_DELEGATE_SESSION_USER_IMPERSONATE_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableCreateSymbolicLinkPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_CREATE_SYMBOLIC_LINK_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_CREATE_SYMBOLIC_LINK_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableTimezonePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_TIME_ZONE_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_TIME_ZONE_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableIncWorkingSetPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_INC_WORKING_SET_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_INC_WORKING_SET_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableRelabelPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_RELABEL_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableRelabelPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_RELABEL_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableTrustedCredManAccessPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_TRUSTED_CREDMAN_ACCESS_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_TRUSTED_CREDMAN_ACCESS_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableCreateGlobalPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_CREATE_GLOBAL_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableCreateGlobalPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_CREATE_GLOBAL_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableImpersonatePrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_IMPERSONATE_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableImpersonatePrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_IMPERSONATE_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableManageVolumePrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_MANAGE_VOLUME_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableManageVolumePrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_MANAGE_VOLUME_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableDelegationPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_ENABLE_DELEGATION_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableDelegationPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_ENABLE_DELEGATION_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableSyncAgentPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_SYNC_AGENT_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableSyncAgentPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_SYNC_AGENT_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableUndockPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_UNDOCK_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableUndockPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_UNDOCK_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableRemoteShutdownPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_REMOTE_SHUTDOWN_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_REMOTE_SHUTDOWN_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableChangeNotifyPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_CHANGE_NOTIFY_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableChangeNotifyPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_CHANGE_NOTIFY_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableSystemEnvironmentPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_SYSTEM_ENVIRONMENT_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_SYSTEM_ENVIRONMENT_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableAuditPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_AUDIT_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_AUDIT_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableShutdownPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableShutdownPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_SHUTDOWN_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableCreatePermanentPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_CREATE_PERMANENT_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_CREATE_PERMANENT_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableCreatePageFilePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_CREATE_PAGEFILE_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_CREATE_PAGEFILE_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableIncBasePriorutyPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_INC_BASE_PRIORITY_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_INC_BASE_PRIORITY_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableProfSingleProcessPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_PROF_SINGLE_PROCESS_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_PROF_SINGLE_PROCESS_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableSystemTimePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_SYSTEMTIME_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_SYSTEMTIME_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableSystemProfilePrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_SYSTEM_PROFILE_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_SYSTEM_PROFILE_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableLoadDriverPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_LOAD_DRIVER_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableLoadDriverPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_LOAD_DRIVER_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableTakeOwnershipPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_TAKE_OWNERSHIP_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_TAKE_OWNERSHIP_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableSecurityPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_SECURITY_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_SECURITY_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableTcbPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_TCB_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableTcbPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_TCB_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableMachineAccountPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_MACHINE_ACCOUNT_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_MACHINE_ACCOUNT_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableUnsolicitedInputPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_UNSOLICITED_INPUT_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_UNSOLICITED_INPUT_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableBackupPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_BACKUP_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableBackupPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_BACKUP_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableRestorePrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_RESTORE_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableRestorePrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_RESTORE_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableLockMemoryPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_LOCK_MEMORY_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableLockMemoryPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_LOCK_MEMORY_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::DisableIncreaseQuotaPrivilege(const unsigned long pid,
 	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_INCREASE_QUOTA_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+	return privilegeController(pid, SE_INCREASE_QUOTA_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::DisableDebugPrivilege(const unsigned long pid,
-	const unsigned long desiredProcRights) const {
-	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
-	if (hProc && INVALID_HANDLE_VALUE != hProc) {
-		::HANDLE hToken = 0;
-		LUID luid;
-		TOKEN_PRIVILEGES tkp;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			::LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luid);
-			tkp.PrivilegeCount = 1;
-			tkp.Privileges[0].Luid = luid;
-			tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
-			if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL)) {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return true;
-			} else {
-				::CloseHandle(hToken);
-				::CloseHandle(hProc);
-				return false;
-			}
-		}
-		::CloseHandle(hProc);
-		return false;
-	}
-	return false;
+bool ProcessHandler::DisableDebugPrivilege(const unsigned long pid, const unsigned long desiredProcRights) const {
+	return privilegeController(pid, SE_DEBUG_NAME, false, desiredProcRights);
 }
 
 bool ProcessHandler::IsProcRunning(const std::wstring exepath,
@@ -2653,4 +915,41 @@ ProcOpResult ProcessHandler::ListProcesses(std::vector<ProcDesc> &procList) {
 	} else {
 		return ProcOpResult::Fail;
 	}
+}
+
+bool ProcessHandler::privilegeController(const unsigned long pid, const std::wstring privName, const bool enable,
+	const unsigned long desiredProcRights) const {
+	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
+	if (hProc && INVALID_HANDLE_VALUE != hProc) {
+		::HANDLE hToken = 0;
+		::LUID luid = { 0 };
+		::TOKEN_PRIVILEGES tkp = { 0 };
+		if (::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+			if (INVALID_HANDLE_VALUE != hToken) {
+				::LookupPrivilegeValue(0, privName.c_str(), &luid);
+				tkp.PrivilegeCount = 1;
+				tkp.Privileges[0].Luid = luid;
+				if (enable) {
+					tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+				} else {
+					tkp.Privileges[0].Attributes = SE_PRIVILEGE_REMOVED;
+				}
+				if (::AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), 0, 0)) {
+					::CloseHandle(hToken);
+					::CloseHandle(hProc);
+					return true;
+				} else {
+					::CloseHandle(hToken);
+					::CloseHandle(hProc);
+					return false;
+				}
+			}
+			::CloseHandle(hProc);
+			return false;
+		} else {
+			::CloseHandle(hProc);
+			return false;
+		}
+	}
+	return false;
 }

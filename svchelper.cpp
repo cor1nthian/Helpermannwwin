@@ -1116,9 +1116,9 @@ SvcRunState SvcHandler::IsServiceRunning(const std::wstring svcDisplayName,
 		ret.svcRunning = true;
 	}
 	std::wstring tstr = lower_copy(svcNeeded[0].binaryPath);
-	size_t markPos = tstr.find(L".exe") + 4;
+	size_t markPos = tstr.find(L".exe");
 	if (std::string::npos != markPos) {
-		tstr = tstr.substr(0, markPos);
+		tstr = tstr.substr(0, markPos + 4);
 	}
 	ProcessHandler procHandler;
 	ret.svcProcRunning = procHandler.IsProcRunning(tstr);

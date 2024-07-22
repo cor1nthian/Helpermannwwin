@@ -502,7 +502,7 @@ struct PingResult {
 	PingResult();
 	PingResult(const bool result, const unsigned short int rtt, const unsigned short int ttl);
 	PingResult(const PingResult& other);
-	PingResult(PingResult&& other) noexcept;
+	PingResult(PingResult &&other) noexcept;
 	~PingResult();
 	PingResult& operator=(const PingResult& other);
 	PingResult& operator=(PingResult&& other) noexcept;

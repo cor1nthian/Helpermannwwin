@@ -2871,8 +2871,7 @@ RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secD
 	return RegOpResult::Success;
 }
 
-RegOpResult RegHandler::CreateKey(const std::wstring keyName, const bool createMissingKeys,
-	const HKEY *root) const {
+RegOpResult RegHandler::CreateKey(const std::wstring keyName, const bool createMissingKeys, const HKEY *root) const {
 	if (keyName.length()) {
 		HKEY keyHandle = { 0 }, rootKey = { 0 };
 		std::wstring keyPath = keyName;

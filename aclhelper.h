@@ -129,7 +129,7 @@ class ACLHandler {
 		ACLHandler(ACLHandler &&other) noexcept = delete;
 		~ACLHandler();
 		ACLHandler& operator=(const ACLHandler &other) = delete;
-		ACLHandler& operator=(ACLHandler &&other) = delete;
+		ACLHandler& operator=(ACLHandler &&other) noexcept = delete;
 		bool operator==(const ACLHandler &other) const = delete;
 		bool operator!=(const ACLHandler &other) const = delete;
 		ACLOpResult SecurityDescriptor2StringSecurityDescriptor(unsigned char* &secDesc,

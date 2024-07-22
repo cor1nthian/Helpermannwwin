@@ -53,6 +53,7 @@
 
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
+
 #pragma comment(lib, "netapi32.lib")
 
 // malloc with ease
@@ -173,8 +174,7 @@ const std::vector<WKSid> const gc_WellKnownStrSIDs = GetWellKnownStrSIDs();
 
 struct WKSid {
 	WKSid();
-	WKSid(std::wstring strsid,
-		std::wstring sidname, std::wstring sidnameorig);
+	WKSid(std::wstring strsid, std::wstring sidname, std::wstring sidnameorig);
 	WKSid(const WKSid &other);
 	WKSid(WKSid &&other) noexcept;
 	~WKSid();
@@ -187,213 +187,16 @@ struct WKSid {
 	std::wstring SIDNameOrig;
 };
 
-/* User account description struct
-Operators are defined in the header file,
-constructors and destructor are defined in the source code file */
+// User account description struct
 struct AccountDesc {
 	AccountDesc();
 	AccountDesc(const AccountDesc &other);
+	AccountDesc(AccountDesc &&other) noexcept;
 	~AccountDesc();
-	AccountDesc& operator=(const AccountDesc &other) {
-		ncNormalAcc = other.ncNormalAcc;
-		ncTempDupAcc = other.ncTempDupAcc;
-		ncWorkstationTrustAcc = other.ncWorkstationTrustAcc;
-		ncServerTrustAcc = other.ncServerTrustAcc;
-		ncInterdomainTrustAcc = other.ncInterdomainTrustAcc;
-		accountLocked = other.accountLocked;
-		accountDisabled = other.accountDisabled;
-		accountNotDelegated = other.accountNotDelegated;
-		accountDESKeysOnly = other.accountDESKeysOnly;
-		accountNoKerberosPreauth = other.accountNoKerberosPreauth;
-		accountTrustedToAuthForDelegation = other.accountTrustedToAuthForDelegation;
-		accountTrustedForDelegation = other.accountTrustedForDelegation;
-		logonScriptExecuted = other.logonScriptExecuted;
-		passwordNotNeeded = other.passwordNotNeeded;
-		passwordCantChange = other.passwordCantChange;
-		passwordNoExpire = other.passwordNoExpire;
-		passwordReverseEncryption = other.passwordReverseEncryption;
-		passwordSmartCardNeeded = other.passwordSmartCardNeeded;
-		passwordExpired = other.passwordExpired;
-		passwordEncrypted = other.passwordEncrypted;
-		authPrintOp = other.authPrintOp;
-		authCommOp = other.authCommOp;
-		authSrvOp = other.authSrvOp;
-		authAccOp = other.authAccOp;
-		passwordAge = other.passwordAge;
-		passwordBadCount = other.passwordBadCount;
-		lastLogOn = other.lastLogOn;
-		lastLogOff = other.lastLogOff;
-		privileges = other.privileges;
-		expireDate = other.expireDate;
-		maxStorage = other.maxStorage;
-		logonCount = other.logonCount;
-		countryCode = other.countryCode;
-		codePage = other.codePage;
-		primaryGroupId = other.primaryGroupId;
-		sid = other.sid;
-		comment = other.comment;
-		accountName = other.accountName;
-		accountFullname = other.accountFullname;
-		logonScriptPath = other.logonScriptPath;
-		homeDirPath = other.homeDirPath;
-		homeDirDrive = other.homeDirDrive;
-		profileDirPath = other.profileDirPath;
-		params = other.params;
-		allowedWorkstations = other.allowedWorkstations;
-		logonServer = other.logonServer;
-		passwordSetStr = other.passwordSetStr;
-		lastLogOnStr = other.lastLogOnStr;
-		lastLogOffStr = other.lastLogOffStr;
-		privilegesStr = other.privilegesStr;
-		expireDateStr = other.expireDateStr;
-		maxStorageStr = other.maxStorageStr;
-		groups = other.groups;
-		return *this;
-	}
-	bool operator==(const AccountDesc &other) const {
-		return (ncNormalAcc == other.ncNormalAcc &&
-			ncTempDupAcc == other.ncTempDupAcc &&
-			ncWorkstationTrustAcc == other.ncWorkstationTrustAcc &&
-			ncServerTrustAcc == other.ncServerTrustAcc &&
-			ncInterdomainTrustAcc == other.ncInterdomainTrustAcc &&
-			accountLocked == other.accountLocked &&
-			accountDisabled == other.accountDisabled &&
-			accountNotDelegated == other.accountNotDelegated &&
-			accountDESKeysOnly == other.accountDESKeysOnly &&
-			accountNoKerberosPreauth == other.accountNoKerberosPreauth &&
-			accountTrustedToAuthForDelegation == other.accountTrustedToAuthForDelegation &&
-			accountTrustedForDelegation == other.accountTrustedForDelegation &&
-			logonScriptExecuted == other.logonScriptExecuted &&
-			passwordNotNeeded == other.passwordNotNeeded &&
-			passwordCantChange == other.passwordCantChange &&
-			passwordNoExpire == other.passwordNoExpire &&
-			passwordReverseEncryption == other.passwordReverseEncryption &&
-			passwordSmartCardNeeded == other.passwordSmartCardNeeded &&
-			passwordExpired == other.passwordExpired &&
-			authPrintOp == other.authPrintOp &&
-			authCommOp == other.authCommOp &&
-			authSrvOp == other.authSrvOp &&
-			authAccOp == other.authAccOp &&
-			passwordEncrypted == other.passwordEncrypted &&
-			passwordAge == other.passwordAge &&
-			passwordBadCount == other.passwordBadCount &&
-			lastLogOn == other.lastLogOn &&
-			lastLogOff == other.lastLogOff &&
-			privileges == other.privileges &&
-			expireDate == other.expireDate &&
-			maxStorage == other.maxStorage &&
-			logonCount == other.logonCount &&
-			countryCode == other.countryCode &&
-			codePage == other.codePage &&
-			primaryGroupId == other.primaryGroupId &&
-			groups == other.groups &&
-			(sid == other.sid &&
-				lower_copy(sid) == lower_copy(other.sid)) &&
-			(comment == other.comment &&
-				lower_copy(comment) == lower_copy(other.comment)) &&
-			(accountName == other.accountName &&
-				lower_copy(accountName) == lower_copy(other.accountName)) &&
-			(accountFullname == other.accountFullname &&
-				lower_copy(accountFullname) == lower_copy(other.accountFullname)) &&
-			(logonScriptPath == other.logonScriptPath &&
-				lower_copy(logonScriptPath) == lower_copy(other.logonScriptPath)) &&
-			(homeDirPath == other.homeDirPath &&
-				lower_copy(homeDirPath) == lower_copy(other.homeDirPath)) &&
-			(homeDirDrive == other.homeDirDrive &&
-				lower_copy(homeDirDrive) == lower_copy(other.homeDirDrive)) &&
-			(profileDirPath == other.profileDirPath &&
-				lower_copy(profileDirPath) == lower_copy(other.profileDirPath)) &&
-			(params == other.params &&
-				lower_copy(params) == lower_copy(other.params)) &&
-			(allowedWorkstations == other.allowedWorkstations &&
-				lower_copy(allowedWorkstations) == lower_copy(other.allowedWorkstations)) &&
-			(logonServer == other.logonServer &&
-				lower_copy(logonServer) == lower_copy(other.logonServer)) &&
-			(passwordSetStr == other.passwordSetStr &&
-				lower_copy(passwordSetStr) == lower_copy(other.passwordSetStr)) &&
-			(lastLogOnStr == other.lastLogOnStr &&
-				lower_copy(lastLogOnStr) == lower_copy(other.lastLogOnStr)) &&
-			(lastLogOffStr == other.lastLogOffStr &&
-				lower_copy(lastLogOffStr) == lower_copy(other.lastLogOffStr)) &&
-			(privilegesStr == other.privilegesStr &&
-				lower_copy(privilegesStr) == lower_copy(other.privilegesStr)) &&
-			(expireDateStr == other.expireDateStr &&
-				lower_copy(expireDateStr) == lower_copy(other.expireDateStr)) &&
-			(maxStorageStr == other.maxStorageStr &&
-				lower_copy(maxStorageStr) == lower_copy(other.maxStorageStr)));
-	}
-	bool operator!=(const AccountDesc &other) const {
-		return (ncNormalAcc != other.ncNormalAcc ||
-			ncTempDupAcc != other.ncTempDupAcc ||
-			ncWorkstationTrustAcc != other.ncWorkstationTrustAcc ||
-			ncServerTrustAcc != other.ncServerTrustAcc ||
-			ncInterdomainTrustAcc != other.ncInterdomainTrustAcc ||
-			accountLocked != other.accountLocked ||
-			accountDisabled != other.accountDisabled ||
-			accountNotDelegated != other.accountNotDelegated ||
-			accountDESKeysOnly != other.accountDESKeysOnly ||
-			accountNoKerberosPreauth != other.accountNoKerberosPreauth ||
-			accountTrustedToAuthForDelegation != other.accountTrustedToAuthForDelegation ||
-			accountTrustedForDelegation != other.accountTrustedForDelegation ||
-			logonScriptExecuted != other.logonScriptExecuted ||
-			passwordNotNeeded != other.passwordNotNeeded ||
-			passwordCantChange != other.passwordCantChange ||
-			passwordNoExpire != other.passwordNoExpire ||
-			passwordReverseEncryption != other.passwordReverseEncryption ||
-			passwordSmartCardNeeded != other.passwordSmartCardNeeded ||
-			passwordExpired != other.passwordExpired ||
-			passwordEncrypted != other.passwordEncrypted ||
-			authPrintOp != other.authPrintOp ||
-			authCommOp != other.authCommOp ||
-			authSrvOp != other.authSrvOp ||
-			authAccOp != other.authAccOp ||
-			passwordAge != other.passwordAge ||
-			passwordBadCount != other.passwordBadCount ||
-			lastLogOn != other.lastLogOn ||
-			lastLogOff != other.lastLogOff ||
-			privileges != other.privileges ||
-			expireDate != other.expireDate ||
-			maxStorage != other.maxStorage ||
-			logonCount != other.logonCount ||
-			countryCode != other.countryCode ||
-			codePage != other.codePage ||
-			primaryGroupId != other.primaryGroupId ||
-			groups != other.groups ||
-			(sid != other.sid ||
-				lower_copy(sid) != lower_copy(other.sid)) ||
-			(comment != other.comment ||
-				lower_copy(comment) != lower_copy(other.comment)) ||
-			(accountName != other.accountName ||
-				lower_copy(accountName) != lower_copy(other.accountName)) ||
-			(accountFullname != other.accountFullname ||
-				lower_copy(accountFullname) != lower_copy(other.accountFullname)) ||
-			(logonScriptPath != other.logonScriptPath ||
-				lower_copy(logonScriptPath) != lower_copy(other.logonScriptPath)) ||
-			(homeDirPath != other.homeDirPath ||
-				lower_copy(homeDirPath) != lower_copy(other.homeDirPath)) ||
-			(homeDirDrive != other.homeDirDrive ||
-				lower_copy(homeDirDrive) != lower_copy(other.homeDirDrive)) ||
-			(profileDirPath != other.profileDirPath ||
-				lower_copy(profileDirPath) != lower_copy(other.profileDirPath)) ||
-			(params != other.params ||
-				lower_copy(params) != lower_copy(other.params)) ||
-			(allowedWorkstations != other.allowedWorkstations ||
-				lower_copy(allowedWorkstations) != lower_copy(other.allowedWorkstations)) ||
-			(logonServer != other.logonServer ||
-				lower_copy(logonServer) != lower_copy(other.logonServer)) ||
-			(passwordSetStr != other.passwordSetStr ||
-				lower_copy(passwordSetStr) != lower_copy(other.passwordSetStr)) ||
-			(lastLogOnStr != other.lastLogOnStr ||
-				lower_copy(lastLogOnStr) != lower_copy(other.lastLogOnStr)) ||
-			(lastLogOffStr != other.lastLogOffStr ||
-				lower_copy(lastLogOffStr) != lower_copy(other.lastLogOffStr)) ||
-			(privilegesStr != other.privilegesStr ||
-				lower_copy(privilegesStr) != lower_copy(other.privilegesStr)) ||
-			(expireDateStr != other.expireDateStr ||
-				lower_copy(expireDateStr) != lower_copy(other.expireDateStr)) ||
-			(maxStorageStr != other.maxStorageStr ||
-				lower_copy(maxStorageStr) != lower_copy(other.maxStorageStr)));
-	}
+	AccountDesc& operator=(const AccountDesc &other);
+	AccountDesc& operator=(AccountDesc &&other) noexcept;
+	bool operator==(const AccountDesc &other) const;
+	bool operator!=(const AccountDesc &other) const;
 	bool ncNormalAcc;
 	bool ncTempDupAcc;
 	bool ncWorkstationTrustAcc;
@@ -449,6 +252,7 @@ struct AccountDesc {
 	std::vector<GroupDesc> groups;
 };
 
+// Account group dekiniton struct
 struct GroupDesc {
 	GroupDesc();
 	GroupDesc(const bool isADGroyp, const std::wstring groupName, const std::wstring groupStrSid,

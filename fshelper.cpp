@@ -74,24 +74,168 @@ FileRecord::FileRecord() {
 }
 
 FileRecord::FileRecord(const FileRecord& other) {
-	fileName = other.fileName;
-	filePath = other.filePath;
-	hash = other.hash;
-	size = other.size;
+	if (this != &other) {
+		fileName = other.fileName;
+		filePath = other.filePath;
+		hash = other.hash;
+		size = other.size;
+	}
+}
+
+FileRecord::FileRecord(FileRecord &&other) noexcept {
+	if (this != &other) {
+		fileName = other.fileName;
+		other.fileName.~basic_string();
+		filePath = other.filePath;
+		other.filePath.~basic_string();
+		hash = other.hash;
+		other.hash.~basic_string();
+		size = other.size;
+		other.size = 0;
+	}
 }
 
 FileRecord::~FileRecord() {}
 
+FileRecord& FileRecord::operator=(const FileRecord& other) {
+	if (this != &other) {
+		fileName = other.fileName;
+		filePath = other.filePath;
+		hash = other.hash;
+		size = other.size;
+	}
+	return *this;
+}
+
+FileRecord& FileRecord::operator=(FileRecord &&other) noexcept {
+	if (this != &other) {
+		fileName = other.fileName;
+		other.fileName.~basic_string();
+		filePath = other.filePath;
+		other.filePath.~basic_string();
+		hash = other.hash;
+		other.hash.~basic_string();
+		size = other.size;
+		other.size = 0;
+	}
+	return *this;
+}
+
+bool FileRecord::operator==(const FileRecord& other) const {
+	if (this != &other) {
+		return (lower_copy(hash) == lower_copy(other.hash) &&
+				size == other.size &&
+#if defined (_WIN32) || defined (_WIN64)
+				lower_copy(filePath) == lower_copy(other.filePath));
+#else
+				filePath == other.filePath);
+#endif
+	} else {
+		return true;
+	}
+}
+
+bool FileRecord::operator!=(const FileRecord& other) const {
+	if (this != &other) {
+		return (lower_copy(hash) != lower_copy(other.hash) ||
+				size != other.size ||
+#if defined (_WIN32) || defined (_WIN64)
+				lower_copy(filePath) != lower_copy(other.filePath));
+#else
+				filePath != other.filePath);
+#endif
+	} else {
+		return false;
+	}
+}
+
 FolderRecord::FolderRecord() {}
 
 FolderRecord::FolderRecord(const FolderRecord &other) {
-	folderName = other.folderName;
-	folderPath = other.folderPath;
-	files = other.files;
-	folders = other.folders;
+	if (this != &other) {
+		folderName = other.folderName;
+		folderPath = other.folderPath;
+		files = other.files;
+		folders = other.folders;
+	}
+}
+
+FolderRecord::FolderRecord(FolderRecord&& other) noexcept {
+	if (this != &other) {
+		folderName = other.folderName;
+		other.folderName.~basic_string();
+		folderPath = other.folderPath;
+		other.folderPath.~basic_string();
+		files = other.files;
+		other.files.~vector();
+		folders = other.folders;
+		other.folders.~vector();
+	}
 }
 
 FolderRecord::~FolderRecord() {}
+
+FolderRecord& FolderRecord::operator=(const FolderRecord& other) {
+	if (this != &other) {
+		folderName = other.folderName;
+		folderPath = other.folderPath;
+		files = other.files;
+		folders = other.folders;
+	}
+	return *this;
+}
+
+FolderRecord& FolderRecord::operator=(const FolderRecord &&other) noexcept {
+	if (this != &other) {
+		folderName = other.folderName;
+		other.folderName.~basic_string();
+		folderPath = other.folderPath;
+		other.folderPath.~basic_string();
+		files = other.files;
+		other.files.~vector();
+		folders = other.folders;
+		other.folders.~vector();
+	}
+	return *this;
+}
+
+bool FolderRecord::operator==(const FolderRecord &other) const {
+	if (this != &other) {
+		return (files == other.files &&
+				folders == other.folders &&
+#if defined (_WIN32) || defined (_WIN64)
+				lower_copy(folderName) == lower_copy(other.folderName) &&
+#else
+				folderName == other.folderName) &&
+#endif
+#if defined (_WIN32) || defined (_WIN64)
+				lower_copy(folderPath) == lower_copy(other.folderPath));
+#else
+				folderPath == other.folderPath);
+#endif
+	} else {
+		return true;
+	}
+}
+
+bool FolderRecord::operator!=(const FolderRecord &other) const {
+	if (this != &other) {
+		return (files != other.files ||
+				folders != other.folders ||
+#if defined (_WIN32) || defined (_WIN64)
+				lower_copy(folderName) != lower_copy(other.folderName) ||
+#else
+				folderName == other.folderName) ||
+#endif
+#if defined (_WIN32) || defined (_WIN64)
+				lower_copy(folderPath) != lower_copy(other.folderPath));
+#else
+				folderPath != other.folderPath);
+#endif
+	} else {
+		return false;
+	}
+}
 
 PartitionDesc::PartitionDesc() {
 	volumeSerial = 0;
@@ -127,51 +271,342 @@ PartitionDesc::PartitionDesc() {
 	seqWriteOnce = false;
 }
 
-PartitionDesc::PartitionDesc(const PartitionDesc& other) {
-	partLetter = other.partLetter;
-	volumeLabel = other.volumeLabel;
-	volumePath = other.volumePath;
-	drivePath = other.drivePath;
-	volumeSerial = other.volumeSerial;
-	volumeSerialStr = other.volumeSerialStr;
-	spaceFree = other.spaceFree;
-	spaceTotal = other.spaceTotal;
-	fsName = other.fsName;
-	maxComponentLen = other.maxComponentLen;
-	caseSensitiveSearch = other.caseSensitiveSearch;
-	casePreservedMames = other.casePreservedMames;
-	unicodeFNames = other.unicodeFNames;
-	persistentACLS = other.persistentACLS;
-	supportFileCompress = other.supportFileCompress;
-	supportQuota = other.supportQuota;
-	supportSparseFile = other.supportSparseFile;
-	supportReparsePoints = other.supportReparsePoints;
-	supportRemoteStorage = other.supportRemoteStorage;
-	supportPosixUnlinkRename = other.supportPosixUnlinkRename;
-	supportObjectIds = other.supportObjectIds;
-	supportEncryption = other.supportEncryption;
-	supportNamedStreams = other.supportNamedStreams;
-	supportTransactions = other.supportTransactions;
-	supportHardLink = other.supportHardLink;
-	suportExtendAttrib = other.suportExtendAttrib;
-	supportFileIdOpen = other.supportFileIdOpen;
-	supportUSNJournal = other.supportUSNJournal;
-	supportIntegrityStream = other.supportIntegrityStream;
-	supportBlockRefCount = other.supportBlockRefCount;
-	supportSparseVdl = other.supportSparseVdl;
-	supportGhosting = other.supportGhosting;
-	returnCleanupResInfo = other.returnCleanupResInfo;
-	volumeCompressed = other.volumeCompressed;
-	volumeReadOnly = other.volumeReadOnly;
-	volumeDax = other.volumeDax;
-	seqWriteOnce = other.seqWriteOnce;
+PartitionDesc::PartitionDesc(const PartitionDesc &other) {
+	if (this != &other) {
+		partLetter = other.partLetter;
+		volumeLabel = other.volumeLabel;
+		volumePath = other.volumePath;
+		drivePath = other.drivePath;
+		volumeSerial = other.volumeSerial;
+		volumeSerialStr = other.volumeSerialStr;
+		spaceFree = other.spaceFree;
+		spaceTotal = other.spaceTotal;
+		fsName = other.fsName;
+		maxComponentLen = other.maxComponentLen;
+		caseSensitiveSearch = other.caseSensitiveSearch;
+		casePreservedMames = other.casePreservedMames;
+		unicodeFNames = other.unicodeFNames;
+		persistentACLS = other.persistentACLS;
+		supportFileCompress = other.supportFileCompress;
+		supportQuota = other.supportQuota;
+		supportSparseFile = other.supportSparseFile;
+		supportReparsePoints = other.supportReparsePoints;
+		supportRemoteStorage = other.supportRemoteStorage;
+		supportPosixUnlinkRename = other.supportPosixUnlinkRename;
+		supportObjectIds = other.supportObjectIds;
+		supportEncryption = other.supportEncryption;
+		supportNamedStreams = other.supportNamedStreams;
+		supportTransactions = other.supportTransactions;
+		supportHardLink = other.supportHardLink;
+		suportExtendAttrib = other.suportExtendAttrib;
+		supportFileIdOpen = other.supportFileIdOpen;
+		supportUSNJournal = other.supportUSNJournal;
+		supportIntegrityStream = other.supportIntegrityStream;
+		supportBlockRefCount = other.supportBlockRefCount;
+		supportSparseVdl = other.supportSparseVdl;
+		supportGhosting = other.supportGhosting;
+		returnCleanupResInfo = other.returnCleanupResInfo;
+		volumeCompressed = other.volumeCompressed;
+		volumeReadOnly = other.volumeReadOnly;
+		volumeDax = other.volumeDax;
+		seqWriteOnce = other.seqWriteOnce;
+	}
+}
+
+PartitionDesc::PartitionDesc(PartitionDesc &&other) noexcept {
+	if (this != &other) {
+		partLetter = other.partLetter;
+		other.partLetter.~basic_string();
+		volumeLabel = other.volumeLabel;
+		other.volumeLabel.~basic_string();
+		volumePath = other.volumePath;
+		other.volumePath.~basic_string();
+		drivePath = other.drivePath;
+		other.drivePath.~basic_string();
+		volumeSerial = other.volumeSerial;
+		other.volumeSerial = 0;
+		volumeSerialStr = other.volumeSerialStr;
+		other.volumeSerialStr.~basic_string();
+		spaceFree = other.spaceFree;
+		other.spaceFree = 0;
+		spaceTotal = other.spaceTotal;
+		other.spaceTotal = 0;
+		fsName = other.fsName;
+		other.fsName.~basic_string();
+		maxComponentLen = other.maxComponentLen;
+		other.maxComponentLen = 0;
+		caseSensitiveSearch = other.caseSensitiveSearch;
+		other.caseSensitiveSearch = false;
+		casePreservedMames = other.casePreservedMames;
+		other.casePreservedMames = false;
+		unicodeFNames = other.unicodeFNames;
+		other.unicodeFNames = false;
+		persistentACLS = other.persistentACLS;
+		other.persistentACLS = false;
+		supportFileCompress = other.supportFileCompress;
+		other.supportFileCompress = false;
+		supportQuota = other.supportQuota;
+		other.supportQuota = false;
+		supportSparseFile = other.supportSparseFile;
+		other.supportSparseFile = false;
+		supportReparsePoints = other.supportReparsePoints;
+		other.supportReparsePoints = false;
+		supportRemoteStorage = other.supportRemoteStorage;
+		other.supportRemoteStorage = false;
+		supportPosixUnlinkRename = other.supportPosixUnlinkRename;
+		other.supportRemoteStorage = false;
+		supportObjectIds = other.supportObjectIds;
+		other.supportObjectIds = false;
+		supportEncryption = other.supportEncryption;
+		other.supportEncryption = false;
+		supportNamedStreams = other.supportNamedStreams;
+		other.supportNamedStreams = false;
+		supportTransactions = other.supportTransactions;
+		other.supportTransactions = false;
+		supportHardLink = other.supportHardLink;
+		other.supportHardLink = false;
+		suportExtendAttrib = other.suportExtendAttrib;
+		other.suportExtendAttrib = false;
+		supportFileIdOpen = other.supportFileIdOpen;
+		other.supportFileIdOpen = false;
+		supportUSNJournal = other.supportUSNJournal;
+		other.supportUSNJournal = false;
+		supportIntegrityStream = other.supportIntegrityStream;
+		other.supportIntegrityStream = false;
+		supportBlockRefCount = other.supportBlockRefCount;
+		other.supportBlockRefCount = false;
+		supportSparseVdl = other.supportSparseVdl;
+		other.supportSparseVdl = false;
+		supportGhosting = other.supportGhosting;
+		other.supportGhosting = false;
+		returnCleanupResInfo = other.returnCleanupResInfo;
+		other.returnCleanupResInfo = false;
+		volumeCompressed = other.volumeCompressed;
+		other.volumeCompressed = false;
+		volumeReadOnly = other.volumeReadOnly;
+		other.volumeReadOnly = false;
+		volumeDax = other.volumeDax;
+		other.volumeDax = false;
+		seqWriteOnce = other.seqWriteOnce;
+		other.seqWriteOnce = false;
+	}
+}
+
+PartitionDesc& PartitionDesc::operator=(const PartitionDesc &other) {
+	if (this != &other) {
+		partLetter = other.partLetter;
+		drivePath = other.drivePath;
+		volumeSerial = other.volumeSerial;
+		volumeSerialStr = other.volumeSerialStr;
+		volumeLabel = other.volumeLabel;
+		fsName = other.fsName;
+		spaceFree = other.spaceFree;
+		spaceTotal = other.spaceTotal;
+		maxComponentLen = other.maxComponentLen;
+		caseSensitiveSearch = other.caseSensitiveSearch;
+		casePreservedMames = other.casePreservedMames;
+		unicodeFNames = other.unicodeFNames;
+		persistentACLS = other.persistentACLS;
+		supportFileCompress = other.supportFileCompress;
+		supportQuota = other.supportQuota;
+		supportSparseFile = other.supportSparseFile;
+		supportReparsePoints = other.supportReparsePoints;
+		supportRemoteStorage = other.supportRemoteStorage;
+		supportPosixUnlinkRename = other.supportPosixUnlinkRename;
+		supportObjectIds = other.supportObjectIds;
+		supportEncryption = other.supportEncryption;
+		supportNamedStreams = other.supportNamedStreams;
+		supportTransactions = other.supportTransactions;
+		supportHardLink = other.supportHardLink;
+		suportExtendAttrib = other.suportExtendAttrib;
+		supportFileIdOpen = other.supportFileIdOpen;
+		supportUSNJournal = other.supportUSNJournal;
+		supportIntegrityStream = other.supportIntegrityStream;
+		supportBlockRefCount = other.supportBlockRefCount;
+		supportSparseVdl = other.supportSparseVdl;
+		supportGhosting = other.supportGhosting;
+		returnCleanupResInfo = other.returnCleanupResInfo;
+		volumeCompressed = other.volumeCompressed;
+		volumeReadOnly = other.volumeReadOnly;
+		volumeDax = other.volumeDax;
+		seqWriteOnce = other.seqWriteOnce;
+	}
+	return *this;
+}
+
+PartitionDesc& PartitionDesc::operator=(PartitionDesc&& other) noexcept {
+	if (this != &other) {
+		partLetter = other.partLetter;
+		other.partLetter.~basic_string();
+		volumeLabel = other.volumeLabel;
+		other.volumeLabel.~basic_string();
+		volumePath = other.volumePath;
+		other.volumePath.~basic_string();
+		drivePath = other.drivePath;
+		other.drivePath.~basic_string();
+		volumeSerial = other.volumeSerial;
+		other.volumeSerial = 0;
+		volumeSerialStr = other.volumeSerialStr;
+		other.volumeSerialStr.~basic_string();
+		spaceFree = other.spaceFree;
+		other.spaceFree = 0;
+		spaceTotal = other.spaceTotal;
+		other.spaceTotal = 0;
+		fsName = other.fsName;
+		other.fsName.~basic_string();
+		maxComponentLen = other.maxComponentLen;
+		other.maxComponentLen = 0;
+		caseSensitiveSearch = other.caseSensitiveSearch;
+		other.caseSensitiveSearch = false;
+		casePreservedMames = other.casePreservedMames;
+		other.casePreservedMames = false;
+		unicodeFNames = other.unicodeFNames;
+		other.unicodeFNames = false;
+		persistentACLS = other.persistentACLS;
+		other.persistentACLS = false;
+		supportFileCompress = other.supportFileCompress;
+		other.supportFileCompress = false;
+		supportQuota = other.supportQuota;
+		other.supportQuota = false;
+		supportSparseFile = other.supportSparseFile;
+		other.supportSparseFile = false;
+		supportReparsePoints = other.supportReparsePoints;
+		other.supportReparsePoints = false;
+		supportRemoteStorage = other.supportRemoteStorage;
+		other.supportRemoteStorage = false;
+		supportPosixUnlinkRename = other.supportPosixUnlinkRename;
+		other.supportRemoteStorage = false;
+		supportObjectIds = other.supportObjectIds;
+		other.supportObjectIds = false;
+		supportEncryption = other.supportEncryption;
+		other.supportEncryption = false;
+		supportNamedStreams = other.supportNamedStreams;
+		other.supportNamedStreams = false;
+		supportTransactions = other.supportTransactions;
+		other.supportTransactions = false;
+		supportHardLink = other.supportHardLink;
+		other.supportHardLink = false;
+		suportExtendAttrib = other.suportExtendAttrib;
+		other.suportExtendAttrib = false;
+		supportFileIdOpen = other.supportFileIdOpen;
+		other.supportFileIdOpen = false;
+		supportUSNJournal = other.supportUSNJournal;
+		other.supportUSNJournal = false;
+		supportIntegrityStream = other.supportIntegrityStream;
+		other.supportIntegrityStream = false;
+		supportBlockRefCount = other.supportBlockRefCount;
+		other.supportBlockRefCount = false;
+		supportSparseVdl = other.supportSparseVdl;
+		other.supportSparseVdl = false;
+		supportGhosting = other.supportGhosting;
+		other.supportGhosting = false;
+		returnCleanupResInfo = other.returnCleanupResInfo;
+		other.returnCleanupResInfo = false;
+		volumeCompressed = other.volumeCompressed;
+		other.volumeCompressed = false;
+		volumeReadOnly = other.volumeReadOnly;
+		other.volumeReadOnly = false;
+		volumeDax = other.volumeDax;
+		other.volumeDax = false;
+		seqWriteOnce = other.seqWriteOnce;
+		other.seqWriteOnce = false;
+	}
+	return *this;
+}
+
+bool PartitionDesc::operator==(const PartitionDesc& other) const {
+	if (this != &other) {
+		return (lower_copy(partLetter) == lower_copy(other.partLetter) &&
+				lower_copy(drivePath) == lower_copy(other.drivePath) &&
+				lower_copy(volumePath) == lower_copy(other.volumePath) &&
+				lower_copy(volumeSerialStr) == lower_copy(other.volumeSerialStr) &&
+				lower_copy(volumeLabel) == lower_copy(other.volumeLabel) &&
+				lower_copy(fsName) == lower_copy(other.fsName) &&
+				volumeSerial == other.volumeSerial &&
+				spaceFree == other.spaceFree &&
+				spaceTotal == other.spaceTotal &&
+				fsName == other.fsName &&
+				maxComponentLen == other.maxComponentLen &&
+				caseSensitiveSearch == other.caseSensitiveSearch &&
+				casePreservedMames == other.casePreservedMames &&
+				unicodeFNames == other.unicodeFNames &&
+				persistentACLS == other.persistentACLS &&
+				supportFileCompress == other.supportFileCompress &&
+				supportQuota == other.supportQuota &&
+				supportSparseFile == other.supportSparseFile &&
+				supportReparsePoints == other.supportReparsePoints &&
+				supportRemoteStorage == other.supportRemoteStorage &&
+				supportPosixUnlinkRename == other.supportPosixUnlinkRename &&
+				supportObjectIds == other.supportObjectIds &&
+				supportEncryption == other.supportEncryption &&
+				supportNamedStreams == other.supportNamedStreams &&
+				supportTransactions == other.supportTransactions &&
+				supportHardLink == other.supportHardLink &&
+				suportExtendAttrib == other.suportExtendAttrib &&
+				supportFileIdOpen == other.supportFileIdOpen &&
+				supportUSNJournal == other.supportUSNJournal &&
+				supportIntegrityStream == other.supportIntegrityStream &&
+				supportBlockRefCount == other.supportBlockRefCount &&
+				supportSparseVdl == other.supportSparseVdl &&
+				supportGhosting == other.supportGhosting &&
+				returnCleanupResInfo == other.returnCleanupResInfo &&
+				volumeCompressed == other.volumeCompressed &&
+				volumeReadOnly == other.volumeReadOnly &&
+				volumeDax == other.volumeDax &&
+				seqWriteOnce == other.seqWriteOnce);
+	} else {
+		return true;
+	}
+}
+
+bool PartitionDesc::operator!=(const PartitionDesc& other) const {
+	if (this != &other) {
+		return (lower_copy(partLetter) != lower_copy(other.partLetter) ||
+				lower_copy(drivePath) != lower_copy(other.drivePath) ||
+				lower_copy(volumePath) != lower_copy(other.volumePath) ||
+				lower_copy(volumeSerialStr) != lower_copy(other.volumeSerialStr) ||
+				lower_copy(volumeLabel) != lower_copy(other.volumeLabel) ||
+				lower_copy(fsName) != lower_copy(other.fsName) ||
+				volumeSerial != other.volumeSerial ||
+				spaceFree != other.spaceFree ||
+				spaceTotal != other.spaceTotal ||
+				fsName != other.fsName ||
+				maxComponentLen != other.maxComponentLen ||
+				caseSensitiveSearch != other.caseSensitiveSearch ||
+				casePreservedMames != other.casePreservedMames ||
+				unicodeFNames != other.unicodeFNames ||
+				persistentACLS != other.persistentACLS ||
+				supportFileCompress != other.supportFileCompress ||
+				supportQuota != other.supportQuota ||
+				supportSparseFile != other.supportSparseFile ||
+				supportReparsePoints != other.supportReparsePoints ||
+				supportRemoteStorage != other.supportRemoteStorage ||
+				supportPosixUnlinkRename != other.supportPosixUnlinkRename ||
+				supportObjectIds != other.supportObjectIds ||
+				supportEncryption != other.supportEncryption ||
+				supportNamedStreams != other.supportNamedStreams ||
+				supportTransactions != other.supportTransactions ||
+				supportHardLink != other.supportHardLink ||
+				suportExtendAttrib != other.suportExtendAttrib ||
+				supportFileIdOpen != other.supportFileIdOpen ||
+				supportUSNJournal != other.supportUSNJournal ||
+				supportIntegrityStream != other.supportIntegrityStream ||
+				supportBlockRefCount != other.supportBlockRefCount ||
+				supportSparseVdl != other.supportSparseVdl ||
+				supportGhosting != other.supportGhosting ||
+				returnCleanupResInfo != other.returnCleanupResInfo ||
+				volumeCompressed != other.volumeCompressed ||
+				volumeReadOnly != other.volumeReadOnly ||
+				volumeDax != other.volumeDax ||
+				seqWriteOnce != other.seqWriteOnce);
+	} else {
+		return false;
+	}
 }
 
 PartitionDesc::~PartitionDesc() {}
 
 FSHandler::FSHandler() {}
-
-FSHandler::FSHandler(const FSHandler& other) {}
 
 FSHandler::~FSHandler() {}
 
