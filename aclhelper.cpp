@@ -23,7 +23,7 @@ SecDesc::SecDesc() {
 SecDesc::SecDesc(const SecDesc &other) {
     if (this != &other) {
         if (other.daclInfo) {
-             if (daclInfo && daclInfoSz) {
+             if (daclInfo) {
                 SAFE_LOCALFREE(daclInfo);
             }
             daclInfo = ::LocalAlloc(LPTR, other.daclInfoSz);
@@ -31,13 +31,12 @@ SecDesc::SecDesc(const SecDesc &other) {
                 memcpy(daclInfo, other.daclInfo, other.daclInfoSz);
             }
         } else {
-            if (daclInfo && daclInfoSz) {
+            if (daclInfo) {
                 SAFE_LOCALFREE(daclInfo);
             }
-            daclInfo = 0;
         }
         if (other.daclAbsInfo) {
-             if (daclAbsInfo && daclAbsInfoSz) {
+             if (daclAbsInfo) {
                  SAFE_LOCALFREE(daclAbsInfo);
             }
             daclAbsInfo = ::LocalAlloc(LPTR, other.daclAbsInfoSz);
@@ -45,13 +44,12 @@ SecDesc::SecDesc(const SecDesc &other) {
                 memcpy(daclAbsInfo, other.daclAbsInfo, other.daclAbsInfoSz);
             }
         } else {
-            if (daclAbsInfo && daclAbsInfoSz) {
+            if (daclAbsInfo) {
                 SAFE_LOCALFREE(daclAbsInfo);
             }
-            daclAbsInfo = 0;
         }
         if (other.saclInfo) {
-            if (saclInfo && saclInfoSz) {
+            if (saclInfo) {
                 SAFE_LOCALFREE(saclInfo);
             }
             saclInfo = ::LocalAlloc(LPTR, other.saclInfoSz);
@@ -59,13 +57,12 @@ SecDesc::SecDesc(const SecDesc &other) {
                 memcpy(saclInfo, other.saclInfo, other.saclInfoSz);
             }
         } else {
-            if (saclInfo && saclInfoSz) {
+            if (saclInfo) {
                 SAFE_LOCALFREE(saclInfo);
             }
-            saclInfo = 0;
         }
         if (other.saclAbsInfo) {
-             if (saclAbsInfo && saclAbsInfoSz) {
+             if (saclAbsInfo) {
                  SAFE_LOCALFREE(saclAbsInfo);
             }
             saclAbsInfo = ::LocalAlloc(LPTR, other.saclAbsInfoSz);
@@ -73,13 +70,12 @@ SecDesc::SecDesc(const SecDesc &other) {
                 memcpy(saclAbsInfo, other.saclAbsInfo, other.saclAbsInfoSz);
             }
         } else {
-            if (saclAbsInfo && saclAbsInfoSz) {
+            if (saclAbsInfo) {
                 SAFE_LOCALFREE(saclAbsInfo);
             }
-            saclAbsInfo = 0;
         }
         if (other.ownerInfo) {
-            if (ownerInfo && ownerInfoSz) {
+            if (ownerInfo) {
                 SAFE_LOCALFREE(ownerInfo);
             }
             ownerInfo = ::LocalAlloc(LPTR, other.ownerInfoSz);
@@ -87,13 +83,12 @@ SecDesc::SecDesc(const SecDesc &other) {
                 memcpy(ownerInfo, other.ownerInfo, other.ownerInfoSz);
             }
         } else {
-            if (ownerInfo && ownerInfoSz) {
+            if (ownerInfo) {
                 SAFE_LOCALFREE(ownerInfo);
             }
-            ownerInfo = 0;
         }
         if (other.primaryGroupInfo) {
-            if (primaryGroupInfo && primaryGroupInfoSz) {
+            if (primaryGroupInfo) {
                 SAFE_LOCALFREE(primaryGroupInfo);
             }
             primaryGroupInfo = ::LocalAlloc(LPTR, other.primaryGroupInfoSz);
@@ -101,13 +96,12 @@ SecDesc::SecDesc(const SecDesc &other) {
                 memcpy(primaryGroupInfo, other.primaryGroupInfo, other.primaryGroupInfoSz);
             }
         } else {
-            if (primaryGroupInfo && primaryGroupInfoSz) {
+            if (primaryGroupInfo) {
                 SAFE_LOCALFREE(primaryGroupInfo);
             }
-            primaryGroupInfo = 0;
         }
         if (other.absoluteSDInfo) {
-            if (absoluteSDInfo && absoluteSDInfoSz) {
+            if (absoluteSDInfo) {
                 SAFE_LOCALFREE(absoluteSDInfo);
             }
             absoluteSDInfo = ::LocalAlloc(LPTR, other.absoluteSDInfoSz);
@@ -115,13 +109,12 @@ SecDesc::SecDesc(const SecDesc &other) {
                 memcpy(absoluteSDInfo, other.absoluteSDInfo, other.absoluteSDInfoSz);
             }
         } else {
-            if (absoluteSDInfo && absoluteSDInfoSz) {
+            if (absoluteSDInfo) {
                 SAFE_LOCALFREE(absoluteSDInfo);
             }
-            absoluteSDInfo = 0;
         }
         if (other.selfRelativeSDInfo) {
-            if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
+            if (selfRelativeSDInfo) {
                 SAFE_LOCALFREE(absoluteSDInfo);
             }
             selfRelativeSDInfo = ::LocalAlloc(LPTR, other.selfRelativeSDInfoSz);
@@ -129,10 +122,9 @@ SecDesc::SecDesc(const SecDesc &other) {
                 memcpy(selfRelativeSDInfo, other.selfRelativeSDInfo, other.selfRelativeSDInfoSz);
             }
         } else {
-            if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
+            if (selfRelativeSDInfo) {
                 SAFE_LOCALFREE(selfRelativeSDInfo);
             }
-            selfRelativeSDInfo = 0;
         }
         daclInfoSz = other.daclInfoSz;
         daclAbsInfoSz = other.daclAbsInfoSz;
@@ -236,7 +228,7 @@ SecDesc::~SecDesc() {
 SecDesc& SecDesc::operator=(const SecDesc &other) {
     if (this != &other) {
         if (other.daclInfo) {
-            if (daclInfo && daclInfoSz) {
+            if (daclInfo) {
                 SAFE_LOCALFREE(daclInfo);
             }
             daclInfo = ::LocalAlloc(LPTR, other.daclInfoSz);
@@ -244,13 +236,12 @@ SecDesc& SecDesc::operator=(const SecDesc &other) {
                 memcpy(daclInfo, other.daclInfo, other.daclInfoSz);
             }
         } else {
-            if (daclInfo && daclInfoSz) {
+            if (daclInfo) {
                 SAFE_LOCALFREE(daclInfo);
             }
-            daclInfo = 0;
         }
         if (other.daclAbsInfo) {
-            if (daclAbsInfo && daclAbsInfoSz) {
+            if (daclAbsInfo) {
                 SAFE_LOCALFREE(daclAbsInfo);
             }
             daclAbsInfo = ::LocalAlloc(LPTR, other.daclAbsInfoSz);
@@ -258,13 +249,12 @@ SecDesc& SecDesc::operator=(const SecDesc &other) {
                 memcpy(daclAbsInfo, other.daclAbsInfo, other.daclAbsInfoSz);
             }
         } else {
-            if (daclAbsInfo && daclAbsInfoSz) {
+            if (daclAbsInfo) {
                 SAFE_LOCALFREE(daclAbsInfo);
             }
-            daclAbsInfo = 0;
         }
         if (other.saclInfo) {
-            if (saclInfo && saclInfoSz) {
+            if (saclInfo) {
                 SAFE_LOCALFREE(saclInfo);
             }
             saclInfo = ::LocalAlloc(LPTR, other.saclInfoSz);
@@ -272,13 +262,12 @@ SecDesc& SecDesc::operator=(const SecDesc &other) {
                 memcpy(saclInfo, other.saclInfo, other.saclInfoSz);
             }
         } else {
-            if (saclInfo && saclInfoSz) {
+            if (saclInfo) {
                 SAFE_LOCALFREE(saclInfo);
             }
-            saclInfo = 0;
         }
         if (other.saclAbsInfo) {
-            if (saclAbsInfo && saclAbsInfoSz) {
+            if (saclAbsInfo) {
                 SAFE_LOCALFREE(saclAbsInfo);
             }
             saclAbsInfo = ::LocalAlloc(LPTR, other.saclAbsInfoSz);
@@ -286,13 +275,12 @@ SecDesc& SecDesc::operator=(const SecDesc &other) {
                 memcpy(saclAbsInfo, other.saclAbsInfo, other.saclAbsInfoSz);
             }
         } else {
-            if (saclAbsInfo && saclAbsInfoSz) {
+            if (saclAbsInfo) {
                 SAFE_LOCALFREE(saclAbsInfo);
             }
-            saclAbsInfo = 0;
         }
         if (other.ownerInfo) {
-            if (ownerInfo && ownerInfoSz) {
+            if (ownerInfo) {
                 SAFE_LOCALFREE(ownerInfo);
             }
             ownerInfo = ::LocalAlloc(LPTR, other.ownerInfoSz);
@@ -300,13 +288,12 @@ SecDesc& SecDesc::operator=(const SecDesc &other) {
                 memcpy(ownerInfo, other.ownerInfo, other.ownerInfoSz);
             }
         } else {
-            if (ownerInfo && ownerInfoSz) {
+            if (ownerInfo) {
                 SAFE_LOCALFREE(ownerInfo);
             }
-            ownerInfo = 0;
         }
         if (other.primaryGroupInfo) {
-            if (primaryGroupInfo && primaryGroupInfoSz) {
+            if (primaryGroupInfo) {
                 SAFE_LOCALFREE(primaryGroupInfo);
             }
             primaryGroupInfo = ::LocalAlloc(LPTR, other.primaryGroupInfoSz);
@@ -314,13 +301,12 @@ SecDesc& SecDesc::operator=(const SecDesc &other) {
                 memcpy(primaryGroupInfo, other.primaryGroupInfo, other.primaryGroupInfoSz);
             }
         } else {
-            if (primaryGroupInfo && primaryGroupInfoSz) {
+            if (primaryGroupInfo) {
                 SAFE_LOCALFREE(primaryGroupInfo);
             }
-            primaryGroupInfo = 0;
         }
         if (other.absoluteSDInfo) {
-            if (absoluteSDInfo && absoluteSDInfoSz) {
+            if (absoluteSDInfo) {
                 SAFE_LOCALFREE(absoluteSDInfo);
             }
             absoluteSDInfo = ::LocalAlloc(LPTR, other.absoluteSDInfoSz);
@@ -328,13 +314,12 @@ SecDesc& SecDesc::operator=(const SecDesc &other) {
                 memcpy(absoluteSDInfo, other.absoluteSDInfo, other.absoluteSDInfoSz);
             }
         } else {
-            if (absoluteSDInfo && absoluteSDInfoSz) {
+            if (absoluteSDInfo) {
                 SAFE_LOCALFREE(absoluteSDInfo);
             }
-            absoluteSDInfo = 0;
         }
         if (other.selfRelativeSDInfo) {
-            if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
+            if (selfRelativeSDInfo) {
                 SAFE_LOCALFREE(absoluteSDInfo);
             }
             selfRelativeSDInfo = ::LocalAlloc(LPTR, other.selfRelativeSDInfoSz);
@@ -342,10 +327,9 @@ SecDesc& SecDesc::operator=(const SecDesc &other) {
                 memcpy(selfRelativeSDInfo, other.selfRelativeSDInfo, other.selfRelativeSDInfoSz);
             }
         } else {
-            if (selfRelativeSDInfo && selfRelativeSDInfoSz) {
+            if (selfRelativeSDInfo) {
                 SAFE_LOCALFREE(selfRelativeSDInfo);
             }
-            selfRelativeSDInfo = 0;
         }
     }
     daclInfoSz = other.daclInfoSz;
