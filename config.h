@@ -7,7 +7,7 @@
 #ifdef DLLBUILD
 	#define LIBCOMPONENT __declspec(dllexport)
 #else
-	#define LIBCOMPONENT __declspec(dllimport)
+	#define LIBCOMPONENT // __declspec(dllimport)
 #endif
 
 // NetHelper Defines
