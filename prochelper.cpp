@@ -669,8 +669,7 @@ bool ProcessHandler::DisableDebugPrivilege(const unsigned long pid, const unsign
 	return privilegeController(pid, SE_DEBUG_NAME, false, desiredProcRights);
 }
 
-bool ProcessHandler::IsProcRunning(const std::wstring exepath,
-	const std::vector<ProcDesc> *proclist) {
+bool ProcessHandler::IsProcRunning(const std::wstring exepath, const std::vector<ProcDesc> *proclist) {
 	std::vector<ProcDesc> vec;
 	if (proclist) {
 		vec = *proclist;

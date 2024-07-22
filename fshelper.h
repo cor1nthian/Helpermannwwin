@@ -45,6 +45,7 @@
 #include <regex>
 #include <sstream>
 #include <vector>
+#include "config.h"
 #include "strhelper.h"
 #include "aclhelper.h"
 #include "prochelper.h"
@@ -85,7 +86,7 @@ enum class HashType : unsigned long {
 	SHA256 = CALG_SHA_256
 };
 
-struct BinData {
+LIBCOMPONENT struct BinData {
 	BinData();
 	BinData(const BinBitDepth bitDepth, const BinPlatform binPlatform);
 	BinData(const BinData &other);
@@ -100,7 +101,7 @@ struct BinData {
 };
 
 // File description struct
-struct FileRecord {
+LIBCOMPONENT struct FileRecord {
 	// File description struct constructor
 	FileRecord();
 	// File description struct copy constructor
@@ -123,10 +124,8 @@ struct FileRecord {
 	unsigned long long size;
 };
 
-/* Folder description struct
-Operators are defined in the header file,
-constructors and destructor are defined in the source code file */
-struct FolderRecord {
+// Folder description struct
+LIBCOMPONENT struct FolderRecord {
 	// Folder description struct constructor
 	FolderRecord();
 	// Folder description struct copy constructor
@@ -145,7 +144,7 @@ struct FolderRecord {
 };
 
 // Partition description struct
-struct PartitionDesc {
+LIBCOMPONENT struct PartitionDesc {
 	// Partition description struct constructor
 	PartitionDesc();
 	// Partition description struct copy constructor
@@ -233,7 +232,7 @@ struct PartitionDesc {
 };
 
 // Handler class encapsulating file system functionality
-class FSHandler {
+class LIBCOMPONENT FSHandler {
 	public:
 		// File system handler constructor
 		FSHandler();

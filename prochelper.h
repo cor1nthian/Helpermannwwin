@@ -47,6 +47,7 @@
 #include "fshelper.h"
 #include "strhelper.h"
 #include "syshelper.h"
+#include "config.h"
 
 enum class ProcOpResult : unsigned char {
 	Success = 0,
@@ -59,7 +60,7 @@ enum class ProcAwait : unsigned char {
 	NoWait
 };
 
-struct ProcResource {
+LIBCOMPONENT struct ProcResource {
 	ProcResource();
 	ProcResource(const unsigned long PID, unsigned long ExitCode, STARTUPINFO SI,
 		PROCESS_INFORMATION PI);
@@ -76,7 +77,7 @@ struct ProcResource {
 	PROCESS_INFORMATION pi;
 };
 
-struct ProcDesc {
+LIBCOMPONENT struct ProcDesc {
 	ProcDesc();
 	ProcDesc(const unsigned long sz,
 		const unsigned long use,
@@ -107,7 +108,7 @@ struct ProcDesc {
 	std::wstring exepath;
 };
 
-class ProcessHandler {
+LIBCOMPONENT class ProcessHandler {
 	public:
 		ProcessHandler();
 		ProcessHandler(const ProcessHandler &other) = delete;
@@ -267,8 +268,7 @@ class ProcessHandler {
 			const unsigned long desiredProcRights = PROCESS_ALL_ACCESS) const;
 		bool DisableDebugPrivilege(const unsigned long pid,
 			const unsigned long desiredProcRights = PROCESS_ALL_ACCESS) const;
-		bool IsProcRunning(const std::wstring exepath,
-			const std::vector<ProcDesc> *proclist = 0);
+		bool IsProcRunning(const std::wstring exepath, const std::vector<ProcDesc> *proclist = 0);
 		std::wstring GetProcessExePathByPid(const unsigned long pid,
 			const unsigned long desiredProcRights = PROCESS_ALL_ACCESS);
 		ProcDesc GetProcessByPid(const unsigned long pid,

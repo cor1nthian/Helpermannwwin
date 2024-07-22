@@ -9,7 +9,7 @@
 #endif
 #include "strhelper.h"
 
-inline std::size_t wcslen_c(const wchar_t* line) {
+std::size_t wcslen_c(const wchar_t* line) {
     const wchar_t* end = line;
     if (line) {
         while (*end != L'\0') {
@@ -21,7 +21,7 @@ inline std::size_t wcslen_c(const wchar_t* line) {
     return end - line;
 }
 
-inline bool contentInBuf(const char* buf, size_t bufSz) {
+bool contentInBuf(const char* buf, size_t bufSz) {
     for (size_t i = 0; i < bufSz; ++i) {
         if (buf[i] != '\0') {
             return true;
@@ -30,7 +30,7 @@ inline bool contentInBuf(const char* buf, size_t bufSz) {
     return false;
 }
 
-inline bool contentInBuf(const wchar_t* buf, size_t bufSz) {
+bool contentInBuf(const wchar_t* buf, size_t bufSz) {
     for (size_t i = 0; i < bufSz; ++i) {
         if (buf[i] != L'\0') {
             return true;

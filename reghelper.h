@@ -74,6 +74,7 @@
 #include <algorithm>
 #include <iterator>
 #include <regex>
+#include "config.h"
 #include "nethelper.h"
 #include "syshelper.h"
 #include "strhelper.h"
@@ -81,12 +82,13 @@
 #include "prochelper.h"
 #include "aclhelper.h"
 
-const void* const gc_wc_emptyVal = (void*)L'Z';
-const void* const gc_wc_incorrectVal = (void*)L'Y';
-
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
+
 #pragma comment(lib, "Advapi32.lib")
+
+const void* const gc_wc_emptyVal = (void*)L'Z';
+const void* const gc_wc_incorrectVal = (void*)L'Y';
 
 const void* const gc_ul_emptyVal = (void*)0xABCD1234;
 const void* const gc_ul_incorrectVal = (void*)0xABCD5678;
@@ -99,13 +101,13 @@ const wchar_t* const gc_loadKeyNamePrefix = L"Loaded Hive ";
 // maximum menu items added
 const unsigned long gc_maxMenuItems = 512;
 
-enum class RegLoadTarget : unsigned char {
+enum class LIBCOMPONENT RegLoadTarget : unsigned char {
 	None,
 	LocalMachine,
 	Users
 };
 
-enum class RegValType : unsigned long {
+enum class LIBCOMPONENT RegValType : unsigned long {
 	None = REG_NONE,
 	Str = REG_SZ,
 	MultiStr = REG_MULTI_SZ,
@@ -122,12 +124,12 @@ enum class RegValType : unsigned long {
 	Link = REG_LINK
 };
 
-enum class RegOpResult : unsigned char {
+enum class LIBCOMPONENT RegOpResult : unsigned char {
 	Success,
 	Fail
 };
 
-struct RegValDesc {
+LIBCOMPONENT struct RegValDesc {
 	RegValDesc();
 	RegValDesc(const RegValDesc &other);
 	~RegValDesc();
@@ -251,7 +253,7 @@ struct RegValDesc {
 	std::wstring valDataHex;
 };
 
-struct RegKeyDesc {
+LIBCOMPONENT struct RegKeyDesc {
 	RegKeyDesc();
 	RegKeyDesc(const RegKeyDesc &other);
 	~RegKeyDesc();
@@ -285,7 +287,7 @@ struct RegKeyDesc {
 	std::vector<RegValDesc> values;
 };
 
-class RegHandler {
+LIBCOMPONENT class RegHandler {
 	public:
 		RegHandler();
 		RegHandler(const RegHandler &other);

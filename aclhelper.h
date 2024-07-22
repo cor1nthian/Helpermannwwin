@@ -40,6 +40,7 @@
 #include <Windows.h>
 #include "strhelper.h"
 #include "syshelper.h"
+#include "config.h"
 
 #define PERMISSION std::pair<std::pair<std::wstring, std::wstring>, AceType>
 #define PERMISSIONFULL std::pair<std::pair<std::wstring, std::wstring>, std::pair<AceType, unsigned long>>
@@ -95,7 +96,7 @@ enum class ACLOpResult : unsigned char {
 	Fail
 };
 
-struct SecDesc {
+LIBCOMPONENT struct SecDesc {
 	SecDesc();
 	SecDesc(const SecDesc &other);
 	SecDesc(SecDesc &&other) noexcept;
@@ -122,7 +123,7 @@ struct SecDesc {
 	void* selfRelativeSDInfo;
 };
 
-class ACLHandler {
+LIBCOMPONENT class ACLHandler {
 	public:
 		ACLHandler();
 		ACLHandler(const ACLHandler &other) = delete;

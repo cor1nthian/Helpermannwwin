@@ -36,6 +36,7 @@
 
 #include <Windows.h>
 #include <wininet.h>
+#include "config.h"
 #include "strhelper.h"
 
 #pragma warning(disable : 4244)
@@ -43,7 +44,7 @@
 
 #pragma comment (lib, "Wininet.lib")
 
-class HTTPHelper {
+LIBCOMPONENT class HTTPHelper {
 	public:
 		HTTPHelper();
 		HTTPHelper(const HTTPHelper &other) = delete;

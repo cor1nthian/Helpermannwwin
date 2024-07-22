@@ -128,6 +128,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="aclhelper.h" />
+    <ClInclude Include="config.h" />
     <ClInclude Include="fshelper.h" />
     <ClInclude Include="httphelper.h" />
     <ClInclude Include="nethelper.h" />

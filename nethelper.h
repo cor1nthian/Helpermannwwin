@@ -59,10 +59,7 @@
 
 #include "strhelper.h"
 #include "prochelper.h"
-
-#ifdef _DEBUG
-	#define DNSHELPER_SHOWERRORMSGBOX
-#endif
+#include "config.h"
 
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
@@ -82,12 +79,12 @@
 #define MAXTRACERTHOPS		255
 #define MAXTRACERTPINGS		32
 
-struct HostNodeAddr;
-struct HostNode;
-struct PingResult;
-struct TracertResult;
-struct ICMPHeader;
-struct IPHeader;
+LIBCOMPONENT struct HostNodeAddr;
+LIBCOMPONENT struct HostNode;
+LIBCOMPONENT struct PingResult;
+LIBCOMPONENT struct TracertResult;
+LIBCOMPONENT struct ICMPHeader;
+LIBCOMPONENT struct IPHeader;
 
 #define PINGMULTIPLEEPSA std::map<std::string, std::vector<PingResult>>
 #define PINGMULTIPLEEPSW std::map<std::wstring, std::vector<PingResult>>
@@ -447,7 +444,7 @@ enum class NWProtocol : unsigned long {
 	IPV6 = IPPROTO::IPPROTO_IPV6
 };
 
-struct DNSQueryContext {
+LIBCOMPONENT struct DNSQueryContext {
 	DNSQueryContext();
 	DNSQueryContext(const unsigned long refCount, const wchar_t* queryName, const unsigned long queryNameLen,
 		const unsigned short int queryType, const unsigned long queryOptions, const DNS_QUERY_RESULT queryRes,
@@ -468,7 +465,7 @@ struct DNSQueryContext {
 	HANDLE QueryCompletedEvent;
 };
 
-struct HostNodeAddr {
+LIBCOMPONENT struct HostNodeAddr {
 	HostNodeAddr();
 	HostNodeAddr(const SocketType sockType, const NWProtocol protocol, const AddressType addrType,
 		const std::wstring address);
@@ -485,7 +482,7 @@ struct HostNodeAddr {
 	std::wstring Address;
 };
 
-struct HostNode {
+LIBCOMPONENT struct HostNode {
 	HostNode();
 	HostNode(const std::vector<HostNodeAddr> address);
 	HostNode(const HostNode &other);
@@ -498,7 +495,7 @@ struct HostNode {
 	std::vector<HostNodeAddr> Address;
 };
 
-struct PingResult {
+LIBCOMPONENT struct PingResult {
 	PingResult();
 	PingResult(const bool result, const unsigned short int rtt, const unsigned short int ttl);
 	PingResult(const PingResult& other);
@@ -513,7 +510,7 @@ struct PingResult {
 	unsigned short int RoundTripTime;
 };
 
-struct TracertResult {
+LIBCOMPONENT struct TracertResult {
 	TracertResult();
 	TracertResult(const std::wstring address, const std::wstring addressv4,
 		const std::wstring addressv6, const unsigned short int ttl,
@@ -533,7 +530,7 @@ struct TracertResult {
 	std::vector<PingResult> Pings;
 };
 
-struct ICMPHeader {
+LIBCOMPONENT struct ICMPHeader {
 	ICMPHeader();
 	ICMPHeader(const unsigned char Type, const unsigned char Code, const unsigned short int Checksum,
 		const unsigned long ID, const unsigned short int SeqNum, const unsigned long Timestamp);
@@ -553,7 +550,7 @@ struct ICMPHeader {
 	unsigned long timestamp;
 };
 
-struct IPHeader {
+LIBCOMPONENT struct IPHeader {
 	IPHeader();
 	IPHeader(const unsigned int headerLen, const unsigned int ver, const unsigned char tos, const unsigned short int packlen,
 		const unsigned short int id, const unsigned short int packetflags, const unsigned char timetolive,
@@ -579,65 +576,65 @@ struct IPHeader {
 	unsigned int   destIP;			// Destination IP
 };
 
-NetOpResult ping(std::vector<PingResult> &results, const std::string address, const unsigned short numAttempts = 4,
+LIBCOMPONENT NetOpResult ping(std::vector<PingResult> &results, const std::string address, const unsigned short numAttempts = 4,
 	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
-NetOpResult ping(std::vector<PingResult> &results, const std::wstring address, const unsigned short numAttempts = 4,
+LIBCOMPONENT NetOpResult ping(std::vector<PingResult> &results, const std::wstring address, const unsigned short numAttempts = 4,
 	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
-NetOpResult ping_MultipleEndPoints(PINGMULTIPLEEPSA &results, const std::string address,
+LIBCOMPONENT NetOpResult ping_MultipleEndPoints(PINGMULTIPLEEPSA &results, const std::string address,
 	const std::string portOrSvcName = "80", const unsigned short numAttempts = 4,
 	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
-NetOpResult ping_MultipleEndPoints(PINGMULTIPLEEPSW &results, const std::wstring address,
+LIBCOMPONENT NetOpResult ping_MultipleEndPoints(PINGMULTIPLEEPSW &results, const std::wstring address,
 	const std::wstring portOrSvcName = L"80", const unsigned short numAttempts = 4,
 	const unsigned short timeout = 1000, const unsigned short timeoutBetweenPings = 1000);
-NetOpResult traceroute(std::vector<TracertResult> &results, const std::string address,  const unsigned char maxHops = 30,
+LIBCOMPONENT NetOpResult traceroute(std::vector<TracertResult> &results, const std::string address,  const unsigned char maxHops = 30,
 	const bool doPings = true, const unsigned short int tracertTimeout = 1000, const unsigned short int pingAttempts = 4,
 	const unsigned short int pingTimeout = 1000, const unsigned short int timeoutBetweenPings = 1000);
-NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring address, const unsigned char maxHops = 30,
+LIBCOMPONENT NetOpResult traceroute(std::vector<TracertResult> &results, const std::wstring address, const unsigned char maxHops = 30,
 	const bool doPings = true, const unsigned short int tracertTimeout = 1000, const unsigned short int pingAttempts = 4,
 	const unsigned short int pingTimeout = 1000, const unsigned short int timeoutBetweenPings = 1000);
-NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std::string address,
+LIBCOMPONENT NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std::string address,
 	const std::string portOrSvcName = "80", const unsigned char maxHops = 30,
 	const bool doPings = true, const unsigned short int tracertTimeout = 1000,
 	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
 	const unsigned short int timeoutBetweenPings = 1000);
-NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std::wstring address,
+LIBCOMPONENT NetOpResult traceroute_MultipleEndPoints(TRACERTMULTIPLEEPS &results, const std::wstring address,
 	const std::wstring portOrSvcName = L"80", const unsigned char maxHops = 30,
 	const bool doPings = true, const unsigned short int tracertTimeout = 1000,
 	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
 	const unsigned short int timeoutBetweenPings = 1000);
-NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPSA &results,
+LIBCOMPONENT NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPSA &results,
 	const std::string address, const std::string portOrSvcName = "80", const unsigned char maxHops = 30,
 	const bool doPings = true, const bool strictEndPointMatch = false, const unsigned short int tracertTimeout = 1000,
 	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
 	const unsigned short int timeoutBetweenPings = 1000);
-NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPSW &results,
+LIBCOMPONENT NetOpResult traceroute_MultipleStartPointsMultipleEndPoints(TRACERTMULTIPLESPSEPSW &results,
 	const std::wstring address, const std::wstring portOrSvcName = L"80", const unsigned char maxHops = 30,
 	const bool doPings = true, const bool strictEndPointMatch = false,  const unsigned short int tracertTimeout = 1000,
 	const unsigned short int pingAttempts = 4, const unsigned short int pingTimeout = 1000,
 	const unsigned short int timeoutBetweenPings = 1000);
-NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std::string address,
+LIBCOMPONENT NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std::string address,
 	const unsigned char maxHops = 30);
-NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std::wstring address,
+LIBCOMPONENT NetOpResult traceroute_RawSocket(std::vector<TracertResult> &results, const std::wstring address,
 	const unsigned char maxHops = 30);
-NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName,
+LIBCOMPONENT NetOpResult lookupIPAddresses(HostNode &node, const std::string dnsName,
 	const std::string portOrSvcName = "80", const AddressFamily addressFmaily = AddressFamily::IPV4,
 	const SocketType socketType = SocketType::Stream, const NWProtocol protocol = NWProtocol::TCP);
-NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName,
+LIBCOMPONENT NetOpResult lookupIPAddresses(HostNode &node, const std::wstring dnsName,
 	const std::wstring portOrSvcName = L"80", const AddressFamily addressFmaily = AddressFamily::IPV4, 
 	const SocketType socketType = SocketType::Stream, const NWProtocol protocol = NWProtocol::TCP);
-NetOpResult getHostnameByIPV4_DNSQuery(std::string &hostName, const std::string ipAddr,
+LIBCOMPONENT NetOpResult getHostnameByIPV4_DNSQuery(std::string &hostName, const std::string ipAddr,
 	const std::string dnsAddr = "", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getHostnameByIPV4_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
+LIBCOMPONENT NetOpResult getHostnameByIPV4_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
 	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getHostnameByIPV6_DNSQuery(std::string &hostName, const std::string ipAddr,
+LIBCOMPONENT NetOpResult getHostnameByIPV6_DNSQuery(std::string &hostName, const std::string ipAddr,
 	const std::string dnsAddr = "", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getHostnameByIPV6_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
+LIBCOMPONENT NetOpResult getHostnameByIPV6_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
 	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV4Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
+LIBCOMPONENT NetOpResult getIPV4Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
 	const std::string dnsAddr = "", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
+LIBCOMPONENT NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
 	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV6Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
+LIBCOMPONENT NetOpResult getIPV6Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
 	const std::string dnsAddr = "", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
 NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
 	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
@@ -647,45 +644,45 @@ NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::string objectNa
 NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::wstring objectName,
 	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
 	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec);
-NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName, const std::string dnsAddr = "",
+LIBCOMPONENT NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName, const std::string dnsAddr = "",
 	const bool async = true, const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName, const std::wstring dnsAddr = L"",
+LIBCOMPONENT NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName, const std::wstring dnsAddr = L"",
 	const bool async = true, const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring>& ipAddrs, const std::string hostName,
+LIBCOMPONENT NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring>& ipAddrs, const std::string hostName,
 	const std::string dnsAddr = "", const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
+LIBCOMPONENT NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
 	const std::wstring dnsAddr = L"", const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostName, const std::string ipV4Addr,
+LIBCOMPONENT NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostName, const std::string ipV4Addr,
 	const std::string dnsIPV4Addr = "", const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostName, const std::wstring ipV4Addr,
+LIBCOMPONENT NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostName, const std::wstring ipV4Addr,
 	const std::wstring dnsIPV4Addr = L"", const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &results, const std::string objectName,
+LIBCOMPONENT NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &results, const std::string objectName,
 	const std::string dnsIPV4Addr = "", const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &results, const std::wstring objectName,
+LIBCOMPONENT NetOpResult getHostnameByIPV6_DNSQueryEx(std::vector<std::wstring> &results, const std::wstring objectName,
 	const std::wstring dnsIPV4Addr = L"", const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult customDNSQueryEx(std::vector<DNS_RECORD> &queryResults, const std::string objectName,
+LIBCOMPONENT NetOpResult customDNSQueryEx(std::vector<DNS_RECORD> &queryResults, const std::string objectName,
 	const std::string dnsIPV4Addr = "", const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
 	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec);
-NetOpResult customDNSQueryEx(std::vector<DNS_RECORD> &queryResults, const std::wstring objectName,
+LIBCOMPONENT NetOpResult customDNSQueryEx(std::vector<DNS_RECORD> &queryResults, const std::wstring objectName,
 	const std::wstring dnsIPV4Addr = L"", const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
 	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec);
-std::wstring getDNSOpTextResult(const DNSResponseCode resultCode);
-std::string lookupIPV4Address(const std::string dnsName);
-std::wstring lookupIPV4Address(const std::wstring dnsName);
-std::string getHostnameByIPV4(const std::string ip, unsigned short int port = 80);
-std::wstring getHostnameByIPV4(const std::wstring ip, unsigned short int port = 80);
-std::string getHostnameByIPV6(const std::string ip, unsigned short int port = 80);
-std::wstring getHostnameByIPV6(const std::wstring ip, unsigned short int port = 80);
-void __stdcall DNSQueryExQueryCompleteCallback(void* context, DNS_QUERY_RESULT* queryResult);
-unsigned short ICMPHeaderChecksum(unsigned short* buffer, int size);
-int decodeResponse(char* buf, int bytes, SOCKADDR_IN* from, int ttl);
+LIBCOMPONENT std::wstring getDNSOpTextResult(const DNSResponseCode resultCode);
+LIBCOMPONENT std::string lookupIPV4Address(const std::string dnsName);
+LIBCOMPONENT std::wstring lookupIPV4Address(const std::wstring dnsName);
+LIBCOMPONENT std::string getHostnameByIPV4(const std::string ip, unsigned short int port = 80);
+LIBCOMPONENT std::wstring getHostnameByIPV4(const std::wstring ip, unsigned short int port = 80);
+LIBCOMPONENT std::string getHostnameByIPV6(const std::string ip, unsigned short int port = 80);
+LIBCOMPONENT std::wstring getHostnameByIPV6(const std::wstring ip, unsigned short int port = 80);
+LIBCOMPONENT void __stdcall DNSQueryExQueryCompleteCallback(void* context, DNS_QUERY_RESULT* queryResult);
+LIBCOMPONENT unsigned short ICMPHeaderChecksum(unsigned short* buffer, int size);
+LIBCOMPONENT int decodeResponse(char* buf, int bytes, SOCKADDR_IN* from, int ttl);
 
 #endif // _NETHELPER_H

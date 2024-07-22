@@ -48,6 +48,7 @@
 #include <fstream>
 #include <thread>
 #include <unordered_map>
+#include "config.h"
 #include "strhelper.h"
 #include "winerrhelper.h"
 
@@ -164,15 +165,15 @@ enum class SidType : unsigned char {
 	SidUnknown = 255
 };
 
-bool IsBadReadPtr(void* p);
-bool IsBadWritePtr(void* p);
-bool IsSIDWellKnown(const std::wstring strsid);
-bool IsSIDWellKnown(const PSID sid);
-std::vector<WKSid> GetWellKnownStrSIDs(PSID domainSID = 0);
+LIBCOMPONENT bool IsBadReadPtr(void* p);
+LIBCOMPONENT bool IsBadWritePtr(void* p);
+LIBCOMPONENT bool IsSIDWellKnown(const std::wstring strsid);
+LIBCOMPONENT bool IsSIDWellKnown(const PSID sid);
+LIBCOMPONENT std::vector<WKSid> GetWellKnownStrSIDs(PSID domainSID = 0);
 
 const std::vector<WKSid> const gc_WellKnownStrSIDs = GetWellKnownStrSIDs();
 
-struct WKSid {
+LIBCOMPONENT struct WKSid {
 	WKSid();
 	WKSid(std::wstring strsid, std::wstring sidname, std::wstring sidnameorig);
 	WKSid(const WKSid &other);
@@ -188,7 +189,7 @@ struct WKSid {
 };
 
 // User account description struct
-struct AccountDesc {
+LIBCOMPONENT struct AccountDesc {
 	AccountDesc();
 	AccountDesc(const AccountDesc &other);
 	AccountDesc(AccountDesc &&other) noexcept;
@@ -253,7 +254,7 @@ struct AccountDesc {
 };
 
 // Account group dekiniton struct
-struct GroupDesc {
+LIBCOMPONENT struct GroupDesc {
 	GroupDesc();
 	GroupDesc(const bool isADGroyp, const std::wstring groupName, const std::wstring groupStrSid,
 		const std::wstring comment, const std::vector<AccountDesc> accounts);
@@ -271,7 +272,7 @@ struct GroupDesc {
 	std::vector<AccountDesc> Accounts;
 };
 
-class SysHandler {
+LIBCOMPONENT class SysHandler {
 	public:
 		SysHandler();
 		SysHandler(const SysHandler &other) = delete;

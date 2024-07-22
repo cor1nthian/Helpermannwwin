@@ -35,6 +35,7 @@
 #define NOWH
 
 #include <Windows.h>
+#include "config.h"
 #include "strhelper.h"
 
 #pragma warning(disable : 4244)
@@ -75,11 +76,11 @@ enum class WinVerAdvanced {
 	WinVerUnknown
 };
 
-WinVerCore getWinVersionCore();
-WinVerAdvanced getWinVerAdvanced();
-std::string getWinVersionStr();
-std::wstring getWinVersionWStr();
-std::string getWinVersionTextStr();
-std::wstring getWinVersionTextWStr();
+LIBCOMPONENT WinVerCore getWinVersionCore();
+LIBCOMPONENT WinVerAdvanced getWinVerAdvanced();
+LIBCOMPONENT std::string getWinVersionStr();
+LIBCOMPONENT std::wstring getWinVersionWStr();
+LIBCOMPONENT std::string getWinVersionTextStr();
+LIBCOMPONENT std::wstring getWinVersionTextWStr();
 
 #endif // _WINVERHELPER_H

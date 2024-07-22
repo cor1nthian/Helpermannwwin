@@ -112,7 +112,7 @@ enum class SvcErrControl : unsigned char {
 	Critical = SERVICE_ERROR_CRITICAL
 };
 
-struct SvcRunState {
+LIBCOMPONENT struct SvcRunState {
 	SvcRunState();
 	SvcRunState(const SvcRunState& other);
 	~SvcRunState();
@@ -132,7 +132,7 @@ struct SvcRunState {
 	bool svcProcRunning;
 };
 
-struct SvcTriggerData {
+LIBCOMPONENT struct SvcTriggerData {
 	SvcTriggerData();
 	SvcTriggerData(const unsigned short triggerdatasize,
 		const unsigned long triggerdatatype,
@@ -166,7 +166,7 @@ struct SvcTriggerData {
 	std::vector<unsigned char> triggerData;
 };
 
-struct SvcTrigger {
+LIBCOMPONENT struct SvcTrigger {
 	SvcTrigger();
 	SvcTrigger(const unsigned long triggertype,
 		const unsigned long triggeraction,
@@ -201,7 +201,7 @@ struct SvcTrigger {
 	std::vector<SvcTriggerData> triggerData;
 };
 
-struct SvcRecord {
+LIBCOMPONENT struct SvcRecord {
 	SvcRecord();
 	SvcRecord(const std::wstring svcname,
 		const std::wstring svcdisplayname,
@@ -389,7 +389,7 @@ struct SvcRecord {
 	SERVICE_STATUS_PROCESS svcProcDetail;
 };
 
-class SvcHandler {
+LIBCOMPONENT class SvcHandler {
 	public:
 		SvcHandler();
 		SvcHandler(const SvcHandler &other);
