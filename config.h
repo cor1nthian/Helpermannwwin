@@ -10,7 +10,7 @@
 #define MALLOC_NULLIFY_NO_REDEFINE(x, type, sz) x = (type*)malloc(sz); if(x) { *x = { 0 }; }
 
 // malloc with ease
-#define MALLOC_NULLIFY_NO_REDEFINE_NO_CONV(x, type, sz) x = malloc(sz); if(x) { *x = { 0 }; }
+#define MALLOC_NULLIFY_NO_REDEFINE_NO_CONV(x, sz) x = malloc(sz); if(x) { *x = { 0 }; }
 
 // new with ease
 #define NEW_NULLIFY(x, type) type* x = 0; x = new type; if(x) { *x = { 0 }; }
