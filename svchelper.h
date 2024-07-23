@@ -40,6 +40,7 @@
 #include <Windows.h>
 #include <map>
 #include <vector>
+#include "config.h"
 #include "prochelper.h"
 #include "strhelper.h"
 #include "syshelper.h"
@@ -107,24 +108,24 @@ enum class ServiceType : unsigned long {
 
 enum class SvcErrControl : unsigned char {
 	Ignore = SERVICE_ERROR_IGNORE,
-	Boenal = SERVICE_ERROR_NORMAL,
+	Normal = SERVICE_ERROR_NORMAL,
 	Severe = SERVICE_ERROR_SEVERE,
 	Critical = SERVICE_ERROR_CRITICAL
 };
 
-LIBCOMPONENT struct SvcRunState {
+struct SvcRunState {
 	SvcRunState();
-	SvcRunState(const SvcRunState& other);
+	SvcRunState(const SvcRunState &other);
 	~SvcRunState();
-	SvcRunState* operator=(const SvcRunState& other) {
+	SvcRunState* operator=(const SvcRunState &other) {
 		svcRunning = other.svcRunning;
 		svcProcRunning = other.svcProcRunning;
 	}
-	bool operator==(const SvcRunState& other) const {
+	bool operator==(const SvcRunState &other) const {
 		return (svcRunning == other.svcRunning &&
 				svcProcRunning == other.svcProcRunning);
 	}
-	bool operator!=(const SvcRunState& other) const {
+	bool operator!=(const SvcRunState &other) const {
 		return (svcRunning != other.svcRunning ||
 			svcProcRunning != other.svcProcRunning);
 	}
@@ -132,12 +133,12 @@ LIBCOMPONENT struct SvcRunState {
 	bool svcProcRunning;
 };
 
-LIBCOMPONENT struct SvcTriggerData {
+struct SvcTriggerData {
 	SvcTriggerData();
 	SvcTriggerData(const unsigned short triggerdatasize,
 		const unsigned long triggerdatatype,
 		std::vector<unsigned char> triggerdata);
-	SvcTriggerData(const SvcTriggerData& other);
+	SvcTriggerData(const SvcTriggerData &other);
 	~SvcTriggerData();
 	SvcTriggerData& operator=(const SvcTriggerData& other) {
 		triggerDataSize = other.triggerDataSize;
@@ -145,7 +146,7 @@ LIBCOMPONENT struct SvcTriggerData {
 		triggerData = other.triggerData;
 		return *this;
 	}
-	bool operator ==(const SvcTriggerData& other) const {
+	bool operator ==(const SvcTriggerData &other) const {
 		std::string origstr = std::string(triggerData.begin(), triggerData.end());
 		std::string otherstr = std::string(other.triggerData.begin(), other.triggerData.end());
 		return (triggerDataSize == other.triggerDataSize &&
@@ -153,7 +154,7 @@ LIBCOMPONENT struct SvcTriggerData {
 			(origstr == otherstr &&
 				lower_copy(origstr) == lower_copy(otherstr)));
 	}
-	bool operator !=(const SvcTriggerData& other) const {
+	bool operator !=(const SvcTriggerData &other) const {
 		std::string origstr = std::string(triggerData.begin(), triggerData.end());
 		std::string otherstr = std::string(other.triggerData.begin(), other.triggerData.end());
 		return (triggerDataSize != other.triggerDataSize ||
@@ -166,13 +167,13 @@ LIBCOMPONENT struct SvcTriggerData {
 	std::vector<unsigned char> triggerData;
 };
 
-LIBCOMPONENT struct SvcTrigger {
+struct SvcTrigger {
 	SvcTrigger();
 	SvcTrigger(const unsigned long triggertype,
 		const unsigned long triggeraction,
 		const std::wstring triggerguid,
 		std::vector <SvcTriggerData> trigdata);
-	SvcTrigger(const SvcTrigger& other);
+	SvcTrigger(const SvcTrigger &other);
 	~SvcTrigger();
 	SvcTrigger& operator=(const SvcTrigger &other) {
 		triggerType = other.triggerType;
@@ -181,7 +182,7 @@ LIBCOMPONENT struct SvcTrigger {
 		triggerData = other.triggerData;
 		return *this;
 	}
-	bool operator==(const SvcTrigger& other) const {
+	bool operator==(const SvcTrigger &other) const {
 		return(triggerType == other.triggerType &&
 			triggerAction == other.triggerAction &&
 			(triggerGuid == other.triggerGuid &&
@@ -201,7 +202,7 @@ LIBCOMPONENT struct SvcTrigger {
 	std::vector<SvcTriggerData> triggerData;
 };
 
-LIBCOMPONENT struct SvcRecord {
+struct SvcRecord {
 	SvcRecord();
 	SvcRecord(const std::wstring svcname,
 		const std::wstring svcdisplayname,
@@ -389,7 +390,7 @@ LIBCOMPONENT struct SvcRecord {
 	SERVICE_STATUS_PROCESS svcProcDetail;
 };
 
-LIBCOMPONENT class SvcHandler {
+class SvcHandler {
 	public:
 		SvcHandler();
 		SvcHandler(const SvcHandler &other);

@@ -86,7 +86,7 @@ enum class HashType : unsigned long {
 	SHA256 = CALG_SHA_256
 };
 
-LIBCOMPONENT struct BinData {
+struct BinData {
 	BinData();
 	BinData(const BinBitDepth bitDepth, const BinPlatform binPlatform);
 	BinData(const BinData &other);
@@ -101,7 +101,7 @@ LIBCOMPONENT struct BinData {
 };
 
 // File description struct
-LIBCOMPONENT struct FileRecord {
+struct FileRecord {
 	// File description struct constructor
 	FileRecord();
 	// File description struct copy constructor
@@ -125,7 +125,7 @@ LIBCOMPONENT struct FileRecord {
 };
 
 // Folder description struct
-LIBCOMPONENT struct FolderRecord {
+struct FolderRecord {
 	// Folder description struct constructor
 	FolderRecord();
 	// Folder description struct copy constructor
@@ -144,7 +144,7 @@ LIBCOMPONENT struct FolderRecord {
 };
 
 // Partition description struct
-LIBCOMPONENT struct PartitionDesc {
+struct PartitionDesc {
 	// Partition description struct constructor
 	PartitionDesc();
 	// Partition description struct copy constructor
@@ -232,7 +232,7 @@ LIBCOMPONENT struct PartitionDesc {
 };
 
 // Handler class encapsulating file system functionality
-class LIBCOMPONENT FSHandler {
+class FSHandler {
 	public:
 		// File system handler constructor
 		FSHandler();

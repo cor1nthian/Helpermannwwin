@@ -57,51 +57,6 @@
 
 #pragma comment(lib, "netapi32.lib")
 
-// malloc with ease
-#define MALLOC_NULLIFY(x, type, sz) type* x = (type*)malloc(sz); if(x) { *x = { 0 }; }
-
-// malloc with ease
-#define MALLOC_NULLIFY_NO_REDEFINE(x, type, sz) x = (type*)malloc(sz); if(x) { *x = { 0 }; }
-
-// malloc with ease
-#define MALLOC_NULLIFY_NO_REDEFINE_NO_CONV(x, type, sz) x = malloc(sz); if(x) { *x = { 0 }; }
-
-// new with ease
-#define NEW_NULLIFY(x, type) type* x = 0; x = new type; if(x) { *x = { 0 }; }
-
-// new with ease
-#define NEW_ARR_NULLIFY_NO_REDEFINE(x, type, sz) x = new type[sz]; if(x) { *x = { 0 }; }
-
-// new with ease
-#define NEW_ARR_NULLIFY(x, type, sz) type* x = 0; x = new type[sz]; if(x) { *x = { 0 }; }
-
-// new with ease
-#define NEW_ARR_NULLIFY_ET(x, type, sz) type x = 0; x = new type[sz]; if(x) { *x = { 0 }; }
-
-// safety first! no errors trying to at least delete this pointer further
-#define SAFE_DELETE(x) delete x; x = 0
-
-// safety first! no errors trying to at least delete this pointer further
-#define SAFE_ARR_DELETE(x) delete[] x; x = 0
-
-// safety first! no errors trying to at least free this pointer further
-#define SAFE_FREE(x) free(x); x = 0
-
-// safety first! no errors trying to at least free this pointer further
-#define SAFE_NetApiBufferFree(x) ::NetApiBufferFree(x); x = 0
-
-// safety first! no errors trying to at least free this pointer further
-#define SAFE_LOCALFREE(x) ::LocalFree((HLOCAL)x); x =0
-
-// can be used for short, unsigned short, word, unsigned word (2-byte types)
-#define BYTESWAP16(n) (((n&0xFF00)>>8)|((n&0x00FF)<<8))
-
-// can be used for int or unsigned int or float (4-byte types)
-#define BYTESWAP32(n) ((BYTESWAP16((n&0xFFFF0000)>>16))|((BYTESWAP16(n&0x0000FFFF))<<16))
-
-// can be used for unsigned long long or double (8-byte types)
-#define BYTESWAP64(n) ((BYTESWAP32((n&0xFFFFFFFF00000000)>>32))|((BYTESWAP32(n&0x00000000FFFFFFFF))<<32))
-
 // Check memory address access
 const unsigned long const dwForbiddenArea = PAGE_GUARD | PAGE_NOACCESS;
 const unsigned long const dwReadRights = PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY;
@@ -162,18 +117,18 @@ enum class SidType : unsigned char {
 	Computer = SID_NAME_USE::SidTypeComputer,
 	Label = SID_NAME_USE::SidTypeLabel,
 	LogonSeesion = SID_NAME_USE::SidTypeLogonSession,
-	SidUnknown = 255
+	SidTypeUnknown = 255
 };
 
-LIBCOMPONENT bool IsBadReadPtr(void* p);
-LIBCOMPONENT bool IsBadWritePtr(void* p);
-LIBCOMPONENT bool IsSIDWellKnown(const std::wstring strsid);
-LIBCOMPONENT bool IsSIDWellKnown(const PSID sid);
-LIBCOMPONENT std::vector<WKSid> GetWellKnownStrSIDs(PSID domainSID = 0);
+bool IsBadReadPtr(void* p);
+bool IsBadWritePtr(void* p);
+bool IsSIDWellKnown(const std::wstring strsid);
+bool IsSIDWellKnown(const PSID sid);
+std::vector<WKSid> GetWellKnownStrSIDs(PSID domainSID = 0);
 
-const std::vector<WKSid> const gc_WellKnownStrSIDs = GetWellKnownStrSIDs();
+// const std::vector<WKSid> const gc_WellKnownStrSIDs = GetWellKnownStrSIDs();
 
-LIBCOMPONENT struct WKSid {
+struct WKSid {
 	WKSid();
 	WKSid(std::wstring strsid, std::wstring sidname, std::wstring sidnameorig);
 	WKSid(const WKSid &other);
@@ -189,7 +144,7 @@ LIBCOMPONENT struct WKSid {
 };
 
 // User account description struct
-LIBCOMPONENT struct AccountDesc {
+struct AccountDesc {
 	AccountDesc();
 	AccountDesc(const AccountDesc &other);
 	AccountDesc(AccountDesc &&other) noexcept;
@@ -253,8 +208,8 @@ LIBCOMPONENT struct AccountDesc {
 	std::vector<GroupDesc> groups;
 };
 
-// Account group dekiniton struct
-LIBCOMPONENT struct GroupDesc {
+// Account group definiton struct
+struct GroupDesc {
 	GroupDesc();
 	GroupDesc(const bool isADGroyp, const std::wstring groupName, const std::wstring groupStrSid,
 		const std::wstring comment, const std::vector<AccountDesc> accounts);
@@ -272,7 +227,7 @@ LIBCOMPONENT struct GroupDesc {
 	std::vector<AccountDesc> Accounts;
 };
 
-LIBCOMPONENT class SysHandler {
+class SysHandler {
 	public:
 		SysHandler();
 		SysHandler(const SysHandler &other) = delete;

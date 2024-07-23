@@ -30,8 +30,9 @@ bool IsBadWritePtr(void* p) {
 }
 
 bool IsSIDWellKnown(const std::wstring strsid) {
-	for (size_t i = 0; i < gc_WellKnownStrSIDs.size(); ++i) {
-		if (gc_WellKnownStrSIDs[i].StrSID == strsid) {
+	std::vector<WKSid> wkSIDS = GetWellKnownStrSIDs();
+	for (size_t i = 0; i < wkSIDS.size(); ++i) {
+		if (wkSIDS[i].StrSID == strsid) {
 			return true;
 		}
 	}
@@ -40,11 +41,15 @@ bool IsSIDWellKnown(const std::wstring strsid) {
 
 bool IsSIDWellKnown(const PSID sid) {
 	SysHandler sys;
-	std::wstring twsid = sys.StrSIDFromSID(sid);
-	for (size_t i = 0; i < gc_WellKnownStrSIDs.size(); ++i) {
-		if (gc_WellKnownStrSIDs[i].StrSID == twsid) {
-			return true;
+	std::wstring strSID = sys.StrSIDFromSID(sid);
+	if (strSID.length()) {
+		std::vector<WKSid> wkSIDS = GetWellKnownStrSIDs();
+		for (size_t i = 0; i < wkSIDS.size(); ++i) {
+			if (wkSIDS[i].StrSID == strSID) {
+				return true;
+			}
 		}
+		return false;
 	}
 	return false;
 }
@@ -970,8 +975,8 @@ SysHandler::SysHandler() {}
 SysHandler::~SysHandler() {}
 
 std::wstring SysHandler::GetMachineName() const {
-	unsigned long nameLen = MAX_COMPUTERNAME_LENGTH;
-	wchar_t compName[MAX_COMPUTERNAME_LENGTH + 1] = { 0 };
+	unsigned long nameLen = MAX_COMPUTERNAME_LENGTH * sizeof(wchar_t);
+	wchar_t compName[(MAX_COMPUTERNAME_LENGTH * sizeof(wchar_t)) + sizeof(wchar_t)] = { 0 };
 	if (::GetComputerName(compName, &nameLen)) {
 		return compName;
 	} else {
@@ -1160,7 +1165,7 @@ SysOpResult SysHandler::GetSIDType(const PSID sid, SidType &sidType, const std::
 				} else {
 					SAFE_ARR_DELETE(nameBuf);
 					SAFE_ARR_DELETE(domainNameBuf);
-					sidType = SidType::SidUnknown;
+					sidType = SidType::SidTypeUnknown;
 					return SysOpResult::Fail;
 				}
 			} else {

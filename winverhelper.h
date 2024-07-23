@@ -76,11 +76,11 @@ enum class WinVerAdvanced {
 	WinVerUnknown
 };
 
-LIBCOMPONENT WinVerCore getWinVersionCore();
-LIBCOMPONENT WinVerAdvanced getWinVerAdvanced();
-LIBCOMPONENT std::string getWinVersionStr();
-LIBCOMPONENT std::wstring getWinVersionWStr();
-LIBCOMPONENT std::string getWinVersionTextStr();
-LIBCOMPONENT std::wstring getWinVersionTextWStr();
+WinVerCore getWinVersionCore();
+WinVerAdvanced getWinVerAdvanced();
+std::string getWinVersionStr();
+std::wstring getWinVersionWStr();
+std::string getWinVersionTextStr();
+std::wstring getWinVersionTextWStr();
 
 #endif // _WINVERHELPER_H

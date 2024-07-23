@@ -96,7 +96,7 @@ enum class ACLOpResult : unsigned char {
 	Fail
 };
 
-LIBCOMPONENT struct SecDesc {
+struct SecDesc {
 	SecDesc();
 	SecDesc(const SecDesc &other);
 	SecDesc(SecDesc &&other) noexcept;
@@ -123,7 +123,7 @@ LIBCOMPONENT struct SecDesc {
 	void* selfRelativeSDInfo;
 };
 
-LIBCOMPONENT class ACLHandler {
+class ACLHandler {
 	public:
 		ACLHandler();
 		ACLHandler(const ACLHandler &other) = delete;

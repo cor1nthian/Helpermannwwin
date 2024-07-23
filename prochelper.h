@@ -60,7 +60,7 @@ enum class ProcAwait : unsigned char {
 	NoWait
 };
 
-LIBCOMPONENT struct ProcResource {
+struct ProcResource {
 	ProcResource();
 	ProcResource(const unsigned long PID, unsigned long ExitCode, STARTUPINFO SI,
 		PROCESS_INFORMATION PI);
@@ -77,7 +77,7 @@ LIBCOMPONENT struct ProcResource {
 	PROCESS_INFORMATION pi;
 };
 
-LIBCOMPONENT struct ProcDesc {
+struct ProcDesc {
 	ProcDesc();
 	ProcDesc(const unsigned long sz,
 		const unsigned long use,
@@ -108,7 +108,7 @@ LIBCOMPONENT struct ProcDesc {
 	std::wstring exepath;
 };
 
-LIBCOMPONENT class ProcessHandler {
+class ProcessHandler {
 	public:
 		ProcessHandler();
 		ProcessHandler(const ProcessHandler &other) = delete;

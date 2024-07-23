@@ -45,9 +45,9 @@
 
 #define SOFTWAREVERSION std::pair<std::wstring, std::wstring>
 
-#define REG_MAX_KEY_LENGTH 255
-#define REG_MAX_VALUE_NAME 4096
-#define REG_READBUFSZ 1024
+#define REG_MAX_KEY_LENGTH	255
+#define REG_MAX_VALUE_NAME	4096
+#define REG_READBUFSZ		1024
 
 #define REGHELPERVALBEGIN HKEY keyHandle = { 0 }, rootKey = { 0 }; \
 				std::wstring keyPath, valueName = valName; \
@@ -99,15 +99,15 @@ const void* const gc_ull_incorrectVal = (void*)0xABCD8765;
 const wchar_t* const gc_loadKeyNamePrefix = L"Loaded Hive ";
 
 // maximum menu items added
-const unsigned long gc_maxMenuItems = 512;
+const unsigned long const gc_maxMenuItems = 512;
 
-enum class LIBCOMPONENT RegLoadTarget : unsigned char {
+enum class RegLoadTarget : unsigned char {
 	None,
 	LocalMachine,
 	Users
 };
 
-enum class LIBCOMPONENT RegValType : unsigned long {
+enum class RegValType : unsigned long {
 	None = REG_NONE,
 	Str = REG_SZ,
 	MultiStr = REG_MULTI_SZ,
@@ -124,12 +124,12 @@ enum class LIBCOMPONENT RegValType : unsigned long {
 	Link = REG_LINK
 };
 
-enum class LIBCOMPONENT RegOpResult : unsigned char {
+enum class RegOpResult : unsigned char {
 	Success,
 	Fail
 };
 
-LIBCOMPONENT struct RegValDesc {
+struct RegValDesc {
 	RegValDesc();
 	RegValDesc(const RegValDesc &other);
 	~RegValDesc();
@@ -253,7 +253,7 @@ LIBCOMPONENT struct RegValDesc {
 	std::wstring valDataHex;
 };
 
-LIBCOMPONENT struct RegKeyDesc {
+struct RegKeyDesc {
 	RegKeyDesc();
 	RegKeyDesc(const RegKeyDesc &other);
 	~RegKeyDesc();
@@ -287,7 +287,7 @@ LIBCOMPONENT struct RegKeyDesc {
 	std::vector<RegValDesc> values;
 };
 
-LIBCOMPONENT class RegHandler {
+class RegHandler {
 	public:
 		RegHandler();
 		RegHandler(const RegHandler &other);

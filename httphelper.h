@@ -44,7 +44,7 @@
 
 #pragma comment (lib, "Wininet.lib")
 
-LIBCOMPONENT class HTTPHelper {
+class HTTPHelper {
 	public:
 		HTTPHelper();
 		HTTPHelper(const HTTPHelper &other) = delete;
