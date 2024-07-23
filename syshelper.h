@@ -52,9 +52,6 @@
 #include "strhelper.h"
 #include "winerrhelper.h"
 
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4996)
-
 // Check memory address access
 const unsigned long const dwForbiddenArea = PAGE_GUARD | PAGE_NOACCESS;
 const unsigned long const dwReadRights = PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY;

@@ -34,9 +34,6 @@
 #define NOWINMESSAGES
 #define NOWH
 
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4996)
-
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <psapi.h>

@@ -82,9 +82,6 @@
 #include "prochelper.h"
 #include "aclhelper.h"
 
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4996)
-
 const void* const gc_wc_emptyVal = (void*)L'Z';
 const void* const gc_wc_incorrectVal = (void*)L'Y';
 

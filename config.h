@@ -48,6 +48,10 @@
 // can be used for unsigned long long or double (8-byte types)
 #define BYTESWAP64(n) ((BYTESWAP32((n&0xFFFFFFFF00000000)>>32))|((BYTESWAP32(n&0x00000000FFFFFFFF))<<32))
 
+// Disable warnings
+#pragma warning(disable : 4244)
+#pragma warning(disable : 4996)
+
 // Libs
 #if defined(_WIN32) || defined(_WIN64)
 	#pragma comment(lib, "Kernel32.lib")

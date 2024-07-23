@@ -36,9 +36,6 @@
 	#define NOWH
 #endif
 
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4996)
-
 // #include <codecvt>
 #if defined(_WIN32) || defined(_WIN64)
 	#include <combaseapi.h>

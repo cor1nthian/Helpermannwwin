@@ -38,9 +38,6 @@
 #include "config.h"
 #include "strhelper.h"
 
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4996)
-
 void errorMsgBox(const std::wstring errormsg);
 void setLastError(const unsigned long code);
 unsigned long getLastErrorCode();

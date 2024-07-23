@@ -38,9 +38,6 @@
 #include "config.h"
 #include "strhelper.h"
 
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4996)
-
 enum class WinVerCore {
 	Core50,
 	Core51,

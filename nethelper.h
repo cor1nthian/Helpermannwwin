@@ -55,9 +55,6 @@
 #include "prochelper.h"
 #include "config.h"
 
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4996)
-
 #define ICMP_ECHOREPLY		0
 #define ICMP_DESTUNREACH	3
 #define ICMP_SRCQUENCH		4
