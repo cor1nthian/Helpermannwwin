@@ -85,8 +85,6 @@
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
 
-#pragma comment(lib, "Advapi32.lib")
-
 const void* const gc_wc_emptyVal = (void*)L'Z';
 const void* const gc_wc_incorrectVal = (void*)L'Y';
 

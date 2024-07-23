@@ -36,7 +36,6 @@
 
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
-#pragma comment(lib, "Kernel32.lib")
 
 #include <Windows.h>
 #include <Wincrypt.h>

@@ -48,6 +48,17 @@
 // can be used for unsigned long long or double (8-byte types)
 #define BYTESWAP64(n) ((BYTESWAP32((n&0xFFFFFFFF00000000)>>32))|((BYTESWAP32(n&0x00000000FFFFFFFF))<<32))
 
+// Libs
+#if defined(_WIN32) || defined(_WIN64)
+	#pragma comment(lib, "Kernel32.lib")
+	#pragma comment(lib, "Wininet.lib")
+	#pragma comment(lib, "iphlpapi.lib")
+	#pragma comment(lib, "ws2_32.lib")
+	#pragma comment(lib, "Dnsapi.lib")
+	#pragma comment(lib, "Advapi32.lib")
+	#pragma comment(lib, "netapi32.lib")
+#endif
+
 // NetHelper Defines
 #ifdef _DEBUG
 	#define DNSHELPER_SHOWERRORMSGBOX

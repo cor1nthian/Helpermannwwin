@@ -37,17 +37,15 @@
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
 
-#pragma comment(lib, "Kernel32.lib")
-
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <psapi.h>
 #include <map>
 #include <vector>
+#include "config.h"
 #include "fshelper.h"
 #include "strhelper.h"
 #include "syshelper.h"
-#include "config.h"
 
 enum class ProcOpResult : unsigned char {
 	Success = 0,

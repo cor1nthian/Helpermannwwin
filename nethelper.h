@@ -51,12 +51,6 @@
 	#include <arpa/inet.h>
 #endif
 
-#if defined(_WIN32) || defined(_WIN64)
-	#pragma comment(lib, "iphlpapi.lib")
-	#pragma comment(lib, "ws2_32.lib")
-	#pragma comment(lib, "Dnsapi.lib")
-#endif
-
 #include "strhelper.h"
 #include "prochelper.h"
 #include "config.h"

@@ -42,8 +42,6 @@
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
 
-#pragma comment (lib, "Wininet.lib")
-
 class HTTPHelper {
 	public:
 		HTTPHelper();
