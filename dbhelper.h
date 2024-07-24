@@ -35,8 +35,9 @@
 #define NOWH
 
 #include <Windows.h>
-#include <sql.h>
 #include <sqlext.h>
+#include <sqltypes.h>
+#include <sql.h>
 #include <sal.h>
 #include "config.h"
 #include "strhelper.h"
@@ -46,9 +47,23 @@ enum class MSSQLOpResult : unsigned char {
 	Fail
 };
 
+enum class MSSQLDriverType : unsigned char {
+	SQLServer
+};
+
+enum class MSSQLConnTrust : unsigned char {
+	Undefined,
+	Trusted,
+	NotTrusted
+};
+
 enum class PGSQLOpResult : unsigned char {
 	Success,
 	Fail
+};
+
+const std::map<MSSQLDriverType, std::wstring> gc_SQLDriverType = {
+	{ MSSQLDriverType::SQLServer, L"SQL Server" }
 };
 
 class MSSQLDBHandler {
@@ -63,7 +78,10 @@ class MSSQLDBHandler {
 		MSSQLDBHandler& operator=(MSSQLDBHandler &&other) noexcept;
 		bool operator==(const MSSQLDBHandler &other) const;
 		bool operator!=(const MSSQLDBHandler &other) const;
-		MSSQLOpResult ConnectDB(const std::wstring serverAddr, const std::wstring login, const std::wstring pwd);
+		MSSQLOpResult ConnectDB(const std::wstring serverAddr, const std::wstring dbName,
+			const std::wstring port = L"50100", MSSQLDriverType driverType = MSSQLDriverType::SQLServer,
+			const std::wstring login = L"", const std::wstring pwd = L"",
+			const MSSQLConnTrust trustRel = MSSQLConnTrust::Undefined, const size_t connOutBufLen = 1924);
 		MSSQLOpResult DisconnectDB(const std::wstring serverAddr);
 		MSSQLOpResult ExecQuery(unsigned long &queyID, const std::wstring query);
 		MSSQLOpResult CancelQuery(const unsigned long queyID);

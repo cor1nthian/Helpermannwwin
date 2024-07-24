@@ -62,8 +62,56 @@ bool MSSQLDBHandler::operator!=(const MSSQLDBHandler &other) const {
 	}
 }
 
-MSSQLOpResult MSSQLDBHandler::ConnectDB(const std::wstring serverAddr, const std::wstring login,
-	const std::wstring pwd) {
+MSSQLOpResult MSSQLDBHandler::ConnectDB(const std::wstring serverAddr, const std::wstring dbName,
+	const std::wstring port, MSSQLDriverType driverType, const std::wstring login, const std::wstring pwd,
+	const MSSQLConnTrust trustRel, const size_t connOutBufLen) {
+	if ((!login.length() && !pwd.length() && MSSQLConnTrust::NotTrusted == trustRel) || (!connOutBufLen)) {
+		return MSSQLOpResult::Fail;
+	}
+	SQLHENV hEnv = 0;
+	SQLHDBC hDbc = 0;
+	SQLHSTMT hStmt = 0;
+	if (SQL_ERROR == SQLAllocHandle(SQL_HANDLE_ENV, 0, &hEnv)) {
+		return MSSQLOpResult::Fail;
+	}
+	
+	short rc = SQLSetEnvAttr(hEnv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
+	if (SQL_SUCCESS != rc) {
+		return MSSQLOpResult::Fail;
+		// HandleDiagnosticRecord(h, ht, rc);
+	}
+	rc = SQLAllocHandle(SQL_HANDLE_DBC, hEnv, &hDbc);
+	if (SQL_SUCCESS != rc) {
+		return MSSQLOpResult::Fail;
+	}
+	std::wstring sqlDriver;
+	for (auto &it : gc_SQLDriverType) {
+		if (driverType == it.first) {
+			sqlDriver = it.second;
+			break;
+		}
+	}
+	std::wstring connLine = L"DRIVER={" + sqlDriver + L"};SERVER=" + serverAddr + L"," + port + L";DATABASE=" + dbName;
+	if (login.length()) {
+		connLine = connLine + L";UID=" + login;
+	}
+	if (pwd.length()) {
+		connLine = connLine + L";PWD=" + pwd;
+	}
+	if (MSSQLConnTrust::Trusted == trustRel) {
+		connLine = connLine + L";Trusted=true";
+	} else if (MSSQLConnTrust::NotTrusted == trustRel) {
+		connLine = connLine + L";Trusted=false";
+	}
+	NEW_ARR_NULLIFY(connOut, wchar_t, connOutBufLen);
+	if (!connOut) {
+		return MSSQLOpResult::Fail;
+	}
+	rc = SQLDriverConnect(hDbc, 0, (SQLWCHAR*)connLine.c_str(), SQL_NTS, connOut, connOutBufLen, 0,
+		SQL_DRIVER_NOPROMPT);
+	if (SQL_SUCCESS != rc) {
+		return MSSQLOpResult::Fail;
+	}
 	return MSSQLOpResult::Success;
 }
 
