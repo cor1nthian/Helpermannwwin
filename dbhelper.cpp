@@ -56,11 +56,12 @@ bool MSSQLDBHandler::operator!=(const MSSQLDBHandler &other) const {
 	}
 }
 
-MSSQLOpResult MSSQLDBHandler::ConnectDB() {
+MSSQLOpResult MSSQLDBHandler::ConnectDB(const std::wstring serverAddr, const std::wstring login,
+	const std::wstring pwd) {
 	return MSSQLOpResult::Success;
 }
 
-MSSQLOpResult MSSQLDBHandler::DisconnectDB() {
+MSSQLOpResult MSSQLDBHandler::DisconnectDB(const std::wstring serverAddr) {
 	return MSSQLOpResult::Success;
 }
 
@@ -136,11 +137,12 @@ bool PGSQLDBHandler::operator!=(const PGSQLDBHandler &other) const {
 	}
 }
 
-PGSQLOpResult PGSQLDBHandler::ConnectDB() {
+PGSQLOpResult PGSQLDBHandler::ConnectDB(const std::wstring serverAddr, const std::wstring login,
+	const std::wstring pwd) {
 	return PGSQLOpResult::Success;
 }
 
-PGSQLOpResult PGSQLDBHandler::DisconnectDB() {
+PGSQLOpResult PGSQLDBHandler::DisconnectDB(const std::wstring serverAddr) {
 	return PGSQLOpResult::Success;
 }
 
