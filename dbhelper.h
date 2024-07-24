@@ -62,7 +62,7 @@ enum class PGSQLOpResult : unsigned char {
 	Fail
 };
 
-const std::map<MSSQLDriverType, std::wstring> gc_SQLDriverType = {
+const std::map<MSSQLDriverType, std::wstring> const gc_SQLDriverType = {
 	{ MSSQLDriverType::SQLServer, L"SQL Server" }
 };
 
@@ -81,7 +81,7 @@ class MSSQLDBHandler {
 		MSSQLOpResult ConnectDB(const std::wstring serverAddr, const std::wstring dbName,
 			const std::wstring port = L"50100", MSSQLDriverType driverType = MSSQLDriverType::SQLServer,
 			const std::wstring login = L"", const std::wstring pwd = L"",
-			const MSSQLConnTrust trustRel = MSSQLConnTrust::Undefined, const size_t connOutBufLen = 1924);
+			const MSSQLConnTrust trustRel = MSSQLConnTrust::Undefined, const size_t connOutBufLen = 32768);
 		MSSQLOpResult DisconnectDB(const std::wstring serverAddr);
 		MSSQLOpResult ExecQuery(unsigned long &queyID, const std::wstring query);
 		MSSQLOpResult CancelQuery(const unsigned long queyID);
