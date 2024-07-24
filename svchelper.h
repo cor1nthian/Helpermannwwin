@@ -216,8 +216,8 @@ struct SvcRecord {
 	~SvcRecord();
 	SvcRecord& operator=(const SvcRecord &other);
 	SvcRecord& operator=(SvcRecord &&other) noexcept;
-	bool operator ==(const SvcRecord &other) const;
-	bool operator !=(const SvcRecord &other) const;
+	bool operator==(const SvcRecord &other) const;
+	bool operator!=(const SvcRecord &other) const;
 	std::vector<std::wstring> dependencies;
 	std::vector<SvcTrigger> triggers;
 	std::wstring svcName;

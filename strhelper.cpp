@@ -46,7 +46,6 @@ wchar_t* char2wchar(const char* line, wchar_t* buf) {
         wc = buf;
     } else {
         NEW_ARR_NULLIFY(wc, wchar_t, cSize);
-        // wc = (wchar_t*)calloc(cSize, cSize * sizeof(wchar_t));
     }
     if (wc) {
         mbstowcs(wc, line, cSize);
@@ -156,9 +155,7 @@ char* replaceChars(const char* source, const char* replaceWhat, const char* repl
         return 0;
     }
     if ((replaceWhatLen > srcLen) || (!memcmp(source, replaceWhat, srcLen))) {
-        char* retbuf = (char*)LocalAlloc(LMEM_ZEROINIT, srcLen * sizeof(char));
-        // NEW_ARR_NULLIFY(retbuf, char, srcLen);
-        // char* retbuf = (char*)malloc(srcLen * sizeof(char));
+        NEW_ARR_NULLIFY(retbuf, char, srcLen);
         if (retbuf) {
             memcpy(retbuf, source, srcLen * sizeof(char));
             return retbuf;
@@ -166,17 +163,19 @@ char* replaceChars(const char* source, const char* replaceWhat, const char* repl
             return 0;
         }
     }
-    size_t copyMark = 0;
-    size_t newBufSz = srcLen + 5 * replaceWithLen;
-    char* newBuf = (char*)LocalAlloc(LMEM_ZEROINIT, newBufSz * sizeof(char));
-    // NEW_ARR_NULLIFY(newBuf, char, newBufSz);
-    /*char* newBuf = 0;
-    newBuf = (char*)calloc(newBufSz, newBufSz * sizeof(char));*/
-    // newBuf = (char*)malloc(newBufSz * sizeof(char));
+    size_t copyMark = 0, newBufSz = 0, i = 0;
+    for (i = 0; i < srcLen - replaceWhatLen; ++i) {
+        if (!memcmp(&source[i], replaceWhat, replaceWhatLen * sizeof(char))) {
+            newBufSz += replaceWithLen;
+        } else {
+            ++newBufSz;
+        }
+    }
+    NEW_ARR_NULLIFY(newBuf, char, newBufSz);
     if (!newBuf) {
         return 0;
     }
-    for (size_t i = 0; i < srcLen; ++i) {
+    for (i = 0; i < srcLen; ++i) {
         if (memcmp(&source[i], replaceWhat, replaceWhatLen * sizeof(char))) {
             memcpy(&newBuf[copyMark], &source[i], sizeof(char));
             copyMark += 1;
@@ -214,8 +213,6 @@ wchar_t* replaceChars(const wchar_t* source, const wchar_t* replaceWhat,
     }
     if ((replaceWhatLen > srcLen) || (!memcmp(source, replaceWhat, srcLen))) {
         NEW_ARR_NULLIFY(retbuf, wchar_t, srcLen);
-        // wchar_t* retbuf = (wchar_t*)LocalAlloc(LMEM_ZEROINIT, srcLen * sizeof(wchar_t));
-        // wchar_t* retbuf = (wchar_t*)malloc(srcLen * sizeof(wchar_t));
         if (retbuf) {
             memcpy(retbuf, source, srcLen * sizeof(wchar_t));
             return retbuf;
@@ -223,17 +220,19 @@ wchar_t* replaceChars(const wchar_t* source, const wchar_t* replaceWhat,
             return 0;
         }
     }
-    size_t copyMark = 0;
-    size_t newBufSz = srcLen + 5 * replaceWithLen;
+    size_t copyMark = 0, newBufSz = 0, i = 0;
+    for (i = 0; i < srcLen - replaceWhatLen; ++i) {
+        if (!memcmp(&source[i], replaceWhat, replaceWhatLen * sizeof(wchar_t))) {
+            newBufSz += replaceWithLen;
+        } else {
+            ++newBufSz;
+        }
+    }
     NEW_ARR_NULLIFY(newBuf, wchar_t, newBufSz);
-    // wchar_t* newBuf = (wchar_t*)LocalAlloc(LMEM_ZEROINIT, newBufSz * sizeof(wchar_t));
-    /*wchar_t* newBuf = 0;
-    newBuf = (wchar_t*)calloc(newBufSz, newBufSz * sizeof(wchar_t));*/
-    // newBuf = (wchar_t*)malloc(newBufSz * sizeof(wchar_t));
     if (!newBuf) {
         return 0;
     }
-    for (size_t i = 0; i < srcLen; ++i) {
+    for (i = 0; i < srcLen; ++i) {
         if (memcmp(&source[i], replaceWhat, replaceWhatLen * sizeof(wchar_t))) {
             memcpy(&newBuf[copyMark], &source[i], sizeof(wchar_t));
             copyMark += 1;
