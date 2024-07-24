@@ -191,9 +191,9 @@ HostNodeAddr& HostNodeAddr::operator=(HostNodeAddr&& other) noexcept {
 bool HostNodeAddr::operator==(const HostNodeAddr& other) const {
     if (this != &other) {
         return (SockType == other.SockType &&
-            Protocol == other.Protocol &&
-            AddrType == other.AddrType &&
-            Address == other.Address);
+                Protocol == other.Protocol &&
+                AddrType == other.AddrType &&
+                Address == other.Address);
     } else {
         return true;
     }
@@ -202,9 +202,9 @@ bool HostNodeAddr::operator==(const HostNodeAddr& other) const {
 bool HostNodeAddr::operator!=(const HostNodeAddr& other) const {
     if (this != &other) {
         return (SockType != other.SockType ||
-            Protocol != other.Protocol ||
-            AddrType != other.AddrType ||
-            Address != other.Address);
+                Protocol != other.Protocol ||
+                AddrType != other.AddrType ||
+                Address != other.Address);
     } else {
         return false;
     }
@@ -252,7 +252,7 @@ bool HostNode::operator==(const HostNode& other) const {
 
 bool HostNode::operator!=(const HostNode& other) const {
     if (this != &other) {
-        return(Address != other.Address);
+        return (Address != other.Address);
     } else {
         return false;
     }
@@ -312,18 +312,18 @@ PingResult& PingResult::operator=(PingResult&& other) noexcept {
 }
 bool PingResult::operator==(const PingResult& other) const {
     if (this != &other) {
-        return(Result == other.Result &&
-            RoundTripTime == other.RoundTripTime &&
-            TTL == other.TTL);
+        return (Result == other.Result &&
+                RoundTripTime == other.RoundTripTime &&
+                TTL == other.TTL);
     } else {
         return true;
     }
 }
 bool PingResult::operator!=(const PingResult& other) const {
     if (this != &other) {
-    return(Result != other.Result ||
-        RoundTripTime != other.RoundTripTime ||
-        TTL != other.TTL);
+    return (Result != other.Result ||
+            RoundTripTime != other.RoundTripTime ||
+            TTL != other.TTL);
     } else {
         return false;
     }
@@ -403,11 +403,11 @@ TracertResult& TracertResult::TracertResult::operator=(TracertResult &&other) no
 
 bool TracertResult::operator==(const TracertResult &other) const {
     if (this != &other) {
-        return(Pings == other.Pings && TTL == other.TTL &&
-            RoundTripTime == other.RoundTripTime &&
-            lower_copy(Address) == lower_copy(other.Address) &&
-            lower_copy(AddressIPV4) == lower_copy(other.AddressIPV4) &&
-            lower_copy(AddressIPV6) == lower_copy(other.AddressIPV6));
+        return (Pings == other.Pings && TTL == other.TTL &&
+                RoundTripTime == other.RoundTripTime &&
+                lower_copy(Address) == lower_copy(other.Address) &&
+                lower_copy(AddressIPV4) == lower_copy(other.AddressIPV4) &&
+                lower_copy(AddressIPV6) == lower_copy(other.AddressIPV6));
     } else {
         return false;
     }
@@ -415,11 +415,11 @@ bool TracertResult::operator==(const TracertResult &other) const {
 
 bool TracertResult::operator!=(const TracertResult &other) const {
     if (this != &other) {
-        return(Pings != other.Pings || TTL != other.TTL ||
-            RoundTripTime != other.RoundTripTime ||
-            lower_copy(Address) != lower_copy(other.Address) ||
-            lower_copy(AddressIPV4) != lower_copy(other.AddressIPV4) ||
-            lower_copy(AddressIPV6) != lower_copy(other.AddressIPV6));
+        return (Pings != other.Pings || TTL != other.TTL ||
+                RoundTripTime != other.RoundTripTime ||
+                lower_copy(Address) != lower_copy(other.Address) ||
+                lower_copy(AddressIPV4) != lower_copy(other.AddressIPV4) ||
+                lower_copy(AddressIPV6) != lower_copy(other.AddressIPV6));
     } else {
         return false;
     }
@@ -447,12 +447,14 @@ ICMPHeader::ICMPHeader(const unsigned char Type, const unsigned char Code, const
 }
 
 ICMPHeader::ICMPHeader(const ICMPHeader &other) {
-    type = other.type;
-    code = other.code;
-    checksum = other.checksum;
-    id = other.id;
-    seqnum = other.seqnum;
-    timestamp = other.timestamp;
+    if (this != &other) {
+        type = other.type;
+        code = other.code;
+        checksum = other.checksum;
+        id = other.id;
+        seqnum = other.seqnum;
+        timestamp = other.timestamp;
+    }
 }
 
 ICMPHeader::ICMPHeader(ICMPHeader &&other) noexcept {
@@ -507,11 +509,11 @@ ICMPHeader& ICMPHeader::operator=(ICMPHeader &&other) noexcept {
 bool ICMPHeader::operator==(const ICMPHeader &other) const {
     if (this != &other) {
         return (type == other.type &&
-            code == other.code &&
-            checksum == other.checksum &&
-            id == other.id &&
-            seqnum == other.seqnum &&
-            timestamp == other.timestamp);
+                code == other.code &&
+                checksum == other.checksum &&
+                id == other.id &&
+                seqnum == other.seqnum &&
+                timestamp == other.timestamp);
     } else {
          return true;
     }
@@ -520,11 +522,11 @@ bool ICMPHeader::operator==(const ICMPHeader &other) const {
 bool ICMPHeader::operator!=(const ICMPHeader &other) const {
     if (this != &other) {
         return (type != other.type ||
-            code != other.code ||
-            checksum != other.checksum ||
-            id != other.id ||
-            seqnum != other.seqnum ||
-            timestamp != other.timestamp);
+                code != other.code ||
+                checksum != other.checksum ||
+                id != other.id ||
+                seqnum != other.seqnum ||
+                timestamp != other.timestamp);
     } else {
         return false;
     }
@@ -652,16 +654,16 @@ IPHeader& IPHeader::operator=(IPHeader &&other) noexcept {
 bool IPHeader::operator==(const IPHeader &other) const {
     if (this != &other) {
         return (headerlen == other.headerlen &&
-            version == other.version &&
-            typeofoservice == other.typeofoservice &&
-            packetlen == other.packetlen &&
-            identifier == other.identifier &&
-            flags == other.flags &&
-            ttl == other.ttl &&
-            protocol == other.protocol &&
-            checksum == other.checksum &&
-            sourceIP == other.sourceIP &&
-            destIP == other.destIP);
+                version == other.version &&
+                typeofoservice == other.typeofoservice &&
+                packetlen == other.packetlen &&
+                identifier == other.identifier &&
+                flags == other.flags &&
+                ttl == other.ttl &&
+                protocol == other.protocol &&
+                checksum == other.checksum &&
+                sourceIP == other.sourceIP &&
+                destIP == other.destIP);
     } else {
         return false;
     }
@@ -670,16 +672,16 @@ bool IPHeader::operator==(const IPHeader &other) const {
 bool IPHeader::operator!=(const IPHeader& other) const {
     if (this != &other) {
         return (headerlen != other.headerlen ||
-            version != other.version ||
-            typeofoservice != other.typeofoservice ||
-            packetlen != other.packetlen ||
-            identifier != other.identifier ||
-            flags != other.flags ||
-            ttl != other.ttl ||
-            protocol != other.protocol ||
-            checksum != other.checksum ||
-            sourceIP != other.sourceIP ||
-            destIP != other.destIP);
+                version != other.version ||
+                typeofoservice != other.typeofoservice ||
+                packetlen != other.packetlen ||
+                identifier != other.identifier ||
+                flags != other.flags ||
+                ttl != other.ttl ||
+                protocol != other.protocol ||
+                checksum != other.checksum ||
+                sourceIP != other.sourceIP ||
+                destIP != other.destIP);
     } else {
         return false;
     }

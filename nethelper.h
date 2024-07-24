@@ -51,9 +51,9 @@
 	#include <arpa/inet.h>
 #endif
 
+#include "config.h"
 #include "strhelper.h"
 #include "prochelper.h"
-#include "config.h"
 
 #define ICMP_ECHOREPLY		0
 #define ICMP_DESTUNREACH	3
