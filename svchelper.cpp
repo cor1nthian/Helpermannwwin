@@ -620,18 +620,22 @@ SvcHandler::SvcHandler(const SC_HANDLE schandle, const unsigned long scmrights, 
 }
 
 SvcHandler::SvcHandler(const SvcHandler& other) {
-	m_scmHandle = other.m_scmHandle;
-	m_scmRights = other.m_scmRights;
-	m_scmOpen = other.m_scmOpen;
+	if (this != &other) {
+		m_scmHandle = other.m_scmHandle;
+		m_scmRights = other.m_scmRights;
+		m_scmOpen = other.m_scmOpen;
+	}
 }
 
 SvcHandler::SvcHandler(SvcHandler &&other) noexcept {
-	m_scmHandle = other.m_scmHandle;
-	other.m_scmHandle = 0;
-	m_scmRights = other.m_scmRights;
-	other.m_scmRights = 0;
-	m_scmOpen = other.m_scmOpen;
-	other.m_scmOpen = false;
+	if (this != &other) {
+		m_scmHandle = other.m_scmHandle;
+		other.m_scmHandle = 0;
+		m_scmRights = other.m_scmRights;
+		other.m_scmRights = 0;
+		m_scmOpen = other.m_scmOpen;
+		other.m_scmOpen = false;
+	}
 }
 
 SvcHandler::~SvcHandler() {
@@ -686,7 +690,7 @@ ScmOpResult SvcHandler::SCM_OpenManager(unsigned long desiredRghts) {
 		desiredRghts = GENERIC_ALL;
 	}
 	SC_HANDLE sch = OpenSCManager(NULL, NULL, desiredRghts);
-	if (NULL == sch) {
+	if (0 == sch) {
 		return ScmOpResult::OpenManagerFail;
 	}
 	m_scmHandle = sch;

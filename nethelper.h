@@ -107,6 +107,30 @@ const std::vector<unsigned short int> const gc_CommonPorts = {
 	2078    // WebDAV / WebDisk SSL
 };
 
+const std::map<unsigned short int, std::wstring> const gc_CommonPortsNames = {
+	{ 80, L"HTTP" },
+	{ 443, L"HTTPS" },
+	{ 21, L"FTP" },
+	{ 22, L"FTPS / SSH" },
+	{ 53, L"DNS" },
+	{ 110, L"POP3" },
+	{ 995, L"POP3 SSL" },
+	{ 143, L"IMAP" },
+	{ 993, L"IMAP SSL" },
+	{ 25, L"SMTP" },
+	{ 26, L"SMTP" },
+	{ 587, L"SMTP SSL" },
+	{ 3306, L"MySQL" },
+	{ 2082, L"cPanel" },
+	{ 2083, L"cPanel SSL" },
+	{ 2086, L"WHM(Webhost Manager)" },
+	{ 2087, L"WHM(Webhost Manager) SSL" },
+	{ 2095, L"Webmail" },
+	{ 2096, L"Webmail SSL" },
+	{ 2077, L"WebDAV / WebDisk" },
+	{ 2078, L"WebDAV / WebDisk SSL" }
+};
+
 #if defined(_WIN32) || defined(_WIN64)
 	extern bool g_WSAStarted;
 #endif
