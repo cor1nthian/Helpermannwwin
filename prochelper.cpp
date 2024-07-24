@@ -817,34 +817,53 @@ ProcOpResult ProcessHandler::GetProcUserSID(const unsigned long pid, PSID &sid,
 	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
 		::HANDLE hToken = 0;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			unsigned long bufSize = 0, retval = NO_ERROR;
-			if (!::GetTokenInformation(hToken, TokenUser, 0, 0, &bufSize)) {
-				retval = ::GetLastError();
-				if (retval == ERROR_INSUFFICIENT_BUFFER) {
-					::TOKEN_USER* buf = (::TOKEN_USER*)malloc(bufSize);
-					if (buf) {
-						if (::GetTokenInformation(hToken, TokenUser, (void*)buf, bufSize, &bufSize)) {
-							sid = (SID*)::LocalAlloc(LPTR, sizeof(SID));
-							if (!sid) {
-								return ProcOpResult::Fail;
+		if (::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+			if (INVALID_HANDLE_VALUE != hToken) {
+				unsigned long bufSize = 0, retval = NO_ERROR;
+				if (!::GetTokenInformation(hToken, TokenUser, 0, 0, &bufSize)) {
+					retval = ::GetLastError();
+					if (ERROR_INSUFFICIENT_BUFFER == retval) {
+						::TOKEN_USER* buf = (::TOKEN_USER*)malloc(bufSize);
+						if (buf) {
+							if (::GetTokenInformation(hToken, TokenUser, (void*)buf, bufSize, &bufSize)) {
+								sid = (SID*)::LocalAlloc(LPTR, sizeof(SID));
+								if (!sid) {
+									return ProcOpResult::Fail;
+								}
+								memcpy(sid, buf->User.Sid, sizeof(SID));
+								// sid = buf->User.Sid;
+								SAFE_FREE(buf);
+								::CloseHandle(hToken);
+								::CloseHandle(hProc);
+								return ProcOpResult::Success;
 							}
-							memcpy(sid, buf->User.Sid, sizeof(SID));
-							// sid = buf->User.Sid;
 							SAFE_FREE(buf);
-							return ProcOpResult::Success;
+							::CloseHandle(hToken);
+							::CloseHandle(hProc);
+							return ProcOpResult::Fail;
+						} else {
+							::CloseHandle(hToken);
+							::CloseHandle(hProc);
+							return ProcOpResult::Fail;
 						}
-						SAFE_FREE(buf);
+					} else {
+						::CloseHandle(hToken);
+						::CloseHandle(hProc);
 						return ProcOpResult::Fail;
 					}
+				} else {
+					::CloseHandle(hToken);
+					::CloseHandle(hProc);
 					return ProcOpResult::Fail;
 				}
+			} else {
+				::CloseHandle(hProc);
 				return ProcOpResult::Fail;
 			}
+		} else {
+			::CloseHandle(hProc);
 			return ProcOpResult::Fail;
 		}
-		return ProcOpResult::Fail;
 	}
 	return ProcOpResult::Fail;
 }
