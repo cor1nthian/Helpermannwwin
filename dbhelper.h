@@ -4,51 +4,59 @@
 #include "config.h"
 #include "strhelper.h"
 
-enum class MSSQLOpResult {
+enum class MSSQLOpResult : unsigned char {
 	Success,
 	Fail
 };
 
-enum class PGSQLOpResult {
+enum class PGSQLOpResult : unsigned char {
 	Success,
 	Fail
 };
 
-class MSSQLDBHelper {
+class MSSQLDBHandler {
 	public:
-		MSSQLDBHelper();
-		MSSQLDBHelper(const MSSQLDBHelper &other);
-		MSSQLDBHelper(MSSQLDBHelper &&other) noexcept;
-		~MSSQLDBHelper();
-		MSSQLDBHelper& operator=(const MSSQLDBHelper &other);
-		MSSQLDBHelper& operator=(MSSQLDBHelper &&other) noexcept;
-		bool operator==(const MSSQLDBHelper &other) const;
-		bool operator!=(const MSSQLDBHelper &other) const;
+		MSSQLDBHandler();
+		MSSQLDBHandler(const MSSQLDBHandler &other);
+		MSSQLDBHandler(MSSQLDBHandler &&other) noexcept;
+		~MSSQLDBHandler();
+		MSSQLDBHandler& operator=(const MSSQLDBHandler &other);
+		MSSQLDBHandler& operator=(MSSQLDBHandler &&other) noexcept;
+		bool operator==(const MSSQLDBHandler &other) const;
+		bool operator!=(const MSSQLDBHandler &other) const;
 		MSSQLOpResult ConnectDB();
 		MSSQLOpResult DisconnectDB();
 		MSSQLOpResult ExecQuery(unsigned long &queyID, const std::wstring query);
 		MSSQLOpResult CancelQuery(const unsigned long queyID);
 	protected:
+
 	private:
+		MSSQLOpResult QueryCompleteCallback();
+		MSSQLOpResult QueryCamcelledCallback();
+		std::map<unsigned long, std::wstring> m_ConnectedDBs;
 		std::map<unsigned long, std::wstring> m_RunningQueries;
 };
 
-class PGSQLDBHelper {
+class PGSQLDBHandler {
 	public:
-		PGSQLDBHelper();
-		PGSQLDBHelper(const PGSQLDBHelper &other);
-		PGSQLDBHelper(PGSQLDBHelper &&other) noexcept;
-		~PGSQLDBHelper();
-		PGSQLDBHelper& operator=(const PGSQLDBHelper &other);
-		PGSQLDBHelper& operator=(PGSQLDBHelper && other) noexcept;
-		bool operator==(const PGSQLDBHelper &other) const;
-		bool operator!=(const PGSQLDBHelper &other) const;
+		PGSQLDBHandler();
+		PGSQLDBHandler(const PGSQLDBHandler &other);
+		PGSQLDBHandler(PGSQLDBHandler &&other) noexcept;
+		~PGSQLDBHandler();
+		PGSQLDBHandler& operator=(const PGSQLDBHandler &other);
+		PGSQLDBHandler& operator=(PGSQLDBHandler && other) noexcept;
+		bool operator==(const PGSQLDBHandler &other) const;
+		bool operator!=(const PGSQLDBHandler &other) const;
 		PGSQLOpResult ConnectDB();
 		PGSQLOpResult DisconnectDB();
 		PGSQLOpResult ExecQuery(unsigned long &queyID, const std::wstring query);
 		PGSQLOpResult CancelQuery(const unsigned long queyID);
 	protected:
+
 	private:
+		PGSQLOpResult QueryCompleteCallback();
+		PGSQLOpResult QueryCamcelledCallback();
+		std::map<unsigned long, std::wstring> m_ConnectedDBs;
 		std::map<unsigned long, std::wstring> m_RunningQueries;
 };
 

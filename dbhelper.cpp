@@ -1,49 +1,161 @@
 #include "dbhelper.h"
 
-MSSQLDBHelper::MSSQLDBHelper() {}
+MSSQLDBHandler::MSSQLDBHandler() {}
 
-MSSQLDBHelper::MSSQLDBHelper(const MSSQLDBHelper &other) {}
+MSSQLDBHandler::MSSQLDBHandler(const MSSQLDBHandler &other) {
+	if (this != &other) {
+		m_ConnectedDBs = other.m_ConnectedDBs;
+		m_RunningQueries = other.m_RunningQueries;
+	}
+}
 
-MSSQLDBHelper::MSSQLDBHelper(MSSQLDBHelper &&other) noexcept {}
+MSSQLDBHandler::MSSQLDBHandler(MSSQLDBHandler &&other) noexcept {
+	if (this != &other) {
+		m_ConnectedDBs = other.m_ConnectedDBs;
+		other.m_ConnectedDBs.~map();
+		m_RunningQueries = other.m_RunningQueries;
+		other.m_RunningQueries.~map();
+	}
+}
 
-MSSQLDBHelper::~MSSQLDBHelper() {}
+MSSQLDBHandler::~MSSQLDBHandler() {}
 
-MSSQLDBHelper& MSSQLDBHelper::operator=(const MSSQLDBHelper &other) {}
+MSSQLDBHandler& MSSQLDBHandler::operator=(const MSSQLDBHandler &other) {
+	if (this != &other) {
+		m_ConnectedDBs = other.m_ConnectedDBs;
+		m_RunningQueries = other.m_RunningQueries;
+	}
+	return *this;
+}
 
-MSSQLDBHelper& MSSQLDBHelper::operator=(MSSQLDBHelper &&other) noexcept {}
+MSSQLDBHandler& MSSQLDBHandler::operator=(MSSQLDBHandler &&other) noexcept {
+	if (this != &other) {
+		m_ConnectedDBs = other.m_ConnectedDBs;
+		other.m_ConnectedDBs.~map();
+		m_RunningQueries = other.m_RunningQueries;
+		other.m_RunningQueries.~map();
+	}
+	return *this;
+}
 
-bool MSSQLDBHelper::operator==(const MSSQLDBHelper &other) const {}
+bool MSSQLDBHandler::operator==(const MSSQLDBHandler &other) const {
+	if (this != &other) {
+		return (m_ConnectedDBs == other.m_ConnectedDBs &&
+				m_RunningQueries == other.m_RunningQueries);
+	} else {
+		return true;
+	}
+}
 
-bool MSSQLDBHelper::operator!=(const MSSQLDBHelper &other) const {}
+bool MSSQLDBHandler::operator!=(const MSSQLDBHandler &other) const {
+	if (this != &other) {
+		return (m_ConnectedDBs != other.m_ConnectedDBs &&
+				m_RunningQueries != other.m_RunningQueries);
+	} else {
+		return false;
+	}
+}
 
-MSSQLOpResult MSSQLDBHelper::ConnectDB() {}
+MSSQLOpResult MSSQLDBHandler::ConnectDB() {
+	return MSSQLOpResult::Success;
+}
 
-MSSQLOpResult MSSQLDBHelper::DisconnectDB() {}
+MSSQLOpResult MSSQLDBHandler::DisconnectDB() {
+	return MSSQLOpResult::Success;
+}
 
-MSSQLOpResult MSSQLDBHelper::ExecQuery(unsigned long &queyID, const std::wstring query) {}
+MSSQLOpResult MSSQLDBHandler::ExecQuery(unsigned long &queyID, const std::wstring query) {
+	return MSSQLOpResult::Success;
+}
 
-MSSQLOpResult MSSQLDBHelper::CancelQuery(const unsigned long queyID) {}
+MSSQLOpResult MSSQLDBHandler::CancelQuery(const unsigned long queyID) {
+	return MSSQLOpResult::Success;
+}
 
-PGSQLDBHelper::PGSQLDBHelper() {}
+MSSQLOpResult MSSQLDBHandler::QueryCompleteCallback() {
+	return MSSQLOpResult::Success;
+}
 
-PGSQLDBHelper::PGSQLDBHelper(const PGSQLDBHelper &other) {}
+MSSQLOpResult MSSQLDBHandler::QueryCamcelledCallback() {
+	return MSSQLOpResult::Success;
+}
 
-PGSQLDBHelper::PGSQLDBHelper(PGSQLDBHelper &&other) noexcept {}
+PGSQLDBHandler::PGSQLDBHandler() {}
 
-PGSQLDBHelper::~PGSQLDBHelper() {}
+PGSQLDBHandler::PGSQLDBHandler(const PGSQLDBHandler &other) {
+	if (this != &other) {
+		m_ConnectedDBs = other.m_ConnectedDBs;
+		m_RunningQueries = other.m_RunningQueries;
+	}
+}
 
-PGSQLDBHelper& PGSQLDBHelper::operator=(const PGSQLDBHelper &other) {}
+PGSQLDBHandler::PGSQLDBHandler(PGSQLDBHandler &&other) noexcept {
+	if (this != &other) {
+		m_ConnectedDBs = other.m_ConnectedDBs;
+		other.m_ConnectedDBs.~map();
+		m_RunningQueries = other.m_RunningQueries;
+		other.m_RunningQueries.~map();
+	}
+}
 
-PGSQLDBHelper& PGSQLDBHelper::operator=(PGSQLDBHelper &&other) noexcept {}
+PGSQLDBHandler::~PGSQLDBHandler() {}
 
-bool PGSQLDBHelper::operator==(const PGSQLDBHelper &other) const {}
+PGSQLDBHandler& PGSQLDBHandler::operator=(const PGSQLDBHandler &other) {
+	if (this != &other) {
+		m_ConnectedDBs = other.m_ConnectedDBs;
+		m_RunningQueries = other.m_RunningQueries;
+	}
+	return *this;
+}
 
-bool PGSQLDBHelper::operator!=(const PGSQLDBHelper &other) const {}
+PGSQLDBHandler& PGSQLDBHandler::operator=(PGSQLDBHandler &&other) noexcept {
+	if (this != &other) {
+		m_ConnectedDBs = other.m_ConnectedDBs;
+		other.m_ConnectedDBs.~map();
+		m_RunningQueries = other.m_RunningQueries;
+		other.m_RunningQueries.~map();
+	}
+	return *this;
+}
 
-PGSQLOpResult PGSQLDBHelper::ConnectDB() {}
+bool PGSQLDBHandler::operator==(const PGSQLDBHandler &other) const {
+	if (this != &other) {
+		return (m_ConnectedDBs == other.m_ConnectedDBs ||
+				m_RunningQueries == other.m_RunningQueries);
+	} else {
+		return true;
+	}
+}
 
-PGSQLOpResult PGSQLDBHelper::DisconnectDB() {}
+bool PGSQLDBHandler::operator!=(const PGSQLDBHandler &other) const {
+	if (this != &other) {
+		return (m_ConnectedDBs != other.m_ConnectedDBs ||
+				m_RunningQueries != other.m_RunningQueries);
+	} else {
+		return false;
+	}
+}
 
-PGSQLOpResult PGSQLDBHelper::ExecQuery(unsigned long &queyID, const std::wstring query) {}
+PGSQLOpResult PGSQLDBHandler::ConnectDB() {
+	return PGSQLOpResult::Success;
+}
 
-PGSQLOpResult PGSQLDBHelper::CancelQuery(const unsigned long queyID) {}
+PGSQLOpResult PGSQLDBHandler::DisconnectDB() {
+	return PGSQLOpResult::Success;
+}
+
+PGSQLOpResult PGSQLDBHandler::ExecQuery(unsigned long &queyID, const std::wstring query) {
+	return PGSQLOpResult::Success;
+}
+
+PGSQLOpResult PGSQLDBHandler::CancelQuery(const unsigned long queyID) {
+	return PGSQLOpResult::Success;
+}
+
+PGSQLOpResult PGSQLDBHandler::QueryCompleteCallback() {
+	return PGSQLOpResult::Success;
+}
+
+PGSQLOpResult PGSQLDBHandler::QueryCamcelledCallback() {
+	return PGSQLOpResult::Success;
+}
