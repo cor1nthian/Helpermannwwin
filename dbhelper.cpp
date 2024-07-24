@@ -77,12 +77,22 @@ MSSQLOpResult MSSQLDBHandler::ConnectDB(const std::wstring serverAddr, const std
 	
 	short rc = SQLSetEnvAttr(hEnv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
 	if (SQL_SUCCESS != rc) {
-		return MSSQLOpResult::Fail;
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+		} else if (SQL_INVALID_HANDLE == rc) {
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			return MSSQLOpResult::Fail;
+		}
 		// HandleDiagnosticRecord(h, ht, rc);
 	}
 	rc = SQLAllocHandle(SQL_HANDLE_DBC, hEnv, &hDbc);
 	if (SQL_SUCCESS != rc) {
-		return MSSQLOpResult::Fail;
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+		} else if (SQL_INVALID_HANDLE == rc) {
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			return MSSQLOpResult::Fail;
+		}
 	}
 	std::wstring sqlDriver;
 	for (auto &it : gc_SQLDriverType) {
@@ -98,6 +108,9 @@ MSSQLOpResult MSSQLDBHandler::ConnectDB(const std::wstring serverAddr, const std
 	if (pwd.length()) {
 		connLine = connLine + L";PWD=" + pwd;
 	}
+	if (!endsWith(connLine, L";")) {
+		connLine = connLine + L";";
+	}
 	if (MSSQLConnTrust::Trusted == trustRel) {
 		connLine = connLine + L";Trusted=true";
 	} else if (MSSQLConnTrust::NotTrusted == trustRel) {
@@ -110,7 +123,12 @@ MSSQLOpResult MSSQLDBHandler::ConnectDB(const std::wstring serverAddr, const std
 	rc = SQLDriverConnect(hDbc, 0, (SQLWCHAR*)connLine.c_str(), SQL_NTS, connOut, connOutBufLen, 0,
 		SQL_DRIVER_NOPROMPT);
 	if (SQL_SUCCESS != rc) {
-		return MSSQLOpResult::Fail;
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+		} else if (SQL_INVALID_HANDLE == rc) {
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			return MSSQLOpResult::Fail;
+		}
 	}
 	return MSSQLOpResult::Success;
 }
