@@ -35,9 +35,9 @@
 #define NOWH
 
 #include <Windows.h>
+#include "config.h"
 #include "strhelper.h"
 #include "syshelper.h"
-#include "config.h"
 
 #define PERMISSION std::pair<std::pair<std::wstring, std::wstring>, AceType>
 #define PERMISSIONFULL std::pair<std::pair<std::wstring, std::wstring>, std::pair<AceType, unsigned long>>

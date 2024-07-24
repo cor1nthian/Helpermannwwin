@@ -127,119 +127,13 @@ enum class RegOpResult : unsigned char {
 struct RegValDesc {
 	RegValDesc();
 	RegValDesc(const RegValDesc &other);
+	RegValDesc(RegValDesc &&other) noexcept;
 	~RegValDesc();
 	void FreeData();
-	RegValDesc& operator=(const RegValDesc& other) {
-		size_t sz = 0;
-		valType = other.valType;
-		if (valType == RegValType::Str || valType == RegValType::MultiStr ||
-			valType == RegValType::ExpandStr || valType == RegValType::Link) {
-			sz = sizeof(wchar_t);
-		} else if (valType == RegValType::DWord || valType == RegValType::DWordLE ||
-			valType == RegValType::DWordBE) {
-			sz = sizeof(unsigned long);
-		} else if (valType == RegValType::QWord || valType == RegValType::QWordLE) {
-			sz = sizeof(unsigned long long);
-		} else if (other.valType == RegValType::Binary ||
-			other.valType == RegValType::None) {
-			sz = sizeof(unsigned char);
-		}
-		valDataSz = other.valDataSz;
-		valData = { 0 };
-		if (other.valDataSz && other.valData && !IsBadReadPtr(other.valData)) {
-			if (other.valType == RegValType::Str || other.valType == RegValType::MultiStr ||
-				other.valType == RegValType::ExpandStr || other.valType == RegValType::Link) {
-				NEW_ARR_NULLIFY(valData, wchar_t, (valDataSz / sizeof(wchar_t)) * sizeof(char));
-			} else if (other.valType == RegValType::DWord ||
-				other.valType == RegValType::DWordLE ||
-				other.valType == RegValType::DWordBE) {
-				NEW_NULLIFY(valData, unsigned long, valDataSz / sizeof(unsigned long));
-			} else if (other.valType == RegValType::QWord ||
-				other.valType == RegValType::QWordLE) {
-				NEW_NULLIFY(valData, unsigned long long, valDataSz / sizeof(unsigned long long));
-			} else if (other.valType == RegValType::Binary) {
-				NEW_ARR_NULLIFY(valData, unsigned char, valDataSz / sizeof(unsigned char));
-			} else if (other.valType == RegValType::None) {
-			}
-			if (valData && other.valType != RegValType::None) {
-				memcpy(valData, other.valData, valDataSz); // *sz);
-			}
-		}
-		valPath = other.valPath;
-		valName = other.valName;
-		valDataHex = other.valDataHex;
-		return *this;
-	}
-	bool operator==(const RegValDesc& other) const {
-		bool bufeq = false, otheq = false;
-		size_t sz = 0;
-		if (valType == RegValType::Str || valType == RegValType::MultiStr ||
-			valType == RegValType::ExpandStr || valType == RegValType::Link) {
-			sz = sizeof(wchar_t);
-		} else if (valType == RegValType::DWord || valType == RegValType::DWordLE ||
-			valType == RegValType::DWordBE) {
-			sz = sizeof(unsigned long);
-		} else if (valType == RegValType::QWord || valType == RegValType::QWordLE) {
-			sz = sizeof(unsigned long long);
-		} else if (valType == RegValType::Binary || valType == RegValType::None) {
-			sz = sizeof(unsigned char);
-		}
-		if (valData && other.valData) {
-			if (memcmp(valData, other.valData, valDataSz)) {
-				bufeq = false;
-			} else {
-				bufeq = true;
-			}
-		} else if((!valData && other.valData) || (valData && !other.valData)) {
-			bufeq = false;
-		} else if (!valData && !other.valData) {
-			bufeq = true;
-		}
-		otheq = ((valPath == other.valPath &&
-				lower_copy(valPath) == lower_copy(other.valPath)) &&
-			(valName == other.valName &&
-				lower_copy(valName) == lower_copy(other.valName)) &&
-			(valDataHex == other.valDataHex &&
-				lower_copy(valDataHex) == lower_copy(other.valDataHex)) &&
-			valDataSz == other.valDataSz &&
-			valType == other.valType);
-		return (bufeq && otheq);
-	}
-	bool operator!=(const RegValDesc &other) const {
-		bool bufneq = false, othneq = false;
-		size_t sz = 0;
-		if (valType == RegValType::Str || valType == RegValType::MultiStr ||
-			valType == RegValType::ExpandStr || valType == RegValType::Link) {
-			sz = sizeof(wchar_t);
-		} else if (valType == RegValType::DWord || valType == RegValType::DWordLE ||
-			valType == RegValType::DWordBE) {
-			sz = sizeof(unsigned long);
-		} else if (valType == RegValType::QWord || valType == RegValType::QWordLE) {
-			sz = sizeof(unsigned long long);
-		} else if (valType == RegValType::Binary || valType == RegValType::None) {
-			sz = sizeof(unsigned char);
-		}
-		if (valData && other.valData) {
-			if (memcmp(valData, other.valData, valDataSz)) {
-				bufneq = true;
-			} else {
-				bufneq = false;
-			}
-		} else if ((!valData && other.valData) || (valData && !other.valData)) {
-			bufneq = true;
-		} else if (!valData && !other.valData) {
-			bufneq = false;
-		}
-		othneq = ((valPath != other.valPath ||
-				lower_copy(valPath) != lower_copy(other.valPath)) ||
-			(valName != other.valName ||
-				lower_copy(valName) != lower_copy(other.valName)) ||
-			(valDataHex != other.valDataHex ||
-				lower_copy(valDataHex) != lower_copy(other.valDataHex)) ||
-			valDataSz != other.valDataSz ||
-			valType != other.valType);
-		return (bufneq || othneq);
-	}
+	RegValDesc& operator=(const RegValDesc &other);
+	RegValDesc& operator=(RegValDesc &&other) noexcept;
+	bool operator==(const RegValDesc &other) const;
+	bool operator!=(const RegValDesc &other) const;
 	RegValType valType;
 	void* valData;
 	unsigned long valDataSz;
@@ -251,31 +145,13 @@ struct RegValDesc {
 struct RegKeyDesc {
 	RegKeyDesc();
 	RegKeyDesc(const RegKeyDesc &other);
+	RegKeyDesc(RegKeyDesc &&other) noexcept;
 	~RegKeyDesc();
 	void FreeValues();
-	RegKeyDesc& operator=(const RegKeyDesc &other) {
-		keyPath = other.keyPath;
-		keyName = other.keyName;
-		keys = other.keys;
-		values = other.values;
-		return *this;
-	}
-	bool operator==(const RegKeyDesc &other) const {
-		return ((keyPath == other.keyPath &&
-				lower_copy(keyPath) == lower_copy(other.keyPath)) &&
-			(keyName == other.keyName &&
-				lower_copy(keyName) == lower_copy(other.keyName)) &&
-			keys != other.keys &&
-			values == other.values);
-	}
-	bool operator!=(const RegKeyDesc &other) const {
-		return ((keyPath != other.keyPath ||
-				lower_copy(keyPath) != lower_copy(other.keyPath)) ||
-			(keyName != other.keyName ||
-				lower_copy(keyName) != lower_copy(other.keyName)) ||
-			keys != other.keys ||
-			values != other.values);
-	}
+	RegKeyDesc& operator=(const RegKeyDesc &other);
+	RegKeyDesc& operator=(RegKeyDesc &&other) noexcept;
+	bool operator==(const RegKeyDesc &other) const;
+	bool operator!=(const RegKeyDesc &other) const;
 	std::wstring keyPath;
 	std::wstring keyName;
 	std::vector<RegKeyDesc> keys;
@@ -286,7 +162,12 @@ class RegHandler {
 	public:
 		RegHandler();
 		RegHandler(const RegHandler &other);
+		RegHandler(RegHandler &&other) noexcept;
 		~RegHandler();
+		RegHandler& operator=(const RegHandler &other);
+		RegHandler& operator=(RegHandler &&other) noexcept;
+		bool operator==(const RegHandler &other) const;
+		bool operator!=(const RegHandler &other) const;
 		RegOpResult GetStrVal(const std::wstring valName, std::wstring &val, const bool cleanupString = true,
 			const HKEY *root = 0) const;
 		RegOpResult GetDWordVal(const std::wstring valName, unsigned long &val, const HKEY *root = 0) const;

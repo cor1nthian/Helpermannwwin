@@ -10,10 +10,25 @@ RegValDesc::RegValDesc() {
 RegKeyDesc::RegKeyDesc() {}
 
 RegKeyDesc::RegKeyDesc(const RegKeyDesc &other) {
-	keyPath = other.keyPath;
-	keyName = other.keyName;
-	keys = other.keys;
-	values = other.values;
+	if (this != &other) {
+		keyPath = other.keyPath;
+		keyName = other.keyName;
+		keys = other.keys;
+		values = other.values;
+	}
+}
+
+RegKeyDesc::RegKeyDesc(RegKeyDesc &&other) noexcept {
+	if (this != &other) {
+		keyPath = other.keyPath;
+		other.keyPath.~basic_string();
+		keyName = other.keyName;
+		other.keyName.~basic_string();
+		keys = other.keys;
+		other.keys.~vector();
+		values = other.values;
+		other.values.~vector();
+	}
 }
 
 RegKeyDesc::~RegKeyDesc() {}
@@ -24,9 +39,54 @@ void RegKeyDesc::FreeValues() {
 	}
 }
 
-RegValDesc::RegValDesc(const RegValDesc& other) {
-	size_t sz = 0;
-	valType = other.valType;
+RegKeyDesc& RegKeyDesc::operator=(const RegKeyDesc &other) {
+	if (this != &other) {
+		keyPath = other.keyPath;
+		keyName = other.keyName;
+		keys = other.keys;
+		values = other.values;
+	}
+	return *this;
+}
+
+RegKeyDesc& RegKeyDesc::operator=(RegKeyDesc &&other) noexcept {
+	if (this != &other) {
+		keyPath = other.keyPath;
+		other.keyPath.~basic_string();
+		keyName = other.keyName;
+		other.keyName.~basic_string();
+		keys = other.keys;
+		other.keys.~vector();
+		values = other.values;
+		other.values.~vector();
+	}
+	return *this;
+}
+
+bool RegKeyDesc::operator==(const RegKeyDesc& other) const {
+	if (this != &other) {
+		return (lower_copy(keyPath) == lower_copy(other.keyPath) &&
+				lower_copy(keyName) == lower_copy(other.keyName) &&
+				keys == other.keys &&
+				values == other.values);
+	} else {
+		return true;
+	}
+}
+
+bool RegKeyDesc::operator!=(const RegKeyDesc& other) const {
+	if (this != &other) {
+		return (lower_copy(keyPath) != lower_copy(other.keyPath) ||
+				lower_copy(keyName) != lower_copy(other.keyName) ||
+				keys != other.keys ||
+				values != other.values);
+	} else {
+		return false;
+	}
+}
+
+RegValDesc::RegValDesc(const RegValDesc &other) {
+	/*size_t sz = 0;
 	if (valType == RegValType::Str || valType == RegValType::MultiStr ||
 		valType == RegValType::ExpandStr || valType == RegValType::Link) {
 		sz = sizeof(wchar_t);
@@ -38,29 +98,129 @@ RegValDesc::RegValDesc(const RegValDesc& other) {
 	} else if (other.valType == RegValType::Binary ||
 		other.valType == RegValType::None) {
 		sz = sizeof(unsigned char);
-	}
-	valDataSz = other.valDataSz;
-	valData = { 0 };
-	if (other.valDataSz && other.valData && !IsBadReadPtr(other.valData)) {
-		if (other.valType == RegValType::Str || other.valType == RegValType::MultiStr ||
-			other.valType == RegValType::ExpandStr || other.valType == RegValType::Link) {
-			NEW_ARR_NULLIFY(valData, wchar_t, (valDataSz / sizeof(wchar_t)) * sizeof(char));
-		} else if (other.valType == RegValType::DWord || other.valType == RegValType::DWordLE ||
-			other.valType == RegValType::DWordBE) {
-			NEW_NULLIFY(valData, unsigned long, valDataSz / sizeof(unsigned long));
-		} else if (other.valType == RegValType::QWord || other.valType == RegValType::QWordLE) {
-			NEW_NULLIFY(valData, unsigned long long, valDataSz / sizeof(unsigned long long));
-		} else if (other.valType == RegValType::Binary) {
-			NEW_ARR_NULLIFY(valData, unsigned char, valDataSz / sizeof(unsigned char));
-		} else if (other.valType == RegValType::None) {
+	}*/
+	if (this != &other) {
+		valDataSz = other.valDataSz;
+		valData = { 0 };
+		if (other.valDataSz && other.valData && !IsBadReadPtr(other.valData)) {
+			if (other.valType == RegValType::Str || other.valType == RegValType::MultiStr ||
+				other.valType == RegValType::ExpandStr || other.valType == RegValType::Link) {
+				NEW_ARR_NULLIFY(valData, wchar_t, (valDataSz / sizeof(wchar_t)) * sizeof(char));
+			} else if (other.valType == RegValType::DWord || other.valType == RegValType::DWordLE ||
+				other.valType == RegValType::DWordBE) {
+				NEW_NULLIFY(valData, unsigned long, valDataSz / sizeof(unsigned long));
+			} else if (other.valType == RegValType::QWord || other.valType == RegValType::QWordLE) {
+				NEW_NULLIFY(valData, unsigned long long, valDataSz / sizeof(unsigned long long));
+			} else if (other.valType == RegValType::Binary) {
+				NEW_ARR_NULLIFY(valData, unsigned char, valDataSz / sizeof(unsigned char));
+			} else if (other.valType == RegValType::None) {
+			}
+			if (valData && other.valType != RegValType::None) {
+				memcpy(valData, other.valData, valDataSz); // *sz);
+			}
 		}
-		if (valData && other.valType != RegValType::None) {
-			memcpy(valData, other.valData, valDataSz); // *sz);
-		}
+		valType = other.valType;
+		valPath = other.valPath;
+		valName = other.valName;
+		valDataHex = other.valDataHex;
 	}
-	valPath = other.valPath;
-	valName = other.valName;
-	valDataHex = other.valDataHex;
+}
+
+RegValDesc::RegValDesc(RegValDesc &&other) noexcept {
+	if (this != &other) {
+		if (other.valDataSz && other.valData && !IsBadReadPtr(other.valData)) {
+			if (valData) {
+				if (valDataSz == 1) {
+					SAFE_DELETE(valData);
+				} else if (valDataSz > 1) {
+					SAFE_ARR_DELETE(valData);
+				}
+			}
+			valData = other.valData;
+			other.valData = 0;
+		}
+		valType = other.valType;
+		other.valType = RegValType::None;
+		valDataSz = other.valDataSz;
+		other.valDataSz = 0;
+		valPath = other.valPath;
+		other.valPath.~basic_string();
+		valName = other.valName;
+		other.valName.~basic_string();
+		valDataHex = other.valDataHex;
+		other.valDataHex.~basic_string();
+	}
+}
+
+RegValDesc& RegValDesc::operator=(const RegValDesc &other) {
+	/*size_t sz = 0;
+	if (valType == RegValType::Str || valType == RegValType::MultiStr ||
+		valType == RegValType::ExpandStr || valType == RegValType::Link) {
+		sz = sizeof(wchar_t);
+	} else if (valType == RegValType::DWord || valType == RegValType::DWordLE ||
+		valType == RegValType::DWordBE) {
+		sz = sizeof(unsigned long);
+	} else if (valType == RegValType::QWord || valType == RegValType::QWordLE) {
+		sz = sizeof(unsigned long long);
+	} else if (other.valType == RegValType::Binary ||
+		other.valType == RegValType::None) {
+		sz = sizeof(unsigned char);
+	}*/
+	if (this != &other) {
+		valDataSz = other.valDataSz;
+		valData = { 0 };
+		if (other.valDataSz && other.valData && !IsBadReadPtr(other.valData)) {
+			if (other.valType == RegValType::Str || other.valType == RegValType::MultiStr ||
+				other.valType == RegValType::ExpandStr || other.valType == RegValType::Link) {
+				NEW_ARR_NULLIFY(valData, wchar_t, (valDataSz / sizeof(wchar_t)) * sizeof(char));
+			} else if (other.valType == RegValType::DWord ||
+				other.valType == RegValType::DWordLE ||
+				other.valType == RegValType::DWordBE) {
+				NEW_NULLIFY(valData, unsigned long, valDataSz / sizeof(unsigned long));
+			} else if (other.valType == RegValType::QWord ||
+				other.valType == RegValType::QWordLE) {
+				NEW_NULLIFY(valData, unsigned long long, valDataSz / sizeof(unsigned long long));
+			} else if (other.valType == RegValType::Binary) {
+				NEW_ARR_NULLIFY(valData, unsigned char, valDataSz / sizeof(unsigned char));
+			} else if (other.valType == RegValType::None) {
+			}
+			if (valData && other.valType != RegValType::None) {
+				memcpy(valData, other.valData, valDataSz); // *sz);
+			}
+		}
+		valType = other.valType;
+		valPath = other.valPath;
+		valName = other.valName;
+		valDataHex = other.valDataHex;
+	}
+	return *this;
+}
+
+RegValDesc& RegValDesc::operator=(RegValDesc &&other) noexcept {
+	if (this != &other) {
+		if (other.valDataSz && other.valData && !IsBadReadPtr(other.valData)) {
+			if (valData) {
+				if (valDataSz == 1) {
+					SAFE_DELETE(valData);
+				} else if (valDataSz > 1) {
+					SAFE_ARR_DELETE(valData);
+				}
+			}
+			valData = other.valData;
+			other.valData = 0;
+		}
+		valType = other.valType;
+		other.valType = RegValType::None;
+		valDataSz = other.valDataSz;
+		other.valDataSz = 0;
+		valPath = other.valPath;
+		other.valPath.~basic_string();
+		valName = other.valName;
+		other.valName.~basic_string();
+		valDataHex = other.valDataHex;
+		other.valDataHex.~basic_string();
+	}
+	return *this;
 }
 
 RegValDesc::~RegValDesc() {
@@ -85,14 +245,101 @@ void RegValDesc::FreeData() {
 	SAFE_ARR_DELETE(valData);
 }
 
+bool RegValDesc::operator==(const RegValDesc &other) const {
+	/*size_t sz = 0;
+	if (valType == RegValType::Str || valType == RegValType::MultiStr ||
+		valType == RegValType::ExpandStr || valType == RegValType::Link) {
+		sz = sizeof(wchar_t);
+	} else if (valType == RegValType::DWord || valType == RegValType::DWordLE ||
+		valType == RegValType::DWordBE) {
+		sz = sizeof(unsigned long);
+	} else if (valType == RegValType::QWord || valType == RegValType::QWordLE) {
+		sz = sizeof(unsigned long long);
+	} else if (valType == RegValType::Binary || valType == RegValType::None) {
+		sz = sizeof(unsigned char);
+	}*/
+	if (this != &other) {
+		bool bufeq = false, otheq = false;
+		if (valData && other.valData) {
+			if (memcmp(valData, other.valData, valDataSz)) {
+				bufeq = false;
+			} else {
+				bufeq = true;
+			}
+		} else if ((!valData && other.valData) || (valData && !other.valData)) {
+			bufeq = false;
+		} else if (!valData && !other.valData) {
+			bufeq = true;
+		}
+		otheq = (lower_copy(valPath) == lower_copy(other.valPath) &&
+				lower_copy(valName) == lower_copy(other.valName) &&
+				lower_copy(valDataHex) == lower_copy(other.valDataHex) &&
+				valDataSz == other.valDataSz &&
+				valType == other.valType);
+		return (bufeq && otheq);
+	} else {
+		return true;
+	}
+}
+
+bool RegValDesc::operator!=(const RegValDesc& other) const {
+	/*size_t sz = 0;
+	if (valType == RegValType::Str || valType == RegValType::MultiStr ||
+		valType == RegValType::ExpandStr || valType == RegValType::Link) {
+		sz = sizeof(wchar_t);
+	} else if (valType == RegValType::DWord || valType == RegValType::DWordLE ||
+		valType == RegValType::DWordBE) {
+		sz = sizeof(unsigned long);
+	} else if (valType == RegValType::QWord || valType == RegValType::QWordLE) {
+		sz = sizeof(unsigned long long);
+	} else if (valType == RegValType::Binary || valType == RegValType::None) {
+		sz = sizeof(unsigned char);
+	}*/
+	if (this != &other) {
+		bool bufneq = false, othneq = false;
+		if (valData && other.valData) {
+			if (memcmp(valData, other.valData, valDataSz)) {
+				bufneq = true;
+			} else {
+				bufneq = false;
+			}
+		} else if ((!valData && other.valData) || (valData && !other.valData)) {
+			bufneq = true;
+		} else if (!valData && !other.valData) {
+			bufneq = false;
+		}
+		othneq = (lower_copy(valPath) != lower_copy(other.valPath) ||
+				lower_copy(valName) != lower_copy(other.valName) ||
+				lower_copy(valDataHex) != lower_copy(other.valDataHex) ||
+				valDataSz != other.valDataSz ||
+				valType != other.valType);
+		return (bufneq || othneq);
+	} else {
+		return false;
+	}
+}
+
 RegHandler::RegHandler() {
 	m_mountedHiveCount = 0;
 }
 
 RegHandler::RegHandler(const RegHandler &other) {
-	m_mountedHiveCount = other.m_mountedHiveCount;
-	m_mountedHives = other.m_mountedHives;
-	m_connectedRegs = other.m_connectedRegs;
+	if (this != &other) {
+		m_mountedHiveCount = other.m_mountedHiveCount;
+		m_mountedHives = other.m_mountedHives;
+		m_connectedRegs = other.m_connectedRegs;
+	}
+}
+
+RegHandler::RegHandler(RegHandler &&other) noexcept {
+	if (this != &other) {
+		m_mountedHiveCount = other.m_mountedHiveCount;
+		other.m_mountedHiveCount = 0;
+		m_mountedHives = other.m_mountedHives;
+		other.m_mountedHives.~map();
+		m_connectedRegs = other.m_connectedRegs;
+		other.m_connectedRegs.~map();
+	}
 }
 
 RegHandler::~RegHandler() {
@@ -100,6 +347,52 @@ RegHandler::~RegHandler() {
 		for (auto &it : m_mountedHives) {
 			UnmountHive_UnloadKey(it.first, pickUnloadKey(it.second));
 		}
+	}
+	if (m_connectedRegs.size()) {
+		for (auto& it : m_connectedRegs) {
+			DisconnectRegistry(it.second);
+		}
+	}
+}
+
+RegHandler& RegHandler::operator=(const RegHandler &other) {
+	if (this != &other) {
+		m_mountedHiveCount = other.m_mountedHiveCount;
+		m_mountedHives = other.m_mountedHives;
+		m_connectedRegs = other.m_connectedRegs;
+	}
+	return *this;
+}
+
+RegHandler& RegHandler::operator=(RegHandler &&other) noexcept {
+	if (this != &other) {
+		m_mountedHiveCount = other.m_mountedHiveCount;
+		other.m_mountedHiveCount = 0;
+		m_mountedHives = other.m_mountedHives;
+		other.m_mountedHives.~map();
+		m_connectedRegs = other.m_connectedRegs;
+		other.m_connectedRegs.~map();
+	}
+	return *this;
+}
+
+bool RegHandler::operator==(const RegHandler &other) const {
+	if (this != &other) {
+		return (m_mountedHiveCount == other.m_mountedHiveCount &&
+				m_mountedHives == other.m_mountedHives &&
+				m_connectedRegs == other.m_connectedRegs);
+	} else {
+		return true;
+	}
+}
+
+bool RegHandler::operator!=(const RegHandler &other) const {
+	if (this != &other) {
+		return (m_mountedHiveCount != other.m_mountedHiveCount ||
+				m_mountedHives != other.m_mountedHives ||
+				m_connectedRegs != other.m_connectedRegs);
+	} else {
+		return false;
 	}
 }
 
