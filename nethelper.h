@@ -489,7 +489,7 @@ struct HostNode {
 struct PingResult {
 	PingResult();
 	PingResult(const bool result, const unsigned short int rtt, const unsigned short int ttl);
-	PingResult(const PingResult& other);
+	PingResult(const PingResult &other);
 	PingResult(PingResult &&other) noexcept;
 	~PingResult();
 	PingResult& operator=(const PingResult& other);
@@ -506,9 +506,9 @@ struct TracertResult {
 	TracertResult(const std::wstring address, const std::wstring addressv4,
 		const std::wstring addressv6, const unsigned short int ttl,
 		const unsigned short int rtt, const std::vector<PingResult> pings);
-	TracertResult(const TracertResult& other);
-	TracertResult(TracertResult&& other) noexcept;
-	TracertResult& operator=(const TracertResult& other);
+	TracertResult(const TracertResult &other);
+	TracertResult(TracertResult &&other) noexcept;
+	TracertResult& operator=(const TracertResult &other);
 	TracertResult& operator=(TracertResult &&other) noexcept;
 	bool operator==(const TracertResult &other) const;
 	bool operator!=(const TracertResult &other) const;

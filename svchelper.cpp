@@ -613,15 +613,71 @@ SvcHandler::SvcHandler() {
 	m_scmOpen = false;
 }
 
+SvcHandler::SvcHandler(const SC_HANDLE schandle, const unsigned long scmrights, const bool scmopen) {
+	m_scmHandle = schandle;
+	m_scmRights = scmrights;
+	m_scmOpen = scmopen;
+}
+
 SvcHandler::SvcHandler(const SvcHandler& other) {
 	m_scmHandle = other.m_scmHandle;
 	m_scmRights = other.m_scmRights;
 	m_scmOpen = other.m_scmOpen;
 }
 
+SvcHandler::SvcHandler(SvcHandler &&other) noexcept {
+	m_scmHandle = other.m_scmHandle;
+	other.m_scmHandle = 0;
+	m_scmRights = other.m_scmRights;
+	other.m_scmRights = 0;
+	m_scmOpen = other.m_scmOpen;
+	other.m_scmOpen = false;
+}
+
 SvcHandler::~SvcHandler() {
 	if (m_scmHandle) {
 		SCM_CloseManager();
+	}
+}
+
+SvcHandler& SvcHandler::operator=(const SvcHandler &other) {
+	if (this != &other) {
+		m_scmHandle = other.m_scmHandle;
+		m_scmRights = other.m_scmRights;
+		m_scmOpen = other.m_scmOpen;
+	}
+	return *this;
+}
+
+SvcHandler& SvcHandler::operator=(SvcHandler &&other) noexcept {
+	if (this != &other) {
+		m_scmHandle = other.m_scmHandle;
+		other.m_scmHandle = 0;
+		m_scmRights = other.m_scmRights;
+		other.m_scmRights = 0;
+		m_scmOpen = other.m_scmOpen;
+		other.m_scmOpen = false;
+	}
+	return *this;
+}
+
+bool SvcHandler::operator==(const SvcHandler &other) const {
+	if (this != &other) {
+		return (m_scmHandle == other.m_scmHandle &&
+				m_scmRights == other.m_scmRights &&
+				m_scmOpen == other.m_scmOpen);
+	} else {
+		return true;
+	}
+}
+
+bool SvcHandler::operator!=(const SvcHandler &other) const {
+	if (this != &other) {
+		return (m_scmHandle != other.m_scmHandle ||
+				m_scmRights != other.m_scmRights ||
+				m_scmOpen != other.m_scmOpen);
+	} else {
+		return false;
 	}
 }
 

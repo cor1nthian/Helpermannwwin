@@ -250,8 +250,14 @@ struct SvcRecord {
 class SvcHandler {
 	public:
 		SvcHandler();
+		SvcHandler(const SC_HANDLE schandle, const unsigned long scmrights, const bool scmopen);
 		SvcHandler(const SvcHandler &other);
+		SvcHandler(SvcHandler &&other) noexcept;
 		~SvcHandler();
+		SvcHandler& operator=(const SvcHandler &other);
+		SvcHandler& operator=(SvcHandler &&other) noexcept;
+		bool operator==(const SvcHandler &other) const;
+		bool operator!=(const SvcHandler &other) const;
 		ScmOpResult SCM_OpenManager(unsigned long desiredRghts = 0);
 		ScmOpResult SCM_CloseManager();
 		ScmOpResult InstallSvc(const std::wstring svcName, const std::wstring displayName,

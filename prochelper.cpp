@@ -686,13 +686,11 @@ bool ProcessHandler::IsProcRunning(const std::wstring exepath, const std::vector
 	return false;
 }
 
-std::wstring ProcessHandler::GetProcessExePathByPid(const unsigned long pid,
-	const unsigned long desiredProcRights) {
+std::wstring ProcessHandler::GetProcessExePathByPid(const unsigned long pid, const unsigned long desiredProcRights) {
 	std::wstring ret;
 	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (INVALID_HANDLE_VALUE != hProc) {
 		NEW_ARR_NULLIFY(buf, wchar_t, 2048);
-		// wchar_t* buf = (wchar_t*)calloc(2048, 2048 * sizeof(wchar_t));
 		if (buf) {
 			if (::GetProcessImageFileName(hProc, buf, 2048)) {
 				if(startsWith(lower_copy(buf), L"\\device\\harddiskvolume")) {
@@ -703,15 +701,13 @@ std::wstring ProcessHandler::GetProcessExePathByPid(const unsigned long pid,
 				}
 			}
 			SAFE_ARR_DELETE(buf);
-			// SAFE_FREE(buf);
 		}
 		::CloseHandle(hProc);
 	}
 	return ret;
 }
 
-ProcDesc ProcessHandler::GetProcessByPid(const unsigned long pid,
-	std::vector<ProcDesc>* procList) {
+ProcDesc ProcessHandler::GetProcessByPid(const unsigned long pid, std::vector<ProcDesc> *procList) {
 	std::vector<ProcDesc> procs;
 	ProcDesc ret;
 	if (procList) {
@@ -729,8 +725,7 @@ ProcDesc ProcessHandler::GetProcessByPid(const unsigned long pid,
 	return ret;
 }
 
-std::vector<ProcDesc> ProcessHandler::GetProcessByExePath(const std::wstring exePath,
-	std::vector<ProcDesc>* procList) {
+std::vector<ProcDesc> ProcessHandler::GetProcessByExePath(const std::wstring exePath, std::vector<ProcDesc> *procList) {
 	std::vector<ProcDesc> procs;
 	std::vector<ProcDesc> ret;
 	if (procList) {
