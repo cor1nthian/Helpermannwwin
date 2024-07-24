@@ -758,37 +758,42 @@ std::vector<std::wstring> ProcessHandler::GetProcPrivileges(const unsigned long 
 	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
 		::HANDLE hToken = 0;
-		::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-		if (INVALID_HANDLE_VALUE != hToken) {
-			unsigned long bufSize = 0, retval = NO_ERROR;
-			if (!::GetTokenInformation(hToken, TokenPrivileges, 0, 0, &bufSize)) {
-				retval = ::GetLastError();
-				if (retval == ERROR_INSUFFICIENT_BUFFER) {
-					NEW_ARR_NULLIFY(buf, unsigned char, bufSize * sizeof(unsigned char));
-					if (buf) {
-						if (::GetTokenInformation(hToken, TokenPrivileges, (void*)buf, bufSize, &bufSize)) {
-							TOKEN_PRIVILEGES* priv = (TOKEN_PRIVILEGES*)buf;
-							LUID luid = { 0 };
-							wchar_t pbuf[64] = { 0 };
-							for (size_t i = 0; i < priv->PrivilegeCount; ++i) {
-								bufSize = 64;
-								if (priv->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED) {
-									luid = priv->Privileges[i].Luid;
-									if (::LookupPrivilegeName(0, &luid, pbuf, &bufSize)) {
-										ret.push_back(pbuf);
-									} else {
-										SAFE_ARR_DELETE(buf);
-										::CloseHandle(hToken);
-										::CloseHandle(hProc);
-										return ret;
+		if (::OpenProcessToken(hProc, TOKEN_QUERY, &hToken)) {
+			if (hToken && INVALID_HANDLE_VALUE != hToken) {
+				unsigned long bufSize = 0, retval = NO_ERROR;
+				if (!::GetTokenInformation(hToken, TokenPrivileges, 0, 0, &bufSize)) {
+					retval = ::GetLastError();
+					if (ERROR_INSUFFICIENT_BUFFER == retval) {
+						NEW_ARR_NULLIFY(buf, unsigned char, bufSize * sizeof(unsigned char));
+						if (buf) {
+							if (::GetTokenInformation(hToken, TokenPrivileges, (void*)buf, bufSize, &bufSize)) {
+								TOKEN_PRIVILEGES* priv = (TOKEN_PRIVILEGES*)buf;
+								LUID luid = { 0 };
+								wchar_t pbuf[64] = { 0 };
+								for (size_t i = 0; i < priv->PrivilegeCount; ++i) {
+									bufSize = 64;
+									if (priv->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED) {
+										luid = priv->Privileges[i].Luid;
+										if (::LookupPrivilegeName(0, &luid, pbuf, &bufSize)) {
+											ret.push_back(pbuf);
+										} else {
+											SAFE_ARR_DELETE(buf);
+											::CloseHandle(hToken);
+											::CloseHandle(hProc);
+											return ret;
+										}
 									}
+									memset(pbuf, 0, 64 * sizeof(wchar_t));
 								}
-								memset(pbuf, 0, 64 * sizeof(wchar_t));
+								SAFE_ARR_DELETE(buf);
+								::CloseHandle(hToken);
+								::CloseHandle(hProc);
+								return ret;
+							} else {
+								::CloseHandle(hToken);
+								::CloseHandle(hProc);
+								return ret;
 							}
-							SAFE_ARR_DELETE(buf);
-							::CloseHandle(hToken);
-							::CloseHandle(hProc);
-							return ret;
 						} else {
 							::CloseHandle(hToken);
 							::CloseHandle(hProc);
@@ -799,15 +804,13 @@ std::vector<std::wstring> ProcessHandler::GetProcPrivileges(const unsigned long 
 						::CloseHandle(hProc);
 						return ret;
 					}
-				} else {
-					::CloseHandle(hToken);
-					::CloseHandle(hProc);
-					return ret;
 				}
+			} else {
+				return ret;
 			}
+		} else {
+			return ret;
 		}
-		::CloseHandle(hProc);
-		return ret;
 	}
 	return ret;
 }
@@ -817,7 +820,7 @@ ProcOpResult ProcessHandler::GetProcUserSID(const unsigned long pid, PSID &sid,
 	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {
 		::HANDLE hToken = 0;
-		if (::OpenProcessToken(hProc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+		if (::OpenProcessToken(hProc, TOKEN_QUERY, &hToken)) {
 			if (INVALID_HANDLE_VALUE != hToken) {
 				unsigned long bufSize = 0, retval = NO_ERROR;
 				if (!::GetTokenInformation(hToken, TokenUser, 0, 0, &bufSize)) {
