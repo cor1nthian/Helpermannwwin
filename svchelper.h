@@ -113,19 +113,12 @@ enum class SvcErrControl : unsigned char {
 struct SvcRunState {
 	SvcRunState();
 	SvcRunState(const SvcRunState &other);
+	SvcRunState(SvcRunState &&other) noexcept;
 	~SvcRunState();
-	SvcRunState* operator=(const SvcRunState &other) {
-		svcRunning = other.svcRunning;
-		svcProcRunning = other.svcProcRunning;
-	}
-	bool operator==(const SvcRunState &other) const {
-		return (svcRunning == other.svcRunning &&
-				svcProcRunning == other.svcProcRunning);
-	}
-	bool operator!=(const SvcRunState &other) const {
-		return (svcRunning != other.svcRunning ||
-			svcProcRunning != other.svcProcRunning);
-	}
+	SvcRunState& operator=(const SvcRunState &other);
+	SvcRunState& operator=(SvcRunState &&other) noexcept;
+	bool operator==(const SvcRunState &other) const;
+	bool operator!=(const SvcRunState &other) const;
 	bool svcRunning;
 	bool svcProcRunning;
 };
@@ -136,29 +129,12 @@ struct SvcTriggerData {
 		const unsigned long triggerdatatype,
 		std::vector<unsigned char> triggerdata);
 	SvcTriggerData(const SvcTriggerData &other);
+	SvcTriggerData(SvcTriggerData &&other) noexcept;
 	~SvcTriggerData();
-	SvcTriggerData& operator=(const SvcTriggerData& other) {
-		triggerDataSize = other.triggerDataSize;
-		triggerDataType = other.triggerDataType;
-		triggerData = other.triggerData;
-		return *this;
-	}
-	bool operator ==(const SvcTriggerData &other) const {
-		std::string origstr = std::string(triggerData.begin(), triggerData.end());
-		std::string otherstr = std::string(other.triggerData.begin(), other.triggerData.end());
-		return (triggerDataSize == other.triggerDataSize &&
-			triggerDataType == other.triggerDataType &&
-			(origstr == otherstr &&
-				lower_copy(origstr) == lower_copy(otherstr)));
-	}
-	bool operator !=(const SvcTriggerData &other) const {
-		std::string origstr = std::string(triggerData.begin(), triggerData.end());
-		std::string otherstr = std::string(other.triggerData.begin(), other.triggerData.end());
-		return (triggerDataSize != other.triggerDataSize ||
-			triggerDataType != other.triggerDataType ||
-			(origstr != otherstr ||
-				lower_copy(origstr) != lower_copy(otherstr)));
-	}
+	SvcTriggerData& operator=(const SvcTriggerData& other);
+	SvcTriggerData& operator=(SvcTriggerData &&other) noexcept;
+	bool operator ==(const SvcTriggerData& other) const;
+	bool operator !=(const SvcTriggerData& other) const;
 	unsigned short triggerDataSize;
 	unsigned long triggerDataType;
 	std::vector<unsigned char> triggerData;
@@ -171,28 +147,12 @@ struct SvcTrigger {
 		const std::wstring triggerguid,
 		std::vector <SvcTriggerData> trigdata);
 	SvcTrigger(const SvcTrigger &other);
+	SvcTrigger(SvcTrigger &&other) noexcept;
 	~SvcTrigger();
-	SvcTrigger& operator=(const SvcTrigger &other) {
-		triggerType = other.triggerType;
-		triggerAction = other.triggerAction;
-		triggerGuid = other.triggerGuid;
-		triggerData = other.triggerData;
-		return *this;
-	}
-	bool operator==(const SvcTrigger &other) const {
-		return(triggerType == other.triggerType &&
-			triggerAction == other.triggerAction &&
-			(triggerGuid == other.triggerGuid &&
-				lower_copy(triggerGuid) == lower_copy(other.triggerGuid)) &&
-			triggerData == other.triggerData);
-	}
-	bool operator!=(const SvcTrigger& other) const {
-		return(triggerType != other.triggerType ||
-			triggerAction != other.triggerAction ||
-			(triggerGuid != other.triggerGuid || 
-				lower_copy(triggerGuid) != lower_copy(other.triggerGuid)) ||
-			triggerData != other.triggerData);
-	}
+	SvcTrigger& operator=(const SvcTrigger &other);
+	SvcTrigger& operator=(SvcTrigger &&other) noexcept;
+	bool operator==(const SvcTrigger &other) const;
+	bool operator!=(const SvcTrigger &other) const;
 	unsigned long triggerType;
 	unsigned long triggerAction;
 	std::wstring triggerGuid;
@@ -252,112 +212,12 @@ struct SvcRecord {
 		const SC_ACTION_TYPE failactiontype,
 		const SERVICE_STATUS_PROCESS svcprocdetial);
 	SvcRecord(const SvcRecord &other);
+	SvcRecord(SvcRecord&& other) noexcept;
 	~SvcRecord();
-	SvcRecord& operator =(const SvcRecord &other) {
-		svcName = other.svcName;
-		svcDisplayName = other.svcDisplayName;
-		svcDesc = other.svcDesc;
-		binaryPath = other.binaryPath;
-		startsFrom = other.startsFrom;
-		dependencies = other.dependencies;
-		loadOrderGroup = other.loadOrderGroup;
-		failResetMsg = other.failResetMsg;
-		failCommand = other.failCommand;
-		privileges = other.privileges;
-		serviceType = other.serviceType;
-		startType = other.startType;
-		errorControl = other.errorControl;
-		tagId = other.tagId;
-		failResetPeriod = other.failResetPeriod;
-		failActions = other.failActions;
-		failActionDelay = other.failActionDelay;
-		preshutdownTimeout = other.preshutdownTimeout;
-		svcSidType = other.svcSidType;
-		launchProtected = other.launchProtected;
-		preferredNode = other.preferredNode;
-		preferredNodeDeleteFlag = other.preferredNodeDeleteFlag;
-		delayedAutoStart = other.delayedAutoStart;
-		failureActionsOnNonCrashFailures = other.failureActionsOnNonCrashFailures;
-		triggers = other.triggers;
-		memcpy(&failActionType, &other.failActionType, sizeof(SC_ACTION_TYPE));
-		memcpy(&svcProcDetail, &other.svcProcDetail, sizeof(SERVICE_STATUS_PROCESS));
-		return *this;
-	}
-	bool operator ==(const SvcRecord& other) const {
-		return ((svcName == other.svcName &&
-				lower_copy(svcName) == lower_copy(other.svcName)) &&
-			(svcDisplayName == other.svcDisplayName &&
-				lower_copy(svcDisplayName) == lower_copy(other.svcDisplayName)) &&
-			(svcDesc == other.svcDesc &&
-				lower_copy(svcDesc) == lower_copy(other.svcDesc)) &&
-			(binaryPath == other.binaryPath &&
-				lower_copy(binaryPath) == lower_copy(other.binaryPath)) &&
-			(startsFrom == other.startsFrom &&
-				lower_copy(startsFrom) == lower_copy(other.startsFrom)) &&
-			dependencies == other.dependencies &&
-			(loadOrderGroup == other.loadOrderGroup &&
-				lower_copy(loadOrderGroup) == lower_copy(other.loadOrderGroup)) &&
-			(failResetMsg == other.failResetMsg &&
-				lower_copy(failResetMsg) == lower_copy(other.failResetMsg)) &&
-			(failCommand == other.failCommand &&
-				lower_copy(failResetMsg) == lower_copy(other.failResetMsg)) &&
-			privileges == other.privileges &&
-			serviceType == other.serviceType &&
-			startType == other.startType &&
-			errorControl == other.errorControl &&
-			tagId == other.tagId &&
-			failResetPeriod == other.failResetPeriod &&
-			failActions == other.failActions &&
-			failActionDelay == other.failActionDelay &&
-			preshutdownTimeout == other.preshutdownTimeout &&
-			svcSidType == other.svcSidType &&
-			launchProtected == other.launchProtected &&
-			preferredNode == other.preferredNode &&
-			preferredNodeDeleteFlag == other.preferredNodeDeleteFlag &&
-			delayedAutoStart == other.delayedAutoStart &&
-			failureActionsOnNonCrashFailures == other.failureActionsOnNonCrashFailures &&
-			triggers == other.triggers &&
-			!memcmp(&failActionType, &other.failActionType, sizeof(SC_ACTION_TYPE)) &&
-			!memcmp(&svcProcDetail, &other.svcProcDetail, sizeof(SERVICE_STATUS_PROCESS)));
-	}
-	bool operator !=(const SvcRecord& other) const {
-		return ((svcName != other.svcName ||
-				lower_copy(svcName) != lower_copy(other.svcName)) ||
-			(svcDisplayName != other.svcDisplayName ||
-				lower_copy(svcDisplayName) != lower_copy(other.svcDisplayName)) ||
-			(svcDesc != other.svcDesc ||
-				lower_copy(svcDesc) != lower_copy(other.svcDesc)) ||
-			(binaryPath != other.binaryPath ||
-				lower_copy(binaryPath) != lower_copy(other.binaryPath)) ||
-			(startsFrom != other.startsFrom ||
-				lower_copy(startsFrom) != lower_copy(other.startsFrom)) ||
-			dependencies != other.dependencies ||
-			(loadOrderGroup != other.loadOrderGroup ||
-				lower_copy(loadOrderGroup) != lower_copy(other.loadOrderGroup)) ||
-			(failResetMsg != other.failResetMsg ||
-				lower_copy(failResetMsg) != lower_copy(other.failResetMsg)) ||
-			(failCommand != other.failCommand ||
-				lower_copy(failResetMsg) != lower_copy(other.failResetMsg)) ||
-			privileges != other.privileges ||
-			serviceType != other.serviceType ||
-			startType != other.startType ||
-			errorControl != other.errorControl ||
-			tagId != other.tagId ||
-			failResetPeriod != other.failResetPeriod ||
-			failActions != other.failActions ||
-			failActionDelay != other.failActionDelay ||
-			preshutdownTimeout != other.preshutdownTimeout ||
-			svcSidType != other.svcSidType ||
-			launchProtected != other.launchProtected ||
-			preferredNode != other.preferredNode ||
-			preferredNodeDeleteFlag != other.preferredNodeDeleteFlag ||
-			delayedAutoStart != other.delayedAutoStart ||
-			failureActionsOnNonCrashFailures != other.failureActionsOnNonCrashFailures ||
-			triggers != other.triggers ||
-			failActionType != other.failActionType ||
-			memcmp(&failActionType, &other.failActionType, sizeof(SC_ACTION_TYPE)) ||
-			memcmp(&svcProcDetail, &other.svcProcDetail, sizeof(SERVICE_STATUS_PROCESS)));
-	}
+	SvcRecord& operator=(const SvcRecord &other);
+	SvcRecord& operator=(SvcRecord &&other) noexcept;
+	bool operator ==(const SvcRecord &other) const;
+	bool operator !=(const SvcRecord &other) const;
 	std::vector<std::wstring> dependencies;
 	std::vector<SvcTrigger> triggers;
 	std::wstring svcName;
@@ -489,7 +349,8 @@ class SvcHandler {
 		ScmOpResult QuerySvcTriggerInfo(SC_HANDLE& svcHandle,  SvcRecord& rec);
 		ScmOpResult QuerySvcLaunchProtected(SC_HANDLE& svcHandle,  SvcRecord& rec);
 		ScmOpResult StopDependentSvc(const SvcRecord& svcRec, const bool stopDrivers = false,
-			const unsigned long desiredRights = 0, const unsigned long timeout = 30000, const std::vector<SvcRecord>*svcRecords = 0);
+			const unsigned long desiredRights = 0, const unsigned long timeout = 30000,
+			const std::vector<SvcRecord> *svcRecords = 0);
 		inline ScmOpResult ObtainSCMHanele(const unsigned long desiredRights = 0);
 		bool m_scmOpen;
 		unsigned long m_scmRights;

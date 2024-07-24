@@ -7,11 +7,58 @@ SvcRunState::SvcRunState() {
 }
 
 SvcRunState::SvcRunState(const SvcRunState& other) {
-	svcRunning = other.svcRunning;
-	svcProcRunning = other.svcProcRunning;
+	if (this != &other) {
+		svcRunning = other.svcRunning;
+		svcProcRunning = other.svcProcRunning;
+	}
+}
+
+SvcRunState::SvcRunState(SvcRunState&& other) noexcept {
+	if (this != &other) {
+		svcRunning = other.svcRunning;
+		other.svcRunning = false;
+		svcProcRunning = other.svcProcRunning;
+		other.svcProcRunning = false;
+	}
 }
 
 SvcRunState::~SvcRunState() {}
+
+SvcRunState& SvcRunState::operator=(const SvcRunState& other) {
+	if (this != &other) {
+		svcRunning = other.svcRunning;
+		svcProcRunning = other.svcProcRunning;
+	}
+	return *this;
+}
+
+SvcRunState& SvcRunState::operator=(SvcRunState&& other) noexcept {
+	if (this != &other) {
+		svcRunning = other.svcRunning;
+		other.svcRunning = false;
+		svcProcRunning = other.svcProcRunning;
+		other.svcProcRunning = false;
+	}
+	return *this;
+}
+
+bool SvcRunState::operator==(const SvcRunState& other) const {
+	if (this != &other) {
+		return (svcRunning == other.svcRunning &&
+				svcProcRunning == other.svcProcRunning);
+	} else {
+		return true;
+	}
+}
+
+bool SvcRunState::operator!=(const SvcRunState& other) const {
+	if (this != &other) {
+		return (svcRunning != other.svcRunning ||
+				svcProcRunning != other.svcProcRunning);
+	} else {
+		return false;
+	}
+}
 
 SvcTriggerData::SvcTriggerData() {
 	triggerDataSize = 0;
@@ -27,12 +74,71 @@ SvcTriggerData::SvcTriggerData(const unsigned short triggerdatasize,
 }
 
 SvcTriggerData::SvcTriggerData(const SvcTriggerData &other) {
-	triggerDataSize = other.triggerDataSize;
-	triggerDataType = other.triggerDataType;
-	triggerData = other.triggerData;
+	if (this != &other) {
+		triggerDataSize = other.triggerDataSize;
+		triggerDataType = other.triggerDataType;
+		triggerData = other.triggerData;
+	}
+}
+
+SvcTriggerData::SvcTriggerData(SvcTriggerData &&other) noexcept {
+	if (this != &other) {
+		triggerDataSize = other.triggerDataSize;
+		other.triggerDataSize = 0;
+		triggerDataType = other.triggerDataType;
+		other.triggerDataType = 0;
+		triggerData = other.triggerData;
+		other.triggerData.~vector();
+	}
 }
 
 SvcTriggerData::~SvcTriggerData() {}
+
+SvcTriggerData& SvcTriggerData::operator=(const SvcTriggerData& other) {
+	if (this != &other) {
+		triggerDataSize = other.triggerDataSize;
+		triggerDataType = other.triggerDataType;
+		triggerData = other.triggerData;
+	}
+	return *this;
+}
+
+SvcTriggerData& SvcTriggerData::operator=(SvcTriggerData&& other) noexcept {
+	if (this != &other) {
+		triggerDataSize = other.triggerDataSize;
+		other.triggerDataSize = 0;
+		triggerDataType = other.triggerDataType;
+		other.triggerDataType = 0;
+		triggerData = other.triggerData;
+		other.triggerData.~vector();
+	}
+	return *this;
+}
+
+bool SvcTriggerData::operator==(const SvcTriggerData& other) const {
+	if (this != &other) {
+		std::string origstr = std::string(triggerData.begin(), triggerData.end());
+		std::string otherstr = std::string(other.triggerData.begin(), other.triggerData.end());
+		return (triggerDataSize == other.triggerDataSize &&
+			triggerDataType == other.triggerDataType &&
+			(origstr == otherstr &&
+				lower_copy(origstr) == lower_copy(otherstr)));
+	} else {
+		return true;
+	}
+}
+bool SvcTriggerData::operator!=(const SvcTriggerData& other) const {
+	if (this != &other) {
+		std::string origstr = std::string(triggerData.begin(), triggerData.end());
+		std::string otherstr = std::string(other.triggerData.begin(), other.triggerData.end());
+		return (triggerDataSize != other.triggerDataSize ||
+			triggerDataType != other.triggerDataType ||
+			(origstr != otherstr ||
+				lower_copy(origstr) != lower_copy(otherstr)));
+	} else {
+		return false;
+	}
+}
 
 SvcTrigger::SvcTrigger() {
 	triggerType = 0;
@@ -50,13 +156,76 @@ SvcTrigger::SvcTrigger(const unsigned long triggertype,
 }
 
 SvcTrigger::SvcTrigger(const SvcTrigger &other) {
-	triggerType = other.triggerType;
-	triggerAction = other.triggerAction;
-	triggerGuid = other.triggerGuid;
-	triggerData = other.triggerData;
+	if (this != &other) {
+		triggerType = other.triggerType;
+		triggerAction = other.triggerAction;
+		triggerGuid = other.triggerGuid;
+		triggerData = other.triggerData;
+	}
+}
+
+SvcTrigger::SvcTrigger(SvcTrigger &&other) noexcept {
+	if (this != &other) {
+		triggerType = other.triggerType;
+		other.triggerType = 0;
+		triggerAction = other.triggerAction;
+		other.triggerAction = 0;
+		triggerGuid = other.triggerGuid;
+		other.triggerGuid.~basic_string();
+		triggerData = other.triggerData;
+		other.triggerData.~vector();
+	}
 }
 
 SvcTrigger::~SvcTrigger() {}
+
+SvcTrigger& SvcTrigger::operator=(const SvcTrigger& other) {
+	if (this != &other) {
+		triggerType = other.triggerType;
+		triggerAction = other.triggerAction;
+		triggerGuid = other.triggerGuid;
+		triggerData = other.triggerData;
+	}
+	return *this;
+}
+
+SvcTrigger& SvcTrigger::operator=(SvcTrigger &&other) noexcept {
+	if (this != &other) {
+		if (this != &other) {
+			triggerType = other.triggerType;
+			other.triggerType = 0;
+			triggerAction = other.triggerAction;
+			other.triggerAction = 0;
+			triggerGuid = other.triggerGuid;
+			other.triggerGuid.~basic_string();
+			triggerData = other.triggerData;
+			other.triggerData.~vector();
+		}
+	}
+	return *this;
+}
+
+bool SvcTrigger::operator==(const SvcTrigger &other) const {
+	if (this != &other) {
+		return (triggerType == other.triggerType &&
+				triggerAction == other.triggerAction &&
+				lower_copy(triggerGuid) == lower_copy(other.triggerGuid) &&
+				triggerData == other.triggerData);
+	} else {
+		return true;
+	}
+}
+
+bool SvcTrigger::operator!=(const SvcTrigger &other) const {
+	if (this != &other) {
+		return (triggerType != other.triggerType ||
+				triggerAction != other.triggerAction ||
+				lower_copy(triggerGuid) != lower_copy(other.triggerGuid) ||
+				triggerData != other.triggerData);
+	} else {
+		return false;
+	}
+}
 
 SvcRecord::SvcRecord() {
 	serviceType = 0;
@@ -183,37 +352,260 @@ SvcRecord::SvcRecord(const std::wstring svcname,
 	svcProcDetail = svcprocdetial;
 }
 
-SvcRecord::SvcRecord(const SvcRecord& other) {
-	svcName = other.svcName;
-	svcDisplayName = other.svcDisplayName;
-	svcDesc = other.svcDesc;
-	binaryPath = other.binaryPath;
-	startsFrom = other.startsFrom;
-	dependencies = other.dependencies;
-	loadOrderGroup = other.loadOrderGroup;
-	failResetMsg = other.failResetMsg;
-	failCommand = other.failCommand;
-	privileges = other.privileges;
-	serviceType = other.serviceType;
-	startType = other.startType;
-	errorControl = other.errorControl;
-	tagId = other.tagId;
-	failResetPeriod = other.failResetPeriod;
-	failActions = other.failActions;
-	failActionDelay = other.failActionDelay;
-	preshutdownTimeout = other.preshutdownTimeout;
-	svcSidType = other.svcSidType;
-	launchProtected = other.launchProtected;
-	preferredNode = other.preferredNode;
-	preferredNodeDeleteFlag = other.preferredNodeDeleteFlag;
-	delayedAutoStart = other.delayedAutoStart;
-	failureActionsOnNonCrashFailures = other.failureActionsOnNonCrashFailures;
-	triggers = other.triggers;
-	failActionType = other.failActionType;
-	memcpy(&svcProcDetail, &other.svcProcDetail, sizeof(SERVICE_STATUS_PROCESS));
+SvcRecord::SvcRecord(const SvcRecord &other) {
+	if (this != &other) {
+		svcName = other.svcName;
+		svcDisplayName = other.svcDisplayName;
+		svcDesc = other.svcDesc;
+		binaryPath = other.binaryPath;
+		startsFrom = other.startsFrom;
+		dependencies = other.dependencies;
+		loadOrderGroup = other.loadOrderGroup;
+		failResetMsg = other.failResetMsg;
+		failCommand = other.failCommand;
+		privileges = other.privileges;
+		serviceType = other.serviceType;
+		startType = other.startType;
+		errorControl = other.errorControl;
+		tagId = other.tagId;
+		failResetPeriod = other.failResetPeriod;
+		failActions = other.failActions;
+		failActionDelay = other.failActionDelay;
+		preshutdownTimeout = other.preshutdownTimeout;
+		svcSidType = other.svcSidType;
+		launchProtected = other.launchProtected;
+		preferredNode = other.preferredNode;
+		preferredNodeDeleteFlag = other.preferredNodeDeleteFlag;
+		delayedAutoStart = other.delayedAutoStart;
+		failureActionsOnNonCrashFailures = other.failureActionsOnNonCrashFailures;
+		triggers = other.triggers;
+		failActionType = other.failActionType;
+		memcpy(&svcProcDetail, &other.svcProcDetail, sizeof(SERVICE_STATUS_PROCESS));
+	}
+}
+
+SvcRecord::SvcRecord(SvcRecord &&other) noexcept {
+	if (this != &other) {
+		svcName = other.svcName;
+		other.svcName.~basic_string();
+		svcDisplayName = other.svcDisplayName;
+		other.svcDisplayName.~basic_string();
+		svcDesc = other.svcDesc;
+		other.svcDesc.~basic_string();
+		binaryPath = other.binaryPath;
+		other.binaryPath.~basic_string();
+		startsFrom = other.startsFrom;
+		other.startsFrom.~basic_string();
+		dependencies = other.dependencies;
+		other.dependencies.~vector();
+		loadOrderGroup = other.loadOrderGroup;
+		other.loadOrderGroup.~basic_string();
+		failResetMsg = other.failResetMsg;
+		other.failResetMsg.~basic_string();
+		failCommand = other.failCommand;
+		other.failCommand.~basic_string();
+		privileges = other.privileges;
+		other.privileges.~basic_string();
+		serviceType = other.serviceType;
+		other.serviceType = 0;
+		startType = other.startType;
+		other.startType = 0;
+		errorControl = other.errorControl;
+		other.errorControl = 0;
+		tagId = other.tagId;
+		other.tagId = 0;
+		failResetPeriod = other.failResetPeriod;
+		other.failResetPeriod = 0;
+		failActions = other.failActions;
+		other.failActions = 0;
+		failActionDelay = other.failActionDelay;
+		other.failActionDelay = 0;
+		preshutdownTimeout = other.preshutdownTimeout;
+		other.preshutdownTimeout = 0;
+		svcSidType = other.svcSidType;
+		other.svcSidType = 0;
+		launchProtected = other.launchProtected;
+		other.launchProtected = 0;
+		preferredNode = other.preferredNode;
+		other.preferredNode = 0;
+		preferredNodeDeleteFlag = other.preferredNodeDeleteFlag;
+		other.preferredNodeDeleteFlag = false;
+		delayedAutoStart = other.delayedAutoStart;
+		other.delayedAutoStart = false;
+		failureActionsOnNonCrashFailures = other.failureActionsOnNonCrashFailures;
+		other.failureActionsOnNonCrashFailures = false;
+		triggers = other.triggers;
+		other.triggers.~vector();
+		failActionType = other.failActionType;
+		memset(&other.failActionType, 0, sizeof(SC_ACTION_TYPE));
+		memcpy(&svcProcDetail, &other.svcProcDetail, sizeof(SERVICE_STATUS_PROCESS));
+		memset(&other.svcProcDetail, 0, sizeof(SERVICE_STATUS_PROCESS));
+	}
 }
 
 SvcRecord::~SvcRecord() {}
+
+SvcRecord& SvcRecord::operator=(const SvcRecord &other) {
+	if (this != &other) {
+		svcName = other.svcName;
+		svcDisplayName = other.svcDisplayName;
+		svcDesc = other.svcDesc;
+		binaryPath = other.binaryPath;
+		startsFrom = other.startsFrom;
+		dependencies = other.dependencies;
+		loadOrderGroup = other.loadOrderGroup;
+		failResetMsg = other.failResetMsg;
+		failCommand = other.failCommand;
+		privileges = other.privileges;
+		serviceType = other.serviceType;
+		startType = other.startType;
+		errorControl = other.errorControl;
+		tagId = other.tagId;
+		failResetPeriod = other.failResetPeriod;
+		failActions = other.failActions;
+		failActionDelay = other.failActionDelay;
+		preshutdownTimeout = other.preshutdownTimeout;
+		svcSidType = other.svcSidType;
+		launchProtected = other.launchProtected;
+		preferredNode = other.preferredNode;
+		preferredNodeDeleteFlag = other.preferredNodeDeleteFlag;
+		delayedAutoStart = other.delayedAutoStart;
+		failureActionsOnNonCrashFailures = other.failureActionsOnNonCrashFailures;
+		triggers = other.triggers;
+		failActionType = other.failActionType;
+		memcpy(&svcProcDetail, &other.svcProcDetail, sizeof(SERVICE_STATUS_PROCESS));
+	}
+	return *this;
+}
+
+SvcRecord& SvcRecord::SvcRecord::operator=(SvcRecord &&other) noexcept {
+	if (this != &other) {
+		svcName = other.svcName;
+		other.svcName.~basic_string();
+		svcDisplayName = other.svcDisplayName;
+		other.svcDisplayName.~basic_string();
+		svcDesc = other.svcDesc;
+		other.svcDesc.~basic_string();
+		binaryPath = other.binaryPath;
+		other.binaryPath.~basic_string();
+		startsFrom = other.startsFrom;
+		other.startsFrom.~basic_string();
+		dependencies = other.dependencies;
+		other.dependencies.~vector();
+		loadOrderGroup = other.loadOrderGroup;
+		other.loadOrderGroup.~basic_string();
+		failResetMsg = other.failResetMsg;
+		other.failResetMsg.~basic_string();
+		failCommand = other.failCommand;
+		other.failCommand.~basic_string();
+		privileges = other.privileges;
+		other.privileges.~basic_string();
+		serviceType = other.serviceType;
+		other.serviceType = 0;
+		startType = other.startType;
+		other.startType = 0;
+		errorControl = other.errorControl;
+		other.errorControl = 0;
+		tagId = other.tagId;
+		other.tagId = 0;
+		failResetPeriod = other.failResetPeriod;
+		other.failResetPeriod = 0;
+		failActions = other.failActions;
+		other.failActions = 0;
+		failActionDelay = other.failActionDelay;
+		other.failActionDelay = 0;
+		preshutdownTimeout = other.preshutdownTimeout;
+		other.preshutdownTimeout = 0;
+		svcSidType = other.svcSidType;
+		other.svcSidType = 0;
+		launchProtected = other.launchProtected;
+		other.launchProtected = 0;
+		preferredNode = other.preferredNode;
+		other.preferredNode = 0;
+		preferredNodeDeleteFlag = other.preferredNodeDeleteFlag;
+		other.preferredNodeDeleteFlag = false;
+		delayedAutoStart = other.delayedAutoStart;
+		other.delayedAutoStart = false;
+		failureActionsOnNonCrashFailures = other.failureActionsOnNonCrashFailures;
+		other.failureActionsOnNonCrashFailures = false;
+		triggers = other.triggers;
+		other.triggers.~vector();
+		failActionType = other.failActionType;
+		memset(&other.failActionType, 0, sizeof(SC_ACTION_TYPE));
+		memcpy(&svcProcDetail, &other.svcProcDetail, sizeof(SERVICE_STATUS_PROCESS));
+		memset(&other.svcProcDetail, 0, sizeof(SERVICE_STATUS_PROCESS));
+	}
+	return *this;
+}
+
+bool SvcRecord::operator ==(const SvcRecord& other) const {
+	if (this != &other) {
+		return (lower_copy(svcName) == lower_copy(other.svcName) &&
+				lower_copy(svcDisplayName) == lower_copy(other.svcDisplayName) &&
+				lower_copy(svcDesc) == lower_copy(other.svcDesc) &&
+				lower_copy(binaryPath) == lower_copy(other.binaryPath) &&
+				lower_copy(startsFrom) == lower_copy(other.startsFrom) &&
+				dependencies == other.dependencies &&
+				lower_copy(loadOrderGroup) == lower_copy(other.loadOrderGroup) &&
+				lower_copy(failResetMsg) == lower_copy(other.failResetMsg) &&
+				lower_copy(failResetMsg) == lower_copy(other.failResetMsg) &&
+				privileges == other.privileges &&
+				serviceType == other.serviceType &&
+				startType == other.startType &&
+				errorControl == other.errorControl &&
+				tagId == other.tagId &&
+				failResetPeriod == other.failResetPeriod &&
+				failActions == other.failActions &&
+				failActionDelay == other.failActionDelay &&
+				preshutdownTimeout == other.preshutdownTimeout &&
+				svcSidType == other.svcSidType &&
+				launchProtected == other.launchProtected &&
+				preferredNode == other.preferredNode &&
+				preferredNodeDeleteFlag == other.preferredNodeDeleteFlag &&
+				delayedAutoStart == other.delayedAutoStart &&
+				failureActionsOnNonCrashFailures == other.failureActionsOnNonCrashFailures &&
+				triggers == other.triggers &&
+				!memcmp(&failActionType, &other.failActionType, sizeof(SC_ACTION_TYPE)) &&
+				!memcmp(&svcProcDetail, &other.svcProcDetail, sizeof(SERVICE_STATUS_PROCESS)));
+	} else {
+		return true;
+	}
+}
+
+bool SvcRecord::operator !=(const SvcRecord& other) const {
+	if (this != &other) {
+		return (lower_copy(svcName) != lower_copy(other.svcName) ||
+				lower_copy(svcDisplayName) != lower_copy(other.svcDisplayName) ||
+				lower_copy(svcDesc) != lower_copy(other.svcDesc) ||
+				lower_copy(binaryPath) != lower_copy(other.binaryPath) ||
+				lower_copy(startsFrom) != lower_copy(other.startsFrom) ||
+				dependencies != other.dependencies ||
+				lower_copy(loadOrderGroup) != lower_copy(other.loadOrderGroup) ||
+				lower_copy(failResetMsg) != lower_copy(other.failResetMsg) ||
+				lower_copy(failResetMsg) != lower_copy(other.failResetMsg) ||
+				privileges != other.privileges ||
+				serviceType != other.serviceType ||
+				startType != other.startType ||
+				errorControl != other.errorControl ||
+				tagId != other.tagId ||
+				failResetPeriod != other.failResetPeriod ||
+				failActions != other.failActions ||
+				failActionDelay != other.failActionDelay ||
+				preshutdownTimeout != other.preshutdownTimeout ||
+				svcSidType != other.svcSidType ||
+				launchProtected != other.launchProtected ||
+				preferredNode != other.preferredNode ||
+				preferredNodeDeleteFlag != other.preferredNodeDeleteFlag ||
+				delayedAutoStart != other.delayedAutoStart ||
+				failureActionsOnNonCrashFailures != other.failureActionsOnNonCrashFailures ||
+				triggers != other.triggers ||
+				failActionType != other.failActionType ||
+				memcmp(&failActionType, &other.failActionType, sizeof(SC_ACTION_TYPE)) ||
+				memcmp(&svcProcDetail, &other.svcProcDetail, sizeof(SERVICE_STATUS_PROCESS)));
+	} else {
+		return false;
+	}
+}
 
 SvcHandler::SvcHandler() {
 	m_scmHandle = 0;
