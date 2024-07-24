@@ -244,7 +244,7 @@ HostNode& HostNode::operator=(HostNode&& other) noexcept {
 
 bool HostNode::operator==(const HostNode& other) const {
     if (this != &other) {
-        return(Address == other.Address);
+        return (Address == other.Address);
     } else {
         return true;
     }
@@ -321,9 +321,9 @@ bool PingResult::operator==(const PingResult& other) const {
 }
 bool PingResult::operator!=(const PingResult& other) const {
     if (this != &other) {
-    return (Result != other.Result ||
-            RoundTripTime != other.RoundTripTime ||
-            TTL != other.TTL);
+        return (Result != other.Result ||
+                RoundTripTime != other.RoundTripTime ||
+                TTL != other.TTL);
     } else {
         return false;
     }

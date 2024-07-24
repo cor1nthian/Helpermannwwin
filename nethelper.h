@@ -503,10 +503,10 @@ struct HostNode {
 	HostNode(const HostNode &other);
 	HostNode(HostNode&& other) noexcept;
 	~HostNode();
-	HostNode& operator=(const HostNode& other);
-	HostNode& operator=(HostNode&& other) noexcept;
-	bool operator==(const HostNode& other) const;
-	bool operator!=(const HostNode& other) const;
+	HostNode& operator=(const HostNode &other);
+	HostNode& operator=(HostNode &&other) noexcept;
+	bool operator==(const HostNode &other) const;
+	bool operator!=(const HostNode &other) const;
 	std::vector<HostNodeAddr> Address;
 };
 
@@ -516,10 +516,10 @@ struct PingResult {
 	PingResult(const PingResult &other);
 	PingResult(PingResult &&other) noexcept;
 	~PingResult();
-	PingResult& operator=(const PingResult& other);
-	PingResult& operator=(PingResult&& other) noexcept;
-	bool operator==(const PingResult& other) const;
-	bool operator!=(const PingResult& other) const;
+	PingResult& operator=(const PingResult &other);
+	PingResult& operator=(PingResult &&other) noexcept;
+	bool operator==(const PingResult &other) const;
+	bool operator!=(const PingResult &other) const;
 	bool Result;
 	unsigned short int TTL;
 	unsigned short int RoundTripTime;
