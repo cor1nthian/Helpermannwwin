@@ -66,52 +66,64 @@ DNSQueryContext::DNSQueryContext(DNSQueryContext &&other) noexcept {
 DNSQueryContext::~DNSQueryContext() {}
 
 DNSQueryContext& DNSQueryContext::operator=(const DNSQueryContext &other) {
-    RefCount = other.RefCount;
-    memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-    QueryType = other.QueryType;
-    QueryOptions = other.QueryOptions;
-    QueryResults = other.QueryResults;
-    QueryCancelContext = other.QueryCancelContext;
-    QueryCompletedEvent = other.QueryCompletedEvent;
+    if (this != &other) {
+        RefCount = other.RefCount;
+        memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
+        QueryType = other.QueryType;
+        QueryOptions = other.QueryOptions;
+        QueryResults = other.QueryResults;
+        QueryCancelContext = other.QueryCancelContext;
+        QueryCompletedEvent = other.QueryCompletedEvent;
+    }
     return *this;
 }
 
 DNSQueryContext& DNSQueryContext::operator=(DNSQueryContext &&other) noexcept {
-    RefCount = other.RefCount;
-    other.RefCount = 0;
-    memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-    memset(&other.QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-    QueryType = other.QueryType;
-    other.QueryType = 0;
-    QueryOptions = other.QueryOptions;
-    other.QueryOptions = 0;
-    QueryResults = other.QueryResults;
-    other.QueryResults = { 0 };
-    QueryCancelContext = other.QueryCancelContext;
-    other.QueryCancelContext = { 0 };
-    QueryCompletedEvent = other.QueryCompletedEvent;
-    other.QueryCompletedEvent = 0;
+    if (this != &other) {
+        RefCount = other.RefCount;
+        other.RefCount = 0;
+        memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
+        memset(&other.QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
+        QueryType = other.QueryType;
+        other.QueryType = 0;
+        QueryOptions = other.QueryOptions;
+        other.QueryOptions = 0;
+        QueryResults = other.QueryResults;
+        other.QueryResults = { 0 };
+        QueryCancelContext = other.QueryCancelContext;
+        other.QueryCancelContext = { 0 };
+        QueryCompletedEvent = other.QueryCompletedEvent;
+        other.QueryCompletedEvent = 0;
+    }
     return *this;
 }
 
 bool DNSQueryContext::operator==(const DNSQueryContext& other) const {
-    return((RefCount == other.RefCount &&
-        QueryType == other.QueryType &&
-        QueryOptions == other.QueryOptions &&
-        QueryCompletedEvent == other.QueryCompletedEvent) &&
-        !memcmp(&QueryResults, &other.QueryResults, sizeof(DNS_QUERY_RESULT)) &&
-        !memcmp(&QueryCancelContext, &other.QueryCancelContext, sizeof(DNS_QUERY_CANCEL)) &&
-        !memcmp(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t)));
+    if (this != &other) {
+        return (RefCount == other.RefCount &&
+                QueryType == other.QueryType &&
+                QueryOptions == other.QueryOptions &&
+                QueryCompletedEvent == other.QueryCompletedEvent &&
+                !memcmp(&QueryResults, &other.QueryResults, sizeof(DNS_QUERY_RESULT)) &&
+                !memcmp(&QueryCancelContext, &other.QueryCancelContext, sizeof(DNS_QUERY_CANCEL)) &&
+                !memcmp(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t)));
+    } else {
+        return true;
+    }
 }
 
 bool DNSQueryContext::operator!=(const DNSQueryContext& other) const {
-    return((RefCount != other.RefCount ||
-        QueryType != other.QueryType ||
-        QueryOptions != other.QueryOptions ||
-        QueryCompletedEvent != other.QueryCompletedEvent) ||
-        memcmp(&QueryResults, &other.QueryResults, sizeof(DNS_QUERY_RESULT)) ||
-        memcmp(&QueryCancelContext, &other.QueryCancelContext, sizeof(DNS_QUERY_CANCEL)) ||
-        memcmp(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t)));
+    if (this != &other) {
+        return (RefCount != other.RefCount ||
+                QueryType != other.QueryType ||
+                QueryOptions != other.QueryOptions ||
+                QueryCompletedEvent != other.QueryCompletedEvent ||
+                memcmp(&QueryResults, &other.QueryResults, sizeof(DNS_QUERY_RESULT)) ||
+                memcmp(&QueryCancelContext, &other.QueryCancelContext, sizeof(DNS_QUERY_CANCEL)) ||
+                memcmp(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t)));
+    } else {
+        return false;
+    }
 }
 
 HostNodeAddr::HostNodeAddr() {
