@@ -37,7 +37,7 @@
 #define SAFE_NetApiBufferFree(x) ::NetApiBufferFree(x); x = 0
 
 // safety first! no errors trying to at least free this pointer further
-#define SAFE_LOCALFREE(x) ::LocalFree((HLOCAL)x); x =0
+#define SAFE_LOCALFREE(x) ::LocalFree((::HLOCAL)x); x =0
 
 // can be used for short, unsigned short, word, unsigned word (2-byte types)
 #define BYTESWAP16(n) (((n&0xFF00)>>8)|((n&0x00FF)<<8))

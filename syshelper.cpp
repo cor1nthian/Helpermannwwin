@@ -1042,12 +1042,12 @@ bool SysHandler::IsWow64Proc(const unsigned long pid, const unsigned long desire
 }
 
 bool SysHandler::ExtractResource(const std::wstring extractPath, const unsigned long resId) const {
-	HRSRC hResource = 0;
+	::HRSRC hResource = 0;
 	hResource = FindResource(NULL, MAKEINTRESOURCE(resId), RT_RCDATA);
 	if (hResource) {
-		HGLOBAL hGlobal = ::LoadResource(NULL, hResource);
+		::HGLOBAL hGlobal = ::LoadResource(NULL, hResource);
 		if (hGlobal) {
-			DWORD exeSize = ::SizeofResource(NULL, hResource);
+			unsigned long exeSize = ::SizeofResource(NULL, hResource);
 			if (exeSize) {
 				void* exeBuf = ::LockResource(hGlobal);
 				if (exeBuf) {
