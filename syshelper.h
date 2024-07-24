@@ -47,7 +47,6 @@
 #include <sstream>
 #include <fstream>
 #include <thread>
-#include <unordered_map>
 #include "config.h"
 #include "strhelper.h"
 #include "winerrhelper.h"
