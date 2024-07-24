@@ -17,6 +17,8 @@ enum class PGSQLOpResult : unsigned char {
 class MSSQLDBHandler {
 	public:
 		MSSQLDBHandler();
+		MSSQLDBHandler(const std::map<unsigned long, std::wstring> connectedDBS,
+			const std::map<unsigned long, std::wstring> runningQueries);
 		MSSQLDBHandler(const MSSQLDBHandler &other);
 		MSSQLDBHandler(MSSQLDBHandler &&other) noexcept;
 		~MSSQLDBHandler();
@@ -42,6 +44,8 @@ class MSSQLDBHandler {
 class PGSQLDBHandler {
 	public:
 		PGSQLDBHandler();
+		PGSQLDBHandler(const std::map<unsigned long, std::wstring> connectedDBS,
+			const std::map<unsigned long, std::wstring> runningQueries);
 		PGSQLDBHandler(const PGSQLDBHandler &other);
 		PGSQLDBHandler(PGSQLDBHandler &&other) noexcept;
 		~PGSQLDBHandler();

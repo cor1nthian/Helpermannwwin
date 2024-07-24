@@ -2,6 +2,12 @@
 
 MSSQLDBHandler::MSSQLDBHandler() {}
 
+MSSQLDBHandler::MSSQLDBHandler(const std::map<unsigned long, std::wstring> connectedDBS,
+	const std::map<unsigned long, std::wstring> runningQueries) {
+	m_ConnectedDBs = connectedDBS;
+	m_RunningQueries = runningQueries;
+}
+
 MSSQLDBHandler::MSSQLDBHandler(const MSSQLDBHandler &other) {
 	if (this != &other) {
 		m_ConnectedDBs = other.m_ConnectedDBs;
@@ -82,6 +88,12 @@ MSSQLOpResult MSSQLDBHandler::QueryCamcelledCallback() {
 }
 
 PGSQLDBHandler::PGSQLDBHandler() {}
+
+PGSQLDBHandler::PGSQLDBHandler(const std::map<unsigned long, std::wstring> connectedDBS,
+	const std::map<unsigned long, std::wstring> runningQueries) {
+	m_ConnectedDBs = connectedDBS;
+	m_RunningQueries = runningQueries;
+}
 
 PGSQLDBHandler::PGSQLDBHandler(const PGSQLDBHandler &other) {
 	if (this != &other) {
