@@ -62,10 +62,14 @@ bool MSSQLDBHandler::operator!=(const MSSQLDBHandler &other) const {
 	}
 }
 
-MSSQLOpResult MSSQLDBHandler::ConnectDB(const std::wstring serverAddr, const std::wstring dbName,
-	const std::wstring port, MSSQLDriverType driverType, const std::wstring login, const std::wstring pwd,
-	const MSSQLConnTrust trustRel, const size_t connOutBufLen) {
+MSSQLOpResult MSSQLDBHandler::ConnectDB(unsigned long &connID, const std::wstring serverAddr, const std::wstring dbName,
+	const std::wstring port, const std::wstring login, const std::wstring pwd, const MSSQLConnTrust trustRel,
+	const MSSQLDriverType driverType, const unsigned long connOutBufLen) {
 	if ((!login.length() && !pwd.length() && MSSQLConnTrust::NotTrusted == trustRel) || (!connOutBufLen)) {
+		return MSSQLOpResult::Fail;
+	}
+	unsigned long connDBID = assignConnDBID();
+	if (!connDBID) {
 		return MSSQLOpResult::Fail;
 	}
 	SQLHENV hEnv = 0;
@@ -130,10 +134,16 @@ MSSQLOpResult MSSQLDBHandler::ConnectDB(const std::wstring serverAddr, const std
 			return MSSQLOpResult::Fail;
 		}
 	}
+	if (login.length()) {
+		m_ConnectedDBs[connDBID] = dbName + L"|" + port + L"|" + login;
+	} else {
+		m_ConnectedDBs[connDBID] = dbName + L"|" + port + L"|Trusted";
+	}
+	
 	return MSSQLOpResult::Success;
 }
 
-MSSQLOpResult MSSQLDBHandler::DisconnectDB(const std::wstring serverAddr) {
+MSSQLOpResult MSSQLDBHandler::DisconnectDB(unsigned long &connDBID, const std::wstring serverAddr) {
 	return MSSQLOpResult::Success;
 }
 
@@ -151,6 +161,15 @@ MSSQLOpResult MSSQLDBHandler::QueryCompleteCallback() {
 
 MSSQLOpResult MSSQLDBHandler::QueryCamcelledCallback() {
 	return MSSQLOpResult::Success;
+}
+
+unsigned long MSSQLDBHandler::assignConnDBID() {
+	size_t connDBSz = m_ConnectedDBs.size();
+	if (MSSQLMAXCONN == connDBSz) {
+		return 0;
+	} else {
+		return connDBSz;
+	}
 }
 
 PGSQLDBHandler::PGSQLDBHandler() {}

@@ -68,4 +68,9 @@
 	#define DNSHELPER_SHOWERRORMSGBOX
 #endif
 
+// DBHelper defines
+
+#define MSSQLMAXCONN	1024
+#define MSSQLMAXOUTBUF	32768
+
 #endif
