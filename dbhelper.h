@@ -66,11 +66,27 @@ const std::map<MSSQLDriverType, std::wstring> const gc_SQLDriverType = {
 	{ MSSQLDriverType::SQLServer, L"SQL Server" }
 };
 
+struct MSSQLOutBuf {
+	MSSQLOutBuf();
+	MSSQLOutBuf(size_t outbufsz);
+	MSSQLOutBuf(wchar_t* outbuf, size_t outbufsz);
+	MSSQLOutBuf(const MSSQLOutBuf &other);
+	MSSQLOutBuf(MSSQLOutBuf&& other) noexcept;
+	~MSSQLOutBuf();
+	MSSQLOutBuf& operator=(const MSSQLOutBuf &other);
+	MSSQLOutBuf& operator=(MSSQLOutBuf &&other) noexcept;
+	bool operator==(const MSSQLOutBuf &other) const;
+	bool operator!=(const MSSQLOutBuf &other) const;
+	wchar_t* OutBuf;
+	size_t OutBufSz;
+};
+
 class MSSQLDBHandler {
 	public:
 		MSSQLDBHandler();
-		MSSQLDBHandler(const std::map<unsigned long, std::wstring> connectedDBS,
-			const std::map<unsigned long, std::wstring> runningQueries);
+		MSSQLDBHandler(const std::map<SQLHANDLE, std::wstring> connectedDBs,
+			const std::map<SQLHANDLE, MSSQLOutBuf> outBuffers,
+			const std::map<SQLHANDLE, std::wstring> runningQueries);
 		MSSQLDBHandler(const MSSQLDBHandler &other);
 		MSSQLDBHandler(MSSQLDBHandler &&other) noexcept;
 		~MSSQLDBHandler();
@@ -78,12 +94,12 @@ class MSSQLDBHandler {
 		MSSQLDBHandler& operator=(MSSQLDBHandler &&other) noexcept;
 		bool operator==(const MSSQLDBHandler &other) const;
 		bool operator!=(const MSSQLDBHandler &other) const;
-		MSSQLOpResult ConnectDB(unsigned long &connID, const std::wstring serverAddr, const std::wstring dbName,
+		MSSQLOpResult ConnectDB(SQLHANDLE &connID, const std::wstring serverAddr, const std::wstring dbName,
 			const std::wstring port = L"50100", const std::wstring login = L"", const std::wstring pwd = L"",
 			const MSSQLConnTrust trustRel = MSSQLConnTrust::Undefined,
 			const MSSQLDriverType driverType = MSSQLDriverType::SQLServer,
 			const unsigned long connOutBufLen = MSSQLMAXOUTBUF);
-		MSSQLOpResult DisconnectDB(unsigned long &connDBID, const std::wstring serverAddr);
+		MSSQLOpResult DisconnectDB(SQLHANDLE connDBID = 0, const std::wstring serverAddr = L"");
 		MSSQLOpResult ExecQuery(unsigned long &queyID, const std::wstring query);
 		MSSQLOpResult CancelQuery(const unsigned long queyID);
 	protected:
@@ -93,9 +109,11 @@ class MSSQLDBHandler {
 		MSSQLOpResult QueryCompleteCallback();
 		MSSQLOpResult QueryCamcelledCallback();
 		unsigned long assignConnDBID();
+		void SQLErrorDetails();
 		/*       VARIABLES       */
-		std::map<unsigned long, std::wstring> m_ConnectedDBs;
-		std::map<unsigned long, std::wstring> m_RunningQueries;
+		std::map<SQLHANDLE, std::wstring> m_ConnectedDBs;
+		std::map<SQLHANDLE, MSSQLOutBuf> m_OutBuffers;
+		std::map<SQLHANDLE, std::wstring> m_RunningQueries;
 };
 
 class PGSQLDBHandler {

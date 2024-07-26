@@ -70,7 +70,7 @@
 
 // DBHelper defines
 
-#define MSSQLMAXCONN	1024
-#define MSSQLMAXOUTBUF	32768
-
+#define MSSQLMAXCONN		1024
+	#define MSSQLMAXOUTBUF	32768
+#define MSSQLCONNTOOMANY	-1
 #endif
