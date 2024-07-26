@@ -159,8 +159,8 @@ bool MSSQLDBHandler::operator!=(const MSSQLDBHandler &other) const {
 MSSQLOpResult MSSQLDBHandler::ConnectDB(SQLHANDLE &connID, const std::wstring serverAddr, const std::wstring dbName,
 	const std::wstring port, const std::wstring login, const std::wstring pwd, const MSSQLConnTrust trustRel,
 	const MSSQLDriverType driverType, const unsigned long connOutBufLen) {
-	if ((!login.length() && !pwd.length() && (MSSQLConnTrust::Trusted != trustRel)) || (!connOutBufLen) ||
-		(!serverAddr.length())) {
+	if ((!login.length() && !pwd.length() && (MSSQLConnTrust::Trusted != trustRel)) || (!serverAddr.length()) ||
+		(!connOutBufLen)) {
 		return MSSQLOpResult::Fail;
 	}
 	std::wstring connRec;
@@ -177,11 +177,16 @@ MSSQLOpResult MSSQLDBHandler::ConnectDB(SQLHANDLE &connID, const std::wstring se
 	SQLHENV hEnv = 0;
 	SQLHDBC hDbc = 0;
 	SQLHSTMT hStmt = 0;
-	if (SQL_ERROR == SQLAllocHandle(SQL_HANDLE_ENV, 0, &hEnv)) {
-		return MSSQLOpResult::Fail;
+	short rc = ::SQLAllocHandle(SQL_HANDLE_ENV, 0, &hEnv);
+	if (SQL_SUCCESS == rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+		} else if (SQL_INVALID_HANDLE == rc) {
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			return MSSQLOpResult::Fail;
+		}
 	}
-	
-	short rc = SQLSetEnvAttr(hEnv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
+	rc = ::SQLSetEnvAttr(hEnv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
 	if (SQL_SUCCESS != rc) {
 		if (SQL_SUCCESS_WITH_INFO == rc) {
 		} else if (SQL_INVALID_HANDLE == rc) {
@@ -189,9 +194,8 @@ MSSQLOpResult MSSQLDBHandler::ConnectDB(SQLHANDLE &connID, const std::wstring se
 		} else if (SQL_ERROR == rc) {
 			return MSSQLOpResult::Fail;
 		}
-		// HandleDiagnosticRecord(h, ht, rc);
 	}
-	rc = SQLAllocHandle(SQL_HANDLE_DBC, hEnv, &hDbc);
+	rc = ::SQLAllocHandle(SQL_HANDLE_DBC, hEnv, &hDbc);
 	if (SQL_SUCCESS != rc) {
 		if (SQL_SUCCESS_WITH_INFO == rc) {
 		} else if (SQL_INVALID_HANDLE == rc) {
@@ -233,7 +237,7 @@ MSSQLOpResult MSSQLDBHandler::ConnectDB(SQLHANDLE &connID, const std::wstring se
 	if (!buf.OutBuf) {
 		return MSSQLOpResult::Fail;
 	}
-	rc = SQLDriverConnect(hDbc, ::GetDesktopWindow(), (SQLWCHAR*)connLine.c_str(), SQL_NTS, 0, 0, 0,
+	rc = ::SQLDriverConnect(hDbc, ::GetDesktopWindow(), (SQLWCHAR*)connLine.c_str(), SQL_NTS, 0, 0, 0,
 		SQL_DRIVER_NOPROMPT);
 	if (SQL_SUCCESS != rc) {
 		if (SQL_SUCCESS_WITH_INFO == rc) {
