@@ -70,7 +70,11 @@
 
 // DBHelper defines
 
-#define MSSQLMAXCONN		1024
-	#define MSSQLMAXOUTBUF	32768
+// max database connections
+#define MSSQLMAXCONN		64
+// max connection ou buffer size, characters
+#define MSSQLMAXOUTBUF		2048
+// min connection ou buffer size, characters
+#define MSSQLMINOUTBUF		1024
 #define MSSQLCONNTOOMANY	-1
 #endif

@@ -1,18 +1,68 @@
 #include "dbhelper.h"
 
+MSSQLOpResult getAvailableODBCDrivers(std::vector<std::wstring> &drivers, const bool includeAttrs) {
+	SQLHENV hEnv = 0;
+	wchar_t driver[512] = { 0 }, attr[512] = { 0 };
+	short driver_ret = 0, attr_ret, direction = 0, ret = 0;
+	short rc = ::SQLAllocHandle(SQL_HANDLE_ENV, 0, &hEnv);
+	if (SQL_SUCCESS != rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+		} else if (SQL_INVALID_HANDLE == rc) {
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			return MSSQLOpResult::Fail;
+		}
+	}
+	rc = ::SQLSetEnvAttr(hEnv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
+	if (SQL_SUCCESS != rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+		} else if (SQL_INVALID_HANDLE == rc) {
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			return MSSQLOpResult::Fail;
+		}
+	}
+	direction = SQL_FETCH_FIRST;
+	while (SQL_SUCCEEDED(ret = ::SQLDrivers(hEnv, direction, driver, 512, &driver_ret, attr, 512, &attr_ret))) {
+		direction = SQL_FETCH_NEXT;
+		if (includeAttrs) {
+			drivers.push_back(std::wstring(driver) + L" " + attr);
+		} else {
+			drivers.push_back(driver);
+		}
+		if (ret == SQL_SUCCESS_WITH_INFO) {
+			continue;
+			// printf("\tdata truncation\n");
+		}
+	}
+	rc = ::SQLFreeHandle(SQL_HANDLE_ENV, hEnv);
+	if (SQL_SUCCESS != rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+		} else if (SQL_INVALID_HANDLE == rc) {
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			return MSSQLOpResult::Fail;
+		}
+	}
+	return MSSQLOpResult::Success;
+}
+
 MSSQLOutBuf::MSSQLOutBuf() {
 	OutBuf = 0;
 	OutBufSz = 0;
 }
 
-MSSQLOutBuf::MSSQLOutBuf(size_t outbufsz) {
+MSSQLOutBuf::MSSQLOutBuf(const size_t outbufsz) {
 	OutBufSz = outbufsz;
 	NEW_ARR_NULLIFY_NO_REDEFINE(OutBuf, wchar_t, OutBufSz);
 }
 
-MSSQLOutBuf::MSSQLOutBuf(wchar_t* outbuf, size_t outbufsz) {
-	OutBuf = outbuf;
+MSSQLOutBuf::MSSQLOutBuf(const wchar_t* outbuf, const size_t outbufsz) {
 	OutBufSz = outbufsz;
+	NEW_ARR_NULLIFY_NO_REDEFINE(OutBuf, wchar_t, OutBufSz);
+	if (OutBuf) {
+		wsprintf(OutBuf, L"%s", outbuf);
+	}
 }
 
 MSSQLOutBuf::MSSQLOutBuf(const MSSQLOutBuf &other) {
@@ -85,10 +135,86 @@ bool MSSQLOutBuf::operator!=(const MSSQLOutBuf &other) const {
 	}
 }
 
-MSSQLDBHandler::MSSQLDBHandler() {}
+MSSQLQuery::MSSQLQuery() {
+	DBID = 0;
+	QueryID = 0;
+}
 
-MSSQLDBHandler::MSSQLDBHandler(const std::map<SQLHANDLE, std::wstring> connectedDBS,
-	const std::map<SQLHANDLE, MSSQLOutBuf> outBuffers, const std::map<SQLHANDLE, std::wstring> runningQueries) {
+MSSQLQuery::MSSQLQuery(const SQLHANDLE dbid, const SQLHSTMT queryid, const std::wstring querystr) {
+	DBID = dbid;
+	QueryID = queryid;
+	QueryStr = querystr;
+}
+
+MSSQLQuery::MSSQLQuery(const MSSQLQuery &other) {
+	if (this != &other) {
+		DBID = other.DBID;
+		QueryID = other.QueryID;
+		QueryStr = other.QueryStr;
+	}
+}
+
+MSSQLQuery::MSSQLQuery(MSSQLQuery &&other) noexcept {
+	if (this != &other) {
+		DBID = other.DBID;
+		other.DBID = 0;
+		QueryID = other.QueryID;
+		other.QueryID = 0;
+		QueryStr = other.QueryStr;
+		other.QueryStr.~basic_string();
+	}
+}
+
+MSSQLQuery::~MSSQLQuery() {}
+
+MSSQLQuery& MSSQLQuery::operator=(const MSSQLQuery &other) {
+	if (this != &other) {
+		DBID = other.DBID;
+		QueryID = other.QueryID;
+		QueryStr = other.QueryStr;
+	}
+	return *this;
+}
+
+MSSQLQuery& MSSQLQuery::operator=(MSSQLQuery &&other) noexcept {
+	if (this != &other) {
+		DBID = other.DBID;
+		other.DBID = 0;
+		QueryID = other.QueryID;
+		other.QueryID = 0;
+		QueryStr = other.QueryStr;
+		other.QueryStr.~basic_string();
+	}
+	return *this;
+}
+
+bool MSSQLQuery::operator==(const MSSQLQuery &other) const {
+	if (this != &other) {
+		return (DBID == other.DBID &&
+				QueryID == other.QueryID &&
+				lower_copy(QueryStr) == lower_copy(other.QueryStr));
+	} else {
+		return true;
+	}
+}
+
+bool MSSQLQuery::operator!=(const MSSQLQuery &other) const {
+	if (this != &other) {
+		return (DBID != other.DBID ||
+				QueryID != other.QueryID ||
+				lower_copy(QueryStr) != lower_copy(other.QueryStr));
+	} else {
+		return false;
+	}
+}
+
+MSSQLDBHandler::MSSQLDBHandler() {
+	m_hEnv = 0;
+}
+
+MSSQLDBHandler::MSSQLDBHandler(const SQLHANDLE henv, const std::map<SQLHANDLE, std::wstring> connectedDBS,
+	const std::map<SQLHANDLE, MSSQLOutBuf> outBuffers, const std::vector<MSSQLQuery> runningQueries) {
+	m_hEnv = henv;
 	m_ConnectedDBs = connectedDBS;
 	m_OutBuffers = outBuffers;
 	m_RunningQueries = runningQueries;
@@ -96,6 +222,7 @@ MSSQLDBHandler::MSSQLDBHandler(const std::map<SQLHANDLE, std::wstring> connected
 
 MSSQLDBHandler::MSSQLDBHandler(const MSSQLDBHandler &other) {
 	if (this != &other) {
+		m_hEnv = other.m_hEnv;
 		m_ConnectedDBs = other.m_ConnectedDBs;
 		m_OutBuffers = other.m_OutBuffers;
 		m_RunningQueries = other.m_RunningQueries;
@@ -104,19 +231,40 @@ MSSQLDBHandler::MSSQLDBHandler(const MSSQLDBHandler &other) {
 
 MSSQLDBHandler::MSSQLDBHandler(MSSQLDBHandler &&other) noexcept {
 	if (this != &other) {
+		m_hEnv = other.m_hEnv;
+		other.m_hEnv = 0;
 		m_ConnectedDBs = other.m_ConnectedDBs;
 		other.m_ConnectedDBs.~map();
 		m_OutBuffers = other.m_OutBuffers;
 		other.m_OutBuffers.~map();
 		m_RunningQueries = other.m_RunningQueries;
-		other.m_RunningQueries.~map();
+		other.m_RunningQueries.~vector();
 	}
 }
 
-MSSQLDBHandler::~MSSQLDBHandler() {}
+MSSQLDBHandler::~MSSQLDBHandler() {
+	short rc = 0;
+	if (m_ConnectedDBs.size()) {
+		while (m_ConnectedDBs.size()) {
+			DisconnectDB(m_ConnectedDBs.begin()->first);
+		}
+	}
+	rc = ::SQLFreeHandle(SQL_HANDLE_ENV, m_hEnv);
+	if (SQL_SUCCESS != rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+		} else if (SQL_INVALID_HANDLE == rc) {
+			// handle error
+		} else if (SQL_ERROR == rc) {
+			// handle error
+		} else if (SQL_STILL_EXECUTING == rc) {
+			// handle error
+		}
+	}
+}
 
 MSSQLDBHandler& MSSQLDBHandler::operator=(const MSSQLDBHandler &other) {
 	if (this != &other) {
+		m_hEnv = other.m_hEnv;
 		m_ConnectedDBs = other.m_ConnectedDBs;
 		m_OutBuffers = other.m_OutBuffers;
 		m_RunningQueries = other.m_RunningQueries;
@@ -126,19 +274,22 @@ MSSQLDBHandler& MSSQLDBHandler::operator=(const MSSQLDBHandler &other) {
 
 MSSQLDBHandler& MSSQLDBHandler::operator=(MSSQLDBHandler &&other) noexcept {
 	if (this != &other) {
+		m_hEnv = other.m_hEnv;
+		other.m_hEnv = 0;
 		m_ConnectedDBs = other.m_ConnectedDBs;
 		other.m_ConnectedDBs.~map();
 		m_OutBuffers = other.m_OutBuffers;
 		other.m_OutBuffers.~map();
 		m_RunningQueries = other.m_RunningQueries;
-		other.m_RunningQueries.~map();
+		other.m_RunningQueries.~vector();
 	}
 	return *this;
 }
 
 bool MSSQLDBHandler::operator==(const MSSQLDBHandler &other) const {
 	if (this != &other) {
-		return (m_ConnectedDBs == other.m_ConnectedDBs &&
+		return (m_hEnv == other.m_hEnv &&
+				m_ConnectedDBs == other.m_ConnectedDBs &&
 				m_OutBuffers == other.m_OutBuffers &&
 				m_RunningQueries == other.m_RunningQueries);
 	} else {
@@ -148,7 +299,8 @@ bool MSSQLDBHandler::operator==(const MSSQLDBHandler &other) const {
 
 bool MSSQLDBHandler::operator!=(const MSSQLDBHandler &other) const {
 	if (this != &other) {
-		return (m_ConnectedDBs != other.m_ConnectedDBs ||
+		return (m_hEnv != other.m_hEnv ||
+				m_ConnectedDBs != other.m_ConnectedDBs ||
 				m_OutBuffers != other.m_OutBuffers ||
 				m_RunningQueries != other.m_RunningQueries);
 	} else {
@@ -156,109 +308,238 @@ bool MSSQLDBHandler::operator!=(const MSSQLDBHandler &other) const {
 	}
 }
 
-MSSQLOpResult MSSQLDBHandler::ConnectDB(SQLHANDLE &connID, const std::wstring serverAddr, const std::wstring dbName,
-	const std::wstring port, const std::wstring login, const std::wstring pwd, const MSSQLConnTrust trustRel,
-	const MSSQLDriverType driverType, const unsigned long connOutBufLen) {
+MSSQLOpResult MSSQLDBHandler::ConnectDB(SQLHANDLE &connID, const std::wstring serverAddr, std::wstring *infoBuf,
+	const std::wstring dbName, const std::wstring port, const std::wstring login, const std::wstring pwd,
+	const MSSQLConnTrust trustRel, const MSSQLDriverType driverType, const MSSQLDriverPreference driverPref,
+	const std::wstring defaultDriver, const unsigned long connOutBufLen) {
 	if ((!login.length() && !pwd.length() && (MSSQLConnTrust::Trusted != trustRel)) || (!serverAddr.length()) ||
-		(!connOutBufLen)) {
+		(connOutBufLen < MSSQLMINOUTBUF)) {
 		return MSSQLOpResult::Fail;
 	}
-	std::wstring connRec;
+	if (m_ConnectedDBs.size() == MSSQLMAXCONN) {
+		return MSSQLOpResult::Fail;
+	}
+	std::wstring connRec = serverAddr;
+	if (dbName.length()) {
+		connRec = connRec + L"|" + dbName;
+	}
+	if (port.length()) {
+		connRec = connRec + L"|" + port;
+	}
 	if (login.length()) {
-		connRec = dbName + L"|" + port + L"|" + login;
+		connRec = connRec + L"|" + login;
 	} else {
-		connRec = dbName + L"|" + port + L"|Trusted";
+		connRec = connRec + L"|Trusted";
 	}
 	for (auto &it : m_ConnectedDBs) {
 		if (lower_copy(connRec) == lower_copy(it.second)) {
+			connID = it.first;
 			return MSSQLOpResult::Fail;
 		}
 	}
 	SQLHENV hEnv = 0;
 	SQLHDBC hDbc = 0;
 	SQLHSTMT hStmt = 0;
-	short rc = ::SQLAllocHandle(SQL_HANDLE_ENV, 0, &hEnv);
-	if (SQL_SUCCESS == rc) {
-		if (SQL_SUCCESS_WITH_INFO == rc) {
-		} else if (SQL_INVALID_HANDLE == rc) {
-			return MSSQLOpResult::Fail;
-		} else if (SQL_ERROR == rc) {
-			return MSSQLOpResult::Fail;
-		}
-	}
-	rc = ::SQLSetEnvAttr(hEnv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
-	if (SQL_SUCCESS != rc) {
-		if (SQL_SUCCESS_WITH_INFO == rc) {
-		} else if (SQL_INVALID_HANDLE == rc) {
-			return MSSQLOpResult::Fail;
-		} else if (SQL_ERROR == rc) {
-			return MSSQLOpResult::Fail;
-		}
-	}
-	rc = ::SQLAllocHandle(SQL_HANDLE_DBC, hEnv, &hDbc);
-	if (SQL_SUCCESS != rc) {
-		if (SQL_SUCCESS_WITH_INFO == rc) {
-		} else if (SQL_INVALID_HANDLE == rc) {
-			return MSSQLOpResult::Fail;
-		} else if (SQL_ERROR == rc) {
-			return MSSQLOpResult::Fail;
-		}
-	}
-	bool fl = true;
-	std::wstring sqlDriver;
-	for (auto &it : gc_SQLDriverType) {
-		if (driverType == it.first) {
-			sqlDriver = it.second;
-			fl = false;
-			break;
-		}
-	}
-	if (fl) {
+	short rc = 0;
+	NEW_ARR_NULLIFY(errbuf, wchar_t, MSSQLMAXOUTBUF);
+	if (!errbuf) {
 		return MSSQLOpResult::Fail;
 	}
-	std::wstring connLine = L"DRIVER={" + sqlDriver + L"};SERVER=" + serverAddr + L"," + port + L";DATABASE=" + dbName;
-	if (login.length()) {
-		connLine = connLine + L";UID=" + login;
+	if (!m_hEnv) {
+		rc = ::SQLAllocHandle(SQL_HANDLE_ENV, 0, &m_hEnv);
+		if (SQL_SUCCESS != rc) {
+			if (SQL_SUCCESS_WITH_INFO == rc) {
+				if (infoBuf) {
+					if (MSSQLOpResult::Success != SQLInfoDetails(m_hEnv, SQL_HANDLE_ENV, rc, errbuf, MSSQLMAXOUTBUF)) {
+						return MSSQLOpResult::Fail;
+					}
+					*infoBuf = errbuf;
+				}
+			} else if (SQL_INVALID_HANDLE == rc) {
+				if (infoBuf) {
+					if (MSSQLOpResult::Success != SQLInfoDetails(m_hEnv, SQL_HANDLE_ENV, rc, errbuf, MSSQLMAXOUTBUF)) {
+						return MSSQLOpResult::Fail;
+					}
+					*infoBuf = errbuf;
+				}
+				SAFE_ARR_DELETE(errbuf);
+				return MSSQLOpResult::Fail;
+			} else if (SQL_ERROR == rc) {
+				if (infoBuf) {
+					if (MSSQLOpResult::Success != SQLInfoDetails(m_hEnv, SQL_HANDLE_ENV, rc, errbuf, MSSQLMAXOUTBUF)) {
+						return MSSQLOpResult::Fail;
+					}
+					*infoBuf = errbuf;
+				}
+				SAFE_ARR_DELETE(errbuf);
+				return MSSQLOpResult::Fail;
+			}
+		}
+		rc = ::SQLSetEnvAttr(m_hEnv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
+		if (SQL_SUCCESS != rc) {
+			if (SQL_SUCCESS_WITH_INFO == rc) {
+				if (infoBuf) {
+					if (MSSQLOpResult::Success != SQLInfoDetails(m_hEnv, SQL_HANDLE_ENV, rc, errbuf, MSSQLMAXOUTBUF)) {
+						return MSSQLOpResult::Fail;
+					}
+					*infoBuf = errbuf;
+				}
+			} else if (SQL_INVALID_HANDLE == rc) {
+				if (infoBuf) {
+					if (MSSQLOpResult::Success != SQLInfoDetails(m_hEnv, SQL_HANDLE_ENV, rc, errbuf, MSSQLMAXOUTBUF)) {
+						return MSSQLOpResult::Fail;
+					}
+					*infoBuf = errbuf;
+				}
+				SAFE_ARR_DELETE(errbuf);
+				return MSSQLOpResult::Fail;
+			} else if (SQL_ERROR == rc) {
+				if (infoBuf) {
+					if (MSSQLOpResult::Success != SQLInfoDetails(m_hEnv, SQL_HANDLE_ENV, rc, errbuf, MSSQLMAXOUTBUF)) {
+						return MSSQLOpResult::Fail;
+					}
+					*infoBuf = errbuf;
+				}
+				SAFE_ARR_DELETE(errbuf);
+				return MSSQLOpResult::Fail;
+			}
+		}
 	}
-	if (pwd.length()) {
-		connLine = connLine + L";PWD=" + pwd;
+	rc = ::SQLAllocHandle(SQL_HANDLE_DBC, m_hEnv, &hDbc);
+	if (SQL_SUCCESS != rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hDbc, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+		} else if (SQL_INVALID_HANDLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hDbc, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hDbc, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		}
+	}
+	std::wstring sqlDriver;
+	if (MSSQLDriverType::SQLServer == driverType) {
+		bool fl = true;
+		for (auto &it : gc_SQLDriverType) {
+			if (driverType == it.first) {
+				sqlDriver = it.second;
+				fl = false;
+				break;
+			}
+		}
+		if (fl) {
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		}
+	} else if (MSSQLDriverType::Custom == driverType) {
+		if (MSSQLDriverPreference::SQLServer == driverPref) {
+			std::vector<std::wstring> drivers;
+			if (MSSQLOpResult::Success == getAvailableODBCDrivers(drivers)) {
+				for (size_t i = 0; i < drivers.size(); ++i) {
+					if (startsWith(drivers[i], L"SQL Server")) {
+						sqlDriver = drivers[i];
+						break;
+					}
+				}
+			} else {
+				SAFE_ARR_DELETE(errbuf);
+				return MSSQLOpResult::Fail;
+			}
+		} else if (MSSQLDriverPreference::Any == driverPref) {
+			sqlDriver = defaultDriver;
+		}
+	}
+	std::wstring connLine = L"DRIVER={" + sqlDriver + L"};SERVER=" + serverAddr + L"," + port;
+	if (dbName.length()) {
+		connLine = connLine + L";DATABASE=" + dbName;
+	}
+	if (MSSQLConnTrust::Trusted == trustRel) {
+		connLine = connLine + L";Trusted=true";
+	} else if (MSSQLConnTrust::NotTrusted == trustRel) {
+		connLine = connLine + L";Trusted=false";
+	} else if(MSSQLConnTrust::Undefined == trustRel) {
+		if (login.length()) {
+			connLine = connLine + L";UID=" + login;
+		} else {
+			return MSSQLOpResult::Fail;
+		}
+		if (pwd.length()) {
+			connLine = connLine + L";PWD=" + pwd;
+		}
 	}
 	if (!endsWith(connLine, L";")) {
 		connLine = connLine + L";";
 	}
-	if (MSSQLConnTrust::Trusted == trustRel) {
-		connLine = connLine + L"Trusted=true;";
-	} else if (MSSQLConnTrust::NotTrusted == trustRel) {
-		connLine = connLine + L"Trusted=false;";
-	}
 	MSSQLOutBuf buf;
-	buf.OutBufSz = connOutBufLen;
+	buf.OutBufSz = MSSQLMAXOUTBUF;
 	NEW_ARR_NULLIFY_NO_REDEFINE(buf.OutBuf, wchar_t, buf.OutBufSz);
 	if (!buf.OutBuf) {
+		SAFE_ARR_DELETE(errbuf);
 		return MSSQLOpResult::Fail;
 	}
-	rc = ::SQLDriverConnect(hDbc, ::GetDesktopWindow(), (SQLWCHAR*)connLine.c_str(), SQL_NTS, 0, 0, 0,
+	unsigned char connres = 0;
+	rc = ::SQLDriverConnect(hDbc, 0, (SQLWCHAR*)connLine.c_str(), SQL_NTS, buf.OutBuf, buf.OutBufSz, 0,
 		SQL_DRIVER_NOPROMPT);
 	if (SQL_SUCCESS != rc) {
 		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hDbc, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
 		} else if (SQL_INVALID_HANDLE == rc) {
-			return MSSQLOpResult::Fail;
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hDbc, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			connres = 1;
 		} else if (SQL_ERROR == rc) {
-			return MSSQLOpResult::Fail;
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hDbc, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			connres = 2;
 		}
 	}
+	connID = hDbc;
 	m_ConnectedDBs[hDbc] = connRec;
-	return MSSQLOpResult::Success;
+	SAFE_ARR_DELETE(errbuf);
+	if (!connres) {
+		return MSSQLOpResult::Success;
+	} else {
+		return MSSQLOpResult::Fail;
+	}
 }
 
-MSSQLOpResult MSSQLDBHandler::DisconnectDB(SQLHANDLE connDBID, const std::wstring serverAddr) {
+MSSQLOpResult MSSQLDBHandler::DisconnectDB(const SQLHANDLE connDBID, const std::wstring serverAddr) {
 	if (!connDBID && !serverAddr.length()) {
 		return MSSQLOpResult::Fail;
 	}
 	SQLHANDLE dbID = 0;
 	if (connDBID) {
 		std::map<SQLHANDLE, std::wstring>::iterator it;
-		// short rc = ::SQLDisconnect();
 		it = m_ConnectedDBs.find(connDBID);
 		if (m_ConnectedDBs.end() == it) {
 			return MSSQLOpResult::Fail;
@@ -284,36 +565,108 @@ MSSQLOpResult MSSQLDBHandler::DisconnectDB(SQLHANDLE connDBID, const std::wstrin
 			return MSSQLOpResult::Fail;
 		} else if (SQL_ERROR == rc) {
 			return MSSQLOpResult::Fail;
+		} else if (SQL_STILL_EXECUTING == rc) {
+			return MSSQLOpResult::Fail;
 		}
+		
 	}
 	m_OutBuffers.erase(dbID);
 	m_ConnectedDBs.erase(dbID);
-	return MSSQLOpResult::Success;
-}
-
-MSSQLOpResult MSSQLDBHandler::ExecQuery(unsigned long &queyID, const std::wstring query) {
-	return MSSQLOpResult::Success;
-}
-
-MSSQLOpResult MSSQLDBHandler::CancelQuery(const unsigned long queyID) {
-	return MSSQLOpResult::Success;
-}
-
-MSSQLOpResult MSSQLDBHandler::QueryCompleteCallback() {
-	return MSSQLOpResult::Success;
-}
-
-MSSQLOpResult MSSQLDBHandler::QueryCamcelledCallback() {
-	return MSSQLOpResult::Success;
-}
-
-unsigned long MSSQLDBHandler::assignConnDBID() {
-	short connDBSz = m_ConnectedDBs.size();
-	if (MSSQLMAXCONN == connDBSz) {
-		return MSSQLCONNTOOMANY;
-	} else {
-		return connDBSz;
+	rc = ::SQLFreeHandle(SQL_HANDLE_DBC, dbID);
+	if (SQL_SUCCESS != rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+		} else if (SQL_INVALID_HANDLE == rc) {
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			return MSSQLOpResult::Fail;
+		} else if (SQL_STILL_EXECUTING == rc) {
+			return MSSQLOpResult::Fail;
+		}
 	}
+	return MSSQLOpResult::Success;
+}
+
+MSSQLOpResult MSSQLDBHandler::ExecQuery(const SQLHANDLE &queryID, const std::wstring querystr) {
+	if (!querystr.length()) {
+		return MSSQLOpResult::Fail;
+	}
+	return QueryComplete();
+}
+
+MSSQLOpResult MSSQLDBHandler::CancelQuery(const SQLHSTMT queryID, const std::wstring querystr) {
+	SQLHSTMT qryID = 0;
+	if (!queryID && !querystr.length()) {
+		return MSSQLOpResult::Fail;
+	} else {
+		if (queryID && !querystr.length()) {
+			for (size_t i = 0; i < m_RunningQueries.size(); ++i) {
+				if (m_RunningQueries[i].QueryID == queryID) {
+					qryID = m_RunningQueries[i].QueryID;
+					break;
+				}
+			}
+		} else if (!queryID && querystr.length()) {
+			for (size_t i = 0; i < m_RunningQueries.size(); ++i) {
+				if (lower_copy(trim_copy(m_RunningQueries[i].QueryStr)) == lower_copy(trim_copy(querystr))) {
+					qryID = m_RunningQueries[i].QueryID;
+					break;
+				}
+			}
+		}
+	}
+	if (!qryID) {
+		return MSSQLOpResult::Fail;
+	}
+	short rc = ::SQLCancel(qryID);
+	if (SQL_SUCCESS != rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+		} else if (SQL_INVALID_HANDLE == rc) {
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			return MSSQLOpResult::Fail;
+		}
+
+	}
+	return QueryCancelled();
+}
+
+MSSQLOpResult MSSQLDBHandler::QueryComplete() {
+	return MSSQLOpResult::Success;
+}
+
+MSSQLOpResult MSSQLDBHandler::QueryCancelled() {
+	return MSSQLOpResult::Success;
+}
+
+MSSQLOpResult MSSQLDBHandler::SQLInfoDetails(const SQLHANDLE handle, const short recordType, const short code,
+	wchar_t* &infoBuf, const size_t infoBufSz) const {
+	short iRec = 0; long  iError = 0;
+	wchar_t wszMessage[1000] = { 0 }, wszState[SQL_SQLSTATE_SIZE + 1] = { 0 };
+	if (!infoBuf) {
+		NEW_ARR_NULLIFY_NO_REDEFINE(infoBuf, wchar_t, MSSQLMAXOUTBUF);
+		if (!infoBuf) {
+			return MSSQLOpResult::Fail;
+		}
+	} else {
+		memset(infoBuf, 0, infoBufSz);
+	}
+	if (SQL_INVALID_HANDLE == code) {
+		wsprintf(infoBuf, L"%s", L"Invalid handle!\n");
+		return MSSQLOpResult::Success;
+	}
+	while (SQL_SUCCESS == ::SQLGetDiagRec(recordType,
+		handle,
+		++iRec,
+		wszState,
+		&iError,
+		wszMessage,
+		(short)(sizeof(wszMessage) / sizeof(WCHAR)), 0)) {
+		// Hide data truncated..
+		if (wcsncmp(wszState, L"01004", 5)) {
+			wsprintf(infoBuf, L"[%5.5s] %s (%d)\n", wszState, wszMessage, iError);
+		}
+	}
+	return MSSQLOpResult::Success;
 }
 
 PGSQLDBHandler::PGSQLDBHandler() {}
@@ -388,17 +741,17 @@ PGSQLOpResult PGSQLDBHandler::DisconnectDB(const std::wstring serverAddr) {
 }
 
 PGSQLOpResult PGSQLDBHandler::ExecQuery(unsigned long &queyID, const std::wstring query) {
-	return PGSQLOpResult::Success;
+	return QueryComplete();
 }
 
 PGSQLOpResult PGSQLDBHandler::CancelQuery(const unsigned long queyID) {
+	return QueryCancelled();
+}
+
+PGSQLOpResult PGSQLDBHandler::QueryComplete() {
 	return PGSQLOpResult::Success;
 }
 
-PGSQLOpResult PGSQLDBHandler::QueryCompleteCallback() {
-	return PGSQLOpResult::Success;
-}
-
-PGSQLOpResult PGSQLDBHandler::QueryCamcelledCallback() {
+PGSQLOpResult PGSQLDBHandler::QueryCancelled() {
 	return PGSQLOpResult::Success;
 }
