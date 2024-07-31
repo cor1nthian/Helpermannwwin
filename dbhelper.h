@@ -128,15 +128,15 @@ class MSSQLDBHandler {
 			std::wstring *infoBuf = 0);
 		MSSQLOpResult ExecQuery(SQLHANDLE &queryID, std::vector<std::vector<std::wstring>> &results,
 			const std::wstring querystr, const SQLHANDLE dbHadle = 0,
-			std::wstring* infoBuf = 0);
+			std::wstring *infoBuf = 0);
 		MSSQLOpResult CancelQuery(const SQLHSTMT queryID = 0, const std::wstring query = L"",
-			std::wstring* infoBuf = 0);
+			std::wstring *infoBuf = 0);
 	protected:
 
 	private:
 		/*       FUNCTIONS       */
-		MSSQLOpResult QueryComplete(std::vector<std::vector<std::wstring>> &results, const SQLHSTMT queruHandle,
-			const std::wstring queryStr, std::wstring *infoBuf = 0);
+		MSSQLOpResult QueryComplete(std::vector<std::vector<std::wstring>> &results, const SQLHSTMT queruHandle = 0,
+			const std::wstring queryStr = L"", std::wstring *infoBuf = 0);
 		MSSQLOpResult QueryCancelled(std::wstring *infoBuf = 0);
 		MSSQLOpResult SQLInfoDetails(const SQLHANDLE handle, const short recordType, const short code,
 			wchar_t* &infoBuf, const size_t infoBufSz) const;
