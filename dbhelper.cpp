@@ -1057,14 +1057,18 @@ MSSQLOpResult MSSQLDBHandler::CancelQuery(const SQLHSTMT queryID, const std::wst
 }
 
 MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring>> &results,
-	const SQLHSTMT queruHandle, const std::wstring queryStr, std::wstring *infoBuf) {
-	MSSQLQuery* qptr = 0;
-	if (!queruHandle && !queryStr.length()) {
+	SQLHSTMT queryHandle, const std::wstring queryStr, std::wstring *infoBuf) {
+	if (!queryHandle && !queryStr.length()) {
 		return MSSQLOpResult::Fail;
 	}
-	if (queruHandle) {
+	MSSQLQuery* qptr = 0;
+	NEW_ARR_NULLIFY(errbuf, wchar_t, MSSQLMAXOUTBUF);
+	if (!errbuf) {
+		return MSSQLOpResult::Fail;
+	}
+	if (queryHandle) {
 		for (size_t i = 0; i < m_RunningQueries.size(); ++i) {
-			if (m_RunningQueries[i].QueryID == queruHandle) {
+			if (m_RunningQueries[i].QueryID == queryHandle) {
 				qptr = &(m_RunningQueries[i]);
 				break;
 			}
@@ -1079,6 +1083,104 @@ MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring
 		}
 	}
 	if (!qptr) {
+		SAFE_ARR_DELETE(errbuf);
+		return MSSQLOpResult::Fail;
+	}
+	short colNum = 0;
+	SQLLEN rowNum = 0;
+	short rc = ::SQLNumResultCols(qptr->QueryID, &colNum);
+	if (SQL_SUCCESS_WITH_INFO == rc) {
+		if (infoBuf) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+				return MSSQLOpResult::Fail;
+			}
+			*infoBuf = errbuf;
+		}
+	} else if (SQL_INVALID_HANDLE == rc) {
+		if (infoBuf) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+				return MSSQLOpResult::Fail;
+			}
+			*infoBuf = errbuf;
+		}
+		SAFE_ARR_DELETE(errbuf);
+		return MSSQLOpResult::Fail;
+	} else if (SQL_ERROR == rc) {
+		if (infoBuf) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+				return MSSQLOpResult::Fail;
+			}
+			*infoBuf = errbuf;
+		}
+		SAFE_ARR_DELETE(errbuf);
+		return MSSQLOpResult::Fail;
+	} else if (SQL_STILL_EXECUTING == rc) {
+		if (infoBuf) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+				return MSSQLOpResult::Fail;
+			}
+			*infoBuf = errbuf;
+		}
+		SAFE_ARR_DELETE(errbuf);
+		return MSSQLOpResult::Fail;
+	}
+	rc = ::SQLRowCount(qptr->QueryID, &rowNum);
+	if (SQL_SUCCESS_WITH_INFO == rc) {
+		if (infoBuf) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+				return MSSQLOpResult::Fail;
+			}
+			*infoBuf = errbuf;
+		}
+	} else if (SQL_INVALID_HANDLE == rc) {
+		if (infoBuf) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+				return MSSQLOpResult::Fail;
+			}
+			*infoBuf = errbuf;
+		}
+		SAFE_ARR_DELETE(errbuf);
+		return MSSQLOpResult::Fail;
+	} else if (SQL_ERROR == rc) {
+		if (infoBuf) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+				return MSSQLOpResult::Fail;
+			}
+			*infoBuf = errbuf;
+		}
+		SAFE_ARR_DELETE(errbuf);
+		return MSSQLOpResult::Fail;
+	}
+	if (colNum) {
+
+	} else {
+
+	}
+	rc = ::SQLFreeStmt(qptr->QueryID, SQL_CLOSE);
+	if (SQL_SUCCESS_WITH_INFO == rc) {
+		if (infoBuf) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+				return MSSQLOpResult::Fail;
+			}
+			*infoBuf = errbuf;
+		}
+	} else if (SQL_INVALID_HANDLE == rc) {
+		if (infoBuf) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+				return MSSQLOpResult::Fail;
+			}
+			*infoBuf = errbuf;
+		}
+		SAFE_ARR_DELETE(errbuf);
+		return MSSQLOpResult::Fail;
+	} else if (SQL_ERROR == rc) {
+		if (infoBuf) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+				return MSSQLOpResult::Fail;
+			}
+			*infoBuf = errbuf;
+		}
+		SAFE_ARR_DELETE(errbuf);
 		return MSSQLOpResult::Fail;
 	}
 	m_RunningQueries.erase(std::remove(m_RunningQueries.begin(), m_RunningQueries.end(), *qptr),

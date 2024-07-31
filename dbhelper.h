@@ -135,7 +135,7 @@ class MSSQLDBHandler {
 
 	private:
 		/*       FUNCTIONS       */
-		MSSQLOpResult QueryComplete(std::vector<std::vector<std::wstring>> &results, const SQLHSTMT queruHandle = 0,
+		MSSQLOpResult QueryComplete(std::vector<std::vector<std::wstring>> &results, SQLHSTMT queryHandle = 0,
 			const std::wstring queryStr = L"", std::wstring *infoBuf = 0);
 		MSSQLOpResult QueryCancelled(std::wstring *infoBuf = 0);
 		MSSQLOpResult SQLInfoDetails(const SQLHANDLE handle, const short recordType, const short code,
