@@ -1086,6 +1086,8 @@ MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring
 		SAFE_ARR_DELETE(errbuf);
 		return MSSQLOpResult::Fail;
 	}
+	results.front().clear();
+	results.clear();
 	short colNum = 0;
 	SQLLEN rowNum = 0;
 	short rc = ::SQLNumResultCols(qptr->QueryID, &colNum);
