@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "dbhelper.h"
 
 MSSQLOpResult getAvailableODBCDrivers(std::vector<std::wstring> &drivers, const bool includeAttrs) {
@@ -87,11 +88,7 @@ MSSQLOutBuf::MSSQLOutBuf(MSSQLOutBuf &&other) noexcept {
 	}
 }
 
-MSSQLOutBuf::~MSSQLOutBuf() {
-	if (OutBuf) {
-		SAFE_ARR_DELETE(OutBuf);
-	}
-}
+MSSQLOutBuf::~MSSQLOutBuf() {}
 
 MSSQLOutBuf& MSSQLOutBuf::operator=(const MSSQLOutBuf &other) {
 	if (this != &other) {
@@ -320,11 +317,11 @@ MSSQLOpResult MSSQLDBHandler::ConnectDB(SQLHANDLE &connID, const std::wstring se
 		return MSSQLOpResult::Fail;
 	}
 	std::wstring connRec = serverAddr;
-	if (dbName.length()) {
-		connRec = connRec + L"|" + dbName;
-	}
 	if (port.length()) {
 		connRec = connRec + L"|" + port;
+	}
+	if (dbName.length()) {
+		connRec = connRec + L"|" + dbName;
 	}
 	if (login.length()) {
 		connRec = connRec + L"|" + login;
@@ -339,7 +336,6 @@ MSSQLOpResult MSSQLDBHandler::ConnectDB(SQLHANDLE &connID, const std::wstring se
 	}
 	SQLHENV hEnv = 0;
 	SQLHDBC hDbc = 0;
-	SQLHSTMT hStmt = 0;
 	short rc = 0;
 	NEW_ARR_NULLIFY(errbuf, wchar_t, MSSQLMAXOUTBUF);
 	if (!errbuf) {
@@ -466,7 +462,10 @@ MSSQLOpResult MSSQLDBHandler::ConnectDB(SQLHANDLE &connID, const std::wstring se
 			sqlDriver = defaultDriver;
 		}
 	}
-	std::wstring connLine = L"DRIVER={" + sqlDriver + L"};SERVER=" + serverAddr + L"," + port;
+	std::wstring connLine = L"DRIVER={" + sqlDriver + L"};SERVER=" + serverAddr;
+	if (port.length()) {
+		connLine = connLine + L"," + port;
+	}
 	if (dbName.length()) {
 		connLine = connLine + L";DATABASE=" + dbName;
 	}
@@ -533,8 +532,193 @@ MSSQLOpResult MSSQLDBHandler::ConnectDB(SQLHANDLE &connID, const std::wstring se
 	}
 }
 
-MSSQLOpResult MSSQLDBHandler::DisconnectDB(const SQLHANDLE connDBID, const std::wstring serverAddr) {
+MSSQLOpResult MSSQLDBHandler::ConnectDBWConnLine(SQLHANDLE& connID, const std::wstring connLine, std::wstring *infoBuf) {
+	short rc = 0;
+	NEW_ARR_NULLIFY(errbuf, wchar_t, MSSQLMAXOUTBUF);
+	if (!errbuf) {
+		return MSSQLOpResult::Fail;
+	}
+	if (!m_hEnv) {
+		rc = ::SQLAllocHandle(SQL_HANDLE_ENV, 0, &m_hEnv);
+		if (SQL_SUCCESS != rc) {
+			if (SQL_SUCCESS_WITH_INFO == rc) {
+				if (infoBuf) {
+					if (MSSQLOpResult::Success != SQLInfoDetails(m_hEnv, SQL_HANDLE_ENV, rc, errbuf, MSSQLMAXOUTBUF)) {
+						return MSSQLOpResult::Fail;
+					}
+					*infoBuf = errbuf;
+				}
+			} else if (SQL_INVALID_HANDLE == rc) {
+				if (infoBuf) {
+					if (MSSQLOpResult::Success != SQLInfoDetails(m_hEnv, SQL_HANDLE_ENV, rc, errbuf, MSSQLMAXOUTBUF)) {
+						return MSSQLOpResult::Fail;
+					}
+					*infoBuf = errbuf;
+				}
+				SAFE_ARR_DELETE(errbuf);
+				return MSSQLOpResult::Fail;
+			} else if (SQL_ERROR == rc) {
+				if (infoBuf) {
+					if (MSSQLOpResult::Success != SQLInfoDetails(m_hEnv, SQL_HANDLE_ENV, rc, errbuf, MSSQLMAXOUTBUF)) {
+						return MSSQLOpResult::Fail;
+					}
+					*infoBuf = errbuf;
+				}
+				SAFE_ARR_DELETE(errbuf);
+				return MSSQLOpResult::Fail;
+			}
+		}
+		rc = ::SQLSetEnvAttr(m_hEnv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
+		if (SQL_SUCCESS != rc) {
+			if (SQL_SUCCESS_WITH_INFO == rc) {
+				if (infoBuf) {
+					if (MSSQLOpResult::Success != SQLInfoDetails(m_hEnv, SQL_HANDLE_ENV, rc, errbuf, MSSQLMAXOUTBUF)) {
+						return MSSQLOpResult::Fail;
+					}
+					*infoBuf = errbuf;
+				}
+			} else if (SQL_INVALID_HANDLE == rc) {
+				if (infoBuf) {
+					if (MSSQLOpResult::Success != SQLInfoDetails(m_hEnv, SQL_HANDLE_ENV, rc, errbuf, MSSQLMAXOUTBUF)) {
+						return MSSQLOpResult::Fail;
+					}
+					*infoBuf = errbuf;
+				}
+				SAFE_ARR_DELETE(errbuf);
+				return MSSQLOpResult::Fail;
+			} else if (SQL_ERROR == rc) {
+				if (infoBuf) {
+					if (MSSQLOpResult::Success != SQLInfoDetails(m_hEnv, SQL_HANDLE_ENV, rc, errbuf, MSSQLMAXOUTBUF)) {
+						return MSSQLOpResult::Fail;
+					}
+					*infoBuf = errbuf;
+				}
+				SAFE_ARR_DELETE(errbuf);
+				return MSSQLOpResult::Fail;
+			}
+		}
+	}
+	SQLHDBC hDbc = 0;
+	rc = ::SQLAllocHandle(SQL_HANDLE_DBC, m_hEnv, &hDbc);
+	if (SQL_SUCCESS != rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hDbc, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+		} else if (SQL_INVALID_HANDLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hDbc, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hDbc, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		}
+	}
+	size_t poss = connLine.find(L"SERVER="), pose = std::wstring::npos;
+	std::wstring connRec, connLineSub;
+	std::vector<std::wstring> connLnSpl;
+	if (std::wstring::npos != poss) {
+		poss += 7;
+		pose = connLine.find(L";", poss);
+		if (std::wstring::npos != pose) {
+			connLineSub = connLine.substr(poss, pose - poss);
+		}
+		if (std::wstring::npos != connLineSub.find(L",")) {
+			connLnSpl = splitStr(connLineSub, L",");
+			connRec = connLnSpl[0] + L"|" + connLnSpl[1] + L"|";
+		} else {
+			connRec = connLineSub + L"|";
+		}
+	}
+	poss = connLine.find(L"DATABASE=");
+	if (std::wstring::npos != poss) {
+		poss += 9;
+		pose = connLine.find(L";", poss);
+		if (std::wstring::npos != pose) {
+			connLineSub = connLine.substr(poss, pose - poss);
+			connRec = connRec + connLineSub;
+		}
+	}
+	poss = connLine.find(L"UID=");
+	if (std::wstring::npos != poss) {
+		poss += 4;
+		pose = connLine.find(L";", poss);
+		if (std::wstring::npos != pose) {
+			connLineSub = connLine.substr(poss, pose - poss);
+			connRec = connRec + connLineSub;
+		}
+	} else {
+		connRec = connRec + L"|Trusted";
+	}
+	MSSQLOutBuf buf;
+	buf.OutBufSz = MSSQLMAXOUTBUF;
+	NEW_ARR_NULLIFY_NO_REDEFINE(buf.OutBuf, wchar_t, buf.OutBufSz);
+	if (!buf.OutBuf) {
+		SAFE_ARR_DELETE(errbuf);
+		return MSSQLOpResult::Fail;
+	}
+	unsigned char connres = 0;
+	rc = ::SQLDriverConnect(hDbc, 0, (SQLWCHAR*)connLine.c_str(), SQL_NTS, buf.OutBuf, buf.OutBufSz, 0,
+		SQL_DRIVER_NOPROMPT);
+	if (SQL_SUCCESS != rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hDbc, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+		} else if (SQL_INVALID_HANDLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hDbc, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			connres = 1;
+		} else if (SQL_ERROR == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hDbc, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			connres = 2;
+		}
+	}
+	connID = hDbc;
+	m_ConnectedDBs[hDbc] = connRec;
+	m_OutBuffers[hDbc] = buf;
+	SAFE_ARR_DELETE(errbuf);
+	if (!connres) {
+		return MSSQLOpResult::Success;
+	} else {
+		return MSSQLOpResult::Fail;
+	}
+}
+
+MSSQLOpResult MSSQLDBHandler::DisconnectDB(const SQLHANDLE connDBID, const std::wstring serverAddr,
+	std::wstring *infoBuf) {
+	NEW_ARR_NULLIFY(errbuf, wchar_t, MSSQLMAXOUTBUF);
+	if (!errbuf) {
+		return MSSQLOpResult::Fail;
+	}
 	if (!connDBID && !serverAddr.length()) {
+		SAFE_ARR_DELETE(errbuf);
 		return MSSQLOpResult::Fail;
 	}
 	SQLHANDLE dbID = 0;
@@ -542,6 +726,7 @@ MSSQLOpResult MSSQLDBHandler::DisconnectDB(const SQLHANDLE connDBID, const std::
 		std::map<SQLHANDLE, std::wstring>::iterator it;
 		it = m_ConnectedDBs.find(connDBID);
 		if (m_ConnectedDBs.end() == it) {
+			SAFE_ARR_DELETE(errbuf);
 			return MSSQLOpResult::Fail;
 		}
 		dbID = it->first;
@@ -555,45 +740,268 @@ MSSQLOpResult MSSQLDBHandler::DisconnectDB(const SQLHANDLE connDBID, const std::
 			}
 		}
 		if (fl) {
+			SAFE_ARR_DELETE(errbuf);
 			return MSSQLOpResult::Fail;
 		}
 	}
 	short rc = ::SQLDisconnect(dbID);
 	if (SQL_SUCCESS != rc) {
 		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(dbID, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
 		} else if (SQL_INVALID_HANDLE == rc) {
-			return MSSQLOpResult::Fail;
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(dbID, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
 		} else if (SQL_ERROR == rc) {
-			return MSSQLOpResult::Fail;
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(dbID, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
 		} else if (SQL_STILL_EXECUTING == rc) {
-			return MSSQLOpResult::Fail;
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(dbID, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
 		}
 		
+	}
+	if (m_OutBuffers[dbID].OutBuf) {
+		SAFE_ARR_DELETE(m_OutBuffers[dbID].OutBuf);
 	}
 	m_OutBuffers.erase(dbID);
 	m_ConnectedDBs.erase(dbID);
 	rc = ::SQLFreeHandle(SQL_HANDLE_DBC, dbID);
 	if (SQL_SUCCESS != rc) {
 		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(dbID, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
 		} else if (SQL_INVALID_HANDLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(dbID, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
 			return MSSQLOpResult::Fail;
 		} else if (SQL_ERROR == rc) {
-			return MSSQLOpResult::Fail;
-		} else if (SQL_STILL_EXECUTING == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(dbID, SQL_HANDLE_DBC, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
 			return MSSQLOpResult::Fail;
 		}
 	}
+	SAFE_ARR_DELETE(errbuf);
 	return MSSQLOpResult::Success;
 }
 
-MSSQLOpResult MSSQLDBHandler::ExecQuery(const SQLHANDLE &queryID, const std::wstring querystr) {
-	if (!querystr.length()) {
+MSSQLOpResult MSSQLDBHandler::ExecQuery(SQLHANDLE &queryID, std::vector<std::vector<std::wstring>> &results,
+	const std::wstring querystr, const SQLHANDLE dbHadle,
+	std::wstring *infoBuf) {
+	if (!dbHadle || !querystr.length()) {
 		return MSSQLOpResult::Fail;
 	}
-	return QueryComplete();
+	short rc = 0;
+	NEW_ARR_NULLIFY(errbuf, wchar_t, MSSQLMAXOUTBUF);
+	if (!errbuf) {
+		return MSSQLOpResult::Fail;
+	}
+	SQLHSTMT hStmt = 0;
+	rc = ::SQLAllocHandle(SQL_HANDLE_STMT, dbHadle, &hStmt);
+	if (SQL_SUCCESS != rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+		} else if (SQL_INVALID_HANDLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		}
+	}
+	long stmtBufSz = 1.1 * wcslen_c(querystr.c_str());
+	NEW_ARR_NULLIFY(stmtBuf, wchar_t, stmtBufSz);
+	if (!stmtBuf) {
+		SAFE_ARR_DELETE(errbuf);
+		return MSSQLOpResult::Fail;
+	}
+	wsprintf(stmtBuf, L"%s", querystr.c_str());
+	rc = ::SQLPrepare(hStmt, stmtBuf, stmtBufSz);
+	if (SQL_SUCCESS != rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+		} else if (SQL_INVALID_HANDLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(stmtBuf);
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(stmtBuf);
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_STILL_EXECUTING == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(stmtBuf);
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		}
+	}
+	rc = ::SQLExecDirect(hStmt, stmtBuf, stmtBufSz);
+	if (SQL_SUCCESS != rc) {
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+		} else if (SQL_INVALID_HANDLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(stmtBuf);
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(stmtBuf);
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_STILL_EXECUTING == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(stmtBuf);
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_NEED_DATA == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(stmtBuf);
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_NEED_DATA == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(stmtBuf);
+			SAFE_ARR_DELETE(errbuf);
+		} else if (SQL_NO_DATA == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(stmtBuf);
+			SAFE_ARR_DELETE(errbuf);
+		} else if (SQL_PARAM_DATA_AVAILABLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(hStmt, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(stmtBuf);
+			SAFE_ARR_DELETE(errbuf);
+		}
+	}
+	queryID = hStmt;
+	MSSQLQuery tquery;
+	tquery.DBID = dbHadle;
+	tquery.QueryID = hStmt;
+	tquery.QueryStr = querystr;
+	m_RunningQueries.push_back(tquery);
+	SAFE_ARR_DELETE(stmtBuf);
+	SAFE_ARR_DELETE(errbuf);
+	return QueryComplete(results, hStmt, querystr, infoBuf);
 }
 
-MSSQLOpResult MSSQLDBHandler::CancelQuery(const SQLHSTMT queryID, const std::wstring querystr) {
+MSSQLOpResult MSSQLDBHandler::CancelQuery(const SQLHSTMT queryID, const std::wstring querystr,
+	std::wstring *infoBuf) {
+	NEW_ARR_NULLIFY(errbuf, wchar_t, MSSQLMAXOUTBUF);
+	if (!errbuf) {
+		return MSSQLOpResult::Fail;
+	}
 	SQLHSTMT qryID = 0;
 	if (!queryID && !querystr.length()) {
 		return MSSQLOpResult::Fail;
@@ -620,9 +1028,27 @@ MSSQLOpResult MSSQLDBHandler::CancelQuery(const SQLHSTMT queryID, const std::wst
 	short rc = ::SQLCancel(qryID);
 	if (SQL_SUCCESS != rc) {
 		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(qryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
 		} else if (SQL_INVALID_HANDLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(qryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
 			return MSSQLOpResult::Fail;
 		} else if (SQL_ERROR == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(qryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
 			return MSSQLOpResult::Fail;
 		}
 
@@ -630,11 +1056,37 @@ MSSQLOpResult MSSQLDBHandler::CancelQuery(const SQLHSTMT queryID, const std::wst
 	return QueryCancelled();
 }
 
-MSSQLOpResult MSSQLDBHandler::QueryComplete() {
+MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring>> &results,
+	const SQLHSTMT queruHandle, const std::wstring queryStr, std::wstring *infoBuf) {
+	MSSQLQuery* qptr = 0;
+	if (!queruHandle && !queryStr.length()) {
+		return MSSQLOpResult::Fail;
+	}
+	if (queruHandle) {
+		for (size_t i = 0; i < m_RunningQueries.size(); ++i) {
+			if (m_RunningQueries[i].QueryID == queruHandle) {
+				qptr = &(m_RunningQueries[i]);
+				break;
+			}
+		}
+	} else {
+		std::wstring qlow = lower_copy(queryStr);
+		for (size_t i = 0; i < m_RunningQueries.size(); ++i) {
+			if (lower_copy(m_RunningQueries[i].QueryStr) == qlow) {
+				qptr = &(m_RunningQueries[i]);
+				break;
+			}
+		}
+	}
+	if (!qptr) {
+		return MSSQLOpResult::Fail;
+	}
+	m_RunningQueries.erase(std::remove(m_RunningQueries.begin(), m_RunningQueries.end(), *qptr),
+		m_RunningQueries.end());
 	return MSSQLOpResult::Success;
 }
 
-MSSQLOpResult MSSQLDBHandler::QueryCancelled() {
+MSSQLOpResult MSSQLDBHandler::QueryCancelled(std::wstring *infoBuf) {
 	return MSSQLOpResult::Success;
 }
 
@@ -660,7 +1112,7 @@ MSSQLOpResult MSSQLDBHandler::SQLInfoDetails(const SQLHANDLE handle, const short
 		wszState,
 		&iError,
 		wszMessage,
-		(short)(sizeof(wszMessage) / sizeof(WCHAR)), 0)) {
+		(short)(sizeof(wszMessage) / sizeof(wchar_t)), 0)) {
 		// Hide data truncated..
 		if (wcsncmp(wszState, L"01004", 5)) {
 			wsprintf(infoBuf, L"[%5.5s] %s (%d)\n", wszState, wszMessage, iError);

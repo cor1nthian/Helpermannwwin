@@ -123,15 +123,21 @@ class MSSQLDBHandler {
 			const MSSQLDriverPreference driverPref = MSSQLDriverPreference::SQLServer,
 			const std::wstring defaultDriver = L"", /* L"SQL Server Native Client RDA 11.0", */
 			const unsigned long connOutBufLen = MSSQLMAXOUTBUF);
-		MSSQLOpResult DisconnectDB(const SQLHANDLE connDBID = 0, const std::wstring serverAddr = L"");
-		MSSQLOpResult ExecQuery(const SQLHANDLE &queryID, const std::wstring query);
-		MSSQLOpResult CancelQuery(const SQLHSTMT queryID = 0, const std::wstring query = L"");
+		MSSQLOpResult ConnectDBWConnLine(SQLHANDLE &connID, const std::wstring connLine, std::wstring *infoBuf = 0);
+		MSSQLOpResult DisconnectDB(const SQLHANDLE connDBID = 0, const std::wstring serverAddr = L"",
+			std::wstring *infoBuf = 0);
+		MSSQLOpResult ExecQuery(SQLHANDLE &queryID, std::vector<std::vector<std::wstring>> &results,
+			const std::wstring querystr, const SQLHANDLE dbHadle = 0,
+			std::wstring* infoBuf = 0);
+		MSSQLOpResult CancelQuery(const SQLHSTMT queryID = 0, const std::wstring query = L"",
+			std::wstring* infoBuf = 0);
 	protected:
 
 	private:
 		/*       FUNCTIONS       */
-		MSSQLOpResult QueryComplete();
-		MSSQLOpResult QueryCancelled();
+		MSSQLOpResult QueryComplete(std::vector<std::vector<std::wstring>> &results, const SQLHSTMT queruHandle,
+			const std::wstring queryStr, std::wstring *infoBuf = 0);
+		MSSQLOpResult QueryCancelled(std::wstring *infoBuf = 0);
 		MSSQLOpResult SQLInfoDetails(const SQLHANDLE handle, const short recordType, const short code,
 			wchar_t* &infoBuf, const size_t infoBufSz) const;
 		/*       VARIABLES       */
