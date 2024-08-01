@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
-// Common Defines
+// Macro Defines
 
 // malloc with ease
 #define MALLOC_NULLIFY(x, type, sz) type* x = (type*)malloc(sz); if(x) { *x = { 0 }; }
@@ -48,9 +48,21 @@
 // can be used for unsigned long long or double (8-byte types)
 #define BYTESWAP64(n) ((BYTESWAP32((n&0xFFFFFFFF00000000)>>32))|((BYTESWAP32(n&0x00000000FFFFFFFF))<<32))
 
+#define MAX(a,b)            (((a) > (b)) ? (a) : (b))
+#define MIN(a,b)            (((a) < (b)) ? (a) : (b))
+
+#define MAKEWORD(a, b)      ((WORD)(((BYTE)(((DWORD_PTR)(a)) & 0xFF)) | ((WORD)((BYTE)(((DWORD_PTR)(b)) & 0xFF))) << 8))
+#define MAKELONG(a, b)      ((LONG)(((WORD)(((DWORD_PTR)(a)) & 0xFFFF)) | ((DWORD)((WORD)(((DWORD_PTR)(b)) & 0xFFFF))) << 16))
+#define LOWORD(l)           ((WORD)(((DWORD_PTR)(l)) & 0xFFFF))
+#define HIWORD(l)           ((WORD)((((DWORD_PTR)(l)) >> 16) & 0xFFFF))
+#define LOBYTE(w)           ((BYTE)(((DWORD_PTR)(w)) & 0xFF))
+#define HIBYTE(w)           ((BYTE)((((DWORD_PTR)(w)) >> 8) & 0xFF))
+
 // Disable warnings
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
+
+// Common Defines
 
 // Libs
 #if defined(_WIN32) || defined(_WIN64)
@@ -72,9 +84,10 @@
 
 // max database connections
 #define MSSQLMAXCONN		64
-// max connection ou buffer size, characters
+#define MSSQLDISPLAYMAX		64
+// max connection out buffer size, characters
 #define MSSQLMAXOUTBUF		2048
-// min connection ou buffer size, characters
+// min connection out buffer size, characters
 #define MSSQLMINOUTBUF		1024
 #define MSSQLCONNTOOMANY	-1
 #endif

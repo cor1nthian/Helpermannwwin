@@ -74,6 +74,22 @@ const std::map<MSSQLDriverType, std::wstring> const gc_SQLDriverType = {
 
 MSSQLOpResult getAvailableODBCDrivers(std::vector<std::wstring> &drivers, const bool includeAttrs = false);
 
+struct MSSQLBinding {
+	MSSQLBinding();
+	MSSQLBinding(const MSSQLBinding &other);
+	MSSQLBinding(MSSQLBinding &&other) noexcept;
+	~MSSQLBinding();
+	MSSQLBinding& operator=(const MSSQLBinding &other);
+	MSSQLBinding& operator=(MSSQLBinding &&other) noexcept;
+	bool operator==(const MSSQLBinding &other) const;
+	bool operator!=(const MSSQLBinding &other) const;
+	short			cDisplaySize;	/* size to display  */
+	wchar_t*		wszBuffer;		/* display buffer   */
+	long long		indPtr;			/* size or null     */
+	BOOL			fChar;			/* character col?   */
+	MSSQLBinding	*sNext;			/* linked list      */
+};
+
 struct MSSQLOutBuf {
 	MSSQLOutBuf();
 	MSSQLOutBuf(const size_t outbufsz);
@@ -138,6 +154,8 @@ class MSSQLDBHandler {
 		MSSQLOpResult QueryComplete(std::vector<std::vector<std::wstring>> &results, SQLHSTMT queryHandle = 0,
 			const std::wstring queryStr = L"", std::wstring *infoBuf = 0);
 		MSSQLOpResult QueryCancelled(std::wstring *infoBuf = 0);
+		MSSQLOpResult SQLAllocateBindings(const SQLHSTMT queryHnadle, const short colNum, MSSQLBinding **binding,
+			short *display, std::wstring *infoBuf = 0) const;
 		MSSQLOpResult SQLInfoDetails(const SQLHANDLE handle, const short recordType, const short code,
 			wchar_t* &infoBuf, const size_t infoBufSz) const;
 		/*       VARIABLES       */

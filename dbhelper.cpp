@@ -48,6 +48,94 @@ MSSQLOpResult getAvailableODBCDrivers(std::vector<std::wstring> &drivers, const 
 	return MSSQLOpResult::Success;
 }
 
+MSSQLBinding::MSSQLBinding() {
+	cDisplaySize = 0;
+	wszBuffer = 0;
+	indPtr = 0;
+	fChar = false;
+	sNext = 0;
+}
+
+MSSQLBinding::MSSQLBinding(const MSSQLBinding& other) {
+	if (this != &other) {
+		cDisplaySize = other.cDisplaySize;
+		wszBuffer = other.wszBuffer;
+		indPtr = other.indPtr;
+		fChar = other.fChar;
+		sNext = other.sNext;
+	}
+}
+
+MSSQLBinding::MSSQLBinding(MSSQLBinding &&other) noexcept {
+	if (this != &other) {
+		cDisplaySize = other.cDisplaySize;
+		other.cDisplaySize = 0;
+		wszBuffer = other.wszBuffer;
+		other.cDisplaySize = 0;
+		indPtr = other.indPtr;
+		other.indPtr = 0;
+		fChar = other.fChar;
+		other.fChar = false;
+		sNext = other.sNext;
+		other.sNext = 0;
+	}
+}
+
+MSSQLBinding::~MSSQLBinding() {
+
+}
+
+MSSQLBinding& MSSQLBinding::operator=(const MSSQLBinding &other) {
+	if (this != &other) {
+		cDisplaySize = other.cDisplaySize;
+		wszBuffer = other.wszBuffer;
+		indPtr = other.indPtr;
+		fChar = other.fChar;
+		sNext = other.sNext;
+	}
+	return *this;
+}
+
+MSSQLBinding& MSSQLBinding::operator=(MSSQLBinding &&other) noexcept {
+	if (this != &other) {
+		cDisplaySize = other.cDisplaySize;
+		other.cDisplaySize = 0;
+		wszBuffer = other.wszBuffer;
+		other.cDisplaySize = 0;
+		indPtr = other.indPtr;
+		other.indPtr = 0;
+		fChar = other.fChar;
+		other.fChar = false;
+		sNext = other.sNext;
+		other.sNext = 0;
+	}
+	return *this;
+}
+
+bool MSSQLBinding::operator==(const MSSQLBinding &other) const {
+	if (this != &other) {
+		return (cDisplaySize == other.cDisplaySize &&
+				wszBuffer == other.wszBuffer &&
+				indPtr == other.indPtr &&
+				fChar == other.fChar &&
+				sNext == other.sNext);
+	} else {
+		return true;
+	}
+}
+
+bool MSSQLBinding::operator!=(const MSSQLBinding &other) const {
+	if (this != &other) {
+		return (cDisplaySize != other.cDisplaySize ||
+				wszBuffer != other.wszBuffer ||
+				indPtr != other.indPtr ||
+				fChar != other.fChar ||
+				sNext != other.sNext);
+	} else {
+		return false;
+	}
+}
+
 MSSQLOutBuf::MSSQLOutBuf() {
 	OutBuf = 0;
 	OutBufSz = 0;
@@ -1088,19 +1176,20 @@ MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring
 	}
 	results.front().clear();
 	results.clear();
+	size_t i = 0;
 	short colNum = 0;
 	SQLLEN rowNum = 0;
 	short rc = ::SQLNumResultCols(qptr->QueryID, &colNum);
 	if (SQL_SUCCESS_WITH_INFO == rc) {
 		if (infoBuf) {
-			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(qptr->QueryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
 				return MSSQLOpResult::Fail;
 			}
 			*infoBuf = errbuf;
 		}
 	} else if (SQL_INVALID_HANDLE == rc) {
 		if (infoBuf) {
-			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(qptr->QueryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
 				return MSSQLOpResult::Fail;
 			}
 			*infoBuf = errbuf;
@@ -1109,7 +1198,7 @@ MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring
 		return MSSQLOpResult::Fail;
 	} else if (SQL_ERROR == rc) {
 		if (infoBuf) {
-			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(qptr->QueryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
 				return MSSQLOpResult::Fail;
 			}
 			*infoBuf = errbuf;
@@ -1118,7 +1207,7 @@ MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring
 		return MSSQLOpResult::Fail;
 	} else if (SQL_STILL_EXECUTING == rc) {
 		if (infoBuf) {
-			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(qptr->QueryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
 				return MSSQLOpResult::Fail;
 			}
 			*infoBuf = errbuf;
@@ -1129,14 +1218,14 @@ MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring
 	rc = ::SQLRowCount(qptr->QueryID, &rowNum);
 	if (SQL_SUCCESS_WITH_INFO == rc) {
 		if (infoBuf) {
-			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(qptr->QueryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
 				return MSSQLOpResult::Fail;
 			}
 			*infoBuf = errbuf;
 		}
 	} else if (SQL_INVALID_HANDLE == rc) {
 		if (infoBuf) {
-			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(qptr->QueryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
 				return MSSQLOpResult::Fail;
 			}
 			*infoBuf = errbuf;
@@ -1145,7 +1234,7 @@ MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring
 		return MSSQLOpResult::Fail;
 	} else if (SQL_ERROR == rc) {
 		if (infoBuf) {
-			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(qptr->QueryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
 				return MSSQLOpResult::Fail;
 			}
 			*infoBuf = errbuf;
@@ -1156,19 +1245,21 @@ MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring
 	if (colNum) {
 
 	} else {
+		for (i = 0; i < rowNum; ++i) {
 
+		}
 	}
 	rc = ::SQLFreeStmt(qptr->QueryID, SQL_CLOSE);
 	if (SQL_SUCCESS_WITH_INFO == rc) {
 		if (infoBuf) {
-			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(qptr->QueryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
 				return MSSQLOpResult::Fail;
 			}
 			*infoBuf = errbuf;
 		}
 	} else if (SQL_INVALID_HANDLE == rc) {
 		if (infoBuf) {
-			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(qptr->QueryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
 				return MSSQLOpResult::Fail;
 			}
 			*infoBuf = errbuf;
@@ -1177,7 +1268,7 @@ MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring
 		return MSSQLOpResult::Fail;
 	} else if (SQL_ERROR == rc) {
 		if (infoBuf) {
-			if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+			if (MSSQLOpResult::Success != SQLInfoDetails(qptr->QueryID, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
 				return MSSQLOpResult::Fail;
 			}
 			*infoBuf = errbuf;
@@ -1191,6 +1282,178 @@ MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring
 }
 
 MSSQLOpResult MSSQLDBHandler::QueryCancelled(std::wstring *infoBuf) {
+	return MSSQLOpResult::Success;
+}
+
+MSSQLOpResult MSSQLDBHandler::SQLAllocateBindings(const SQLHSTMT queryHnadle,
+	const short colNum, MSSQLBinding **binding, short *display, std::wstring *infoBuf) const {
+	NEW_ARR_NULLIFY(errbuf, wchar_t, MSSQLMAXOUTBUF);
+	if (!errbuf) {
+		return MSSQLOpResult::Fail;
+	}
+	short iCol = 0, cchColumnNameLength = 0, rc = 0;
+	long long cchDisplay = 0, ssType = 0;
+	MSSQLBinding* pThisBinding, * pLastBinding = NULL;
+	*display = 0;
+	for (iCol = 1; iCol <= colNum; ++iCol) {
+		pThisBinding = (MSSQLBinding*)(malloc(sizeof(MSSQLBinding)));
+		if (!(pThisBinding)) {
+			return MSSQLOpResult::Fail;
+		}
+		if (iCol == 1) {
+			*binding = pThisBinding;
+		} else {
+			pLastBinding->sNext = pThisBinding;
+		}
+		pLastBinding = pThisBinding;
+		rc = ::SQLColAttribute(queryHnadle, iCol, SQL_DESC_DISPLAY_SIZE, 0, 0, 0, &cchDisplay);
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+		} else if (SQL_INVALID_HANDLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_STILL_EXECUTING == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		}
+		rc = ::SQLColAttribute(queryHnadle, iCol, SQL_DESC_CONCISE_TYPE, 0, 0, 0, &ssType);
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+		} else if (SQL_INVALID_HANDLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_STILL_EXECUTING == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		}
+		pThisBinding->fChar = (ssType == SQL_CHAR || ssType == SQL_VARCHAR || ssType == SQL_LONGVARCHAR);
+		pThisBinding->sNext = 0;
+		if (cchDisplay > MSSQLDISPLAYMAX) {
+			cchDisplay = MSSQLDISPLAYMAX;
+		}
+		NEW_ARR_NULLIFY_NO_REDEFINE(pThisBinding->wszBuffer, wchar_t, (cchDisplay + 1));
+		if (!(pThisBinding->wszBuffer)) {
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		}
+		rc = ::SQLBindCol(queryHnadle, iCol, SQL_C_TCHAR, (SQLPOINTER)pThisBinding->wszBuffer,
+			(cchDisplay + 1) * sizeof(WCHAR), &pThisBinding->indPtr);
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+		} else if (SQL_INVALID_HANDLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		}
+		rc = ::SQLColAttribute(queryHnadle, iCol, SQL_DESC_NAME, 0, 0, &cchColumnNameLength, 0);
+		if (SQL_SUCCESS_WITH_INFO == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+		} else if (SQL_INVALID_HANDLE == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		} else if (SQL_STILL_EXECUTING == rc) {
+			if (infoBuf) {
+				if (MSSQLOpResult::Success != SQLInfoDetails(queryHnadle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errbuf;
+			}
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
+		}
+
+	}
 	return MSSQLOpResult::Success;
 }
 
