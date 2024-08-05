@@ -154,8 +154,10 @@ class MSSQLDBHandler {
 		MSSQLOpResult QueryComplete(std::vector<std::vector<std::wstring>> &results, SQLHSTMT queryHandle = 0,
 			const std::wstring queryStr = L"", std::wstring *infoBuf = 0);
 		MSSQLOpResult QueryCancelled(std::wstring *infoBuf = 0);
-		MSSQLOpResult SQLAllocateBindings(const SQLHSTMT queryHnadle, const short colNum, MSSQLBinding **binding,
+		MSSQLOpResult SQLAllocateBindings(const SQLHSTMT queryHandle, const short colNum, MSSQLBinding **binding,
 			short *display, std::wstring *infoBuf = 0) const;
+		MSSQLOpResult SQLGetTitles(std::vector<std::vector<std::wstring>> &results, const SQLHSTMT queryHandle,
+			unsigned long displaySize, MSSQLBinding* binding, std::wstring* infoBuf = 0);
 		MSSQLOpResult SQLInfoDetails(const SQLHANDLE handle, const short recordType, const short code,
 			wchar_t* &infoBuf, const size_t infoBufSz) const;
 		/*       VARIABLES       */

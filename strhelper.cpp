@@ -163,10 +163,11 @@ char* replaceChars(const char* source, const char* replaceWhat, const char* repl
             return 0;
         }
     }
-    size_t copyMark = 0, newBufSz = 0, i = 0;
-    for (i = 0; i < srcLen - replaceWhatLen; ++i) {
+    size_t copyMark = 0, newBufSz = 0, stopMark = (srcLen - replaceWhatLen), i = 0;
+    for (i = 0; i < stopMark; ++i) {
         if (!memcmp(&source[i], replaceWhat, replaceWhatLen * sizeof(char))) {
             newBufSz += replaceWithLen;
+            i += replaceWithLen;
         } else {
             ++newBufSz;
         }
@@ -177,10 +178,10 @@ char* replaceChars(const char* source, const char* replaceWhat, const char* repl
     }
     for (i = 0; i < srcLen; ++i) {
         if (memcmp(&source[i], replaceWhat, replaceWhatLen * sizeof(char))) {
-            memcpy(&newBuf[copyMark], &source[i], sizeof(char));
+            sprintf(&newBuf[copyMark], "%s", &source[i]);
             copyMark += 1;
         } else {
-            memcpy(&newBuf[copyMark], replaceWith, replaceWithLen * sizeof(char));
+            sprintf(&newBuf[copyMark], "%s", replaceWith);
             copyMark += replaceWithLen;
             i += replaceWhatLen - 1;
         }
@@ -202,8 +203,8 @@ wchar_t* replaceChars(const wchar_t* source, const wchar_t* replaceWhat,
     } else {
         replaceWhatLen = wcslen_c(replaceWhat);
     }
-    if (replaceWithLen) {
-        replaceWithLen = replaceWithLen;
+    if (replacewithlen) {
+        replaceWithLen = replacewithlen;
     } else {
         replaceWithLen = wcslen_c(replaceWith);
     }
@@ -220,10 +221,11 @@ wchar_t* replaceChars(const wchar_t* source, const wchar_t* replaceWhat,
             return 0;
         }
     }
-    size_t copyMark = 0, newBufSz = 0, i = 0;
-    for (i = 0; i < srcLen - replaceWhatLen; ++i) {
+    size_t copyMark = 0, newBufSz = 0, stopMark = (srcLen - replaceWhatLen), i = 0;
+    for (i = 0; i < stopMark; ++i) {
         if (!memcmp(&source[i], replaceWhat, replaceWhatLen * sizeof(wchar_t))) {
             newBufSz += replaceWithLen;
+            i += replaceWithLen;
         } else {
             ++newBufSz;
         }
@@ -232,12 +234,13 @@ wchar_t* replaceChars(const wchar_t* source, const wchar_t* replaceWhat,
     if (!newBuf) {
         return 0;
     }
+    memset(newBuf, 0, newBufSz * sizeof(wchar_t));
     for (i = 0; i < srcLen; ++i) {
         if (memcmp(&source[i], replaceWhat, replaceWhatLen * sizeof(wchar_t))) {
-            memcpy(&newBuf[copyMark], &source[i], sizeof(wchar_t));
+            wsprintf(&newBuf[copyMark], L"%s", &source[i]);
             copyMark += 1;
         } else {
-            memcpy(&newBuf[copyMark], replaceWith, replaceWithLen * sizeof(wchar_t));
+            wsprintf(&newBuf[copyMark], L"%s", replaceWith);
             copyMark += replaceWithLen;
             i += replaceWhatLen - 1;
         }

@@ -2,42 +2,43 @@
 #define _FS_HELPER_H
 
 /*       In loving memory of @pixo $oft       */
-#define WIN32_LEAN_AND_MEAN
-#define NOGDICAPMASKS
-#define NOVIRTUALKEYCODES
-#define NOSYSMETRICS
-#define NOMENUS
-#define NOICONS
-#define NOKEYSTATES
-#define NOSYSCOMMANDS
-#define NORASTEROPS
-#define NOATOM
-#define NOCLIPBOARD
-#define NOCOLOR
-#define NOKERNEL
-#define NOMEMMGR
-#define NOOPENFILE
-#define NOSCROLL
-#define NOSERVICE
-#define NOSOUND
-#define NOTEXTMETRIC
-#define NOWINOFFSETS
-#define NOCOMM
-#define NOKANJI
-#define NOHELP
-#define NOPROFILER
-#define NODEFERWINDOWPOS
-#define NOMCX
-#define NODRAWTEXT
-#define NOWINSTYLES
-#define NOSHOWWINDOW
-#define NOWINMESSAGES
-#define NOWH
+//#define WIN32_LEAN_AND_MEAN
+//#define NOGDICAPMASKS
+//#define NOVIRTUALKEYCODES
+//#define NOSYSMETRICS
+//#define NOMENUS
+//#define NOICONS
+//#define NOKEYSTATES
+//#define NOSYSCOMMANDS
+//#define NORASTEROPS
+//#define NOATOM
+//#define NOCLIPBOARD
+//#define NOCOLOR
+//#define NOKERNEL
+//#define NOMEMMGR
+//#define NOOPENFILE
+//#define NOSCROLL
+//#define NOSERVICE
+//#define NOSOUND
+//#define NOTEXTMETRIC
+//#define NOWINOFFSETS
+//#define NOCOMM
+//#define NOKANJI
+//#define NOHELP
+//#define NOPROFILER
+//#define NODEFERWINDOWPOS
+//#define NOMCX
+//#define NODRAWTEXT
+//#define NOWINSTYLES
+//#define NOSHOWWINDOW
+//#define NOWINMESSAGES
+//#define NOWH
 
 #include <Windows.h>
 #include <Wincrypt.h>
 #include <winioctl.h>
 #include <fileapi.h>
+#include <shellapi.h>
 #include <regex>
 #include <sstream>
 #include <vector>
@@ -271,8 +272,15 @@ class FSHandler {
 			[in] string path to check
 			Returns true if path exists, false otherwise */
 		bool PathExists(const std::wstring path) const;
+		PartsOpResult CreateFolder(const std::wstring folderPath) const;
+		PartsOpResult CreateFolder(const std::wstring folderPath,
+			const SECURITY_ATTRIBUTES *secAttr = 0) const;
+		PartsOpResult CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const;
+		PartsOpResult RemoveFolder_SHFileOp(const std::wstring folderPath) const;
+		PartsOpResult RemoveFolder(const std::wstring folderPath, const bool includeFiles = true);
+		PartsOpResult RemoveFile(const std::wstring filePath) const;
 		PartsOpResult GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const;
-		PartsOpResult SetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const;
+		PartsOpResult SetObjectSecurity(const SecDesc secDesc, const std::wstring objectPath) const;
 		PartsOpResult EnumFolderContents(FolderRecord &folderInfo, const std::wstring folderPath,
 			const bool getFileHashes = true, const HashType hashType = HashType::SHA256,
 			const bool getFileSize = true);

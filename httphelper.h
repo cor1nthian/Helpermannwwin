@@ -43,12 +43,12 @@ class HTTPHelper {
 	public:
 		HTTPHelper();
 		HTTPHelper(const HTTPHelper &other) = delete;
-		HTTPHelper(const HTTPHelper &&other) = delete;
+		HTTPHelper(HTTPHelper &&other) noexcept = delete;
+		~HTTPHelper();
 		HTTPHelper& operator=(const HTTPHelper &other) = delete;
 		HTTPHelper& operator=(const HTTPHelper &&other) = delete;
 		bool operator==(const HTTPHelper &other) const = delete;
 		bool operator!=(const HTTPHelper &other) const = delete;
-		~HTTPHelper();
 		bool GetHTTPSResponse(const std::string address, std::string &res, std::string requri = "") const;
 		bool GetHTTPSResponse(const std::wstring address, std::string &res, std::wstring requri = L"") const;
 	protected:

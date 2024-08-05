@@ -785,6 +785,99 @@ bool FSHandler::PathExists(const std::wstring path) const {
 	return (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(path.c_str()));
 }
 
+PartsOpResult FSHandler::CreateFolder(const std::wstring folderPath) const {
+	if (!PathExists(folderPath)) {
+		if (CreateDirectory(folderPath.c_str(), 0)) {
+			return PartsOpResult::Success;
+		} else {
+			return PartsOpResult::Fail;
+		}
+	} else {
+		return PartsOpResult::Fail;
+	}
+}
+
+PartsOpResult FSHandler::CreateFolder(const std::wstring folderPath, const SECURITY_ATTRIBUTES *secAttr) const {
+	if (!PathExists(folderPath)) {
+		if (CreateDirectory(folderPath.c_str(), (SECURITY_ATTRIBUTES*)secAttr)) {
+			return PartsOpResult::Success;
+		} else {
+			return PartsOpResult::Fail;
+		}
+	} else {
+		return PartsOpResult::Fail;
+	}
+}
+
+PartsOpResult FSHandler::CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const {
+	if (!PathExists(folderPath)) {
+		if (!CreateDirectory(folderPath.c_str(), 0)) {
+			return PartsOpResult::Fail;
+		}
+	}
+	if (PartsOpResult::Success == SetObjectSecurity(secDesc, folderPath)) {
+		return PartsOpResult::Success;
+	} else {
+		return PartsOpResult::Fail;
+	}
+}
+
+PartsOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath) const {
+	size_t folderPathLen = wcslen_c(folderPath.c_str()) + 2;
+	wchar_t* folderPathBuf = (wchar_t*)malloc(folderPathLen * sizeof(wchar_t));
+	if (!folderPathBuf) {
+		return PartsOpResult::Fail;
+	}
+	memset(folderPathBuf, 0, folderPathLen * sizeof(wchar_t));
+	wsprintf(folderPathBuf, L"%s", folderPath.c_str());
+	SHFILEOPSTRUCT fileOp = {
+		0,
+		FO_DELETE,
+		folderPathBuf,
+		L"",
+		FOF_NOCONFIRMATION |
+		FOF_NOERRORUI |
+		FOF_SILENT,
+		false,
+		0,
+		L"" };
+	unsigned long opres = SHFileOperation(&fileOp);
+	SAFE_FREE(folderPathBuf);
+	if (!opres) {
+		return PartsOpResult::Success;
+	} else {
+		return PartsOpResult::Fail;
+	}
+}
+
+PartsOpResult FSHandler::RemoveFolder(const std::wstring folderPath, const bool includeFiles) {
+	std::vector<FileRecord> folderFiles = SeekFileInDir(folderPath, L".*", L"", false, false);
+	if (folderFiles.size()) {
+		if (includeFiles) {
+			for (size_t i = 0; i < folderFiles.size(); ++i) {
+				if (PartsOpResult::Success != RemoveFile(folderFiles[i].filePath)) {
+					return PartsOpResult::Fail;
+				}
+			}
+		} else {
+			return PartsOpResult::Fail;
+		}
+	}
+	if (::RemoveDirectory(folderPath.c_str())) {
+		return PartsOpResult::Success;
+	} else {
+		return PartsOpResult::Fail;
+	}
+}
+
+PartsOpResult FSHandler::RemoveFile(const std::wstring filePath) const {
+	if (::DeleteFile(filePath.c_str())) {
+		return PartsOpResult::Success;
+	} else {
+		return PartsOpResult::Fail;
+	}
+}
+
 PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const {
 	if (!PathExists(objectPath)) {
 		return PartsOpResult::Fail;
@@ -797,17 +890,25 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 			return PartsOpResult::Fail;
 		}
 	}
+	ACLHandler aclh;
+	SysHandler sys;
 	unsigned long secinfolen = 0;
 	if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo), secDesc.daclInfo,
 		secinfolen, &secinfolen)) {
 		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
+			SECURITY_DESCRIPTOR* tsd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, secinfolen);
+			if (!tsd) {
+				return PartsOpResult::Fail;
+			}
 			secDesc.daclInfo = ::LocalAlloc(LPTR, secinfolen);
 			if (secDesc.daclInfo) {
 				if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo),
-					secDesc.daclInfo, secinfolen, &secinfolen)) {
+					tsd, secinfolen, &secinfolen)) {
 					SAFE_LOCALFREE(secDesc.daclInfo);
 					return PartsOpResult::Fail;
 				}
+				memcpy(secDesc.daclInfo, tsd, secinfolen);
+				SAFE_LOCALFREE(tsd);
 				secDesc.daclInfoSz = secinfolen;
 			} else {
 				return PartsOpResult::Fail;
@@ -822,7 +923,7 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 			if (secDesc.saclInfo) {
 				if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::SACLSecInfo),
 					secDesc.saclInfo, secinfolen, &secinfolen)) {
-					SAFE_LOCALFREE(secDesc.saclInfo);
+					SAFE_LOCALFREE(secDesc.daclInfo);
 					return PartsOpResult::Fail;
 				}
 				secDesc.saclInfoSz = secinfolen;
@@ -832,53 +933,80 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		}
 	}
 	secinfolen = 0;
-	if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::OwnerSecInfo), secDesc.ownerInfo,
-		secinfolen, &secinfolen)) {
+	SECURITY_DESCRIPTOR* tsd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+	if (!tsd) {
+		return PartsOpResult::Fail;
+	}
+	if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::OwnerSecInfo), tsd, secinfolen,
+		&secinfolen)) {
 		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
-			secDesc.ownerInfo = ::LocalAlloc(LPTR, secinfolen);
-			if (secDesc.ownerInfo) {
-				if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::OwnerSecInfo),
-					secDesc.ownerInfo, secinfolen, &secinfolen)) {
-					SAFE_LOCALFREE(secDesc.ownerInfo);
-					return PartsOpResult::Fail;
-				}
-				secDesc.ownerInfoSz = secinfolen;
-			} else {
+			if (!::GetFileSecurity(objectPath.c_str(),static_cast<unsigned long>(SecInfo::OwnerSecInfo),
+				tsd, secinfolen, &secinfolen)) {
+				SAFE_LOCALFREE(tsd);
 				return PartsOpResult::Fail;
 			}
+			PSID tsid = 0;
+			if (ACLOpResult::Success != aclh.OwnerSIDFromSecurityDescriptor(tsd, tsid)) {
+				return PartsOpResult::Fail;
+			}
+			secDesc.ownerInfo = sys.StrSIDFromSID(tsid);
+			// std::wcout << L"xxx " << sys.GetAccountNameFromStrSID(secDesc.ownerInfo) << std::endl;
+			secDesc.ownerInfoSz = secDesc.ownerInfo.length() * sizeof(wchar_t);
 		}
 	}
+	SAFE_LOCALFREE(tsd);
 	secinfolen = 0;
-	if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo), secDesc.primaryGroupInfo,
-		secinfolen, &secinfolen)) {
+	tsd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+	if (!tsd) {
+		return PartsOpResult::Fail;
+	}
+	if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo), tsd, secinfolen,
+		&secinfolen)) {
 		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
-			secDesc.primaryGroupInfo = ::LocalAlloc(LPTR, secinfolen);
-			if (secDesc.primaryGroupInfo) {
-				if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo),
-					secDesc.primaryGroupInfo, secinfolen, &secinfolen)) {
-					SAFE_LOCALFREE(secDesc.primaryGroupInfo);
-					return PartsOpResult::Fail;
-				}
-				secDesc.primaryGroupInfoSz = secinfolen;
-			} else {
+			if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo),
+				tsd, secinfolen, &secinfolen)) {
+				SAFE_LOCALFREE(tsd);
 				return PartsOpResult::Fail;
 			}
+			PSID tsid = 0;
+			if (ACLOpResult::Success != aclh.PrimaryGroupSIDFromSecurityDescriptor(tsd, tsid)) {
+				return PartsOpResult::Fail;
+			}
+			std::wstring sidname = sys.GetAccountNameFromSID(tsid);
+			if((L"отсутствует" != lower_copy(sidname)) && (L"empty" != lower_copy(sidname)) &&
+				(L"missing" != lower_copy(sidname))) {
+				secDesc.primaryGroupInfo = sys.StrSIDFromSID(tsid);
+				secDesc.primaryGroupInfoSz = secDesc.primaryGroupInfo.length() * sizeof(wchar_t);
+			} else {
+				secDesc.primaryGroupInfo = L"";
+				secDesc.primaryGroupInfoSz = 0;
+			}
+			SAFE_LOCALFREE(tsd);
 		}
 	}
-	ACLHandler aclh;
 	if (ACLOpResult::Success != aclh.CreateAbsoluteSecDesc(secDesc)) {
 		return PartsOpResult::Fail;
 	}
 	return PartsOpResult::Success;
 }
 
-PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const {
+PartsOpResult FSHandler::SetObjectSecurity(const SecDesc secDesc, const std::wstring objectPath) const {
 	if (!PathExists(objectPath)) {
 		return PartsOpResult::Fail;
 	}
 	ProcessHandler proc;
 	unsigned long procid = proc.GetCurrentProcPid();
 	std::vector<std::wstring> privs = proc.GetProcPrivileges(procid);
+	if (!valInList(privs, L"SeBackupPrivilege")) {
+		if (!proc.EnableBackupPrivilege(procid)) {
+			return PartsOpResult::Fail;
+		}
+	}
+	if (!valInList(privs, L"SeRestorePrivilege")) {
+		if (!proc.EnableRestorePrivilege(procid)) {
+			return PartsOpResult::Fail;
+		}
+	}
 	if (!valInList(privs, L"SeSecurityPrivilege")) {
 		if (!proc.EnableSecurityPrivilege(procid)) {
 			return PartsOpResult::Fail;
@@ -892,8 +1020,8 @@ PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring 
 	ACLHandler aclh;
 	if (secDesc.daclAbsInfo) {
 		ACL* acllist = 0;
-		if (ACLOpResult::Success != aclh.DACLFromSecurityDescriptor((SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
-			acllist)) {
+		if (ACLOpResult::Success != aclh.DACLFromSecurityDescriptor(
+			(SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo, acllist)) {
 			return PartsOpResult::Fail;
 		}
 		SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
@@ -952,14 +1080,21 @@ PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring 
 			SAFE_LOCALFREE(acllist);
 		}
 	}
-	if (secDesc.ownerInfo) {
+	if (secDesc.ownerInfo.length()) {
 		SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 		if (!sd) {
 			return PartsOpResult::Fail;
 		}
+		PSID tsid = 0;
 		if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
 			int ownerDefaulted = 0;
-			if (!::SetSecurityDescriptorOwner(sd, secDesc.ownerInfo, ownerDefaulted)) {
+			SysHandler sys;
+			tsid = sys.SIDFromStrSid(secDesc.ownerInfo);
+			if (!tsid) {
+				return PartsOpResult::Fail;
+			}
+			if (!::SetSecurityDescriptorOwner(sd, tsid, ownerDefaulted)) {
+				SAFE_LOCALFREE(tsid);
 				return PartsOpResult::Fail;
 			}
 		} else {
@@ -970,15 +1105,23 @@ PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring 
 			return PartsOpResult::Fail;
 		}
 		SAFE_LOCALFREE(sd);
+		SAFE_LOCALFREE(tsid);
 	}
-	if (secDesc.primaryGroupInfo) {
+	if (secDesc.primaryGroupInfo.length()) {
 		SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 		if (!sd) {
 			return PartsOpResult::Fail;
 		}
+		PSID tsid = 0;
 		if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
 			int groupDefaulted = 0;
-			if (!::SetSecurityDescriptorGroup(sd, secDesc.primaryGroupInfo, groupDefaulted)) {
+			SysHandler sys;
+			tsid = sys.SIDFromStrSid(secDesc.primaryGroupInfo);
+			if (!tsid) {
+				return PartsOpResult::Fail;
+			}
+			if (!::SetSecurityDescriptorOwner(sd, tsid, groupDefaulted)) {
+				SAFE_LOCALFREE(tsid);
 				return PartsOpResult::Fail;
 			}
 		} else {
@@ -989,6 +1132,7 @@ PartsOpResult FSHandler::SetObjectSecurity(SecDesc &secDesc, const std::wstring 
 			return PartsOpResult::Fail;
 		}
 		SAFE_LOCALFREE(sd);
+		SAFE_LOCALFREE(tsid);
 	}
 	return PartsOpResult::Success;
 }

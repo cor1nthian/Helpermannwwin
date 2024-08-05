@@ -1253,12 +1253,20 @@ std::wstring SysHandler::GetAccountNameFromSID(const PSID sid, const std::wstrin
 		SID_NAME_USE sidUse;
 		NEW_ARR_NULLIFY(nameBuf, wchar_t, nameLen + 1);
 		NEW_ARR_NULLIFY(domainNameBuf, wchar_t, domainNameLen + 1);
+		wchar_t* machineNameBuf = 0;
 		if (nameBuf && domainNameBuf) {
-			if (::LookupAccountSid(machineName.c_str(), sid, nameBuf, &nameLen,
+			if (L"." != machineName) {
+				NEW_ARR_NULLIFY_NO_REDEFINE(machineNameBuf, wchar_t, 128);
+				wsprintf(machineNameBuf, L"%s", machineName.c_str());
+			}
+			if (::LookupAccountSid(machineNameBuf, sid, nameBuf, &nameLen,
 				domainNameBuf, &domainNameLen, &sidUse)) {
 				std::wstring ret = nameBuf;
 				SAFE_ARR_DELETE(nameBuf);
 				SAFE_ARR_DELETE(domainNameBuf);
+				if (machineNameBuf) {
+					SAFE_ARR_DELETE(machineNameBuf);
+				}
 				return ret;
 			} else {
 				SAFE_ARR_DELETE(nameBuf);
@@ -1368,7 +1376,7 @@ SysOpResult SysHandler::UserLogon(::HANDLE &token, std::wstring userName, std::w
 }
 
 SysOpResult SysHandler::ImpersonateUser(::HANDLE &token) const {
-	if (ImpersonateLoggedOnUser(token)) {
+	if (::ImpersonateLoggedOnUser(token)) {
 		return SysOpResult::Success;
 	} else {
 		return SysOpResult::Fail;

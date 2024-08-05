@@ -110,14 +110,14 @@ struct SecDesc {
 	unsigned long primaryGroupInfoSz;
 	unsigned long absoluteSDInfoSz;
 	unsigned long selfRelativeSDInfoSz;
-	PSID ownerInfo;
-	PSID primaryGroupInfo;
 	void* daclInfo;
 	void* daclAbsInfo;
 	void* saclInfo;
 	void* saclAbsInfo;
 	void* absoluteSDInfo;
 	void* selfRelativeSDInfo;
+	std::wstring ownerInfo;
+	std::wstring primaryGroupInfo;
 };
 
 class ACLHandler {
@@ -184,6 +184,8 @@ class ACLHandler {
 			const bool includeGroups = true, const std::wstring machineName = L".") const;
 		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const;
 		ACLOpResult SACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &sacl) const;
+		ACLOpResult OwnerSIDFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, PSID &sid) const;
+		ACLOpResult PrimaryGroupSIDFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, PSID &sid) const;
 		ACLOpResult CreateAbsoluteSecDesc(SecDesc &secDesc) const;
 		ACLOpResult DACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const;
 		ACLOpResult SACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* sacl) const;
