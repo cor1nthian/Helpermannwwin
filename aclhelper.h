@@ -155,13 +155,20 @@ class ACLHandler {
 		ACLOpResult DACLAddExecuteDenied(::ACL* &dacl, const ::PSID sid) const;
 		ACLOpResult DACLAddDeleteDenied(::ACL* &dacl, const ::PSID sid) const;
 		ACLOpResult DACLAddFullControlDenied(::ACL* &dacl, const ::PSID sid) const;
-		ACLOpResult DACLRegAddFullControlAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddQueryValueAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddSetValueAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddCreateSubkeyAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddEnumSubkeyAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddNotifyAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddCreateLinkAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddFullControlAllowed(::ACL* &dacl, const ::PSID sid,
+			const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddQueryValueAllowed(::ACL* &dacl, const ::PSID sid,
+			const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddSetValueAllowed(::ACL* &dacl, const ::PSID sid,
+			const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddCreateSubkeyAllowed(::ACL* &dacl, const ::PSID sid,
+			const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddEnumSubkeyAllowed(::ACL* &dacl, const ::PSID sid,
+			const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddNotifyAllowed(::ACL* &dacl, const ::PSID sid,
+			const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddCreateLinkAllowed(::ACL* &dacl, const ::PSID sid,
+			const bool removeExistingBan = true) const;
 		ACLOpResult DACLRegAddCreateLinkDenied(::ACL* &dacl, const ::PSID sid) const;
 		ACLOpResult DACLRegAddNotifyDenied(::ACL* &dacl, const ::PSID sid) const;
 		ACLOpResult DACLRegAddEnumSubkeyDenied(::ACL* &dacl, const ::PSID sid) const;
