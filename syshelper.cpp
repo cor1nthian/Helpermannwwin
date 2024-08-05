@@ -39,7 +39,7 @@ bool IsSIDWellKnown(const std::wstring strsid) {
 	return false;
 }
 
-bool IsSIDWellKnown(const PSID sid) {
+bool IsSIDWellKnown(const ::PSID sid) {
 	SysHandler sys;
 	std::wstring strSID = sys.StrSIDFromSID(sid);
 	if (strSID.length()) {
@@ -54,7 +54,7 @@ bool IsSIDWellKnown(const PSID sid) {
 	return false;
 }
 
-std::vector<WKSid> GetWellKnownStrSIDs(PSID domainSID) {
+std::vector<WKSid> GetWellKnownStrSIDs(::PSID domainSID) {
 	std::vector<WKSid> ret;
 	unsigned char wksids[] = {
 		WELL_KNOWN_SID_TYPE::WinNullSid,
@@ -301,7 +301,7 @@ std::vector<WKSid> GetWellKnownStrSIDs(PSID domainSID) {
 		L"WinBuiltinDeviceOwnersSid"
 	};
 	SysHandler sys;
-	PSID tpsid = 0;
+	::PSID tpsid = 0;
 	unsigned long sidlen = SECURITY_MAX_SID_SIZE;
 	for (size_t i = 0; i < 120; ++i) {
 		sidlen = SECURITY_MAX_SID_SIZE;
@@ -1094,7 +1094,7 @@ std::wstring SysHandler::GetStrSIDFromAccountName(const std::wstring accName, co
 	}
 }
 
-PSID SysHandler::GetSIDFromAccountName(const std::wstring accName,
+::PSID SysHandler::GetSIDFromAccountName(const std::wstring accName,
 	const std::wstring machineName, const bool isDomainAcc) const {
 	// unsigned char* buf = (unsigned char*)malloc(128 * sizeof(unsigned char));
 	NEW_ARR_NULLIFY(buf, unsigned char, 128);
@@ -1104,9 +1104,9 @@ PSID SysHandler::GetSIDFromAccountName(const std::wstring accName,
 	unsigned long domainNameLen = 128, sidlen = 128;
 	/*std::wstring fullName = machineName.length() ?
 		machineName + L"\\" + accName : L".\\" + accName;*/
-	if (::LookupAccountName(machineName.c_str(), accName.c_str(), (PSID)buf, &sidlen, domainName,
+	if (::LookupAccountName(machineName.c_str(), accName.c_str(), (::PSID)buf, &sidlen, domainName,
 		&domainNameLen, &sidType)) {
-		return (PSID)buf;
+		return (::PSID)buf;
 	} else {
 		return 0;
 	}
@@ -1148,7 +1148,7 @@ unsigned char SysHandler::GetThreadNum() const {
 	return (unsigned char)(std::thread::hardware_concurrency() - 1);
 }
 
-SysOpResult SysHandler::GetSIDType(const PSID sid, SidType &sidType, const std::wstring machineName, const std::wstring domainName) const {
+SysOpResult SysHandler::GetSIDType(const ::PSID sid, SidType &sidType, const std::wstring machineName, const std::wstring domainName) const {
 	if (sid) {
 		unsigned long nameLen = 256, domainNameLen = 256;
 		NEW_ARR_NULLIFY(nameBuf, wchar_t, nameLen);
@@ -1223,9 +1223,9 @@ SysOpResult SysHandler::GetVirtualMem(unsigned long long &freeVirtMem,
 	}
 }
 
-PSID SysHandler::SIDFromStrSid(const std::wstring sidstr) const {
+::PSID SysHandler::SIDFromStrSid(const std::wstring sidstr) const {
 	if (sidstr.length()) {
-		PSID tsid = 0;
+		::PSID tsid = 0;
 		if (::ConvertStringSidToSid(sidstr.c_str(), &tsid)) {
 			return tsid;
 		} else {
@@ -1236,7 +1236,7 @@ PSID SysHandler::SIDFromStrSid(const std::wstring sidstr) const {
 	}
 }
 
-std::wstring SysHandler::StrSIDFromSID(const PSID sid) const {
+std::wstring SysHandler::StrSIDFromSID(const ::PSID sid) const {
 	wchar_t* sbuf = 0;
 	std::wstring ret;
 	if (::ConvertSidToStringSid(sid, &sbuf)) {
@@ -1247,7 +1247,7 @@ std::wstring SysHandler::StrSIDFromSID(const PSID sid) const {
 	return L"";
 }
 
-std::wstring SysHandler::GetAccountNameFromSID(const PSID sid, const std::wstring machineName) const {
+std::wstring SysHandler::GetAccountNameFromSID(const ::PSID sid, const std::wstring machineName) const {
 	if (sid) {
 		unsigned long nameLen = MAX_PATH, domainNameLen = MAX_PATH;
 		SID_NAME_USE sidUse;
@@ -1292,7 +1292,7 @@ std::wstring SysHandler::GetAccountNameFromStrSID(const std::wstring strSid,
 		if (endsWith(strSid, L"}")) {
 			sid = removeFromEnd_copy(strSid, L"}");
 		}
-		PSID tpsid = SIDFromStrSid(strSid);
+		::PSID tpsid = SIDFromStrSid(strSid);
 		unsigned long nameLen = MAX_PATH, domainNameLen = MAX_PATH;
 		SID_NAME_USE sidUse;
 		NEW_ARR_NULLIFY(nameBuf, wchar_t, nameLen + 1);
@@ -1604,7 +1604,7 @@ SysOpResult SysHandler::EnumAccounts(std::vector<AccountDesc> &accountList,
 	return SysOpResult::Success;
 }
 
-SysOpResult SysHandler::IsAccountMemberOfGroup(const PSID groupSID, const PSID testSID, bool &isMember,
+SysOpResult SysHandler::IsAccountMemberOfGroup(const ::PSID groupSID, const ::PSID testSID, bool &isMember,
 	const std::wstring machineName) const {
 	isMember = false;
 	std::vector<GroupDesc> groups;

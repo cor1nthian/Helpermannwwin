@@ -9,7 +9,7 @@
 #endif
 #include "strhelper.h"
 
-std::size_t wcslen_c(const wchar_t* line) {
+size_t wcslen_c(const wchar_t* line) {
     const wchar_t* end = line;
     if (line) {
         while (*end != L'\0') {
@@ -62,7 +62,6 @@ char* wchar2char(const wchar_t* line, char* buf) {
         wc = buf;
     } else {
         NEW_ARR_NULLIFY_NO_REDEFINE(wc, char, cSize);
-        // wc = (char*)calloc(cSize, cSize * sizeof(char));
     }
     if (wc) {
         wcstombs(wc, line, cSize);
@@ -97,7 +96,7 @@ std::string ull2hexstr(const unsigned long long val) {
 }
 
 std::wstring ull2hexwstr(const unsigned long long val) {
-    const char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const wchar_t digits[] = L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     std::wstring ret;
     unsigned long long tmp = val;
     do {

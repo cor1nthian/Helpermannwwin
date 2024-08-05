@@ -114,8 +114,8 @@ enum class SidType : unsigned char {
 bool IsBadReadPtr(void* p);
 bool IsBadWritePtr(void* p);
 bool IsSIDWellKnown(const std::wstring strsid);
-bool IsSIDWellKnown(const PSID sid);
-std::vector<WKSid> GetWellKnownStrSIDs(PSID domainSID = 0);
+bool IsSIDWellKnown(const ::PSID sid);
+std::vector<WKSid> GetWellKnownStrSIDs(::PSID domainSID = 0);
 
 // const std::vector<WKSid> const gc_WellKnownStrSIDs = GetWellKnownStrSIDs();
 
@@ -258,20 +258,20 @@ class SysHandler {
 		/* Converts string SID to SID type
 			Param:
 			[in] [mandatory] account string SID
-			Returns PSID related with source string SID
-			Returned PSID must be freed with LocalFree */
-		PSID SIDFromStrSid(const std::wstring sidstr) const;
-		/* Converts PSID to string SID
+			Returns ::PSID related with source string SID
+			Returned ::PSID must be freed with LocalFree */
+		::PSID SIDFromStrSid(const std::wstring sidstr) const;
+		/* Converts ::PSID to string SID
 			Param:
-			[in] account PSID
+			[in] account ::PSID
 			Returns string SID */
-		std::wstring StrSIDFromSID(const PSID sid) const;
+		std::wstring StrSIDFromSID(const ::PSID sid) const;
 		/* Gets account name based on SID
 			Param:
-			[in] target PSID
+			[in] target ::PSID
 			[in] [default - "."] target machine name. Leave it unchanged or empty to get local machine accounts
 			Returns account name */
-		std::wstring GetAccountNameFromSID(const PSID sid, const std::wstring machineName = L".") const;
+		std::wstring GetAccountNameFromSID(const ::PSID sid, const std::wstring machineName = L".") const;
 		/* Gets account name based on str SID
 			Param:
 			[in] target str SID
@@ -287,14 +287,14 @@ class SysHandler {
 			Returns result code of the operation */
 		std::wstring GetStrSIDFromAccountName(const std::wstring accName,
 			const std::wstring machineName = L".", const bool isDomainAcc = false) const;
-		/* Gets PSID from a given account name
+		/* Gets ::PSID from a given account name
 			Param:
 			[in] [mandatory] account name / login
 			[in] [optional] [default - "."]		target machine name. Leave it unchanged or empty to get local machine accounts
 			[in] [optional] [default - false]	set to true if requested account belongs to domain
-			Returns account PSID
-			Returned PSID must be freed with LocalFree */
-		PSID GetSIDFromAccountName(const std::wstring accName,
+			Returns account ::PSID
+			Returned ::PSID must be freed with LocalFree */
+		::PSID GetSIDFromAccountName(const std::wstring accName,
 			const std::wstring machineName = L".", const bool isDomainAcc = false) const;
 		/* Converts current system time to Unix time
 			Param:
@@ -321,11 +321,11 @@ class SysHandler {
 			None
 			Returns max number of threads available without oversubscription (cpucorenum - 1) */
 		unsigned char GetThreadNum() const;
-		SysOpResult IsAccountMemberOfGroup(const PSID groupSID, const PSID testSID, bool &isMember,
+		SysOpResult IsAccountMemberOfGroup(const ::PSID groupSID, const ::PSID testSID, bool &isMember,
 			const std::wstring machineName = L".") const;
 		SysOpResult IsAccountMemberOfGroup(const std::wstring groupName, const std::wstring testAccName,
 			bool &isMember, const std::wstring machineName = L".") const;
-		SysOpResult GetSIDType(const PSID sid, SidType &sidType, const std::wstring machineName = L".", 
+		SysOpResult GetSIDType(const ::PSID sid, SidType &sidType, const std::wstring machineName = L".", 
 			const std::wstring domainName = L".") const;
 		/* Gets RAM info
 			Param:

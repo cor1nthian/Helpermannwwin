@@ -134,71 +134,71 @@ class ACLHandler {
 			std::wstring &textSecDesc, SecInfo secInfo = SecInfo::DACLSecInfo) const;
 		ACLOpResult StringSecurityDescriptor2SecurityDescriptor(const std::wstring textSecDesc,
 			unsigned char* &secDesc, unsigned long &secDeszSz) const;
-		ACLOpResult DACLReadAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
-		ACLOpResult DACLWriteAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
-		ACLOpResult DACLExecuteAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
-		ACLOpResult DACLDeleteAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
-		ACLOpResult DACLFullControlAllowed(bool &allowed, const ACL* testACL, const PSID sid) const;
-		ACLOpResult DACLAddCustomAllowedACE(ACL* &dacl, const PSID sid, const unsigned long aclMask,
+		ACLOpResult DACLReadAllowed(bool &allowed, const ::ACL* testACL, const ::PSID sid) const;
+		ACLOpResult DACLWriteAllowed(bool &allowed, const ::ACL* testACL, const ::PSID sid) const;
+		ACLOpResult DACLExecuteAllowed(bool &allowed, const ::ACL* testACL, const ::PSID sid) const;
+		ACLOpResult DACLDeleteAllowed(bool &allowed, const ::ACL* testACL, const ::PSID sid) const;
+		ACLOpResult DACLFullControlAllowed(bool &allowed, const ::ACL* testACL, const ::PSID sid) const;
+		ACLOpResult DACLAddCustomAllowedACE(::ACL* &dacl, const ::PSID sid, const unsigned long aclMask,
 			const unsigned char aceFlags, const bool removeExistingBan = true) const;
-		ACLOpResult DACLAddCustomDeniedACE(ACL* &dacl, const PSID sid, unsigned long aclMask,
+		ACLOpResult DACLAddCustomDeniedACE(::ACL* &dacl, const ::PSID sid, unsigned long aclMask,
 			const unsigned char aceFlags) const;
-		ACLOpResult DACLAddCustomACE(ACL* &dacl, const PSID sid, const AceType aceTyoe, unsigned long aclMask,
+		ACLOpResult DACLAddCustomACE(::ACL* &dacl, const ::PSID sid, const AceType aceTyoe, unsigned long aclMask,
 			const unsigned char aceFlags, const bool removeExistingBan = true) const;
-		ACLOpResult DACLAddFullControlAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLAddDeleteAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLAddExecuteAllowedPermissions(ACL*& dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLAddWriteAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLAddReadAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLAddReadDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLAddWriteDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLAddExecuteDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLAddDeleteDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLAddFullControlDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLRegAddFullControlAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddQueryValueAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddSetValueAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddCreateSubkeyAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddEnumSubkeyAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddNotifyAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddCreateLinkAllowedPermissions(ACL* &dacl, const PSID sid, const bool removeExistingBan = true) const;
-		ACLOpResult DACLRegAddCreateLinkDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLRegAddNotifyDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLRegAddEnumSubkeyDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLRegAddCreateSubkeyDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLRegAddSetValueDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLRegAddQueryValueDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLRegAddFullControlDeniedPermissions(ACL* &dacl, const PSID sid) const;
-		ACLOpResult DACLRemoveACESIDTypeMaskFlags(ACL* &dacl, const PSID sid, const AceType aceType,
+		ACLOpResult DACLAddFullControlAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLAddDeleteAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLAddExecuteAllowed(::ACL*& dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLAddWriteAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLAddReadAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLAddReadDenied(::ACL* &dacl, const ::PSID sid) const;
+		ACLOpResult DACLAddWriteDenied(::ACL* &dacl, const ::PSID sid) const;
+		ACLOpResult DACLAddExecuteDenied(::ACL* &dacl, const ::PSID sid) const;
+		ACLOpResult DACLAddDeleteDenied(::ACL* &dacl, const ::PSID sid) const;
+		ACLOpResult DACLAddFullControlDenied(::ACL* &dacl, const ::PSID sid) const;
+		ACLOpResult DACLRegAddFullControlAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddQueryValueAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddSetValueAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddCreateSubkeyAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddEnumSubkeyAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddNotifyAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddCreateLinkAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan = true) const;
+		ACLOpResult DACLRegAddCreateLinkDenied(::ACL* &dacl, const ::PSID sid) const;
+		ACLOpResult DACLRegAddNotifyDenied(::ACL* &dacl, const ::PSID sid) const;
+		ACLOpResult DACLRegAddEnumSubkeyDenied(::ACL* &dacl, const ::PSID sid) const;
+		ACLOpResult DACLRegAddCreateSubkeyDenied(::ACL* &dacl, const ::PSID sid) const;
+		ACLOpResult DACLRegAddSetValueDenied(::ACL* &dacl, const ::PSID sid) const;
+		ACLOpResult DACLRegAddQueryValueDenied(::ACL* &dacl, const ::PSID sid) const;
+		ACLOpResult DACLRegAddFullControlDenied(::ACL* &dacl, const ::PSID sid) const;
+		ACLOpResult DACLRemoveACESIDTypeMaskFlags(::ACL* &dacl, const ::PSID sid, const AceType aceType,
 			const unsigned long aclMask, const unsigned char aclFlags, const bool includeGroups = true) const;
-		ACLOpResult DACLRemoveACESIDTypeMask(ACL* &dacl, const PSID sid, const AceType aceType,
+		ACLOpResult DACLRemoveACESIDTypeMask(::ACL* &dacl, const ::PSID sid, const AceType aceType,
 			const unsigned long aclMask, const bool includeGroups = true) const;
-		ACLOpResult DACLRemoveACESIDType(ACL* &dacl, const PSID sid, const AceType aceType,
+		ACLOpResult DACLRemoveACESIDType(::ACL* &dacl, const ::PSID sid, const AceType aceType,
 			const bool includeGroups = true) const;
-		ACLOpResult DACLRemoveACESID(ACL* &dacl, const PSID sid, const bool includeGroups = true) const;
-		ACLOpResult DACLGetSIDsByAceType(ACL* dacl, AceType reqAceType, std::vector<PERMISSION> &permissions,
+		ACLOpResult DACLRemoveACESID(::ACL* &dacl, const ::PSID sid, const bool includeGroups = true) const;
+		ACLOpResult DACLGetSIDsByAceType(::ACL* dacl, AceType reqAceType, std::vector<PERMISSION> &permissions,
 			const std::wstring machineName = L".") const;
-		ACLOpResult DACLGetPermissionBySID(ACL* dacl, PSID sid, std::vector<PERMISSION> &permissions,
+		ACLOpResult DACLGetPermissionBySID(::ACL* dacl, ::PSID sid, std::vector<PERMISSION> &permissions,
 			const bool includeGroups = true, const std::wstring machineName = L".") const;
-		ACLOpResult DACLGetPermissionMaskBySID(ACL* dacl, PSID sid, std::vector<PERMISSIONFULL> &permissions,
+		ACLOpResult DACLGetPermissionMaskBySID(::ACL* dacl, ::PSID sid, std::vector<PERMISSIONFULL> &permissions,
 			const bool includeGroups = true, const std::wstring machineName = L".") const;
-		ACLOpResult DACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &dacl) const;
-		ACLOpResult SACLFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, ACL* &sacl) const;
-		ACLOpResult OwnerSIDFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, PSID &sid) const;
-		ACLOpResult PrimaryGroupSIDFromSecurityDescriptor(SECURITY_DESCRIPTOR* secDesc, PSID &sid) const;
+		ACLOpResult DACLFromSecurityDescriptor(::SECURITY_DESCRIPTOR* secDesc, ::ACL* &dacl) const;
+		ACLOpResult SACLFromSecurityDescriptor(::SECURITY_DESCRIPTOR* secDesc, ::ACL* &sacl) const;
+		ACLOpResult OwnerSIDFromSecurityDescriptor(::SECURITY_DESCRIPTOR* secDesc, ::PSID &sid) const;
+		ACLOpResult PrimaryGroupSIDFromSecurityDescriptor(::SECURITY_DESCRIPTOR* secDesc, ::PSID &sid) const;
 		ACLOpResult CreateAbsoluteSecDesc(SecDesc &secDesc) const;
-		ACLOpResult DACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* dacl) const;
-		ACLOpResult SACL2AbsoluteSD(SECURITY_DESCRIPTOR* secDesc, ACL* sacl) const;
+		ACLOpResult DACL2AbsoluteSD(::SECURITY_DESCRIPTOR* secDesc, ::ACL* dacl) const;
+		ACLOpResult SACL2AbsoluteSD(::SECURITY_DESCRIPTOR* secDesc, ::ACL* sacl) const;
 	protected:
 		
 	private:
-		ACLOpResult BuildACE(ACE_HEADER* &ace, const PSID sid, const AceType aceType,
+		ACLOpResult BuildACE(::ACE_HEADER* &ace, const ::PSID sid, const AceType aceType,
 			const ACCESS_MASK accessMask, const unsigned char aceFlags) const;
-		ACLOpResult DACLDenyPermissionSetter(ACL* &dacl, const PSID sid, const unsigned long aclMask,
+		ACLOpResult DACLDenyPermissionSetter(::ACL* &dacl, const ::PSID sid, const unsigned long aclMask,
 			const unsigned char aclFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
-		ACLOpResult DACLAllowPermissionSetter(ACL* &dacl, const PSID sid, const bool removeExistingBan,
+		ACLOpResult DACLAllowPermissionSetter(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan,
 			const unsigned long aclMask, const unsigned char aclFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE) const;
-		ACLOpResult DACLPermissionGetter(bool &allowed, const ACL* testACL, const PSID sid, const unsigned long mask,
+		ACLOpResult DACLPermissionGetter(bool &allowed, const ::ACL* testACL, const ::PSID sid, const unsigned long mask,
 			const bool checkGroups = true) const;
 };
 

@@ -810,7 +810,7 @@ std::vector<std::wstring> ProcessHandler::GetProcPrivileges(const unsigned long 
 	return ret;
 }
 
-ProcOpResult ProcessHandler::GetProcUserSID(const unsigned long pid, PSID &sid,
+ProcOpResult ProcessHandler::GetProcUserSID(const unsigned long pid, ::PSID &sid,
 	const unsigned long desiredProcRights) const {
 	::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
 	if (hProc && INVALID_HANDLE_VALUE != hProc) {

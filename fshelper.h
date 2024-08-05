@@ -282,8 +282,7 @@ class FSHandler {
 		PartsOpResult GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const;
 		PartsOpResult SetObjectSecurity(const SecDesc secDesc, const std::wstring objectPath) const;
 		PartsOpResult EnumFolderContents(FolderRecord &folderInfo, const std::wstring folderPath,
-			const bool getFileHashes = true, const HashType hashType = HashType::SHA256,
-			const bool getFileSize = true);
+			const bool getFileHashes = true, const HashType hashType = HashType::SHA256, const bool getFileSize = true);
 		/* Does the file search baaed on a filename on all available partitions. Filename supports regex expressions.
 			Param:
 			[in] filename to search. Supports regex.

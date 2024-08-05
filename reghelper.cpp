@@ -2957,10 +2957,10 @@ RegOpResult RegHandler::GetKeySecurity(const std::wstring keyName, SecDesc &secD
 		secinfosz = 0;
 		ACLHandler aclh;
 		SysHandler sys;
-		SECURITY_DESCRIPTOR* ownerSecDesc = 0;
+		::SECURITY_DESCRIPTOR* ownerSecDesc = 0;
 		if (ERROR_INSUFFICIENT_BUFFER == ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::OwnerSecInfo),
 			ownerSecDesc, &secinfosz)) {
-			SECURITY_DESCRIPTOR* ownerSecDesc = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, secinfosz);
+			::SECURITY_DESCRIPTOR* ownerSecDesc = (::SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, secinfosz);
 			if (ownerSecDesc) {
 				if (ERROR_SUCCESS != ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::OwnerSecInfo),
 					ownerSecDesc, &secinfosz)) {
@@ -2968,7 +2968,7 @@ RegOpResult RegHandler::GetKeySecurity(const std::wstring keyName, SecDesc &secD
 					CLOSEKEY_NULLIFY(keyHandle);
 					return RegOpResult::Fail;
 				} else {
-					PSID tsid = 0;
+					::PSID tsid = 0;
 					if (ACLOpResult::Success != aclh.OwnerSIDFromSecurityDescriptor(ownerSecDesc, tsid)) {
 						SAFE_LOCALFREE(ownerSecDesc);
 						CLOSEKEY_NULLIFY(keyHandle);
@@ -2987,17 +2987,17 @@ RegOpResult RegHandler::GetKeySecurity(const std::wstring keyName, SecDesc &secD
 			return RegOpResult::Fail;
 		}
 		secinfosz = 0;
-		SECURITY_DESCRIPTOR* primGroupSecDesc = 0;
+		::SECURITY_DESCRIPTOR* primGroupSecDesc = 0;
 		if (ERROR_INSUFFICIENT_BUFFER == ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::GroupSecInfo),
 			primGroupSecDesc, &secinfosz)) {
-			primGroupSecDesc = (SECURITY_DESCRIPTOR*)LocalAlloc(LPTR, secinfosz);
+			primGroupSecDesc = (::SECURITY_DESCRIPTOR*)LocalAlloc(LPTR, secinfosz);
 			if (primGroupSecDesc) {
 				if (ERROR_SUCCESS != ::RegGetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::GroupSecInfo),
 					primGroupSecDesc, &secinfosz)) {
 					CLOSEKEY_NULLIFY(keyHandle);
 					return RegOpResult::Fail;
 				} else {
-					PSID tsid = 0;
+					::PSID tsid = 0;
 					if (ACLOpResult::Success != aclh.PrimaryGroupSIDFromSecurityDescriptor(primGroupSecDesc, tsid)) {
 						SAFE_LOCALFREE(primGroupSecDesc);
 						CLOSEKEY_NULLIFY(keyHandle);
@@ -3068,13 +3068,13 @@ RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secD
 		res = ::RegSetKeySecurity(keyHandle, static_cast<unsigned long>(SecInfo::DACLSecInfo),
 			secDesc.absoluteSDInfo);
 #else
-		ACL* acllist = 0;
-		if (ACLOpResult::Success != aclh.DACLFromSecurityDescriptor((SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
+		::ACL* acllist = 0;
+		if (ACLOpResult::Success != aclh.DACLFromSecurityDescriptor((::SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
 			acllist)) {
 			CLOSEKEY_NULLIFY(keyHandle);
 			return RegOpResult::Fail;
 		}
-		SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+		::SECURITY_DESCRIPTOR* sd = (::SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 		if (!sd) {
 			SAFE_LOCALFREE(acllist);
 			CLOSEKEY_NULLIFY(keyHandle);
@@ -3101,13 +3101,13 @@ RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secD
 			return RegOpResult::Fail;
 		}
 #endif
-		ACL* acllist = 0;
-		if (ACLOpResult::Success != aclh.SACLFromSecurityDescriptor((SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
+		::ACL* acllist = 0;
+		if (ACLOpResult::Success != aclh.SACLFromSecurityDescriptor((::SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
 			acllist)) {
 			CLOSEKEY_NULLIFY(keyHandle);
 			return RegOpResult::Fail;
 		}
-		SECURITY_DESCRIPTOR* sd = (SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+		::SECURITY_DESCRIPTOR* sd = (::SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 		if (!sd) {
 			CLOSEKEY_NULLIFY(keyHandle);
 			return RegOpResult::Fail;
@@ -3128,13 +3128,13 @@ RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secD
 		if (ERROR_SUCCESS != res) {
 			return RegOpResult::Fail;
 		}
-		sd = (SECURITY_DESCRIPTOR*)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+		sd = (::SECURITY_DESCRIPTOR*)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 		if (!sd) {
 			CLOSEKEY_NULLIFY(keyHandle);
 			return RegOpResult::Fail;
 		}
 		if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
-			PSID tsid = sys.SIDFromStrSid(secDesc.ownerInfo);
+			::PSID tsid = sys.SIDFromStrSid(secDesc.ownerInfo);
 			if (tsid) {
 				if (!::SetSecurityDescriptorOwner(sd, tsid, false)) {
 					SAFE_LOCALFREE(sd);
@@ -3165,13 +3165,13 @@ RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secD
 		if (ERROR_SUCCESS != res) {
 			return RegOpResult::Fail;
 		}
-		sd = (SECURITY_DESCRIPTOR*)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+		sd = (::SECURITY_DESCRIPTOR*)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 		if (!sd) {
 			CLOSEKEY_NULLIFY(keyHandle);
 			return RegOpResult::Fail;
 		}
 		if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
-			PSID tsid = sys.SIDFromStrSid(secDesc.primaryGroupInfo);
+			::PSID tsid = sys.SIDFromStrSid(secDesc.primaryGroupInfo);
 			if (tsid) {
 				if (!::SetSecurityDescriptorOwner(sd, tsid, false)) {
 					SAFE_LOCALFREE(sd);

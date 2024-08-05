@@ -273,7 +273,7 @@ class ProcessHandler {
 		unsigned long GetCurrentProcPid() const;
 		std::vector<std::wstring> GetProcPrivileges(const unsigned long pid,
 			const unsigned long desiredProcRights = PROCESS_ALL_ACCESS) const;
-		ProcOpResult GetProcUserSID(const unsigned long pid, PSID &sid,
+		ProcOpResult GetProcUserSID(const unsigned long pid, ::PSID &sid,
 			const unsigned long desiredProcRights = PROCESS_ALL_ACCESS) const;
 		ProcOpResult ListProcesses(std::vector<ProcDesc>& procList);
 	protected:
