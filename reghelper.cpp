@@ -999,10 +999,9 @@ RegOpResult RegHandler::DeleteVal(const std::wstring valName, const HKEY *root) 
 	return RegOpResult::Fail;
 }
 
-RegOpResult RegHandler::AddItem2ExplorerContextMenu(const std::wstring itemName,
-	const std::wstring objectPath, const bool add2DirMenu, const bool add2DriveMenu,
-	const HKEY *root) const {
-	if (!itemName.length() || !objectPath.length()) {
+RegOpResult RegHandler::AddItem2ExplorerContextMenu(const std::wstring itemName, const std::wstring objectPath,
+	const bool add2DirMenu, const bool add2DriveMenu, const HKEY *root) const {
+	if ((!itemName.length() || !objectPath.length()) || (!add2DirMenu && !add2DriveMenu)) {
 		return RegOpResult::Fail;
 	}
 	std::wstring itemNameMod = itemName;
