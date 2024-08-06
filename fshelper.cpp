@@ -618,7 +618,7 @@ PartsOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc>& partList,
 	wchar_t vpnBuf[MAX_PATH + 1] = { 0 };
 	std::vector<PartitionDesc> ret;
 	PartitionDesc elem;
-	// ::HANDLE hPart = FindFirstVolume(vol_name, ARRAYSIZE(vol_name))
+	// ::::HANDLE hPart = FindFirstVolume(vol_name, ARRAYSIZE(vol_name))
 	unsigned long drives = GetLogicalDrives();
 	if (drives) {
 		if (clearList) {
@@ -694,7 +694,7 @@ PartsOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc>& partList,
 }
 
 unsigned long long FSHandler::GetFSize(const std::wstring filePath) {
-	LARGE_INTEGER li = { 0 };
+	::LARGE_INTEGER li = { 0 };
 	unsigned long fsizelow = 0, fsizehigh = 0;
 	::HANDLE hFile = ::CreateFile(filePath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
 		FILE_FLAG_SEQUENTIAL_SCAN, NULL);
@@ -1150,8 +1150,8 @@ PartsOpResult FSHandler::EnumFolderContents(FolderRecord &folderInfo, const std:
 		if (!endsWith(seekpath, fs_pathsall)) {
 			seekpath = seekpath + fs_pathsall;
 		}
-		WIN32_FIND_DATA fd;
-		memset(&fd, 0, sizeof(WIN32_FIND_DATA));
+		::WIN32_FIND_DATA fd;
+		memset(&fd, 0, sizeof(::WIN32_FIND_DATA));
 		::HANDLE hFind = FindFirstFile(seekpath.c_str(), &fd);
 		if (INVALID_HANDLE_VALUE != hFind) {
 			folderInfo.folderName = splitStr(lower_copy(folderPath), L"\\").back();
@@ -1217,8 +1217,8 @@ std::vector<FileRecord> FSHandler::SeekFile(const std::wstring filename,
 	std::wstring path;
 	std::wstring seekpath;
 	std::wstring fnamelow = lower_copy(filename);
-	WIN32_FIND_DATA fd;
-	LARGE_INTEGER filesize;
+	::WIN32_FIND_DATA fd;
+	::LARGE_INTEGER filesize;
 	::HANDLE hFind = INVALID_HANDLE_VALUE;
 	for (size_t i = 0; i < drives.size(); ++i) {
 		memset(&fd, 0, sizeof(fd));
@@ -1306,8 +1306,8 @@ std::vector<FileRecord> FSHandler::SeekFileInDir(const std::wstring startPath,
 	}
 	std::wstring fnamelow = lower_copy(filename);
 	std::wstring seekpath = lower_copy(startPath);
-	WIN32_FIND_DATA fd;
-	LARGE_INTEGER filesize;
+	::WIN32_FIND_DATA fd;
+	::LARGE_INTEGER filesize;
 	::HANDLE hFind = INVALID_HANDLE_VALUE;
 	memset(&fd, 0, sizeof(fd));
 	if (!startsWith(seekpath, fs_pathnolim)) {
@@ -1380,8 +1380,8 @@ std::vector<FileRecord> FSHandler::SeekFileRecursive(const std::wstring startPat
 	std::wstring path = pathOrig;
 	std::wstring fnamelow = lower_copy(filename);
 	std::wstring seekpath = lower_copy(startPath);
-	WIN32_FIND_DATA fd;
-	LARGE_INTEGER filesize;
+	::WIN32_FIND_DATA fd;
+	::LARGE_INTEGER filesize;
 	::HANDLE hFind = INVALID_HANDLE_VALUE;
 	memset(&fd, 0, sizeof(fd));
 	if (!startsWith(seekpath, fs_pathnolim)) {

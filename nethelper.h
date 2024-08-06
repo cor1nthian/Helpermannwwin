@@ -463,7 +463,7 @@ struct DNSQueryContext {
 	DNSQueryContext();
 	DNSQueryContext(const unsigned long refCount, const wchar_t* queryName, const unsigned long queryNameLen,
 		const unsigned short int queryType, const unsigned long queryOptions, const DNS_QUERY_RESULT queryRes,
-		const DNS_QUERY_CANCEL queryCancel, const HANDLE queryCompletedEvent);
+		const DNS_QUERY_CANCEL queryCancel, const ::HANDLE queryCompletedEvent);
 	DNSQueryContext(const DNSQueryContext &other);
 	DNSQueryContext(DNSQueryContext&& other) noexcept;
 	~DNSQueryContext();
@@ -477,7 +477,7 @@ struct DNSQueryContext {
 	unsigned long QueryOptions;
 	DNS_QUERY_RESULT QueryResults;
 	DNS_QUERY_CANCEL QueryCancelContext;
-	HANDLE QueryCompletedEvent;
+	::HANDLE QueryCompletedEvent;
 };
 
 struct HostNodeAddr {

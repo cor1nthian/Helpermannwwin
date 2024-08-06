@@ -946,7 +946,7 @@ ACLOpResult ACLHandler::DACLRegAddCreateSubkeyAllowed(::ACL* &dacl, const ::PSID
     return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_CREATE_SUB_KEY);
 }
 
-ACLOpResult ACLHandler::DACLRegAddEnumSubkeyAllowed(::ACL*& dacl, const ::PSID sid,
+ACLOpResult ACLHandler::DACLRegAddEnumSubkeyAllowed(::ACL* &dacl, const ::PSID sid,
     const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;
@@ -954,7 +954,7 @@ ACLOpResult ACLHandler::DACLRegAddEnumSubkeyAllowed(::ACL*& dacl, const ::PSID s
     return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_ENUMERATE_SUB_KEYS);
 }
 
-ACLOpResult ACLHandler::DACLRegAddNotifyAllowed(::ACL*& dacl, const ::PSID sid,
+ACLOpResult ACLHandler::DACLRegAddNotifyAllowed(::ACL* &dacl, const ::PSID sid,
     const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;
@@ -962,7 +962,7 @@ ACLOpResult ACLHandler::DACLRegAddNotifyAllowed(::ACL*& dacl, const ::PSID sid,
     return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, KEY_NOTIFY);
 }
 
-ACLOpResult ACLHandler::DACLRegAddCreateLinkAllowed(::ACL*& dacl, const ::PSID sid,
+ACLOpResult ACLHandler::DACLRegAddCreateLinkAllowed(::ACL* &dacl, const ::PSID sid,
     const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;
@@ -1008,21 +1008,21 @@ ACLOpResult ACLHandler::DACLAddFullControlAllowed(::ACL* &dacl, const ::PSID sid
     return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, FILE_ALL_ACCESS);
 }
 
-ACLOpResult ACLHandler::DACLAddDeleteAllowed(::ACL*& dacl, ::PSID sid, const bool removeExistingBan) const {
+ACLOpResult ACLHandler::DACLAddDeleteAllowed(::ACL* &dacl, ::PSID sid, const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;
     }
     return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, DELETE);
 }
 
-ACLOpResult ACLHandler::DACLAddExecuteAllowed(::ACL*& dacl, const ::PSID sid, const bool removeExistingBan) const {
+ACLOpResult ACLHandler::DACLAddExecuteAllowed(::ACL* &dacl, const ::PSID sid, const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;
     }
     return DACLAllowPermissionSetter(dacl, sid, removeExistingBan, GENERIC_EXECUTE);
 }
 
-ACLOpResult ACLHandler::DACLAddWriteAllowed(::ACL*& dacl, ::PSID sid, const bool removeExistingBan) const {
+ACLOpResult ACLHandler::DACLAddWriteAllowed(::ACL* &dacl, ::PSID sid, const bool removeExistingBan) const {
     if (!dacl) {
         return ACLOpResult::Fail;
     }

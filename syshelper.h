@@ -77,7 +77,7 @@ bool CheckAccess(void* pAddress, size_t nSize) {
 #define IsBadReadPtrSz(p, n) (!CheckAccess<dwReadRights>(p, n))
 #define IsBadStringPtrWSz(p, n) (!CheckAccess<dwReadRights>(p, 2 * n))
 
-typedef bool(__stdcall* LPFN_ISWOW64PROCESS) (HANDLE procHandle, int &result);
+typedef bool(__stdcall* LPFN_ISWOW64PROCESS) (::HANDLE procHandle, int &result);
 
 // constexpr to get TZ offset
 static constexpr time_t const NULL_TIME = -1;
@@ -349,9 +349,9 @@ class SysHandler {
 			const std::wstring machineName = L".") const;
 		SysOpResult LocalGroupListFromStrSID(std::vector<GroupDesc> &outGroupList, const std::wstring strSID,
 			const std::wstring machineName = L".") const;
-		SysOpResult UserLogon(HANDLE &token, std::wstring userName, std::wstring password,
+		SysOpResult UserLogon(::HANDLE &token, std::wstring userName, std::wstring password,
 			std::wstring domain = L".") const;
-		SysOpResult ImpersonateUser(HANDLE &token) const;
+		SysOpResult ImpersonateUser(::HANDLE &token) const;
 		/* Enumerates local groups
 			Param:
 			[out] [mandatory] group desctiption vector to receive data
