@@ -102,7 +102,7 @@ RegValDesc::RegValDesc(const RegValDesc &other) {
 	if (this != &other) {
 		valDataSz = other.valDataSz;
 		valData = { 0 };
-		if (other.valDataSz && other.valData && !IsBadReadPtr(other.valData)) {
+		if (other.valDataSz && other.valData) {
 			if (other.valType == RegValType::Str || other.valType == RegValType::MultiStr ||
 				other.valType == RegValType::ExpandStr || other.valType == RegValType::Link) {
 				NEW_ARR_NULLIFY(valData, wchar_t, (valDataSz / sizeof(wchar_t)) * sizeof(char));
@@ -118,6 +118,8 @@ RegValDesc::RegValDesc(const RegValDesc &other) {
 			if (valData && other.valType != RegValType::None) {
 				memcpy(valData, other.valData, valDataSz); // *sz);
 			}
+		} else {
+			valData = 0;
 		}
 		valType = other.valType;
 		valPath = other.valPath;
@@ -126,19 +128,10 @@ RegValDesc::RegValDesc(const RegValDesc &other) {
 	}
 }
 
-RegValDesc::RegValDesc(RegValDesc &&other) noexcept {
+RegValDesc::RegValDesc(RegValDesc&& other) noexcept {
 	if (this != &other) {
-		if (other.valDataSz && other.valData && !IsBadReadPtr(other.valData)) {
-			if (valData) {
-				if (valDataSz == 1) {
-					SAFE_DELETE(valData);
-				} else if (valDataSz > 1) {
-					SAFE_ARR_DELETE(valData);
-				}
-			}
-			valData = other.valData;
-			other.valData = 0;
-		}
+		valData = other.valData;
+		other.valData = 0;
 		valType = other.valType;
 		other.valType = RegValType::None;
 		valDataSz = other.valDataSz;
@@ -196,32 +189,32 @@ RegValDesc& RegValDesc::operator=(const RegValDesc &other) {
 	return *this;
 }
 
-RegValDesc& RegValDesc::operator=(RegValDesc &&other) noexcept {
-	if (this != &other) {
-		if (other.valDataSz && other.valData && !IsBadReadPtr(other.valData)) {
-			if (valData) {
-				if (valDataSz == 1) {
-					SAFE_DELETE(valData);
-				} else if (valDataSz > 1) {
-					SAFE_ARR_DELETE(valData);
-				}
-			}
-			valData = other.valData;
-			other.valData = 0;
-		}
-		valType = other.valType;
-		other.valType = RegValType::None;
-		valDataSz = other.valDataSz;
-		other.valDataSz = 0;
-		valPath = other.valPath;
-		other.valPath.~basic_string();
-		valName = other.valName;
-		other.valName.~basic_string();
-		valDataHex = other.valDataHex;
-		other.valDataHex.~basic_string();
-	}
-	return *this;
-}
+//RegValDesc& RegValDesc::operator=(RegValDesc &&other) noexcept {
+//	if (this != &other) {
+//		if (other.valDataSz && other.valData && !IsBadReadPtr(other.valData)) {
+//			if (valData) {
+//				if (valDataSz == 1) {
+//					SAFE_DELETE(valData);
+//				} else if (valDataSz > 1) {
+//					SAFE_ARR_DELETE(valData);
+//				}
+//			}
+//			valData = other.valData;
+//			other.valData = 0;
+//		}
+//		valType = other.valType;
+//		other.valType = RegValType::None;
+//		valDataSz = other.valDataSz;
+//		other.valDataSz = 0;
+//		valPath = other.valPath;
+//		other.valPath.~basic_string();
+//		valName = other.valName;
+//		other.valName.~basic_string();
+//		valDataHex = other.valDataHex;
+//		other.valDataHex.~basic_string();
+//	}
+//	return *this;
+//}
 
 RegValDesc::~RegValDesc() {
 	if (valType == RegValType::DWord || valType == RegValType::DWordLE ||
@@ -1065,9 +1058,8 @@ RegOpResult RegHandler::AddItem2ExplorerContextMenu(const std::wstring itemName,
 	return RegOpResult::Success;
 }
 
-RegOpResult RegHandler::RemoveItemFromExplorerContextMenu(const std::wstring itemName,
-	const bool removeFromDirMenu, const bool removeFromDriveMenu,
-	const HKEY *root) const {
+RegOpResult RegHandler::RemoveItemFromExplorerContextMenu(const std::wstring itemName, const bool removeFromDirMenu,
+	const bool removeFromDriveMenu, const HKEY *root) const {
 	if (!itemName.length()) {
 		return RegOpResult::Fail;
 	}
@@ -1095,9 +1087,8 @@ RegOpResult RegHandler::RemoveItemFromExplorerContextMenu(const std::wstring ite
 }
 
 RegOpResult RegHandler::AddItem2DesktopContextMenu(const std::wstring itemName, const std::wstring objectPath,
-	const std::wstring subMenuName, const std::wstring subCommandMenuName,
-	const std::wstring subCommandMenuNameAdd, const std::wstring menuIconPath,
-	const HKEY *root) const {
+	const std::wstring subMenuName, const std::wstring subCommandMenuName, const std::wstring subCommandMenuNameAdd,
+	const std::wstring menuIconPath, const HKEY *root) const {
 	if (INVALID_FILE_ATTRIBUTES == GetFileAttributes(objectPath.c_str())) {
 		return RegOpResult::Fail;
 	}
@@ -1393,9 +1384,8 @@ RegOpResult RegHandler::RemoveItemFromDesktopContextMenu(const std::wstring item
 	return RegOpResult::Success;
 }
 
-RegOpResult RegHandler::GetSoftwareVersion(const std::wstring softwareName,
-	std::vector<SOFTWAREVERSION> &versions, const bool anySoftware,
-	const bool uniqueValues, const HKEY *root) const {
+RegOpResult RegHandler::GetSoftwareVersion(const std::wstring softwareName, std::vector<SOFTWAREVERSION> &versions,
+	const bool anySoftware, const bool uniqueValues, const HKEY *root) const {
 	size_t i = 0;
 	bool matchFound = false;
 	std::vector<std::wstring> regpaths;
@@ -1427,8 +1417,10 @@ RegOpResult RegHandler::GetSoftwareVersion(const std::wstring softwareName,
 	for (i = 0; i < softwareKeys.size(); ++i) {
 		strbuf = L"Couldnt identify version";
 		matchFound = false;
-		if (!memcmp(softwareKeys[i].valData, &gc_wc_emptyVal, sizeof(wchar_t))) {
-			continue;
+		if (!IsBadReadPtr(softwareKeys[i].valData)) {
+			if (!memcmp(softwareKeys[i].valData, &gc_wc_emptyVal, sizeof(wchar_t))) {
+				continue;
+			}
 		}
 		softname = reinterpret_cast<wchar_t*>(softwareKeys[i].valData);
 		if (anySoftware) {
@@ -1487,9 +1479,8 @@ RegOpResult RegHandler::GetSoftwareVersion(const std::wstring softwareName,
 	}
 }
 
-RegOpResult RegHandler::CopyVal(const std::wstring source,
-	const std::wstring destKeyName, const std::wstring destValName,
-	const HKEY* root) const {
+RegOpResult RegHandler::CopyVal(const std::wstring source, const std::wstring destKeyName, const std::wstring destValName,
+	const HKEY *root) const {
 	if (source.length()) {
 		std::wstring compSrc, compDst;
 		if (endsWith(source, L"\\")) {

@@ -465,7 +465,7 @@ struct DNSQueryContext {
 		const unsigned short int queryType, const unsigned long queryOptions, const DNS_QUERY_RESULT queryRes,
 		const DNS_QUERY_CANCEL queryCancel, const ::HANDLE queryCompletedEvent);
 	DNSQueryContext(const DNSQueryContext &other);
-	DNSQueryContext(DNSQueryContext&& other) noexcept;
+	DNSQueryContext(DNSQueryContext &&other) noexcept;
 	~DNSQueryContext();
 	DNSQueryContext& operator=(const DNSQueryContext &other);
 	DNSQueryContext& operator=(DNSQueryContext &&other) noexcept;

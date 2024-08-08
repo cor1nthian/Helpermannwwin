@@ -616,9 +616,14 @@ std::string prepRegexString_copy(const std::string regexString) {
 
 std::wstring prepRegexString_copy(const std::wstring regexString) {
     std::wstring ret = regexString;
-    if (std::wstring::npos != ret.find(L"+")) {
-        ret = replaceSubstr_copy(ret, L"+", L"\\+");
+    std::vector<std::wstring> escapedChars;
+    escapedChars.push_back(L"+");
+    for (size_t i = 0; i < escapedChars.size(); ++i) {
+        ret = replaceAll(ret, escapedChars[i], L"\\" + escapedChars[i]);
     }
+    /*if (std::wstring::npos != ret.find(L"+")) {
+        ret = replaceSubstr_copy(ret, L"+", L"\\+");
+    }*/
     return ret;
 }
 

@@ -131,7 +131,7 @@ struct RegValDesc {
 	~RegValDesc();
 	void FreeData();
 	RegValDesc& operator=(const RegValDesc &other);
-	RegValDesc& operator=(RegValDesc &&other) noexcept;
+	// RegValDesc& operator=(RegValDesc &&other) noexcept;
 	bool operator==(const RegValDesc &other) const;
 	bool operator!=(const RegValDesc &other) const;
 	RegValType valType;
