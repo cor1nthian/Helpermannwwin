@@ -49,7 +49,7 @@
 #include "winerrhelper.h"
 
 // File system operation result
-enum class PartsOpResult : unsigned char {
+enum class FSOpResult : unsigned char {
 	Success,
 	Fail
 };
@@ -127,13 +127,19 @@ struct FolderRecord {
 	FolderRecord();
 	// Folder description struct copy constructor
 	FolderRecord(const FolderRecord &other);
+	// Folder description struct move constructor
 	FolderRecord(FolderRecord &&other) noexcept;
 	// Folder description struct destructor
 	~FolderRecord();
+	// Folder description struct copy operator =
 	FolderRecord& operator=(const FolderRecord &other);
+	// Folder description struct move operator =
 	FolderRecord& operator=(const FolderRecord &&other) noexcept;
+	// Folder description struct operator ==
 	bool operator==(const FolderRecord &other) const;
+	// Folder description struct operator !=
 	bool operator!=(const FolderRecord &other) const;
+	// Variables / struct fields
 	std::wstring folderName;
 	std::wstring folderPath;
 	std::vector<FileRecord> files;
@@ -251,15 +257,15 @@ class FSHandler {
 			[out] partition description list/vector
 			[in] [default - true] cleat given list before collecting the data
 			Returns result code of the operation (enum value) */
-		PartsOpResult EnumPartitions(std::vector<PartitionDesc> &partList, const bool clearList = true);
+		FSOpResult EnumPartitions(std::vector<PartitionDesc> &partList, const bool clearList = true);
 		/* Gets the size for a given file
 			Param:
 			[in] path to a file to calc comtrol sum for
 			Returns control sum string */
 		unsigned long long GetFSize(const std::wstring filePath);
-		PartsOpResult GetPhysDriveIndexByPartLetter(const std::wstring partLetter,
+		FSOpResult GetPhysDriveIndexByPartLetter(const std::wstring partLetter,
 			unsigned long &driveIndex, std::vector<PartitionDesc> *parts = 0);
-		PartsOpResult GetBinaryFileInfo(const std::wstring binaryPath, BinData &binaryData) const;
+		FSOpResult GetBinaryFileInfo(const std::wstring binaryPath, BinData &binaryData) const;
 		/* Gets the control sum for a given file
 			Param:
 			[in] path to a file to calc control sum for
@@ -272,16 +278,16 @@ class FSHandler {
 			[in] string path to check
 			Returns true if path exists, false otherwise */
 		bool PathExists(const std::wstring path) const;
-		PartsOpResult CreateFolder(const std::wstring folderPath) const;
-		PartsOpResult CreateFolder(const std::wstring folderPath,
+		FSOpResult CreateFolder(const std::wstring folderPath) const;
+		FSOpResult CreateFolder(const std::wstring folderPath,
 			const SECURITY_ATTRIBUTES *secAttr = 0) const;
-		PartsOpResult CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const;
-		PartsOpResult RemoveFolder_SHFileOp(const std::wstring folderPath, std::wstring *infoBuf = 0) const;
-		PartsOpResult RemoveFolder(const std::wstring folderPath, const bool includeFiles = true);
-		PartsOpResult RemoveFile(const std::wstring filePath) const;
-		PartsOpResult GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const;
-		PartsOpResult SetObjectSecurity(const SecDesc secDesc, const std::wstring objectPath) const;
-		PartsOpResult EnumFolderContents(FolderRecord &folderInfo, const std::wstring folderPath,
+		FSOpResult CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const;
+		FSOpResult RemoveFolder_SHFileOp(const std::wstring folderPath, std::wstring *infoBuf = 0) const;
+		FSOpResult RemoveFolder(const std::wstring folderPath, const bool includeFiles = true);
+		FSOpResult RemoveFile(const std::wstring filePath) const;
+		FSOpResult GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const;
+		FSOpResult SetObjectSecurity(const SecDesc secDesc, const std::wstring objectPath) const;
+		FSOpResult EnumFolderContents(FolderRecord &folderInfo, const std::wstring folderPath,
 			const bool getFileHashes = true, const HashType hashType = HashType::SHA256, const bool getFileSize = true);
 		/* Does the file search baaed on a filename on all available partitions. Filename supports regex expressions.
 			Param:
@@ -356,7 +362,7 @@ class FSHandler {
 		std::wstring calcHash(const std::wstring filePath,
 			const HashType hashType, const bool hashUCase = true);
 		unsigned char* File2Buf(const std::wstring filePath);
-		PartsOpResult getSHFileOpDesc(const unsigned long msgCode, std::wstring *msgStr) const;
+		FSOpResult getSHFileOpDesc(const unsigned long msgCode, std::wstring *msgStr) const;
 };
 
 #endif // _FS_HELPER_H

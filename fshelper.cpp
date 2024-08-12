@@ -610,7 +610,7 @@ FSHandler::FSHandler() {}
 
 FSHandler::~FSHandler() {}
 
-PartsOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc>& partList,
+FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc>& partList,
 	const bool clearList) {
 	unsigned long psz = 0, psn = 0;
 	wchar_t plBuf[4] = { 0 };
@@ -687,9 +687,9 @@ PartsOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc>& partList,
 		}
 	}
 	if (partList.size()) {
-		return PartsOpResult::Success;
+		return FSOpResult::Success;
 	} else {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
 }
 
@@ -709,14 +709,14 @@ unsigned long long FSHandler::GetFSize(const std::wstring filePath) {
 	}
 }
 
-PartsOpResult FSHandler::GetPhysDriveIndexByPartLetter(const std::wstring partLetter,
+FSOpResult FSHandler::GetPhysDriveIndexByPartLetter(const std::wstring partLetter,
 	unsigned long &driveIndex, std::vector<PartitionDesc> *parts) {
 	std::vector<PartitionDesc> vec;
 	if (parts) {
 		vec = *parts;
 	} else {
-		if (PartsOpResult::Success != EnumPartitions(vec)) {
-			return PartsOpResult::Fail;
+		if (FSOpResult::Success != EnumPartitions(vec)) {
+			return FSOpResult::Fail;
 		}
 	}
 	std::wstring partLetterMod = partLetter;
@@ -732,13 +732,13 @@ PartsOpResult FSHandler::GetPhysDriveIndexByPartLetter(const std::wstring partLe
 	for (i = 0; i < vec.size(); ++i) {
 		if (lower_copy(vec[i].partLetter) == lower_copy(partLetterMod)) {
 			driveIndex = wstr2ul(firstNumberFromString(vec[i].drivePath));
-			return PartsOpResult::Success;
+			return FSOpResult::Success;
 		}
 	}
-	return PartsOpResult::Success;
+	return FSOpResult::Success;
 }
 
-PartsOpResult FSHandler::GetBinaryFileInfo(const std::wstring binaryPath, BinData &binaryData) const {
+FSOpResult FSHandler::GetBinaryFileInfo(const std::wstring binaryPath, BinData &binaryData) const {
 	if (INVALID_FILE_ATTRIBUTES != GetFileAttributes(binaryPath.c_str())) {
 		unsigned long binType = 0;
 		if (GetBinaryType(binaryPath.c_str(), &binType)) {
@@ -767,10 +767,10 @@ PartsOpResult FSHandler::GetBinaryFileInfo(const std::wstring binaryPath, BinDat
 				binaryData.BitDepth = BinBitDepth::BitDepthUnknown;
 				binaryData.Platform = BinPlatform::PlatformUnknown;
 			}
-			return PartsOpResult::Success;
+			return FSOpResult::Success;
 		}
 	}
-	return PartsOpResult::Fail;
+	return FSOpResult::Fail;
 }
 
 std::wstring FSHandler::GetFileControlSum(const std::wstring filePath, const HashType sumType) {
@@ -785,48 +785,54 @@ bool FSHandler::PathExists(const std::wstring path) const {
 	return (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(path.c_str()));
 }
 
-PartsOpResult FSHandler::CreateFolder(const std::wstring folderPath) const {
+FSOpResult FSHandler::CreateFolder(const std::wstring folderPath) const {
 	if (!PathExists(folderPath)) {
 		if (CreateDirectory(folderPath.c_str(), 0)) {
-			return PartsOpResult::Success;
+			return FSOpResult::Success;
 		} else {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 	} else {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
 }
 
-PartsOpResult FSHandler::CreateFolder(const std::wstring folderPath, const SECURITY_ATTRIBUTES *secAttr) const {
+FSOpResult FSHandler::CreateFolder(const std::wstring folderPath, const SECURITY_ATTRIBUTES *secAttr) const {
 	if (!PathExists(folderPath)) {
 		if (CreateDirectory(folderPath.c_str(), (SECURITY_ATTRIBUTES*)secAttr)) {
-			return PartsOpResult::Success;
+			return FSOpResult::Success;
 		} else {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 	} else {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
 }
 
-PartsOpResult FSHandler::CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const {
+FSOpResult FSHandler::CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const {
 	if (!PathExists(folderPath)) {
 		if (!CreateDirectory(folderPath.c_str(), 0)) {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 	}
-	if (PartsOpResult::Success == SetObjectSecurity(secDesc, folderPath)) {
-		return PartsOpResult::Success;
+	if (FSOpResult::Success == SetObjectSecurity(secDesc, folderPath)) {
+		return FSOpResult::Success;
 	} else {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
 }
 
-PartsOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath, std::wstring *infoBuf) const {
+FSOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath, std::wstring *infoBuf) const {
+	if (!PathExists(folderPath)) {
+		if(infoBuf && !IsBadWritePtr(infoBuf)) {
+			*infoBuf = L"Requested path does not exist";
+		}
+		return FSOpResult::Fail;
+	}
 	size_t folderPathLen = wcslen_c(folderPath.c_str()) + 2;
 	wchar_t* folderPathBuf = (wchar_t*)malloc(folderPathLen * sizeof(wchar_t));
 	if (!folderPathBuf) {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
 	memset(folderPathBuf, 0, folderPathLen * sizeof(wchar_t));
 	wsprintf(folderPathBuf, L"%s", folderPath.c_str());
@@ -842,53 +848,55 @@ PartsOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath, st
 	unsigned long opres = SHFileOperation(&fileOp);
 	SAFE_FREE(folderPathBuf);
 	if (!opres) {
-		return PartsOpResult::Success;
+		return FSOpResult::Success;
 	} else {
 		if (infoBuf) {
-			getSHFileOpDesc(opres, infoBuf);
+			if (FSOpResult::Success != getSHFileOpDesc(opres, infoBuf)) {
+				return FSOpResult::Fail;
+			}
 		}
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
 }
 
-PartsOpResult FSHandler::RemoveFolder(const std::wstring folderPath, const bool includeFiles) {
+FSOpResult FSHandler::RemoveFolder(const std::wstring folderPath, const bool includeFiles) {
 	std::vector<FileRecord> folderFiles = SeekFileInDir(folderPath, L".*", L"", false, false);
 	if (folderFiles.size()) {
 		if (includeFiles) {
 			for (size_t i = 0; i < folderFiles.size(); ++i) {
-				if (PartsOpResult::Success != RemoveFile(folderFiles[i].filePath)) {
-					return PartsOpResult::Fail;
+				if (FSOpResult::Success != RemoveFile(folderFiles[i].filePath)) {
+					return FSOpResult::Fail;
 				}
 			}
 		} else {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 	}
 	if (::RemoveDirectory(folderPath.c_str())) {
-		return PartsOpResult::Success;
+		return FSOpResult::Success;
 	} else {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
 }
 
-PartsOpResult FSHandler::RemoveFile(const std::wstring filePath) const {
+FSOpResult FSHandler::RemoveFile(const std::wstring filePath) const {
 	if (::DeleteFile(filePath.c_str())) {
-		return PartsOpResult::Success;
+		return FSOpResult::Success;
 	} else {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
 }
 
-PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const {
+FSOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const {
 	if (!PathExists(objectPath)) {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
 	ProcessHandler proc;
 	unsigned long procid = proc.GetCurrentProcPid();
 	std::vector<std::wstring> privs = proc.GetProcPrivileges(procid);
 	if (!valInList(privs, L"SeSecurityPrivilege")) {
 		if (!proc.EnableSecurityPrivilege(procid)) {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 	}
 	ACLHandler aclh;
@@ -899,20 +907,20 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		if (ERROR_INSUFFICIENT_BUFFER == getLastErrorCode()) {
 			::SECURITY_DESCRIPTOR* tsd = (::SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, secinfolen);
 			if (!tsd) {
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 			secDesc.daclInfo = ::LocalAlloc(LPTR, secinfolen);
 			if (secDesc.daclInfo) {
 				if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo),
 					tsd, secinfolen, &secinfolen)) {
 					SAFE_LOCALFREE(secDesc.daclInfo);
-					return PartsOpResult::Fail;
+					return FSOpResult::Fail;
 				}
 				memcpy(secDesc.daclInfo, tsd, secinfolen);
 				SAFE_LOCALFREE(tsd);
 				secDesc.daclInfoSz = secinfolen;
 			} else {
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 		}
 	}
@@ -925,18 +933,18 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 				if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::SACLSecInfo),
 					secDesc.saclInfo, secinfolen, &secinfolen)) {
 					SAFE_LOCALFREE(secDesc.daclInfo);
-					return PartsOpResult::Fail;
+					return FSOpResult::Fail;
 				}
 				secDesc.saclInfoSz = secinfolen;
 			} else {
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 		}
 	}
 	secinfolen = 0;
 	::SECURITY_DESCRIPTOR* tsd = (::SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 	if (!tsd) {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
 	if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::OwnerSecInfo), tsd, secinfolen,
 		&secinfolen)) {
@@ -944,11 +952,11 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 			if (!::GetFileSecurity(objectPath.c_str(),static_cast<unsigned long>(SecInfo::OwnerSecInfo),
 				tsd, secinfolen, &secinfolen)) {
 				SAFE_LOCALFREE(tsd);
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 			::PSID tsid = 0;
 			if (ACLOpResult::Success != aclh.OwnerSIDFromSecurityDescriptor(tsd, tsid)) {
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 			secDesc.ownerInfo = sys.StrSIDFromSID(tsid);
 			// std::wcout << L"xxx " << sys.GetAccountNameFromStrSID(secDesc.ownerInfo) << std::endl;
@@ -959,7 +967,7 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 	secinfolen = 0;
 	tsd = (::SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 	if (!tsd) {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
 	if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo), tsd, secinfolen,
 		&secinfolen)) {
@@ -967,11 +975,11 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 			if (!::GetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo),
 				tsd, secinfolen, &secinfolen)) {
 				SAFE_LOCALFREE(tsd);
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 			::PSID tsid = 0;
 			if (ACLOpResult::Success != aclh.PrimaryGroupSIDFromSecurityDescriptor(tsd, tsid)) {
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 			std::wstring sidname = sys.GetAccountNameFromSID(tsid);
 			if((L"отсутствует" != lower_copy(sidname)) && (L"empty" != lower_copy(sidname)) &&
@@ -986,36 +994,36 @@ PartsOpResult FSHandler::GetObjectSecurity(SecDesc &secDesc, const std::wstring 
 		}
 	}
 	if (ACLOpResult::Success != aclh.CreateAbsoluteSecDesc(secDesc)) {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
-	return PartsOpResult::Success;
+	return FSOpResult::Success;
 }
 
-PartsOpResult FSHandler::SetObjectSecurity(const SecDesc secDesc, const std::wstring objectPath) const {
+FSOpResult FSHandler::SetObjectSecurity(const SecDesc secDesc, const std::wstring objectPath) const {
 	if (!PathExists(objectPath)) {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
 	ProcessHandler proc;
 	unsigned long procid = proc.GetCurrentProcPid();
 	std::vector<std::wstring> privs = proc.GetProcPrivileges(procid);
 	if (!valInList(privs, L"SeBackupPrivilege")) {
 		if (!proc.EnableBackupPrivilege(procid)) {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 	}
 	if (!valInList(privs, L"SeRestorePrivilege")) {
 		if (!proc.EnableRestorePrivilege(procid)) {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 	}
 	if (!valInList(privs, L"SeSecurityPrivilege")) {
 		if (!proc.EnableSecurityPrivilege(procid)) {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 	}
 	if (!valInList(privs, L"SeTakeOwnershipPrivilege")) {
 		if (!proc.EnableTakeOwnershipPrivilege(procid)) {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 	}
 	ACLHandler aclh;
@@ -1023,28 +1031,28 @@ PartsOpResult FSHandler::SetObjectSecurity(const SecDesc secDesc, const std::wst
 		::ACL* acllist = 0;
 		if (ACLOpResult::Success != aclh.DACLFromSecurityDescriptor(
 			(::SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo, acllist)) {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 		::SECURITY_DESCRIPTOR* sd = (::SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 		if (!sd) {
 			SAFE_LOCALFREE(acllist);
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 		if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
 			if (!::SetSecurityDescriptorDacl(sd, true, acllist, false)) {
 				SAFE_LOCALFREE(sd);
 				SAFE_LOCALFREE(acllist);
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 		} else {
 			SAFE_LOCALFREE(sd);
 			SAFE_LOCALFREE(acllist);
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 		if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::DACLSecInfo), sd)) {
 			SAFE_LOCALFREE(sd);
 			SAFE_LOCALFREE(acllist);
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 		SAFE_LOCALFREE(sd);
 		SAFE_LOCALFREE(acllist);
@@ -1053,29 +1061,29 @@ PartsOpResult FSHandler::SetObjectSecurity(const SecDesc secDesc, const std::wst
 		::ACL* acllist = 0;
 		if (ACLOpResult::Success != aclh.SACLFromSecurityDescriptor((::SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
 			acllist)) {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 		if (acllist) {
 			::SECURITY_DESCRIPTOR* sd = (::SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 			if (!sd) {
 				SAFE_LOCALFREE(acllist);
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 			if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
 				if (!::SetSecurityDescriptorSacl(sd, true, acllist, false)) {
 					SAFE_LOCALFREE(sd);
 					SAFE_LOCALFREE(acllist);
-					return PartsOpResult::Fail;
+					return FSOpResult::Fail;
 				}
 			} else {
 				SAFE_LOCALFREE(sd);
 				SAFE_LOCALFREE(acllist);
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 			if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::SACLSecInfo), sd)) {
 				SAFE_LOCALFREE(sd);
 				SAFE_LOCALFREE(acllist);
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 			SAFE_LOCALFREE(sd);
 			SAFE_LOCALFREE(acllist);
@@ -1084,7 +1092,7 @@ PartsOpResult FSHandler::SetObjectSecurity(const SecDesc secDesc, const std::wst
 	if (secDesc.ownerInfo.length()) {
 		::SECURITY_DESCRIPTOR* sd = (::SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 		if (!sd) {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 		::PSID tsid = 0;
 		if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
@@ -1092,18 +1100,18 @@ PartsOpResult FSHandler::SetObjectSecurity(const SecDesc secDesc, const std::wst
 			SysHandler sys;
 			tsid = sys.SIDFromStrSid(secDesc.ownerInfo);
 			if (!tsid) {
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 			if (!::SetSecurityDescriptorOwner(sd, tsid, ownerDefaulted)) {
 				SAFE_LOCALFREE(tsid);
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 		} else {
 			SAFE_LOCALFREE(sd);
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 		if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::OwnerSecInfo), sd)) {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 		SAFE_LOCALFREE(sd);
 		SAFE_LOCALFREE(tsid);
@@ -1111,7 +1119,7 @@ PartsOpResult FSHandler::SetObjectSecurity(const SecDesc secDesc, const std::wst
 	if (secDesc.primaryGroupInfo.length()) {
 		::SECURITY_DESCRIPTOR* sd = (::SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 		if (!sd) {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 		::PSID tsid = 0;
 		if (::InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION)) {
@@ -1119,26 +1127,26 @@ PartsOpResult FSHandler::SetObjectSecurity(const SecDesc secDesc, const std::wst
 			SysHandler sys;
 			tsid = sys.SIDFromStrSid(secDesc.primaryGroupInfo);
 			if (!tsid) {
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 			if (!::SetSecurityDescriptorOwner(sd, tsid, groupDefaulted)) {
 				SAFE_LOCALFREE(tsid);
-				return PartsOpResult::Fail;
+				return FSOpResult::Fail;
 			}
 		} else {
 			SAFE_LOCALFREE(sd);
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 		if (!::SetFileSecurity(objectPath.c_str(), static_cast<unsigned long>(SecInfo::GroupSecInfo), sd)) {
-			return PartsOpResult::Fail;
+			return FSOpResult::Fail;
 		}
 		SAFE_LOCALFREE(sd);
 		SAFE_LOCALFREE(tsid);
 	}
-	return PartsOpResult::Success;
+	return FSOpResult::Success;
 }
 
-PartsOpResult FSHandler::EnumFolderContents(FolderRecord &folderInfo, const std::wstring folderPath,
+FSOpResult FSHandler::EnumFolderContents(FolderRecord &folderInfo, const std::wstring folderPath,
 	const bool getFileHashes, const HashType hashType, const bool getFileSize) {
 	if (PathExists(folderPath)) {
 		std::wstring seekpath = lower_copy(folderPath);
@@ -1169,8 +1177,8 @@ PartsOpResult FSHandler::EnumFolderContents(FolderRecord &folderInfo, const std:
 						folderrec.folderName = lower_copy(fd.cFileName);
 						folderrec.folderPath = removeFromStart_copy(seekpath, fs_pathnolim) + L"\\" +
 							lower_copy(fd.cFileName);
-						if (PartsOpResult::Success != EnumFolderContents(folderrec, folderrec.folderPath)) {
-							return PartsOpResult::Fail;
+						if (FSOpResult::Success != EnumFolderContents(folderrec, folderrec.folderPath)) {
+							return FSOpResult::Fail;
 						}
 						folderInfo.folders.push_back(folderrec);
 					}
@@ -1191,9 +1199,9 @@ PartsOpResult FSHandler::EnumFolderContents(FolderRecord &folderInfo, const std:
 			FindClose(hFind);
 		}
 	} else {
-		return PartsOpResult::Fail;
+		return FSOpResult::Fail;
 	}
-	return PartsOpResult::Success;
+	return FSOpResult::Success;
 }
 
 std::vector<FileRecord> FSHandler::SeekFile(const std::wstring filename,
@@ -1205,7 +1213,7 @@ std::vector<FileRecord> FSHandler::SeekFile(const std::wstring filename,
 	if (parts) {
 		drives = *parts;
 	} else {
-		if (PartsOpResult::Success != EnumPartitions(drives)) {
+		if (FSOpResult::Success != EnumPartitions(drives)) {
 			return ret;
 		}
 	}
@@ -1453,7 +1461,7 @@ std::wstring FSHandler::DrivePath2PartLetter(const std::wstring drivePath,
 	if (parts) {
 		vec = *parts;
 	} else {
-		if (PartsOpResult::Fail == EnumPartitions(vec)) {
+		if (FSOpResult::Fail == EnumPartitions(vec)) {
 			return drivePath;
 		}
 	}
@@ -1478,7 +1486,7 @@ std::wstring FSHandler::ReplaceDrivePathWithPartLetter(const std::wstring path,
 	if (parts) {
 		vec = *parts;
 	} else {
-		if (PartsOpResult::Fail == EnumPartitions(vec)) {
+		if (FSOpResult::Fail == EnumPartitions(vec)) {
 			return path;
 		}
 	}
@@ -1635,9 +1643,9 @@ unsigned char* FSHandler::File2Buf(const std::wstring filePath) {
 	return 0;
 }
 
-PartsOpResult FSHandler::getSHFileOpDesc(const unsigned long msgCode, std::wstring *msgStr) const {
-	if (!msgStr) {
-		return PartsOpResult::Fail;
+FSOpResult FSHandler::getSHFileOpDesc(const unsigned long msgCode, std::wstring *msgStr) const {
+	if (!msgStr || IsBadWritePtr(msgStr)) {
+		return FSOpResult::Fail;
 	}
 	if (!msgCode) {
 		*msgStr = L"Succesful operation";
@@ -1693,5 +1701,5 @@ PartsOpResult FSHandler::getSHFileOpDesc(const unsigned long msgCode, std::wstri
 	} else {
 		*msgStr = L"Unknown code specifed";
 	}
-	return PartsOpResult::Success;
+	return FSOpResult::Success;
 }
