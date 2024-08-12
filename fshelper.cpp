@@ -822,7 +822,7 @@ PartsOpResult FSHandler::CreateFolder(const std::wstring folderPath, const SecDe
 	}
 }
 
-PartsOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath) const {
+PartsOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath, std::wstring *infoBuf) const {
 	size_t folderPathLen = wcslen_c(folderPath.c_str()) + 2;
 	wchar_t* folderPathBuf = (wchar_t*)malloc(folderPathLen * sizeof(wchar_t));
 	if (!folderPathBuf) {
@@ -844,6 +844,9 @@ PartsOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath) co
 	if (!opres) {
 		return PartsOpResult::Success;
 	} else {
+		if (infoBuf) {
+			getSHFileOpDesc(opres, infoBuf);
+		}
 		return PartsOpResult::Fail;
 	}
 }
@@ -1630,4 +1633,65 @@ unsigned char* FSHandler::File2Buf(const std::wstring filePath) {
 		}
 	}
 	return 0;
+}
+
+PartsOpResult FSHandler::getSHFileOpDesc(const unsigned long msgCode, std::wstring *msgStr) const {
+	if (!msgStr) {
+		return PartsOpResult::Fail;
+	}
+	if (!msgCode) {
+		*msgStr = L"Succesful operation";
+	} else if (DE_SAMEFILE == msgCode) {
+		*msgStr = L"The source and destination files are the same file";
+	} else if (DE_MANYSRC1DEST == msgCode) {
+		*msgStr = L"Multiple file paths were specified in the source buffer, but only one destination file path";
+	} else if (DE_DIFFDIR == msgCode) {
+		*msgStr = L"Rename operation was specified but the destination path is a different directory Use the move operation instead";
+	} else if (DE_ROOTDIR == msgCode) {
+		*msgStr = L"The source is a root directory, which cannot be moved or renamed";
+	} else if (DE_OPCANCELLED == msgCode) {
+		*msgStr = L"The operation was canceled by the user, or silently canceled if the appropriate flags were supplied to SHFileOperation";
+	} else if (DE_DESTSUBTREE == msgCode) {
+		*msgStr = L"The destination is a subtree of the source";
+	} else if (DE_ACCESSDENIEDSRC == msgCode) {
+		*msgStr = L"Security settings denied access to the source";
+	} else if (DE_PATHTOODEEP == msgCode) {
+		*msgStr = L"The source or destination path exceeded or would exceed MAX_PATH";
+	} else if (DE_MANYDEST == msgCode) {
+		*msgStr = L"The operation involved multiple destination paths, which can fail in the case of a move operation";
+	} else if (DE_INVALIDFILES == msgCode) {
+		*msgStr = L"The path in the source or destination or both was invalid";
+	} else if (DE_DESTSAMETREE == msgCode) {
+		*msgStr = L"The source and destination have the same parent folder";
+	} else if (DE_FLDDESTISFILE == msgCode) {
+		*msgStr = L"The destination path is an existing file";
+	} else if (DE_FILEDESTISFLD == msgCode) {
+		*msgStr = L"The destination path is an existing folder";
+	} else if (DE_FILENAMETOOLONG == msgCode) {
+		*msgStr = L"The name of the file exceeds MAX_PATH";
+	} else if (DE_DEST_IS_CDROM == msgCode) {
+		*msgStr = L"The destination is a read-only DVD, possibly unformatted";
+	} else if (DE_DEST_IS_DVD == msgCode) {
+		*msgStr = L"The destination is a writable CD-ROM, possibly unformatted";
+	} else if (DE_DEST_IS_CDRECORD == msgCode) {
+		*msgStr = L"The destination is a writable CD-ROM, possibly unformatted";
+	} else if (DE_FILE_TOO_LARGE == msgCode) {
+		*msgStr = L"The file involved in the operation is too large for the destination media or file system";
+	} else if (DE_SRC_IS_DVD == msgCode) {
+		*msgStr = L"The source is a read-only DVD, possibly unformatted";
+	} else if (DE_SRC_IS_CDROM == msgCode) {
+		*msgStr = L"The source is a read-only CD-ROM, possibly unformatted";
+	} else if (DE_ERROR_MAX == msgCode) {
+		*msgStr = L"MAX_PATH was exceeded during the operation";
+	} else if (DE_UNKNOWN == msgCode) {
+		// This error does not occur on Windows Vista and later
+		*msgStr = L"An unknown error occurred This is typically due to an invalid path in the source or destination";
+	} else if (DE_ERRORONDEST == msgCode) {
+		*msgStr = L"An unspecified error occurred on the destination";
+	} else if (DE_CANTRENAME == msgCode) {
+		*msgStr = L"Destination is a root directory and cannot be renamed";
+	} else {
+		*msgStr = L"Unknown code specifed";
+	}
+	return PartsOpResult::Success;
 }

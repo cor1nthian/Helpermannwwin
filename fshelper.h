@@ -276,7 +276,7 @@ class FSHandler {
 		PartsOpResult CreateFolder(const std::wstring folderPath,
 			const SECURITY_ATTRIBUTES *secAttr = 0) const;
 		PartsOpResult CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const;
-		PartsOpResult RemoveFolder_SHFileOp(const std::wstring folderPath) const;
+		PartsOpResult RemoveFolder_SHFileOp(const std::wstring folderPath, std::wstring *infoBuf = 0) const;
 		PartsOpResult RemoveFolder(const std::wstring folderPath, const bool includeFiles = true);
 		PartsOpResult RemoveFile(const std::wstring filePath) const;
 		PartsOpResult GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const;
@@ -356,6 +356,7 @@ class FSHandler {
 		std::wstring calcHash(const std::wstring filePath,
 			const HashType hashType, const bool hashUCase = true);
 		unsigned char* File2Buf(const std::wstring filePath);
+		PartsOpResult getSHFileOpDesc(const unsigned long msgCode, std::wstring *msgStr) const;
 };
 
 #endif // _FS_HELPER_H
