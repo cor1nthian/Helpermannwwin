@@ -283,6 +283,8 @@ class FSHandler {
 			const SECURITY_ATTRIBUTES *secAttr = 0) const;
 		FSOpResult CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const;
 		FSOpResult RemoveFolder_SHFileOp(const std::wstring folderPath, std::wstring *infoBuf = 0) const;
+		FSOpResult CustomFileOp_SHFileOp(const std::wstring folderPath, const std::wstring folderPathDest, const unsigned long operation, const unsigned long opCode,
+			std::wstring* infoBuf = 0) const;
 		FSOpResult RemoveFolder(const std::wstring folderPath, const bool includeFiles = true);
 		FSOpResult RemoveFile(const std::wstring filePath) const;
 		FSOpResult GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const;

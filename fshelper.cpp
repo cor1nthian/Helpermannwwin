@@ -822,9 +822,9 @@ FSOpResult FSHandler::CreateFolder(const std::wstring folderPath, const SecDesc 
 	}
 }
 
-FSOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath, std::wstring *infoBuf) const {
+FSOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath, std::wstring* infoBuf) const {
 	if (!PathExists(folderPath)) {
-		if(infoBuf && !IsBadWritePtr(infoBuf)) {
+		if (infoBuf && !IsBadWritePtr(infoBuf)) {
 			*infoBuf = L"Requested path does not exist";
 		}
 		return FSOpResult::Fail;
@@ -847,6 +847,58 @@ FSOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath, std::
 		L"" };
 	unsigned long opres = SHFileOperation(&fileOp);
 	SAFE_FREE(folderPathBuf);
+	if (!opres) {
+		return FSOpResult::Success;
+	} else {
+		if (infoBuf) {
+			if (FSOpResult::Success != getSHFileOpDesc(opres, infoBuf)) {
+				return FSOpResult::Fail;
+			}
+		}
+		return FSOpResult::Fail;
+	}
+}
+
+FSOpResult FSHandler::CustomFileOp_SHFileOp(const std::wstring folderPath, const std::wstring folderPathDest,
+	const unsigned long operation, const unsigned long opCode, std::wstring* infoBuf) const {
+	if (!PathExists(folderPath) && !PathExists(folderPathDest)) {
+		if (infoBuf && !IsBadWritePtr(infoBuf)) {
+			*infoBuf = L"Requested path does not exist";
+		}
+		return FSOpResult::Fail;
+	}
+	size_t folderPathLen = wcslen_c(folderPath.c_str()) + 2;
+	wchar_t* folderPathBuf = 0;
+	if (folderPathLen) {
+		folderPathBuf = (wchar_t*)malloc(folderPathLen * sizeof(wchar_t));
+		if (!folderPathBuf) {
+			return FSOpResult::Fail;
+		}
+		memset(folderPathBuf, 0, folderPathLen * sizeof(wchar_t));
+		wsprintf(folderPathBuf, L"%s", folderPath.c_str());
+	}
+	folderPathLen = wcslen_c(folderPathDest.c_str()) + 2;
+	wchar_t* folderPathDestBuf = 0;
+	if (folderPathLen) {
+		folderPathDestBuf = (wchar_t*)malloc(folderPathLen * sizeof(wchar_t));
+		if (!folderPathDestBuf) {
+			return FSOpResult::Fail;
+		}
+		memset(folderPathDestBuf, 0, folderPathLen * sizeof(wchar_t));
+		wsprintf(folderPathDestBuf, L"%s", folderPathDest.c_str());
+	}
+	SHFILEOPSTRUCT fileOp = {
+		0,
+		operation,
+		folderPathBuf,
+		folderPathDestBuf,
+		opCode,
+		false,
+		0,
+		L"" };
+	unsigned long opres = SHFileOperation(&fileOp);
+	SAFE_FREE(folderPathBuf);
+	SAFE_FREE(folderPathDestBuf);
 	if (!opres) {
 		return FSOpResult::Success;
 	} else {
