@@ -144,7 +144,7 @@ enum class FileInfo : unsigned char {
 };
 
 enum class FolderInfo : unsigned char {
-	eDirectoryInformation = 1,
+	FileDirectoryInformation = 1,
 	FileFullDirectoryInformation,					// 2
 	FileBothDirectoryInformation,					// 3
 	FileBasicInformation,							// 4
@@ -409,7 +409,7 @@ class FSHandler {
 		FSOpResult CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const;
 		FSOpResult RemoveFolder_SHFileOp(const std::wstring folderPath, std::wstring *infoBuf = 0) const;
 		FSOpResult CustomFileOp_SHFileOp(const std::wstring folderPath, const std::wstring folderPathDest,
-			const unsigned long operation, const unsigned long opCode, std::wstring* infoBuf = 0) const;
+			const unsigned long operation, const unsigned long opCode, std::wstring *infoBuf = 0) const;
 		FSOpResult RemoveFolder(const std::wstring folderPath, const bool includeFiles = true);
 		FSOpResult MoveFolder(const std::wstring folderPath, const bool checkDestSpace = true) const;
 		FSOpResult CopyFolder(const std::wstring folderPath, const bool checkDestSpace = true) const;

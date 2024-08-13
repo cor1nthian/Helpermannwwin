@@ -854,7 +854,7 @@ FSOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath, std::
 }
 
 FSOpResult FSHandler::CustomFileOp_SHFileOp(const std::wstring folderPath, const std::wstring folderPathDest,
-	const unsigned long operation, const unsigned long opCode, std::wstring* infoBuf) const {
+	const unsigned long operation, const unsigned long opCode, std::wstring *infoBuf) const {
 	if (!PathExists(folderPath) && !PathExists(folderPathDest)) {
 		if (infoBuf && !IsBadWritePtr(infoBuf)) {
 			*infoBuf = L"Requested path does not exist";
@@ -933,11 +933,11 @@ FSOpResult FSHandler::CopyFolder(const std::wstring folderPath, const bool check
 	return FSOpResult::Success;
 }
 
-FSOpResult FSHandler::MoveFile(const std::wstring folderPath, const bool checkDestSpace = true) const {
+FSOpResult FSHandler::MoveFile(const std::wstring folderPath, const bool checkDestSpace) const {
 	return FSOpResult::Success;
 }
 
-FSOpResult FSHandler::CopyFile(const std::wstring folderPath, const bool checkDestSpace = true) const {
+FSOpResult FSHandler::CopyFile(const std::wstring folderPath, const bool checkDestSpace) const {
 	return FSOpResult::Success;
 }
 
