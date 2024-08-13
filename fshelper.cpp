@@ -769,6 +769,16 @@ bool FSHandler::PathExists(const std::wstring path) const {
 	return (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(path.c_str()));
 }
 
+FSOpResult FSHandler::IsFolder(bool &isFolder, const std::wstring path) const {
+	if (PathExists(path)) {
+		unsigned long fileattr = ::GetFileAttributes(path.c_str());
+		isFolder = FILE_ATTRIBUTE_DIRECTORY & fileattr;
+		return FSOpResult::Success;
+	} else {
+		return FSOpResult::Fail;
+	}
+}
+
 FSOpResult FSHandler::CreateFolder(const std::wstring folderPath) const {
 	if (!PathExists(folderPath)) {
 		if (CreateDirectory(folderPath.c_str(), 0)) {
@@ -920,6 +930,14 @@ FSOpResult FSHandler::MoveFolder(const std::wstring folderPath, const bool check
 }
 
 FSOpResult FSHandler::CopyFolder(const std::wstring folderPath, const bool checkDestSpace) const {
+	return FSOpResult::Success;
+}
+
+FSOpResult FSHandler::MoveFile(const std::wstring folderPath, const bool checkDestSpace = true) const {
+	return FSOpResult::Success;
+}
+
+FSOpResult FSHandler::CopyFile(const std::wstring folderPath, const bool checkDestSpace = true) const {
 	return FSOpResult::Success;
 }
 

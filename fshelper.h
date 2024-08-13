@@ -403,6 +403,7 @@ class FSHandler {
 			[in] string path to check
 			Returns true if path exists, false otherwise */
 		bool PathExists(const std::wstring path) const;
+		FSOpResult IsFolder(bool &isFikder, const std::wstring path) const;
 		FSOpResult CreateFolder(const std::wstring folderPath) const;
 		FSOpResult CreateFolder(const std::wstring folderPath, const SECURITY_ATTRIBUTES *secAttr = 0) const;
 		FSOpResult CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const;
@@ -412,6 +413,8 @@ class FSHandler {
 		FSOpResult RemoveFolder(const std::wstring folderPath, const bool includeFiles = true);
 		FSOpResult MoveFolder(const std::wstring folderPath, const bool checkDestSpace = true) const;
 		FSOpResult CopyFolder(const std::wstring folderPath, const bool checkDestSpace = true) const;
+		FSOpResult MoveFile(const std::wstring folderPath, const bool checkDestSpace = true) const;
+		FSOpResult CopyFile(const std::wstring folderPath, const bool checkDestSpace = true) const;
 		FSOpResult RemoveFile(const std::wstring filePath) const;
 		FSOpResult GetFolderSize_NtQueryDir(unsigned long long &folderSize, const std::wstring folderPath);
 		FSOpResult GetFolderSize(unsigned long long &folderSize, const std::wstring folderPath);
