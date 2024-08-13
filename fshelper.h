@@ -209,6 +209,22 @@ enum class HashType : unsigned long {
 	SHA256 = CALG_SHA_256
 };
 
+struct UnicodeString {
+	UnicodeString();
+	UnicodeString(const unsigned short length, const unsigned short maxlength);
+	UnicodeString(const unsigned short length, const unsigned short maxlength, const wchar_t* buffer);
+	UnicodeString(const UnicodeString &other);
+	UnicodeString(UnicodeString &&other) noexcept;
+	~UnicodeString();
+	UnicodeString& operator=(const UnicodeString &other);
+	UnicodeString& operator=(UnicodeString &&other) noexcept;
+	bool operator==(const UnicodeString &other) const;
+	bool operator!=(const UnicodeString &other) const;
+	unsigned short	Length;
+	unsigned short	MaximumLength;
+	wchar_t*		Buffer;
+};
+
 struct BinData {
 	BinData();
 	BinData(const BinBitDepth bitDepth, const BinPlatform binPlatform);

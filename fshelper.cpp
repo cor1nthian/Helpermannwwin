@@ -7,6 +7,93 @@ const wchar_t* fs_pathseparator = L"\\";
 const wchar_t* fs_pathnolim = L"\\\\?\\";
 const wchar_t* fs_pathsall = L"\\*";
 
+UnicodeString::UnicodeString() {
+	Length = 0;
+	MaximumLength = 0;
+	Buffer = 0;
+}
+
+UnicodeString::UnicodeString(const unsigned short length, const unsigned short maxlength) {
+	Length = length;
+	MaximumLength = maxlength;
+	NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, wchar_t, Length);
+}
+
+UnicodeString::UnicodeString(const unsigned short length, const unsigned short maxlength, const wchar_t* buffer) {
+	Length = length;
+	MaximumLength = maxlength;
+	NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, wchar_t, Length);
+	if(Buffer) {
+		wsprintf(Buffer, L"%s", buffer);
+	}
+}
+
+UnicodeString::UnicodeString(const UnicodeString &other) {
+	if (this != &other) {
+		Length = other.Length;
+		MaximumLength = other.MaximumLength;
+		Buffer = other.Buffer;
+	}
+}
+
+UnicodeString::UnicodeString(UnicodeString &&other) noexcept {
+	if (this != &other) {
+		Length = other.Length;
+		other.Length = 0;
+		MaximumLength = other.MaximumLength;
+		other.MaximumLength = 0;
+		Buffer = other.Buffer;
+		other.Buffer = 0;
+	}
+}
+
+UnicodeString::~UnicodeString() {
+	if (Buffer) {
+		SAFE_ARR_DELETE(Buffer);
+	}
+}
+
+UnicodeString& UnicodeString::operator=(const UnicodeString &other) {
+	if (this != &other) {
+		Length = other.Length;
+		MaximumLength = other.MaximumLength;
+		Buffer = other.Buffer;
+	}
+	return *this;
+}
+
+UnicodeString& UnicodeString::operator=(UnicodeString &&other) noexcept {
+	if (this != &other) {
+		Length = other.Length;
+		other.Length = 0;
+		MaximumLength = other.MaximumLength;
+		other.MaximumLength = 0;
+		Buffer = other.Buffer;
+		other.Buffer = 0;
+	}
+	return *this;
+}
+
+bool UnicodeString::operator==(const UnicodeString& other) const {
+	if (this != &other) {
+		return (Length == other.Length &&
+				MaximumLength == other.MaximumLength &&
+				!memcmp(Buffer, other.Buffer, Length));
+	} else {
+		return true;
+	}
+}
+
+bool UnicodeString::operator!=(const UnicodeString& other) const {
+	if (this != &other) {
+		return (Length != other.Length ||
+				MaximumLength != other.MaximumLength ||
+				memcmp(Buffer, other.Buffer, Length));
+	} else {
+		return false;
+	}
+}
+
 BinData::BinData() {
 	Platform = BinPlatform::PlatformUnknown;
 	BitDepth = BinBitDepth::BitDepthUnknown;
