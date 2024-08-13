@@ -32,7 +32,10 @@ UnicodeString::UnicodeString(const UnicodeString &other) {
 	if (this != &other) {
 		Length = other.Length;
 		MaximumLength = other.MaximumLength;
-		Buffer = other.Buffer;
+		NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, wchar_t, Length);
+		if (Buffer && other.Buffer) {
+			wsprintf(Buffer, L"%s", other.Buffer);
+		}
 	}
 }
 
@@ -78,7 +81,7 @@ bool UnicodeString::operator==(const UnicodeString& other) const {
 	if (this != &other) {
 		return (Length == other.Length &&
 				MaximumLength == other.MaximumLength &&
-				!memcmp(Buffer, other.Buffer, Length));
+				!memcmp(Buffer, other.Buffer, Length * sizeof(wchar_t)));
 	} else {
 		return true;
 	}
@@ -88,11 +91,105 @@ bool UnicodeString::operator!=(const UnicodeString& other) const {
 	if (this != &other) {
 		return (Length != other.Length ||
 				MaximumLength != other.MaximumLength ||
-				memcmp(Buffer, other.Buffer, Length));
+				memcmp(Buffer, other.Buffer, Length * sizeof(wchar_t)));
 	} else {
 		return false;
 	}
 }
+
+CommonString::CommonString() {
+	Length = 0;
+	MaximumLength = 0;
+	Buffer = 0;
+}
+
+CommonString::CommonString(const unsigned short length, const unsigned short maxlength) {
+	Length = length;
+	MaximumLength = maxlength;
+	NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, char, Length);
+}
+
+CommonString::CommonString(const unsigned short length, const unsigned short maxlength, const char* buffer) {
+	Length = length;
+	MaximumLength = maxlength;
+	NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, char, Length);
+	if (Buffer) {
+		sprintf(Buffer, "%s", buffer);
+	}
+}
+
+CommonString::CommonString(const CommonString &other) {
+	if (this != &other) {
+		Length = other.Length;
+		MaximumLength = other.MaximumLength;
+		NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, char, Length);
+		if (Buffer && other.Buffer) {
+			sprintf(Buffer, "%s", other.Buffer);
+		}
+	}
+}
+
+CommonString::CommonString(CommonString &&other) noexcept {
+	if (this != &other) {
+		Length = other.Length;
+		other.Length = 0;
+		MaximumLength = other.MaximumLength;
+		other.MaximumLength = 0;
+		Buffer = other.Buffer;
+		other.Buffer = 0;
+	}
+}
+
+CommonString::~CommonString() {
+	if (Buffer) {
+		SAFE_ARR_DELETE(Buffer);
+	}
+}
+
+CommonString& CommonString::operator=(const CommonString& other) {
+	if (this != &other) {
+		Length = other.Length;
+		MaximumLength = other.MaximumLength;
+		NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, char, Length);
+		if (Buffer && other.Buffer) {
+			sprintf(Buffer, "%s", other.Buffer);
+		}
+	}
+	return *this;
+}
+
+CommonString& CommonString::operator=(CommonString&& other) noexcept {
+	if (this != &other) {
+		Length = other.Length;
+		other.Length = 0;
+		MaximumLength = other.MaximumLength;
+		other.MaximumLength = 0;
+		Buffer = other.Buffer;
+		other.Buffer = 0;
+	}
+	return *this;
+}
+
+bool CommonString::operator==(const CommonString& other) const {
+	if (this != &other) {
+		return (Length == other.Length &&
+				MaximumLength == other.MaximumLength &&
+				!memcmp(Buffer, other.Buffer, Length * sizeof(char)));
+	} else {
+		return true;
+	}
+}
+
+bool CommonString::operator!=(const CommonString& other) const {
+	if (this != &other) {
+		return (Length != other.Length ||
+				MaximumLength != other.MaximumLength ||
+				memcmp(Buffer, other.Buffer, Length * sizeof(char)));
+	} else {
+		return false;
+	}
+}
+
 
 BinData::BinData() {
 	Platform = BinPlatform::PlatformUnknown;

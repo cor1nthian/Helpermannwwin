@@ -225,6 +225,23 @@ struct UnicodeString {
 	wchar_t*		Buffer;
 };
 
+struct CommonString {
+	CommonString();
+	CommonString();
+	CommonString(const unsigned short length, const unsigned short maxlength);
+	CommonString(const unsigned short length, const unsigned short maxlength, const char* buffer);
+	CommonString(const CommonString &other);
+	CommonString(CommonString &&other) noexcept;
+	~CommonString();
+	CommonString& operator=(const CommonString& other);
+	CommonString& operator=(CommonString&& other) noexcept;
+	bool operator==(const CommonString& other) const;
+	bool operator!=(const CommonString& other) const;
+	unsigned short	Length;
+	unsigned short	MaximumLength;
+	char*			Buffer;
+};
+
 struct BinData {
 	BinData();
 	BinData(const BinBitDepth bitDepth, const BinPlatform binPlatform);
