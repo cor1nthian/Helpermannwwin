@@ -227,7 +227,6 @@ struct UnicodeString {
 
 struct CommonString {
 	CommonString();
-	CommonString();
 	CommonString(const unsigned short length, const unsigned short maxlength);
 	CommonString(const unsigned short length, const unsigned short maxlength, const char* buffer);
 	CommonString(const CommonString &other);
