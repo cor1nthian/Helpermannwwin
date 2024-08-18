@@ -189,32 +189,23 @@ RegValDesc& RegValDesc::operator=(const RegValDesc &other) {
 	return *this;
 }
 
-//RegValDesc& RegValDesc::operator=(RegValDesc &&other) noexcept {
-//	if (this != &other) {
-//		if (other.valDataSz && other.valData && !IsBadReadPtr(other.valData)) {
-//			if (valData) {
-//				if (valDataSz == 1) {
-//					SAFE_DELETE(valData);
-//				} else if (valDataSz > 1) {
-//					SAFE_ARR_DELETE(valData);
-//				}
-//			}
-//			valData = other.valData;
-//			other.valData = 0;
-//		}
-//		valType = other.valType;
-//		other.valType = RegValType::None;
-//		valDataSz = other.valDataSz;
-//		other.valDataSz = 0;
-//		valPath = other.valPath;
-//		other.valPath.~basic_string();
-//		valName = other.valName;
-//		other.valName.~basic_string();
-//		valDataHex = other.valDataHex;
-//		other.valDataHex.~basic_string();
-//	}
-//	return *this;
-//}
+RegValDesc& RegValDesc::operator=(RegValDesc &&other) noexcept {
+	if (this != &other) {
+		valData = other.valData;
+		other.valData = 0;
+		valType = other.valType;
+		other.valType = RegValType::None;
+		valDataSz = other.valDataSz;
+		other.valDataSz = 0;
+		valPath = other.valPath;
+		other.valPath.~basic_string();
+		valName = other.valName;
+		other.valName.~basic_string();
+		valDataHex = other.valDataHex;
+		other.valDataHex.~basic_string();
+	}
+	return *this;
+}
 
 RegValDesc::~RegValDesc() {
 	if (valType == RegValType::DWord || valType == RegValType::DWordLE ||
@@ -2594,10 +2585,8 @@ RegOpResult RegHandler::AcquireValues(std::vector<RegValDesc> &valList,
 						if (valList[i].valData) {
 							memset(valList[i].valData, 0, sz); // *sizeof(wchar_t));
 							swprintf((wchar_t*)valList[i].valData, L"%s", tstr.c_str());
-							// wcscpy((wchar_t*)valList[i].valData, tstr.c_str());
-							// memcpy(valList[i].valData, tstr.c_str(), sz);
 							valList[i].valDataSz = sz;
-							std::cout << "seekval str ok " << resAcquired << std::endl;
+							// std::cout << "seekval str ok " << resAcquired << std::endl;
 							++resAcquired;
 						} else {
 							valList[i].valData = new wchar_t;
@@ -2636,7 +2625,7 @@ RegOpResult RegHandler::AcquireValues(std::vector<RegValDesc> &valList,
 			if (RegOpResult::Success == GetMultiStrVal(valList[i].valPath,
 				(wchar_t*&)valList[i].valData,
 				valList[i].valDataSz, root)) {
-				std::cout << "seekval multistr ok " << resAcquired << std::endl;
+				// std::cout << "seekval multistr ok " << resAcquired << std::endl;
 				++resAcquired;
 			} else {
 				std::cout << "seekval multistr NOT OK " << resAcquired << std::endl;
@@ -2659,7 +2648,7 @@ RegOpResult RegHandler::AcquireValues(std::vector<RegValDesc> &valList,
 					memcpy(valList[i].valData, &tval, sizeof(unsigned long));
 					valList[i].valDataHex = ul2hexwstr(*(unsigned long*)valList[i].valData);
 					valList[i].valDataSz = sizeof(unsigned long);
-					std::cout << "seekval dword ok " << resAcquired << std::endl;
+					// std::cout << "seekval dword ok " << resAcquired << std::endl;
 					++resAcquired;
 				}
 			} else {
@@ -2681,7 +2670,7 @@ RegOpResult RegHandler::AcquireValues(std::vector<RegValDesc> &valList,
 					memcpy(valList[i].valData, &tval, sizeof(unsigned long));
 					valList[i].valDataHex = ul2hexwstr(*(unsigned long*)valList[i].valData);
 					valList[i].valDataSz = sizeof(unsigned long);
-					std::cout << "seekval dwordbe ok " << resAcquired << std::endl;
+					// std::cout << "seekval dwordbe ok " << resAcquired << std::endl;
 					++resAcquired;
 				}
 			} else {
@@ -2703,7 +2692,7 @@ RegOpResult RegHandler::AcquireValues(std::vector<RegValDesc> &valList,
 					memcpy(valList[i].valData, &tval, sizeof(unsigned long long));
 					valList[i].valDataHex = ull2hexwstr(*(unsigned long long*)valList[i].valData);
 					valList[i].valDataSz = sizeof(unsigned long long);
-					std::cout << "seekval qword ok " << resAcquired << std::endl;
+					// std::cout << "seekval qword ok " << resAcquired << std::endl;
 					++resAcquired;
 				}
 			} else {
@@ -2714,25 +2703,6 @@ RegOpResult RegHandler::AcquireValues(std::vector<RegValDesc> &valList,
 					valList[i].valDataSz = sizeof(unsigned long long);
 				}
 			}
-		/*} else if (valList[i].valType == RegValType::ResourceList &&
-			!valList[i].valData) {
-			unsigned long long tval = 0;
-			if (RegOpResult::Success == GetResourceList(valList[i].valPath, tval, root)) {
-				valList[i].valData = new unsigned long long;
-				if (valList[i].valData) {
-					*(unsigned long long*)valList[i].valData = 0;
-					memcpy(valList[i].valData, &tval, sizeof(unsigned long long));
-					valList[i].valDataHex = ull2hexwstr(*(unsigned long long*)valList[i].valData);
-					std::cout << "seekval reslist ok " << resAcquired << std::endl;
-					++resAcquired;
-				}
-			} else {
-				valList[i].valData = new unsigned long long;
-				if (valList[i].valData) {
-					valList[i].valData = (void*)gc_ull_incorrectVal;
-					valList[i].valDataSz = sizeof(unsigned long long);
-				}
-			} */
 		} else if ((valList[i].valType == RegValType::Binary ||
 			valList[i].valType == RegValType::FullResourceDesc ||
 			valList[i].valType == RegValType::ResourceRequirementsList ||
@@ -2743,12 +2713,12 @@ RegOpResult RegHandler::AcquireValues(std::vector<RegValDesc> &valList,
 				(unsigned char*&)valList[i].valData,
 				valList[i].valDataSz, root)) {
 				if (valList[i].valData) {
-					std::cout << "seekval bin ok " << resAcquired << std::endl;
+					// std::cout << "seekval bin ok " << resAcquired << std::endl;
 					++resAcquired;
-				} else {
+				}/* else {
 					std::cout << "seekval bin NOT OK " << resAcquired << std::endl;
 					std::wcout << valList[i].valPath << std::endl;
-				}
+				}*/
 			} else {
 				valList[i].valData = new unsigned long;
 				if (valList[i].valData) {
@@ -2866,8 +2836,7 @@ RegOpResult RegHandler::FreeValues(const std::vector<RegKeyDesc> &keyList, const
 	return RegOpResult::Success;
 }
 
-RegOpResult RegHandler::FreeValues(const std::vector<RegValDesc> &valList,
-	const HKEY *root) const {
+RegOpResult RegHandler::FreeValues(const std::vector<RegValDesc> &valList, const HKEY *root) const {
 	if (valList.size()) {
 		for (size_t i = 0; i < valList.size(); ++i) {
 			if (valList[i].valData) {
@@ -3091,13 +3060,19 @@ RegOpResult RegHandler::SetKeySecurity(const std::wstring keyName, SecDesc &secD
 			return RegOpResult::Fail;
 		}
 #endif
+#ifdef _WIN64
 		::ACL* acllist = 0;
+#endif
 		if (ACLOpResult::Success != aclh.SACLFromSecurityDescriptor((::SECURITY_DESCRIPTOR*)secDesc.absoluteSDInfo,
 			acllist)) {
 			CLOSEKEY_NULLIFY(keyHandle);
 			return RegOpResult::Fail;
 		}
+#ifndef _WIN64
+		memset(sd, 0, SECURITY_DESCRIPTOR_MIN_LENGTH);
+#else
 		::SECURITY_DESCRIPTOR* sd = (::SECURITY_DESCRIPTOR*)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+#endif // _WIN64
 		if (!sd) {
 			CLOSEKEY_NULLIFY(keyHandle);
 			return RegOpResult::Fail;

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdio.h>
 #include "fshelper.h"
 
 const unsigned long REG_READBUFSZ = 32768;
@@ -6,6 +7,17 @@ const unsigned long REG_READBUFSZ = 32768;
 const wchar_t* fs_pathseparator = L"\\";
 const wchar_t* fs_pathnolim = L"\\\\?\\";
 const wchar_t* fs_pathsall = L"\\*";
+
+NTSTATUS(WINAPI* pRtlInitUnicodeString)(UnicodeString*, wchar_t*);
+NTSTATUS(WINAPI* pNtCreateFile)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, IOStatusBlock*, LARGE_INTEGER*, unsigned long,
+	unsigned long, unsigned long, unsigned long, void*, unsigned long);
+NTSTATUS(WINAPI* pNtCreateEvent)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, EvtType, unsigned char);
+NTSTATUS(WINAPI* pNtQueryDirectoryFile)(::HANDLE, ::HANDLE, PIO_APC_ROUTINE, void*, IOStatusBlock*, void*,
+	unsigned long, FolderInfo, unsigned char, UnicodeString*, unsigned char);
+NTSTATUS(WINAPI* pNtWaitForSingleobject)(::HANDLE, unsigned char, LARGE_INTEGER*);
+NTSTATUS(WINAPI* pRtlUnicodeStringToAnsiString)(ANSIString*, UnicodeString*, unsigned char);
+NTSTATUS(WINAPI* pNtClearEvent)(::HANDLE);
+NTSTATUS(WINAPI* pNtClose)(::HANDLE);
 
 UnicodeString::UnicodeString() {
 	Length = 0;
@@ -16,14 +28,19 @@ UnicodeString::UnicodeString() {
 UnicodeString::UnicodeString(const unsigned short length, const unsigned short maxlength) {
 	Length = length;
 	MaximumLength = maxlength;
-	NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, wchar_t, Length);
+	Buffer = (wchar_t*)malloc(Length * sizeof(wchar_t));
+	// Buffer = (wchar_t*)::LocalAlloc(LPTR, Length);
+	// NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, wchar_t, Length);
 }
 
 UnicodeString::UnicodeString(const unsigned short length, const unsigned short maxlength, const wchar_t* buffer) {
 	Length = length;
 	MaximumLength = maxlength;
-	NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, wchar_t, Length);
+	Buffer = (wchar_t*)malloc(Length * sizeof(wchar_t));
+	// Buffer = (wchar_t*)::LocalAlloc(LPTR, Length);
+	// NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, wchar_t, Length);
 	if(Buffer) {
+		memset(Buffer, 0, Length * sizeof(wchar_t));
 		wsprintf(Buffer, L"%s", buffer);
 	}
 }
@@ -32,8 +49,11 @@ UnicodeString::UnicodeString(const UnicodeString &other) {
 	if (this != &other) {
 		Length = other.Length;
 		MaximumLength = other.MaximumLength;
-		NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, wchar_t, Length);
+		Buffer = (wchar_t*)malloc(Length * sizeof(wchar_t));
+		// Buffer = (wchar_t*)::LocalAlloc(LPTR, Length);
+		// NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, wchar_t, Length);
 		if (Buffer && other.Buffer) {
+			memset(Buffer, 0, Length * sizeof(wchar_t));
 			wsprintf(Buffer, L"%s", other.Buffer);
 		}
 	}
@@ -51,15 +71,19 @@ UnicodeString::UnicodeString(UnicodeString &&other) noexcept {
 }
 
 UnicodeString::~UnicodeString() {
-	if (Buffer) {
-		SAFE_ARR_DELETE(Buffer);
-	}
+	/*if (Buffer) {
+		SAFE_FREE(Buffer);
+	}*/
 }
 
 UnicodeString& UnicodeString::operator=(const UnicodeString &other) {
 	if (this != &other) {
 		Length = other.Length;
 		MaximumLength = other.MaximumLength;
+		Buffer = (wchar_t*)malloc(Length * sizeof(wchar_t));
+		if (Buffer) {
+			memset(Buffer, 0, Length * sizeof(wchar_t));
+		}
 		Buffer = other.Buffer;
 	}
 	return *this;
@@ -97,39 +121,48 @@ bool UnicodeString::operator!=(const UnicodeString& other) const {
 	}
 }
 
-CommonString::CommonString() {
+ANSIString::ANSIString() {
 	Length = 0;
 	MaximumLength = 0;
 	Buffer = 0;
 }
 
-CommonString::CommonString(const unsigned short length, const unsigned short maxlength) {
+ANSIString::ANSIString(const unsigned short length, const unsigned short maxlength) {
 	Length = length;
 	MaximumLength = maxlength;
-	NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, char, Length);
+	Buffer = (char*)malloc(Length * sizeof(char));
+	if (Buffer) {
+		memset(Buffer, 0, Length * sizeof(wchar_t));
+	}
+	// NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, char, Length);
 }
 
-CommonString::CommonString(const unsigned short length, const unsigned short maxlength, const char* buffer) {
+ANSIString::ANSIString(const unsigned short length, const unsigned short maxlength, const char* buffer) {
 	Length = length;
 	MaximumLength = maxlength;
-	NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, char, Length);
+	Buffer = (char*)malloc(Length * sizeof(char));
+	// NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, char, Length);
 	if (Buffer) {
+		memset(Buffer, 0, Length * sizeof(wchar_t));
 		sprintf(Buffer, "%s", buffer);
 	}
 }
 
-CommonString::CommonString(const CommonString &other) {
+ANSIString::ANSIString(const ANSIString &other) {
 	if (this != &other) {
 		Length = other.Length;
 		MaximumLength = other.MaximumLength;
-		NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, char, Length);
+		Buffer = (char*)malloc(Length * sizeof(char));
+		if (Buffer) {
+			memset(Buffer, 0, Length * sizeof(wchar_t));
+		}
 		if (Buffer && other.Buffer) {
 			sprintf(Buffer, "%s", other.Buffer);
 		}
 	}
 }
 
-CommonString::CommonString(CommonString &&other) noexcept {
+ANSIString::ANSIString(ANSIString &&other) noexcept {
 	if (this != &other) {
 		Length = other.Length;
 		other.Length = 0;
@@ -140,17 +173,20 @@ CommonString::CommonString(CommonString &&other) noexcept {
 	}
 }
 
-CommonString::~CommonString() {
-	if (Buffer) {
-		SAFE_ARR_DELETE(Buffer);
-	}
+ANSIString::~ANSIString() {
+	/*if (Buffer) {
+		SAFE_FREE(Buffer);
+	}*/
 }
 
-CommonString& CommonString::operator=(const CommonString& other) {
+ANSIString& ANSIString::operator=(const ANSIString& other) {
 	if (this != &other) {
 		Length = other.Length;
 		MaximumLength = other.MaximumLength;
-		NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, char, Length);
+		Buffer = (char*)malloc(Length * sizeof(char));
+		if (Buffer) {
+			memset(Buffer, 0, Length * sizeof(wchar_t));
+		}
 		if (Buffer && other.Buffer) {
 			sprintf(Buffer, "%s", other.Buffer);
 		}
@@ -158,7 +194,7 @@ CommonString& CommonString::operator=(const CommonString& other) {
 	return *this;
 }
 
-CommonString& CommonString::operator=(CommonString&& other) noexcept {
+ANSIString& ANSIString::operator=(ANSIString&& other) noexcept {
 	if (this != &other) {
 		Length = other.Length;
 		other.Length = 0;
@@ -170,7 +206,7 @@ CommonString& CommonString::operator=(CommonString&& other) noexcept {
 	return *this;
 }
 
-bool CommonString::operator==(const CommonString& other) const {
+bool ANSIString::operator==(const ANSIString& other) const {
 	if (this != &other) {
 		return (Length == other.Length &&
 				MaximumLength == other.MaximumLength &&
@@ -180,7 +216,7 @@ bool CommonString::operator==(const CommonString& other) const {
 	}
 }
 
-bool CommonString::operator!=(const CommonString& other) const {
+bool ANSIString::operator!=(const ANSIString& other) const {
 	if (this != &other) {
 		return (Length != other.Length ||
 				MaximumLength != other.MaximumLength ||
@@ -190,6 +226,427 @@ bool CommonString::operator!=(const CommonString& other) const {
 	}
 }
 
+ObjectAttributes::ObjectAttributes() {
+	uLength = 0;
+	uAttributes = 0;
+	pSecurityDescriptor = 0;
+	pSecurityQualityOfService = 0;
+	hRootDirectory = 0;
+	pObjectName = 0;
+}
+
+ObjectAttributes::ObjectAttributes(const ObjectAttributes &other) {
+	if (this != &other) {
+		uLength = other.uLength;
+		uAttributes = other.uAttributes;
+		if (other.pSecurityDescriptor) {
+			if (pSecurityDescriptor) {
+				SAFE_FREE(pSecurityDescriptor);
+			}
+			pSecurityDescriptor = malloc(SECURITY_DESCRIPTOR_MIN_LENGTH);
+			if (pSecurityDescriptor) {
+				memcpy(pSecurityDescriptor, other.pSecurityDescriptor, sizeof(SECURITY_DESCRIPTOR));
+			}
+		} else {
+			if (pSecurityDescriptor) {
+				SAFE_FREE(pSecurityDescriptor);
+			}
+		}
+		pSecurityQualityOfService = other.pSecurityQualityOfService;
+		hRootDirectory = other.hRootDirectory;
+		if (other.pObjectName) {
+			if (pObjectName) {
+				SAFE_DELETE(pObjectName);
+			}
+			pObjectName = new UnicodeString;
+			if (pObjectName) {
+				memcpy(pObjectName, other.pObjectName, sizeof(UnicodeString));
+			}
+		} else {
+			if (pObjectName) {
+				SAFE_DELETE(pObjectName);
+			}
+		}
+	}
+}
+
+ObjectAttributes::ObjectAttributes(ObjectAttributes &&other) noexcept {
+	if (this != &other) {
+		uLength = other.uLength;
+		other.uLength = 0;
+		uAttributes = other.uAttributes;
+		other.uLength = 0;
+		pSecurityDescriptor = other.pSecurityDescriptor;
+		other.pSecurityDescriptor = 0;
+		pSecurityQualityOfService = other.pSecurityQualityOfService;
+		other.pSecurityQualityOfService = 0;
+		hRootDirectory = other.hRootDirectory;
+		other.hRootDirectory = 0;
+		pObjectName = other.pObjectName;
+		other.pObjectName = 0;
+	}
+}
+
+ObjectAttributes::~ObjectAttributes() {
+	/*if (pObjectName) {
+		SAFE_DELETE(pObjectName);
+	}*/
+}
+
+ObjectAttributes& ObjectAttributes::operator=(const ObjectAttributes &other) {
+	if (this != &other) {
+		uLength = other.uLength;
+		uAttributes = other.uAttributes;
+		if (other.pSecurityDescriptor) {
+			if (pSecurityDescriptor) {
+				SAFE_FREE(pSecurityDescriptor);
+			}
+			pSecurityDescriptor = malloc(SECURITY_DESCRIPTOR_MIN_LENGTH);
+			if (pSecurityDescriptor) {
+				memcpy(pSecurityDescriptor, other.pSecurityDescriptor, sizeof(SECURITY_DESCRIPTOR));
+			}
+		} else {
+			if (pSecurityDescriptor) {
+				SAFE_FREE(pSecurityDescriptor);
+			}
+		}
+		pSecurityQualityOfService = other.pSecurityQualityOfService;
+		hRootDirectory = other.hRootDirectory;
+		if (other.pObjectName) {
+			if (pObjectName) {
+				SAFE_DELETE(pObjectName);
+			}
+			pObjectName = new UnicodeString;
+			if (pObjectName) {
+				memcpy(pObjectName, other.pObjectName, sizeof(UnicodeString));
+			}
+		} else {
+			if (pObjectName) {
+				SAFE_DELETE(pObjectName);
+			}
+		}
+	}
+	return *this;
+}
+
+ObjectAttributes& ObjectAttributes::operator=(ObjectAttributes &&other) noexcept {
+	if (this != &other) {
+		uLength = other.uLength;
+		other.uLength = 0;
+		uAttributes = other.uAttributes;
+		other.uLength = 0;
+		pSecurityDescriptor = other.pSecurityDescriptor;
+		other.pSecurityDescriptor = 0;
+		pSecurityQualityOfService = other.pSecurityQualityOfService;
+		other.pSecurityQualityOfService = 0;
+		hRootDirectory = other.hRootDirectory;
+		other.hRootDirectory = 0;
+		pObjectName = other.pObjectName;
+		other.pObjectName = 0;
+	}
+	return *this;
+}
+
+bool ObjectAttributes::operator==(const ObjectAttributes& other) const {
+	if (this != &other) {
+		return (uLength == other.uLength &&
+				uAttributes == other.uAttributes &&
+				hRootDirectory == other.hRootDirectory &&
+				// pSecurityQualityOfService == other.pSecurityQualityOfService &&
+				!memcmp(pSecurityDescriptor, other.pSecurityDescriptor, sizeof(SECURITY_DESCRIPTOR)) &&
+				!memcmp(pObjectName, other.pObjectName, sizeof(UnicodeString)));
+	} else {
+		return true;
+	}
+}
+
+bool ObjectAttributes::operator!=(const ObjectAttributes& other) const {
+	if (this != &other) {
+		return (uLength != other.uLength ||
+				uAttributes != other.uAttributes ||
+				hRootDirectory != other.hRootDirectory ||
+				// pSecurityQualityOfService != other.pSecurityQualityOfService ||
+				memcmp(pSecurityDescriptor, other.pSecurityDescriptor, sizeof(SECURITY_DESCRIPTOR)) ||
+				memcmp(pObjectName, other.pObjectName, sizeof(UnicodeString)));
+	} else {
+		return false;
+	}
+}
+
+IOStatusBlock::IOStatusBlock() {
+	Status = 0;
+	Pointer = 0;
+	Information = 0;
+}
+
+IOStatusBlock::IOStatusBlock(const NTSTATUS statuus, const unsigned long long info) {
+	Status = statuus;
+	Information = info;
+	Pointer = 0;
+}
+
+IOStatusBlock::IOStatusBlock(const IOStatusBlock &other) {
+	if (this != &other) {
+		Status = other.Status;
+		Pointer = other.Pointer;
+		Information = other.Information;
+	}
+}
+
+IOStatusBlock::IOStatusBlock(IOStatusBlock &&other) noexcept {
+	if (this != &other) {
+		Status = other.Status;
+		other.Status = 0;
+		Pointer = other.Pointer;
+		other.Pointer = 0;
+		Information = other.Information;
+		other.Information = 0;
+	}
+}
+
+IOStatusBlock::~IOStatusBlock() {}
+
+IOStatusBlock& IOStatusBlock::operator=(const IOStatusBlock& other) {
+	if (this != &other) {
+		Status = other.Status;
+		Pointer = other.Pointer;
+		Information = other.Information;
+	}
+	return *this;
+}
+
+IOStatusBlock& IOStatusBlock::operator=(IOStatusBlock&& other) {
+	if (this != &other) {
+		Status = other.Status;
+		other.Status = 0;
+		Pointer = other.Pointer;
+		other.Pointer = 0;
+		Information = other.Information;
+		other.Information = 0;
+	}
+	return *this;
+}
+
+bool IOStatusBlock::operator==(const IOStatusBlock& other) const {
+	if (this != &other) {
+		return (Status == other.Status &&
+				Information == other.Information);
+	} else {
+		return true;
+	}
+}
+
+bool IOStatusBlock::operator!=(const IOStatusBlock& other) const {
+	if (this != &other) {
+		return (Status != other.Status ||
+				Information != other.Information);
+	} else {
+		return false;
+	}
+}
+
+FileDirBothInformation::FileDirBothInformation() {
+	NextEntryOffset = 0;
+	FileIndex = 0;
+	FileAttributes = 0;
+	FileNameLength = 0;
+	EaSize = 0;
+	ShortNameLength = 0;
+	CreationTime = { 0 };
+	LastAccessTime = { 0 };
+	LastWriteTime = { 0 };
+	ChangeTime = { 0 };
+	EndOfFile = { 0 };
+	AllocationSize = { 0 };
+	memset(ShortName, 0, FSH_SHORTNAMELENGTH * sizeof(wchar_t));
+	memset(FileName, 0, sizeof(wchar_t));
+}
+
+FileDirBothInformation::FileDirBothInformation(const FileDirBothInformation &other) {
+	if (this != &other) {
+		NextEntryOffset = other.NextEntryOffset;
+		FileIndex = other.FileIndex;
+		FileAttributes = other.FileAttributes;
+		FileNameLength = other.FileNameLength;
+		EaSize = other.EaSize;
+		ShortNameLength = other.ShortNameLength;
+		CreationTime.LowPart = other.CreationTime.LowPart;
+		CreationTime.HighPart = other.CreationTime.HighPart;
+		LastAccessTime.LowPart = other.LastAccessTime.LowPart;
+		LastAccessTime.HighPart = other.LastAccessTime.HighPart;
+		LastWriteTime.LowPart = other.LastWriteTime.LowPart;
+		LastWriteTime.HighPart = other.LastWriteTime.HighPart;
+		ChangeTime.LowPart = other.ChangeTime.LowPart;
+		ChangeTime.HighPart = other.ChangeTime.HighPart;
+		EndOfFile.LowPart = other.EndOfFile.LowPart;
+		EndOfFile.HighPart = other.EndOfFile.HighPart;
+		AllocationSize.LowPart = other.AllocationSize.LowPart;
+		AllocationSize.HighPart = other.AllocationSize.HighPart;
+		wsprintf(ShortName, L"%s", other.ShortName);
+		wsprintf(FileName, L"%s", other.FileName);
+	}
+}
+
+FileDirBothInformation::FileDirBothInformation(FileDirBothInformation &&other) noexcept {
+	if (this != &other) {
+		NextEntryOffset = other.NextEntryOffset;
+		other.NextEntryOffset = 0;
+		FileIndex = other.FileIndex;
+		other.FileIndex = 0;
+		FileAttributes = other.FileAttributes;
+		other.FileAttributes = 0;
+		FileNameLength = other.FileNameLength;
+		other.FileNameLength = 0;
+		EaSize = other.EaSize;
+		other.EaSize = 0;
+		ShortNameLength = other.ShortNameLength;
+		other.ShortNameLength = 0;
+		CreationTime.LowPart = other.CreationTime.LowPart;
+		CreationTime.HighPart = other.CreationTime.HighPart;
+		other.CreationTime.LowPart = 0;
+		other.CreationTime.HighPart = 0;
+		LastAccessTime.LowPart = other.LastAccessTime.LowPart;
+		LastAccessTime.HighPart = other.LastAccessTime.HighPart;
+		other.LastAccessTime.LowPart = 0;
+		other.LastAccessTime.HighPart = 0;
+		LastWriteTime.LowPart = other.LastWriteTime.LowPart;
+		LastWriteTime.HighPart = other.LastWriteTime.HighPart;
+		other.LastWriteTime.LowPart = 0;
+		other.LastWriteTime.HighPart = 0;
+		ChangeTime.LowPart = other.ChangeTime.LowPart;
+		ChangeTime.HighPart = other.ChangeTime.HighPart;
+		other.ChangeTime.LowPart = 0;
+		other.ChangeTime.HighPart = 0;
+		EndOfFile.LowPart = other.EndOfFile.LowPart;
+		EndOfFile.HighPart = other.EndOfFile.HighPart;
+		other.EndOfFile.LowPart = 0;
+		other.EndOfFile.HighPart = 0;
+		AllocationSize.LowPart = other.AllocationSize.LowPart;
+		AllocationSize.HighPart = other.AllocationSize.HighPart;
+		other.AllocationSize.LowPart = 0;
+		other.AllocationSize.HighPart = 0;
+		wsprintf(ShortName, L"%s", other.ShortName);
+		memset(other.ShortName, 0, FSH_SHORTNAMELENGTH * sizeof(wchar_t));
+		wsprintf(FileName, L"%s", other.FileName);
+		memset(other.FileName, 0, sizeof(wchar_t));
+	}
+}
+
+FileDirBothInformation::~FileDirBothInformation() {}
+
+FileDirBothInformation& FileDirBothInformation::operator=(const FileDirBothInformation &other) {
+	if (this != &other) {
+		NextEntryOffset = other.NextEntryOffset;
+		FileIndex = other.FileIndex;
+		FileAttributes = other.FileAttributes;
+		FileNameLength = other.FileNameLength;
+		EaSize = other.EaSize;
+		ShortNameLength = other.ShortNameLength;
+		CreationTime.LowPart = other.CreationTime.LowPart;
+		CreationTime.HighPart = other.CreationTime.HighPart;
+		LastAccessTime.LowPart = other.LastAccessTime.LowPart;
+		LastAccessTime.HighPart = other.LastAccessTime.HighPart;
+		LastWriteTime.LowPart = other.LastWriteTime.LowPart;
+		LastWriteTime.HighPart = other.LastWriteTime.HighPart;
+		ChangeTime.LowPart = other.ChangeTime.LowPart;
+		ChangeTime.HighPart = other.ChangeTime.HighPart;
+		EndOfFile.LowPart = other.EndOfFile.LowPart;
+		EndOfFile.HighPart = other.EndOfFile.HighPart;
+		AllocationSize.LowPart = other.AllocationSize.LowPart;
+		AllocationSize.HighPart = other.AllocationSize.HighPart;
+		wsprintf(ShortName, L"%s", other.ShortName);
+		wsprintf(FileName, L"%s", other.FileName);
+	}
+	return *this;
+}
+
+FileDirBothInformation& FileDirBothInformation::operator=(FileDirBothInformation &&other) noexcept {
+	if (this != &other) {
+		NextEntryOffset = other.NextEntryOffset;
+		other.NextEntryOffset = 0;
+		FileIndex = other.FileIndex;
+		other.FileIndex = 0;
+		FileAttributes = other.FileAttributes;
+		other.FileAttributes = 0;
+		FileNameLength = other.FileNameLength;
+		other.FileNameLength = 0;
+		EaSize = other.EaSize;
+		other.EaSize = 0;
+		ShortNameLength = other.ShortNameLength;
+		other.ShortNameLength = 0;
+		CreationTime.LowPart = other.CreationTime.LowPart;
+		CreationTime.HighPart = other.CreationTime.HighPart;
+		other.CreationTime.LowPart = 0;
+		other.CreationTime.HighPart = 0;
+		LastAccessTime.LowPart = other.LastAccessTime.LowPart;
+		LastAccessTime.HighPart = other.LastAccessTime.HighPart;
+		other.LastAccessTime.LowPart = 0;
+		other.LastAccessTime.HighPart = 0;
+		LastWriteTime.LowPart = other.LastWriteTime.LowPart;
+		LastWriteTime.HighPart = other.LastWriteTime.HighPart;
+		other.LastWriteTime.LowPart = 0;
+		other.LastWriteTime.HighPart = 0;
+		ChangeTime.LowPart = other.ChangeTime.LowPart;
+		ChangeTime.HighPart = other.ChangeTime.HighPart;
+		other.ChangeTime.LowPart = 0;
+		other.ChangeTime.HighPart = 0;
+		EndOfFile.LowPart = other.EndOfFile.LowPart;
+		EndOfFile.HighPart = other.EndOfFile.HighPart;
+		other.EndOfFile.LowPart = 0;
+		other.EndOfFile.HighPart = 0;
+		AllocationSize.LowPart = other.AllocationSize.LowPart;
+		AllocationSize.HighPart = other.AllocationSize.HighPart;
+		other.AllocationSize.LowPart = 0;
+		other.AllocationSize.HighPart = 0;
+		wsprintf(ShortName, L"%s", other.ShortName);
+		memset(other.ShortName, 0, FSH_SHORTNAMELENGTH * sizeof(wchar_t));
+		wsprintf(FileName, L"%s", other.FileName);
+		memset(other.FileName, 0, sizeof(wchar_t));
+	}
+	return *this;
+}
+
+bool FileDirBothInformation::operator==(const FileDirBothInformation &other) const {
+	if (this != &other) {
+		return (NextEntryOffset == other.NextEntryOffset &&
+				FileIndex == other.FileIndex &&
+				FileAttributes == other.FileAttributes &&
+				FileNameLength == other.FileNameLength &&
+				EaSize == other.EaSize &&
+				ShortNameLength == other.ShortNameLength &&
+				CreationTime.QuadPart == other.CreationTime.QuadPart &&
+				LastAccessTime.QuadPart == other.LastAccessTime.QuadPart &&
+				LastWriteTime.QuadPart == other.LastWriteTime.QuadPart &&
+				ChangeTime.QuadPart == other.ChangeTime.QuadPart &&
+				EndOfFile.QuadPart == other.EndOfFile.QuadPart &&
+				AllocationSize.QuadPart == other.AllocationSize.QuadPart &&
+				!memcmp(ShortName, other.ShortName, FSH_SHORTNAMELENGTH * sizeof(wchar_t)) &&
+				!memcmp(FileName, other.FileName, FileNameLength * sizeof(wchar_t)));
+	} else {
+		return true;
+	}
+}
+
+bool FileDirBothInformation::operator!=(const FileDirBothInformation& other) const {
+	if (this != &other) {
+		return (NextEntryOffset != other.NextEntryOffset ||
+				FileIndex != other.FileIndex ||
+				FileAttributes != other.FileAttributes ||
+				FileNameLength != other.FileNameLength ||
+				EaSize != other.EaSize ||
+				ShortNameLength != other.ShortNameLength ||
+				CreationTime.QuadPart != other.CreationTime.QuadPart ||
+				LastAccessTime.QuadPart != other.LastAccessTime.QuadPart ||
+				LastWriteTime.QuadPart != other.LastWriteTime.QuadPart ||
+				ChangeTime.QuadPart != other.ChangeTime.QuadPart ||
+				EndOfFile.QuadPart != other.EndOfFile.QuadPart ||
+				AllocationSize.QuadPart != other.AllocationSize.QuadPart ||
+				!memcmp(ShortName, other.ShortName, FSH_SHORTNAMELENGTH * sizeof(wchar_t)) ||
+				!memcmp(FileName, other.FileName, FileNameLength * sizeof(wchar_t)));
+	} else {
+		return false;
+	}
+}
 
 BinData::BinData() {
 	Platform = BinPlatform::PlatformUnknown;
@@ -802,7 +1259,7 @@ FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc>& partList,
 	wchar_t vpnBuf[MAX_PATH + 1] = { 0 };
 	std::vector<PartitionDesc> ret;
 	PartitionDesc elem;
-	// ::::HANDLE hPart = FindFirstVolume(vol_name, ARRAYSIZE(vol_name))
+	// ::HANDLE hPart = FindFirstVolume(vol_name, ARRAYSIZE(vol_name))
 	unsigned long drives = GetLogicalDrives();
 	if (drives) {
 		if (clearList) {
@@ -954,18 +1411,40 @@ bool FSHandler::PathExists(const std::wstring path) const {
 }
 
 FSOpResult FSHandler::IsFolder(bool &isFolder, const std::wstring path) const {
-	if (PathExists(path)) {
-		unsigned long fileattr = ::GetFileAttributes(path.c_str());
-		isFolder = FILE_ATTRIBUTE_DIRECTORY & fileattr;
-		return FSOpResult::Success;
-	} else {
-		return FSOpResult::Fail;
-	}
+	return attrAnalyzer(isFolder, FILE_ATTRIBUTE_DIRECTORY, path);
+}
+
+FSOpResult FSHandler::IsTemporary(bool &isTemporary, const std::wstring path) const {
+	return attrAnalyzer(isTemporary, FILE_ATTRIBUTE_TEMPORARY, path);
+}
+
+FSOpResult FSHandler::IsNormal(bool &isNormal, const std::wstring path) const {
+	return attrAnalyzer(isNormal, FILE_ATTRIBUTE_NORMAL, path);
+}
+
+FSOpResult FSHandler::IsArchive(bool &isArchive, const std::wstring path) const {
+	return attrAnalyzer(isArchive, FILE_ATTRIBUTE_ARCHIVE, path);
+}
+
+FSOpResult FSHandler::IsCompressed(bool &isCompressed, const std::wstring path) const {
+	return attrAnalyzer(isCompressed, FILE_ATTRIBUTE_COMPRESSED, path);
+}
+
+FSOpResult FSHandler::IsHidden(bool &isHidden, const std::wstring path) const {
+	return attrAnalyzer(isHidden, FILE_ATTRIBUTE_HIDDEN, path);
+}
+
+FSOpResult FSHandler::IsEncrypted(bool &isEncrtpted, const std::wstring path) const {
+	return attrAnalyzer(isEncrtpted, FILE_ATTRIBUTE_ENCRYPTED, path);
+}
+
+FSOpResult FSHandler::IsVirtual(bool &isVirtual, const std::wstring path) const {
+	return attrAnalyzer(isVirtual, FILE_ATTRIBUTE_VIRTUAL, path);
 }
 
 FSOpResult FSHandler::CreateFolder(const std::wstring folderPath) const {
 	if (!PathExists(folderPath)) {
-		if (CreateDirectory(folderPath.c_str(), 0)) {
+		if (::CreateDirectory(folderPath.c_str(), 0)) {
 			return FSOpResult::Success;
 		} else {
 			return FSOpResult::Fail;
@@ -977,7 +1456,7 @@ FSOpResult FSHandler::CreateFolder(const std::wstring folderPath) const {
 
 FSOpResult FSHandler::CreateFolder(const std::wstring folderPath, const SECURITY_ATTRIBUTES *secAttr) const {
 	if (!PathExists(folderPath)) {
-		if (CreateDirectory(folderPath.c_str(), (SECURITY_ATTRIBUTES*)secAttr)) {
+		if (::CreateDirectory(folderPath.c_str(), (SECURITY_ATTRIBUTES*)secAttr)) {
 			return FSOpResult::Success;
 		} else {
 			return FSOpResult::Fail;
@@ -989,7 +1468,7 @@ FSOpResult FSHandler::CreateFolder(const std::wstring folderPath, const SECURITY
 
 FSOpResult FSHandler::CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const {
 	if (!PathExists(folderPath)) {
-		if (!CreateDirectory(folderPath.c_str(), 0)) {
+		if (!::CreateDirectory(folderPath.c_str(), 0)) {
 			return FSOpResult::Fail;
 		}
 	}
@@ -1000,12 +1479,24 @@ FSOpResult FSHandler::CreateFolder(const std::wstring folderPath, const SecDesc 
 	}
 }
 
-FSOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath, std::wstring* infoBuf) const {
+FSOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath, std::wstring *infoBuf) const {
+	if (infoBuf && IsBadWritePtr(infoBuf)) {
+		return FSOpResult::Fail;
+	}
 	if (!PathExists(folderPath)) {
-		if (infoBuf && !IsBadWritePtr(infoBuf)) {
-			*infoBuf = L"Requested path does not exist";
+		if (infoBuf) {
+			*infoBuf = L"Specified path does not exist";
 		}
 		return FSOpResult::Fail;
+	}
+	bool isfld = true;
+	if (FSOpResult::Success == IsFolder(isfld, folderPath)) {
+		if (!isfld) {
+			if (infoBuf) {
+				*infoBuf = L"Specified path is not a folder";
+			}
+			return FSOpResult::Fail;
+		}
 	}
 	size_t folderPathLen = wcslen_c(folderPath.c_str()) + 2;
 	wchar_t* folderPathBuf = (wchar_t*)malloc(folderPathLen * sizeof(wchar_t));
@@ -1025,15 +1516,15 @@ FSOpResult FSHandler::RemoveFolder_SHFileOp(const std::wstring folderPath, std::
 		L"" };
 	unsigned long opres = SHFileOperation(&fileOp);
 	SAFE_FREE(folderPathBuf);
-	if (!opres) {
-		return FSOpResult::Success;
-	} else {
+	if (opres) {
 		if (infoBuf) {
 			if (FSOpResult::Success != getSHFileOpDesc(opres, infoBuf)) {
 				return FSOpResult::Fail;
 			}
 		}
 		return FSOpResult::Fail;
+	} else {
+		return FSOpResult::Success;
 	}
 }
 
@@ -1109,20 +1600,302 @@ FSOpResult FSHandler::RemoveFolder(const std::wstring folderPath, const bool inc
 	}
 }
 
-FSOpResult FSHandler::MoveFolder(const std::wstring folderPath, const bool checkDestSpace) const {
+FSOpResult FSHandler::RenameFolder(const std::wstring folderPath, const std::wstring folderPathDest,
+	const RenameBehaviour renameBehaviour) {
+	if (lower_copy(folderPath) == lower_copy(folderPathDest)) {
+		return FSOpResult::Fail;
+	}
+	if (RenameBehaviour::Rename == renameBehaviour) {
+		if (!PathExists(folderPath)) {
+			return FSOpResult::Fail;
+		}
+		if (PathExists(folderPathDest)) {
+			return FSOpResult::Fail;
+		}
+		if (MAX_PATH <= folderPath.length()) {
+			return FSOpResult::Fail;
+		}
+		if (MAX_PATH <= folderPathDest.length()) {
+			return FSOpResult::Fail;
+		}
+		bool isfld = true;
+		if (FSOpResult::Success == IsFolder(isfld, folderPath)) {
+			if (!isfld) {
+				return FSOpResult::Fail;
+			}
+		}
+		char* bufsrc = wchar2char(folderPath.c_str());
+		if (!bufsrc) {
+			return FSOpResult::Fail;
+		}
+		char* buftgt = wchar2char(folderPathDest.c_str());
+		if (!buftgt) {
+			return FSOpResult::Fail;
+		}
+		int renres = rename(bufsrc, buftgt);
+		SAFE_ARR_DELETE(bufsrc);
+		SAFE_ARR_DELETE(buftgt);
+		if (!renres) {
+			return FSOpResult::Success;
+		} else {
+			return FSOpResult::Fail;
+		}
+	} else if (RenameBehaviour::CopyDelete == renameBehaviour) {
+		if (FSOpResult::Success != MoveFolder(folderPath, folderPathDest, true)) {
+			return FSOpResult::Fail;
+		}
+		return FSOpResult::Success;
+	} else {
+		return FSOpResult::Fail;
+	}
+	
+}
+
+FSOpResult FSHandler::MoveFolder(const std::wstring folderPath, const std::wstring folderPathDest,
+	const bool checkDestSpace) {
+	if (lower_copy(folderPath) == lower_copy(folderPathDest)) {
+		return FSOpResult::Fail;
+	}
+	if (!PathExists(folderPath)) {
+		return FSOpResult::Fail;
+	}
+	if (PathExists(folderPathDest)) {
+		return FSOpResult::Fail;
+	}
+	bool isfld = true;
+	if (FSOpResult::Success == IsFolder(isfld, folderPath)) {
+		if (!isfld) {
+			return FSOpResult::Fail;
+		}
+	}
+	if (checkDestSpace) {
+		std::vector<std::wstring> pathSpl = splitStr(folderPathDest, L"\\");
+		if (2 > pathSpl.size()) {
+			return FSOpResult::Fail;
+		}
+		unsigned long long freeSpace = 0, totalSpace = 0;
+		std::wstring partLetter = pathSpl.front();
+		if (endsWith(partLetter, L"\\")) {
+			partLetter = removeFromEnd_copy(partLetter, L"\\");
+		}
+		if (!GetDriveSpace(partLetter, freeSpace, totalSpace)) {
+			return FSOpResult::Fail;
+		}
+		unsigned long long foldersz = 0;
+		if (FSOpResult::Success == GetFolderSizeOnDrive_NtQueryDir(foldersz, folderPath)) {
+			return FSOpResult::Fail;
+		}
+		if (foldersz >= freeSpace) {
+			return FSOpResult::Fail;
+		}
+	}
+	if (!::CopyFile(folderPath.c_str(), folderPathDest.c_str(), true)) {
+		return FSOpResult::Fail;
+	}
+	return RemoveFolder(folderPath);
+}
+
+FSOpResult FSHandler::CopyFolder(const std::wstring folderPath, const std::wstring folderPathDest,
+	const bool checkDestSpace) {
+	if (lower_copy(folderPath) == lower_copy(folderPathDest)) {
+		return FSOpResult::Fail;
+	}
+	if (!PathExists(folderPath)) {
+		return FSOpResult::Fail;
+	}
+	if (PathExists(folderPathDest)) {
+		return FSOpResult::Fail;
+	}
+	bool isfld = true;
+	if (FSOpResult::Success == IsFolder(isfld, folderPath)) {
+		if (!isfld) {
+			return FSOpResult::Fail;
+		}
+	}
+	if (checkDestSpace) {
+		std::vector<std::wstring> pathSpl = splitStr(folderPathDest, L"\\");
+		if (2 > pathSpl.size()) {
+			return FSOpResult::Fail;
+		}
+		unsigned long long freeSpace = 0, totalSpace = 0;
+		std::wstring partLetter = pathSpl.front();
+		if (endsWith(partLetter, L"\\")) {
+			partLetter = removeFromEnd_copy(partLetter, L"\\");
+		}
+		if (!GetDriveSpace(partLetter, freeSpace, totalSpace)) {
+			return FSOpResult::Fail;
+		}
+		unsigned long long foldersz = 0;
+		if (FSOpResult::Success == GetFolderSizeOnDrive_NtQueryDir(foldersz, folderPath)) {
+			return FSOpResult::Fail;
+		}
+		if (foldersz >= freeSpace) {
+			return FSOpResult::Fail;
+		}
+	}
+	std::wstring folderPathPrepped = fs_pathnolim + folderPath;
+	std::wstring folderPathDestPrepped = fs_pathnolim + folderPathDest;
+	if (!::CopyFile(folderPathPrepped.c_str(), folderPathDestPrepped.c_str(), true)) {
+		return FSOpResult::Fail;
+	}
 	return FSOpResult::Success;
 }
 
-FSOpResult FSHandler::CopyFolder(const std::wstring folderPath, const bool checkDestSpace) const {
-	return FSOpResult::Success;
+FSOpResult FSHandler::RenameFile(const std::wstring filePath, const std::wstring filePathDest,
+	const RenameBehaviour renameBehaviour) {
+	if (lower_copy(filePath) == lower_copy(filePathDest)) {
+		return FSOpResult::Fail;
+	}
+	if (RenameBehaviour::Rename == renameBehaviour) {
+		if (!PathExists(filePath)) {
+			return FSOpResult::Fail;
+		}
+		if (PathExists(filePathDest)) {
+			return FSOpResult::Fail;
+		}
+		if (MAX_PATH <= filePath.length()) {
+			return FSOpResult::Fail;
+		}
+		if (MAX_PATH <= filePathDest.length()) {
+			return FSOpResult::Fail;
+		}
+		bool isfld = true;
+		if (FSOpResult::Success == IsFolder(isfld, filePath)) {
+			if (isfld) {
+				return FSOpResult::Fail;
+			}
+		}
+		char* bufsrc = wchar2char(filePath.c_str());
+		if (!bufsrc) {
+			return FSOpResult::Fail;
+		}
+		char* buftgt = wchar2char(filePathDest.c_str());
+		if (!buftgt) {
+			return FSOpResult::Fail;
+		}
+		int renres = rename(bufsrc, buftgt);
+		SAFE_ARR_DELETE(bufsrc);
+		SAFE_ARR_DELETE(buftgt);
+		if (!renres) {
+			return FSOpResult::Success;
+		} else {
+			return FSOpResult::Fail;
+		}
+	} else if (RenameBehaviour::CopyDelete == renameBehaviour) {
+		if (FSOpResult::Success != FileMove(filePath, filePathDest, true)) {
+			return FSOpResult::Fail;
+		}
+		return FSOpResult::Success;
+	} else {
+		return FSOpResult::Fail;
+	}
 }
 
-FSOpResult FSHandler::MoveFile(const std::wstring folderPath, const bool checkDestSpace) const {
-	return FSOpResult::Success;
+FSOpResult FSHandler::FileMove(const std::wstring filePath, const std::wstring filePathDest,
+	const bool checkDestSpace) {
+	if (FSOpResult::Success != FileCopy(filePath, filePathDest, checkDestSpace)) {
+		return FSOpResult::Fail;
+	}
+	return RemoveFile(filePath);
 }
 
-FSOpResult FSHandler::CopyFile(const std::wstring folderPath, const bool checkDestSpace) const {
-	return FSOpResult::Success;
+FSOpResult FSHandler::FileCopy(const std::wstring filePath, const std::wstring filePathDest,
+	const bool checkDestSpace) {
+	if (lower_copy(filePath) == lower_copy(filePathDest)) {
+		return FSOpResult::Fail;
+	}
+	if (!PathExists(filePath)) {
+		return FSOpResult::Fail;
+	}
+	if (PathExists(filePathDest)) {
+		return FSOpResult::Fail;
+	}
+	bool isfld = true;
+	if (FSOpResult::Success == IsFolder(isfld, filePath)) {
+		if (isfld) {
+			return FSOpResult::Fail;
+		}
+	}
+	if (checkDestSpace) {
+		std::vector<std::wstring> pathSpl = splitStr(filePathDest, L"\\");
+		if (2 > pathSpl.size()) {
+			return FSOpResult::Fail;
+		}
+		unsigned long long freeSpace = 0, totalSpace = 0;
+		std::wstring partLetter = pathSpl.front();
+		if (endsWith(partLetter, L"\\")) {
+			partLetter = removeFromEnd_copy(partLetter, L"\\");
+		}
+		if (!GetDriveSpace(partLetter, freeSpace, totalSpace)) {
+			return FSOpResult::Fail;
+		}
+		unsigned long long filesz = 0;
+		if (FSOpResult::Success != GetFSizeOnDrive_NtQueryDir(filesz, filePath)) {
+			return FSOpResult::Fail;
+		}
+		if (filesz >= freeSpace) {
+			return FSOpResult::Fail;
+		}
+	}
+	std::wstring filePathPrepped = fs_pathnolim + filePath;
+	std::wstring filePathDestPrepped = fs_pathnolim + filePathDest;
+	if (::CopyFile(filePathPrepped.c_str(), filePathDestPrepped.c_str(), true)) {
+		return FSOpResult::Success;
+	} else {
+		return FSOpResult::Fail;
+	}
+}
+
+FSOpResult FSHandler::RemoveFile_SHFileOp(const std::wstring filePath, std::wstring *infoBuf) const {
+	if (infoBuf && IsBadWritePtr(infoBuf)) {
+		return FSOpResult::Fail;
+	}
+	if (!PathExists(filePath)) {
+		if (infoBuf) {
+			*infoBuf = L"Specified path does not exist";
+		}
+		return FSOpResult::Fail;
+	}
+	bool isfld = true;
+	if (FSOpResult::Success == IsFolder(isfld, filePath)) {
+		if (isfld) {
+			if (infoBuf) {
+				*infoBuf = L"Specified path is not a file";
+			}
+			return FSOpResult::Fail;
+		}
+	}
+	size_t filePathLen = wcslen_c(filePath.c_str()) + 2;
+	wchar_t* filePathBuf = (wchar_t*)malloc(filePathLen * sizeof(wchar_t));
+	if (!filePathBuf) {
+		if (infoBuf) {
+			*infoBuf = L"Buffer allocation in RemoveFile_SHFileOp failed";
+		}
+		return FSOpResult::Fail;
+	}
+	memset(filePathBuf, 0, filePathLen * sizeof(wchar_t));
+	wsprintf(filePathBuf, L"%s", filePath.c_str());
+	SHFILEOPSTRUCT fileOp = {
+		0,
+		FO_DELETE,
+		filePathBuf,
+		L"",
+		FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT,
+		false,
+		0,
+		L"" };
+	unsigned long opres = SHFileOperation(&fileOp);
+	SAFE_FREE(filePathBuf);
+	if (!opres) {
+		return FSOpResult::Success;
+	} else {
+		if (infoBuf) {
+			if (FSOpResult::Success != getSHFileOpDesc(opres, infoBuf)) {
+				return FSOpResult::Fail;
+			}
+		}
+		return FSOpResult::Fail;
+	}
 }
 
 FSOpResult FSHandler::RemoveFile(const std::wstring filePath) const {
@@ -1133,7 +1906,156 @@ FSOpResult FSHandler::RemoveFile(const std::wstring filePath) const {
 	}
 }
 
-FSOpResult FSHandler::GetFolderSize_NtQueryDir(unsigned long long& folderSize, const std::wstring folderPath) {
+FSOpResult FSHandler::GetFolderSizeOnDrive_NtQueryDir(unsigned long long &folderSize, const std::wstring folderPath) {
+	if (!PathExists(folderPath)) {
+		return FSOpResult::Fail;
+	}
+	bool isfld = false;
+	if (FSOpResult::Success == IsFolder(isfld, folderPath)) {
+		if (!isfld) {
+			return FSOpResult::Fail;
+		}
+	} else {
+		return FSOpResult::Fail;
+	}
+	::HMODULE hModule = ::LoadLibrary(L"ntdll.dll");
+	if (!hModule) {
+		return FSOpResult::Fail;
+	}
+	pRtlInitUnicodeString = (NTSTATUS(WINAPI*)(UnicodeString*, wchar_t*)) ::GetProcAddress(hModule, "RtlInitUnicodeString");
+	pNtCreateFile = (NTSTATUS(WINAPI*)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, IOStatusBlock*, LARGE_INTEGER*,
+		unsigned long, unsigned long, unsigned long, unsigned long, void*, unsigned long))
+		::GetProcAddress(hModule, "NtCreateFile");
+	pNtCreateEvent = (NTSTATUS(WINAPI*)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, EvtType, unsigned char))
+		::GetProcAddress(hModule, "NtCreateEvent");
+	pNtQueryDirectoryFile = (NTSTATUS(WINAPI*)(::HANDLE, ::HANDLE, PIO_APC_ROUTINE, void*, IOStatusBlock*, void*,
+		unsigned long, FolderInfo, unsigned char, UnicodeString*, unsigned char))
+		::GetProcAddress(hModule, "NtQueryDirectoryFile");
+	pNtWaitForSingleobject = (NTSTATUS(WINAPI*)(::HANDLE, unsigned char, LARGE_INTEGER*))
+		::GetProcAddress(hModule, "NtWaitForSingleObject");
+	pRtlUnicodeStringToAnsiString = (NTSTATUS(WINAPI*)(ANSIString*, UnicodeString*, unsigned char))
+		::GetProcAddress(hModule, "RtlUnicodeStringToAnsiString");
+	pNtClearEvent = (NTSTATUS(WINAPI*)(::HANDLE)) ::GetProcAddress(hModule, "NtClearEvent");
+	pNtClose = (NTSTATUS(WINAPI*)(::HANDLE)) ::GetProcAddress(hModule, "NtClose");
+	if (0 == pRtlInitUnicodeString) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pRtlUnicodeStringToAnsiString) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtCreateFile) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtCreateEvent) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtQueryDirectoryFile) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtWaitForSingleobject) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtClearEvent) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtClose) {
+		return FSOpResult::Fail;
+	}
+	::HANDLE RootDirectoryHandle = 0;
+	::HANDLE Event = 0;
+	NTSTATUS ntStatus = STATUS_SUCCESS;
+	UnicodeString RootDirectoryName;
+	ANSIString as;
+	ObjectAttributes RootDirectoryAttributes;
+	IOStatusBlock IOSB;
+	FileDirBothInformation* DirInformation;
+	wchar_t* wszBuffer = (wchar_t*)malloc(64 * sizeof(wchar_t));
+	if (!wszBuffer) {
+		return FSOpResult::Fail;
+	}
+	wchar_t* Buffer = (wchar_t*)malloc(65536 * sizeof(wchar_t));
+	if (!Buffer) {
+		return FSOpResult::Fail;
+	}
+	wsprintf(wszBuffer, L"\\??\\%s\\", folderPath.c_str());
+	ntStatus = ((pRtlInitUnicodeString)(&RootDirectoryName, wszBuffer));
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	InitializeObjectAttributes(&RootDirectoryAttributes, &RootDirectoryName, OBJ_CASE_INSENSITIVE, 0, 0);
+	ntStatus = ((pNtCreateFile)(&RootDirectoryHandle,
+		GENERIC_READ,
+		&RootDirectoryAttributes,
+		&IOSB,
+		0,
+		FILE_ATTRIBUTE_DIRECTORY,
+		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		FILE_OPEN,
+		FILE_DIRECTORY_FILE,
+		0, 0));
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	ntStatus = ((pNtCreateEvent)(&Event, GENERIC_ALL, 0, EvtType::NotificationEvent, 0));
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	ntStatus = ((pNtQueryDirectoryFile)(RootDirectoryHandle,
+		Event, 0, 0,
+		&IOSB,
+		Buffer,
+		65536 * sizeof(unsigned char),
+		FolderInfo::FileDirectoryBothInformation,
+		0, 0, 0));
+	if (STATUS_PENDING == ntStatus) {
+		ntStatus = ((pNtWaitForSingleobject)(Event, 1, 0));
+	}
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	DirInformation = (FileDirBothInformation*)Buffer;
+	UnicodeString EntryName;
+	while (true) {
+		EntryName.MaximumLength = EntryName.Length = (unsigned short)DirInformation->FileNameLength;
+		EntryName.Buffer = &DirInformation->FileName[0];
+		((pRtlUnicodeStringToAnsiString)(&as, &EntryName, 1));
+		if (DirInformation->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			if (strcmp(as.Buffer, ".") && strcmp(as.Buffer, "..")) {
+				wchar_t* tbuf = char2wchar(as.Buffer);
+				std::wstring targpath = folderPath + L"\\" + tbuf;
+				GetFolderSizeOnDriveRec(folderSize, targpath, hModule);
+				SAFE_ARR_DELETE(tbuf);
+			}
+		} else {
+			folderSize += DirInformation->AllocationSize.QuadPart;
+		}
+		if (!DirInformation->NextEntryOffset) {
+			break;
+		} else {
+			DirInformation = (FileDirBothInformation*)(((unsigned char*)DirInformation) + DirInformation->NextEntryOffset);
+		}
+	}
+	((pNtClose)(RootDirectoryHandle));
+	ntStatus = ((pNtClearEvent)(Event));
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	((pNtClose)(Event));
+	SAFE_FREE(wszBuffer);
+	SAFE_FREE(Buffer);
+	if (!::FreeLibrary(hModule)) {
+		return FSOpResult::Fail;
+	}
 	return FSOpResult::Success;
 }
 
@@ -1141,22 +2063,188 @@ FSOpResult FSHandler::GetFolderSize(unsigned long long &folderSize, const std::w
 	if (!PathExists(folderPath)) {
 		return FSOpResult::Fail;
 	}
-	unsigned long fileattr = ::GetFileAttributes(folderPath.c_str());
-	if (!(FILE_ATTRIBUTE_DIRECTORY & fileattr)) {
+	bool isfld = false;
+	if (FSOpResult::Success == IsFolder(isfld, folderPath)) {
+		if (!isfld) {
+			return FSOpResult::Fail;
+		}
+	} else {
 		return FSOpResult::Fail;
 	}
 	folderSize = 0;
-	std::vector<FileRecord> filerecs = SeekFileInDir(folderPath, L".*", L"", false, false);
+	std::vector<FileRecord> filerecs = SeekFileInDir(folderPath, L".*", L"", true, false);
 	for (size_t i = 0; i < filerecs.size(); ++i) {
 		folderSize += filerecs[i].size;
 	}
 	return FSOpResult::Success;
 }
 
+FSOpResult FSHandler::GetFSizeOnDrive_NtQueryDir(unsigned long long &fileSize, const std::wstring filePath) const {
+	if (!PathExists(filePath)) {
+		return FSOpResult::Fail;
+	}
+	bool isfld = false;
+	if (FSOpResult::Success == IsFolder(isfld, filePath)) {
+		if (isfld) {
+			return FSOpResult::Fail;
+		}
+	} else {
+		return FSOpResult::Fail;
+	}
+	std::vector<std::wstring> filePathSpl = splitStr(filePath, L"\\");
+	if (2 > filePathSpl.size()) {
+		return FSOpResult::Fail;
+	}
+	std::string filename = wstr2str(filePathSpl.back());
+	filePathSpl.pop_back();
+	std::wstring ownerfolder = joinStrs(filePathSpl, L"\\");
+	::HMODULE hModule = ::LoadLibrary(L"ntdll.dll");
+	if (!hModule) {
+		return FSOpResult::Fail;
+	}
+	pRtlInitUnicodeString = (NTSTATUS(WINAPI*)(UnicodeString*, wchar_t*))
+		::GetProcAddress(hModule, "RtlInitUnicodeString");
+	pNtCreateFile = (NTSTATUS(WINAPI*)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, IOStatusBlock*, LARGE_INTEGER*,
+		unsigned long, unsigned long, unsigned long, unsigned long, void*, unsigned long))
+		::GetProcAddress(hModule, "NtCreateFile");
+	pNtCreateEvent = (NTSTATUS(WINAPI*)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, EvtType, unsigned char))
+		::GetProcAddress(hModule, "NtCreateEvent");
+	pNtQueryDirectoryFile = (NTSTATUS(WINAPI*)(::HANDLE, ::HANDLE, PIO_APC_ROUTINE, void*, IOStatusBlock*, void*,
+		unsigned long, FolderInfo, unsigned char, UnicodeString*, unsigned char))
+		::GetProcAddress(hModule, "NtQueryDirectoryFile");
+	pNtWaitForSingleobject = (NTSTATUS(WINAPI*)(::HANDLE, unsigned char, LARGE_INTEGER*))
+		::GetProcAddress(hModule, "NtWaitForSingleObject");
+	pRtlUnicodeStringToAnsiString = (NTSTATUS(WINAPI*)(ANSIString*, UnicodeString*, unsigned char))
+		::GetProcAddress(hModule, "RtlUnicodeStringToAnsiString");
+	pNtClearEvent = (NTSTATUS(WINAPI*)(::HANDLE)) ::GetProcAddress(hModule, "NtClearEvent");
+	pNtClose = (NTSTATUS(WINAPI*)(::HANDLE)) ::GetProcAddress(hModule, "NtClose");
+	if (0 == pRtlInitUnicodeString) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pRtlUnicodeStringToAnsiString) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtCreateFile) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtCreateEvent) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtQueryDirectoryFile) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtWaitForSingleobject) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtClearEvent) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtClose) {
+		return FSOpResult::Fail;
+	}
+	::HANDLE RootDirectoryHandle = 0;
+	::HANDLE Event = 0;
+	NTSTATUS ntStatus = STATUS_SUCCESS;
+	UnicodeString RootDirectoryName;
+	ANSIString as;
+	ObjectAttributes RootDirectoryAttributes;
+	IOStatusBlock IOSB;
+	FileDirBothInformation* DirInformation;
+	wchar_t* wszBuffer = (wchar_t*)malloc(64 * sizeof(wchar_t));
+	if (!wszBuffer) {
+		return FSOpResult::Fail;
+	}
+	wchar_t* Buffer = (wchar_t*)malloc(65536 * sizeof(wchar_t));
+	if (!Buffer) {
+		return FSOpResult::Fail;
+	}
+	wsprintf(wszBuffer, L"\\??\\%s\\", ownerfolder.c_str());
+	ntStatus = ((pRtlInitUnicodeString)(&RootDirectoryName, wszBuffer));
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	InitializeObjectAttributes(&RootDirectoryAttributes, &RootDirectoryName, OBJ_CASE_INSENSITIVE, 0, 0);
+	ntStatus = ((pNtCreateFile)(&RootDirectoryHandle,
+		GENERIC_READ,
+		&RootDirectoryAttributes,
+		&IOSB,
+		0,
+		FILE_ATTRIBUTE_DIRECTORY,
+		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		FILE_OPEN,
+		FILE_DIRECTORY_FILE,
+		0, 0));
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	ntStatus = ((pNtCreateEvent)(&Event, GENERIC_ALL, 0, EvtType::NotificationEvent, 0));
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	ntStatus = ((pNtQueryDirectoryFile)(RootDirectoryHandle,
+		Event, 0, 0,
+		&IOSB,
+		Buffer,
+		65536 * sizeof(unsigned char),
+		FolderInfo::FileDirectoryBothInformation,
+		0, 0, 0));
+	if (STATUS_PENDING == ntStatus) {
+		ntStatus = ((pNtWaitForSingleobject)(Event, 1, 0));
+	}
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	DirInformation = (FileDirBothInformation*)Buffer;
+	UnicodeString EntryName;
+	while (true) {
+		EntryName.MaximumLength = EntryName.Length = (unsigned short)DirInformation->FileNameLength;
+		EntryName.Buffer = &DirInformation->FileName[0];
+		((pRtlUnicodeStringToAnsiString)(&as, &EntryName, 1));
+		if (DirInformation->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+		} else {
+			if (!stricmp(as.Buffer, filename.c_str())) {
+				fileSize = DirInformation->AllocationSize.QuadPart;
+				break;
+			}
+		}
+		if (!DirInformation->NextEntryOffset) {
+			break;
+		} else {
+			DirInformation = (FileDirBothInformation*)(((unsigned char*)DirInformation) + DirInformation->NextEntryOffset);
+		}
+	}
+	((pNtClose)(RootDirectoryHandle));
+	ntStatus = ((pNtClearEvent)(Event));
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	((pNtClose)(Event));
+	SAFE_FREE(wszBuffer);
+	SAFE_FREE(Buffer);
+	if (!::FreeLibrary(hModule)) {
+		return FSOpResult::Fail;
+	}
+	return FSOpResult::Success;
+}
+
 FSOpResult FSHandler::GetFSize(unsigned long long &fileSize, const std::wstring filePath) const {
 	if (PathExists(filePath)) {
-		unsigned long fileattr = ::GetFileAttributes(filePath.c_str());
-		if (FILE_ATTRIBUTE_DIRECTORY & fileattr) {
+		bool isfld = false;
+		if (FSOpResult::Success == IsFolder(isfld, filePath)) {
+			if (isfld) {
+				return FSOpResult::Fail;
+			}
+		} else {
 			return FSOpResult::Fail;
 		}
 	} else {
@@ -1468,7 +2556,8 @@ FSOpResult FSHandler::EnumFolderContents(FolderRecord &folderInfo, const std::ws
 						folderrec.folderName = lower_copy(fd.cFileName);
 						folderrec.folderPath = removeFromStart_copy(seekpath, fs_pathnolim) + L"\\" +
 							lower_copy(fd.cFileName);
-						if (FSOpResult::Success != EnumFolderContents(folderrec, folderrec.folderPath)) {
+						if (FSOpResult::Success != EnumFolderContents(folderrec, folderrec.folderPath, getFileHashes,
+							hashType, getFileSize)) {
 							return FSOpResult::Fail;
 						}
 						folderInfo.folders.push_back(folderrec);
@@ -1808,15 +2897,175 @@ std::wstring FSHandler::ReplaceDrivePathWithPartLetter(const std::wstring path,
 	return ret;
 }
 
+FSOpResult FSHandler::GetFolderSizeOnDriveRec(unsigned long long &folderSize, const std::wstring folderPath,
+	::HMODULE ntDLLModule) {
+	if (!PathExists(folderPath)) {
+		return FSOpResult::Fail;
+	}
+	bool isfld = false;
+	if (FSOpResult::Success == IsFolder(isfld, folderPath)) {
+		if (!isfld) {
+			return FSOpResult::Fail;
+		}
+	} else {
+		return FSOpResult::Fail;
+	}
+	pRtlInitUnicodeString = (NTSTATUS(WINAPI*)(UnicodeString*, wchar_t*))
+		::GetProcAddress(ntDLLModule, "RtlInitUnicodeString");
+	pNtCreateFile = (NTSTATUS(WINAPI*)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, IOStatusBlock*, LARGE_INTEGER*,
+		unsigned long, unsigned long, unsigned long, unsigned long, void*, unsigned long))
+		::GetProcAddress(ntDLLModule, "NtCreateFile");
+	pNtCreateEvent = (NTSTATUS(WINAPI*)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, EvtType, unsigned char))
+		::GetProcAddress(ntDLLModule, "NtCreateEvent");
+	pNtQueryDirectoryFile = (NTSTATUS(WINAPI*)(::HANDLE, ::HANDLE, PIO_APC_ROUTINE, void*, IOStatusBlock*, void*,
+		unsigned long, FolderInfo, unsigned char, UnicodeString*, unsigned char))
+		::GetProcAddress(ntDLLModule, "NtQueryDirectoryFile");
+	pNtWaitForSingleobject = (NTSTATUS(WINAPI*)(::HANDLE, unsigned char, LARGE_INTEGER*))
+		::GetProcAddress(ntDLLModule, "NtWaitForSingleObject");
+	pRtlUnicodeStringToAnsiString = (NTSTATUS(WINAPI*)(ANSIString*, UnicodeString*, unsigned char))
+		::GetProcAddress(ntDLLModule, "RtlUnicodeStringToAnsiString");
+	pNtClearEvent = (NTSTATUS(WINAPI*)(::HANDLE)) ::GetProcAddress(ntDLLModule, "NtClearEvent");
+	pNtClose = (NTSTATUS(WINAPI*)(::HANDLE)) ::GetProcAddress(ntDLLModule, "NtClose");
+	if (0 == pRtlInitUnicodeString) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pRtlUnicodeStringToAnsiString) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtCreateFile) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtCreateEvent) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtQueryDirectoryFile) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtWaitForSingleobject) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtClearEvent) {
+		return FSOpResult::Fail;
+	}
+	if (0 == pNtClose) {
+		return FSOpResult::Fail;
+	}
+	::HANDLE RootDirectoryHandle = 0;
+	::HANDLE Event = 0;
+	NTSTATUS ntStatus = STATUS_SUCCESS;
+	UnicodeString RootDirectoryName;
+	ANSIString as;
+	ObjectAttributes RootDirectoryAttributes;
+	IOStatusBlock IOSB;
+	FileDirBothInformation* DirInformation;
+	wchar_t* wszBuffer = (wchar_t*)malloc(64 * sizeof(wchar_t));
+	if (!wszBuffer) {
+		return FSOpResult::Fail;
+	}
+	wchar_t* Buffer = (wchar_t*)malloc(65536 * sizeof(wchar_t));
+	if (!Buffer) {
+		return FSOpResult::Fail;
+	}
+	wsprintf(wszBuffer, L"\\??\\%s\\", folderPath.c_str());
+	ntStatus = ((pRtlInitUnicodeString)(&RootDirectoryName, wszBuffer));
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	InitializeObjectAttributes(&RootDirectoryAttributes, &RootDirectoryName, OBJ_CASE_INSENSITIVE, 0, 0);
+	ntStatus = ((pNtCreateFile)(&RootDirectoryHandle,
+		GENERIC_READ,
+		&RootDirectoryAttributes,
+		&IOSB,
+		0,
+		FILE_ATTRIBUTE_DIRECTORY,
+		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		FILE_OPEN,
+		FILE_DIRECTORY_FILE,
+		0, 0));
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	ntStatus = ((pNtCreateEvent)(&Event, GENERIC_ALL, 0, EvtType::NotificationEvent, 0));
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	ntStatus = ((pNtQueryDirectoryFile)(RootDirectoryHandle,
+		Event, 0, 0,
+		&IOSB,
+		Buffer,
+		65536 * sizeof(unsigned char),
+		FolderInfo::FileDirectoryBothInformation,
+		0, 0, 0));
+	if (STATUS_PENDING == ntStatus) {
+		ntStatus = ((pNtWaitForSingleobject)(Event, 1, 0));
+	}
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	DirInformation = (FileDirBothInformation*)Buffer;
+	UnicodeString EntryName;
+	while (true) {
+		EntryName.MaximumLength = EntryName.Length = (unsigned short)DirInformation->FileNameLength;
+		EntryName.Buffer = &DirInformation->FileName[0];
+		((pRtlUnicodeStringToAnsiString)(&as, &EntryName, 1));
+		if (DirInformation->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			// printf("Directory name: ");
+			if (strcmp(as.Buffer, ".") && strcmp(as.Buffer, "..")) {
+				wchar_t* tbuf = char2wchar(as.Buffer);
+				std::wstring targpath = folderPath + L"\\" + tbuf;
+				GetFolderSizeOnDriveRec(folderSize, targpath, ntDLLModule);
+				SAFE_ARR_DELETE(tbuf);
+			}
+		} else {
+			// printf("Filename: ");
+			folderSize += DirInformation->AllocationSize.QuadPart;
+		}
+		// printf("%s\n", as.Buffer);
+		// printf("Directory size: %lld\n", DirInformation->AllocationSize.QuadPart);
+		if (!DirInformation->NextEntryOffset) {
+			break;
+		} else {
+			DirInformation = (FileDirBothInformation*)(((unsigned char*)DirInformation) + DirInformation->NextEntryOffset);
+		}
+	}
+	((pNtClose)(RootDirectoryHandle));
+	ntStatus = ((pNtClearEvent)(Event));
+	if (!NT_SUCCESS(ntStatus)) {
+		SAFE_FREE(wszBuffer);
+		SAFE_FREE(Buffer);
+		return FSOpResult::Fail;
+	}
+	((pNtClose)(Event));
+	SAFE_FREE(wszBuffer);
+	SAFE_FREE(Buffer);
+	return FSOpResult::Success;
+}
+
 bool FSHandler::GetDriveSpace(const std::wstring partLetter,
 	unsigned long long &freeSpace, unsigned long long &totalSpace) {
-	ULARGE_INTEGER fSpace = { 0 },
-		tSpace = { 0 }, fSpacePU = { 0 };
-	if (GetDiskFreeSpaceEx(partLetter.c_str(), &fSpacePU,
-		&tSpace, &fSpace)) {
-		freeSpace = fSpace.QuadPart;
-		totalSpace = tSpace.QuadPart;
+	std::wstring partLetterMod = fs_pathnolim + partLetter;
+	if (!endsWith(partLetterMod, L"\\")) {
+		partLetterMod = partLetterMod + L"\\";
 	}
+	ULARGE_INTEGER fSpace = { 0 }, tSpace = { 0 }, fSpacePU = { 0 };
+	if (::GetDiskFreeSpaceEx(partLetterMod.c_str(), &fSpacePU, &tSpace, &fSpace)) {
+		freeSpace = fSpacePU.QuadPart;
+		totalSpace = tSpace.QuadPart;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool FSHandler::GetDriveSpace_DriveGeometry(const std::wstring partLetter, unsigned long long &totalSpace) const {
 	std::wstring path = lower_copy(partLetter);
 	if (endsWith(partLetter, L"\\")) {
 		removeFromEnd(path, L"\\");
@@ -1824,24 +3073,24 @@ bool FSHandler::GetDriveSpace(const std::wstring partLetter,
 	if (!startsWith(path, L"\\\\.\\")) {
 		path = L"\\\\.\\" + path;
 	}
-	::HANDLE hDevice = CreateFile(path.c_str(),	    // drive to open
-								0,					// no access to the drive
-								FILE_SHARE_READ |	// share mode
-								FILE_SHARE_WRITE,
-								0,					// default security attributes
-								OPEN_ALWAYS,		// disposition
-								0,					// file attributes
-								NULL);				// do not copy file attributes
+	::HANDLE hDevice = ::CreateFile(path.c_str(),	// drive to open
+		0,					// no access to the drive
+		FILE_SHARE_READ |	// share mode
+		FILE_SHARE_WRITE,
+		0,					// default security attributes
+		OPEN_ALWAYS,		// disposition
+		0,					// file attributes
+		NULL);				// do not copy file attributes
 	if (INVALID_HANDLE_VALUE != hDevice) {
 		unsigned long junk = 0;
 		DISK_GEOMETRY pdg = { 0 };
-		bool result = DeviceIoControl(hDevice,                  // device to be queried
-								IOCTL_DISK_GET_DRIVE_GEOMETRY,	// operation to perform
-								NULL, 0,						// no input buffer
-								&pdg, sizeof(DISK_GEOMETRY),    // output buffer
-								&junk,							// # bytes returned
-								(LPOVERLAPPED)NULL);	
-		CloseHandle(hDevice);
+		bool result = ::DeviceIoControl(hDevice,                // device to be queried
+			IOCTL_DISK_GET_DRIVE_GEOMETRY,	// operation to perform
+			0, 0,							// no input buffer
+			&pdg, sizeof(DISK_GEOMETRY),    // output buffer
+			&junk,							// # bytes returned
+			(LPOVERLAPPED)0);
+		::CloseHandle(hDevice);
 		if (result) {
 			totalSpace = pdg.Cylinders.QuadPart * (unsigned long)pdg.TracksPerCylinder *
 				(unsigned long)pdg.SectorsPerTrack * (unsigned long)pdg.BytesPerSector;
@@ -1990,7 +3239,7 @@ FSOpResult FSHandler::getSHFileOpDesc(const unsigned long msgCode, std::wstring 
 		*msgStr = L"MAX_PATH was exceeded during the operation";
 	} else if (DE_UNKNOWN == msgCode) {
 		// This error does not occur on Windows Vista and later
-		*msgStr = L"An unknown error occurred This is typically due to an invalid path in the source or destination";
+		*msgStr = L"An unknown error occurred. This is typically due to an invalid path in the source or destination";
 	} else if (DE_ERRORONDEST == msgCode) {
 		*msgStr = L"An unspecified error occurred on the destination";
 	} else if (DE_CANTRENAME == msgCode) {
@@ -1999,4 +3248,15 @@ FSOpResult FSHandler::getSHFileOpDesc(const unsigned long msgCode, std::wstring 
 		*msgStr = L"Unknown code specifed";
 	}
 	return FSOpResult::Success;
+}
+
+FSOpResult FSHandler::attrAnalyzer(bool &isTrue, const unsigned long attr, const std::wstring path) const {
+	if (PathExists(path)) {
+		unsigned long fileattr = ::GetFileAttributes(path.c_str());
+		isTrue = attr & fileattr;
+		return FSOpResult::Success;
+	} else {
+		isTrue = false;
+		return FSOpResult::Fail;
+	}
 }

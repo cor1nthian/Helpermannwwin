@@ -12,8 +12,7 @@ unsigned long getLastErrorCode() {
 	return ::GetLastError();
 }
 
-std::wstring getErrorDetails(const unsigned long errcode,
-	const std::wstring funcName,
+std::wstring getErrorDetails(const unsigned long errcode, const std::wstring funcName,
 	const std::wstring additionalInfo) {
 	unsigned long errCode = errcode;
 	if (!errCode) {

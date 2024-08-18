@@ -61,12 +61,17 @@ enum class HeapOpts : unsigned long {
 	NoSerialize = HEAP_NO_SERIALIZE
 };
 
+enum class RenameBehaviour : unsigned char {
+	Rename,
+	CopyDelete
+};
+
 // https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryinformationfile
 
 enum class FileInfo : unsigned char {
 	FileDirectoryInformation = 1,
 	FileFullDirectoryInformation,                   // 2
-	FileBothDirectoryInformation,                   // 3
+	FileDirectoryBothInformation,                   // 3
 	FileBasicInformation,                           // 4
 	FileStandardInformation,                        // 5
 	FileInternalInformation,                        // 6
@@ -146,7 +151,7 @@ enum class FileInfo : unsigned char {
 enum class FolderInfo : unsigned char {
 	FileDirectoryInformation = 1,
 	FileFullDirectoryInformation,					// 2
-	FileBothDirectoryInformation,					// 3
+	FileDirectoryBothInformation,					// 3
 	FileBasicInformation,							// 4
 	FileStandardInformation,						// 5
 	FileInternalInformation,						// 6
@@ -187,6 +192,11 @@ enum class FolderInfo : unsigned char {
 	FileMaximumInformation							// 41
 };
 
+enum class EvtType : unsigned char {
+	NotificationEvent,
+	SynchronizationEvent
+};
+
 enum class BinPlatform : unsigned char {
 	DOS,
 	OSdiv2,
@@ -209,6 +219,20 @@ enum class HashType : unsigned long {
 	SHA256 = CALG_SHA_256
 };
 
+struct UnicodeString;
+struct ANSIString;
+struct ObjectAttributes;
+struct IOStatusBlock;
+struct FileDirBothInformation;
+struct BinData;
+struct FileRecord;
+struct FolderRecord;
+struct PartitionDesc;
+
+class FSHandler;
+
+typedef void(NTAPI* PIO_APC_ROUTINE) (IN void* ApcContext, IN IOStatusBlock* IoStatusBlock, IN unsigned long Reserved);
+
 struct UnicodeString {
 	UnicodeString();
 	UnicodeString(const unsigned short length, const unsigned short maxlength);
@@ -225,20 +249,79 @@ struct UnicodeString {
 	wchar_t*		Buffer;
 };
 
-struct CommonString {
-	CommonString();
-	CommonString(const unsigned short length, const unsigned short maxlength);
-	CommonString(const unsigned short length, const unsigned short maxlength, const char* buffer);
-	CommonString(const CommonString &other);
-	CommonString(CommonString &&other) noexcept;
-	~CommonString();
-	CommonString& operator=(const CommonString& other);
-	CommonString& operator=(CommonString&& other) noexcept;
-	bool operator==(const CommonString& other) const;
-	bool operator!=(const CommonString& other) const;
+struct ANSIString {
+	ANSIString();
+	ANSIString(const unsigned short length, const unsigned short maxlength);
+	ANSIString(const unsigned short length, const unsigned short maxlength, const char* buffer);
+	ANSIString(const ANSIString &other);
+	ANSIString(ANSIString &&other) noexcept;
+	~ANSIString();
+	ANSIString& operator=(const ANSIString &other);
+	ANSIString& operator=(ANSIString &&other) noexcept;
+	bool operator==(const ANSIString &other) const;
+	bool operator!=(const ANSIString &other) const;
 	unsigned short	Length;
 	unsigned short	MaximumLength;
 	char*			Buffer;
+};
+
+struct ObjectAttributes {
+	ObjectAttributes();
+	ObjectAttributes(const ObjectAttributes &other);
+	ObjectAttributes(ObjectAttributes &&other) noexcept;
+	~ObjectAttributes();
+	ObjectAttributes& operator=(const ObjectAttributes &other);
+	ObjectAttributes& operator=(ObjectAttributes &&other) noexcept;
+	bool operator==(const ObjectAttributes &other) const;
+	bool operator!=(const ObjectAttributes &other) const;
+	unsigned long	uLength;
+	::HANDLE		hRootDirectory;
+	UnicodeString*	pObjectName;
+	unsigned long	uAttributes;
+	void*			pSecurityDescriptor;
+	void*			pSecurityQualityOfService;
+};
+
+struct IOStatusBlock {
+	IOStatusBlock();
+	IOStatusBlock(const NTSTATUS statuus, const unsigned long long info);
+	IOStatusBlock(const IOStatusBlock &other);
+	IOStatusBlock(IOStatusBlock &&other) noexcept;
+	~IOStatusBlock();
+	IOStatusBlock& operator=(const IOStatusBlock &other);
+	IOStatusBlock& operator=(IOStatusBlock &&other);
+	bool operator==(const IOStatusBlock &other) const;
+	bool operator!=(const IOStatusBlock &other) const;
+	union {
+		NTSTATUS		Status;
+		void*			Pointer;
+	};
+	unsigned long long	Information;
+};
+
+struct FileDirBothInformation {
+	FileDirBothInformation();
+	FileDirBothInformation(const FileDirBothInformation &other);
+	FileDirBothInformation(FileDirBothInformation &&other) noexcept;
+	~FileDirBothInformation();
+	FileDirBothInformation& operator=(const FileDirBothInformation &other);
+	FileDirBothInformation& operator=(FileDirBothInformation &&other) noexcept;
+	bool operator==(const FileDirBothInformation &other) const;
+	bool operator!=(const FileDirBothInformation &other) const;
+	unsigned long	NextEntryOffset;
+	unsigned long	FileIndex;
+	LARGE_INTEGER	CreationTime;
+	LARGE_INTEGER	LastAccessTime;
+	LARGE_INTEGER	LastWriteTime;
+	LARGE_INTEGER	ChangeTime;
+	LARGE_INTEGER	EndOfFile;
+	LARGE_INTEGER	AllocationSize;
+	unsigned long	FileAttributes;
+	unsigned long	FileNameLength;
+	unsigned long	EaSize;
+	char			ShortNameLength;
+	wchar_t			ShortName[FSH_SHORTNAMELENGTH];
+	wchar_t			FileName[1];
 };
 
 struct BinData {
@@ -401,7 +484,7 @@ class FSHandler {
 		FSHandler(const FSHandler &other) = delete;
 		// File system handler move constructor disabled
 		FSHandler(FSHandler &&other) noexcept = delete;
-		// File system handler operator = (copt) disabled
+		// File system handler operator = (copy) disabled
 		FSHandler& operator=(const FSHandler &other) = delete;
 		// File system handler operator = (move) disabled
 		FSHandler& operator=(FSHandler &&other) noexcept = delete;
@@ -435,7 +518,14 @@ class FSHandler {
 			[in] string path to check
 			Returns true if path exists, false otherwise */
 		bool PathExists(const std::wstring path) const;
-		FSOpResult IsFolder(bool &isFikder, const std::wstring path) const;
+		FSOpResult IsFolder(bool &isFolder, const std::wstring path) const;
+		FSOpResult IsTemporary(bool &isTemporary, const std::wstring path) const;
+		FSOpResult IsNormal(bool &isNormal, const std::wstring path) const;
+		FSOpResult IsArchive(bool &isArchive, const std::wstring path) const;
+		FSOpResult IsCompressed(bool &isCompressed, const std::wstring path) const;
+		FSOpResult IsHidden(bool &isHidden, const std::wstring path) const;
+		FSOpResult IsEncrypted(bool &isEncrtpted, const std::wstring path) const;
+		FSOpResult IsVirtual(bool& isVirtual, const std::wstring path) const;
 		FSOpResult CreateFolder(const std::wstring folderPath) const;
 		FSOpResult CreateFolder(const std::wstring folderPath, const SECURITY_ATTRIBUTES *secAttr = 0) const;
 		FSOpResult CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const;
@@ -443,18 +533,31 @@ class FSHandler {
 		FSOpResult CustomFileOp_SHFileOp(const std::wstring folderPath, const std::wstring folderPathDest,
 			const unsigned long operation, const unsigned long opCode, std::wstring *infoBuf = 0) const;
 		FSOpResult RemoveFolder(const std::wstring folderPath, const bool includeFiles = true);
-		FSOpResult MoveFolder(const std::wstring folderPath, const bool checkDestSpace = true) const;
-		FSOpResult CopyFolder(const std::wstring folderPath, const bool checkDestSpace = true) const;
-		FSOpResult MoveFile(const std::wstring folderPath, const bool checkDestSpace = true) const;
-		FSOpResult CopyFile(const std::wstring folderPath, const bool checkDestSpace = true) const;
+		FSOpResult RenameFolder(const std::wstring folderPath, const std::wstring folderPathDest,
+			const RenameBehaviour renameBehaviour = RenameBehaviour::CopyDelete);
+		FSOpResult MoveFolder(const std::wstring folderPath, const std::wstring folderPathDest,
+			const bool checkDestSpace = true);
+		FSOpResult CopyFolder(const std::wstring folderPath, const std::wstring folderPathDest,
+			const bool checkDestSpace = true);
+		FSOpResult RenameFile(const std::wstring filePath, const std::wstring filePathDest,
+			const RenameBehaviour renameBehaviour = RenameBehaviour::CopyDelete);
+		FSOpResult FileMove(const std::wstring filePath, const std::wstring filePathDest,
+			const bool checkDestSpace = true);
+		FSOpResult FileCopy(const std::wstring filePath, const std::wstring filePathDest,
+			const bool checkDestSpace = true);
+		FSOpResult RemoveFile_SHFileOp(const std::wstring filePath, std::wstring* infoBuf = 0) const;
 		FSOpResult RemoveFile(const std::wstring filePath) const;
-		FSOpResult GetFolderSize_NtQueryDir(unsigned long long &folderSize, const std::wstring folderPath);
+		FSOpResult GetFolderSizeOnDrive_NtQueryDir(unsigned long long &folderSize, const std::wstring folderPath);
 		FSOpResult GetFolderSize(unsigned long long &folderSize, const std::wstring folderPath);
+		FSOpResult GetFSizeOnDrive_NtQueryDir(unsigned long long &fileSize, const std::wstring filePath) const;
 		FSOpResult GetFSize(unsigned long long &fileSize, const std::wstring filePath) const;
 		FSOpResult GetObjectSecurity(SecDesc &secDesc, const std::wstring objectPath) const;
 		FSOpResult SetObjectSecurity(const SecDesc secDesc, const std::wstring objectPath) const;
 		FSOpResult EnumFolderContents(FolderRecord &folderInfo, const std::wstring folderPath,
 			const bool getFileHashes = true, const HashType hashType = HashType::SHA256, const bool getFileSize = true);
+		bool GetDriveSpace(const std::wstring partLetter, unsigned long long &freeSpace,
+			unsigned long long &totalSpace);
+		bool GetDriveSpace_DriveGeometry(const std::wstring partLetter, unsigned long long &totalSpace) const;
 		/* Does the file search baaed on a filename on all available partitions. Filename supports regex expressions.
 			Param:
 			[in] filename to search. Supports regex.
@@ -521,12 +624,13 @@ class FSHandler {
 			const std::wstring filename, std::basic_regex<wchar_t> searchRegex, const bool getSize = true,
 			const bool getControlSum = true, const bool excludeEmptyFiles = false,
 			const HashType hash = HashType::SHA256, std::vector<std::wstring> *exclusions = 0);
-		bool GetDriveSpace(const std::wstring partLetter, unsigned long long &freeSpace,
-			unsigned long long &totalSpace);
+		FSOpResult GetFolderSizeOnDriveRec(unsigned long long &folderSize, const std::wstring folderPath,
+			::HMODULE ntDLLModule);
 		std::wstring calcHash(const std::wstring filePath,
 			const HashType hashType, const bool hashUCase = true);
 		unsigned char* File2Buf(const std::wstring filePath);
 		FSOpResult getSHFileOpDesc(const unsigned long msgCode, std::wstring *msgStr) const;
+		FSOpResult attrAnalyzer(bool &isTrue, const unsigned long attr, const std::wstring path) const;
 };
 
 #endif // _FS_HELPER_H

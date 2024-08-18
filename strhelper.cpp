@@ -45,7 +45,7 @@ wchar_t* char2wchar(const char* line, wchar_t* buf) {
     if (buf) {
         wc = buf;
     } else {
-        NEW_ARR_NULLIFY(wc, wchar_t, cSize);
+        NEW_ARR_NULLIFY_NO_REDEFINE(wc, wchar_t, cSize);
     }
     if (wc) {
         mbstowcs(wc, line, cSize);

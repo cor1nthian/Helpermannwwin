@@ -1015,7 +1015,7 @@ bool SysHandler::IsWow64Proc () const {
 
 bool SysHandler::IsWow64Proc(const unsigned long pid, const unsigned long desiredProcRights) const {
 	int isWow64 = 0;
-	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(
+	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)::GetProcAddress(
 		::GetModuleHandle(L"kernel32"), "IsWow64Process");
 	if (fnIsWow64Process) {
 		::HANDLE hProc = ::OpenProcess(desiredProcRights, true, pid);
@@ -1602,6 +1602,25 @@ SysOpResult SysHandler::EnumAccounts(std::vector<AccountDesc> &accountList,
 		SAFE_NetApiBufferFree(buf4);
 	}
 	return SysOpResult::Success;
+}
+
+SysOpResult SysHandler::DLLLoad(::HMODULE &hModule, const std::wstring libPath) const {
+	::HMODULE hMod = 0;
+	hMod = ::LoadLibrary(libPath.c_str());
+	if (!hMod) {
+		hModule = hMod;
+		return SysOpResult::Fail;
+	} else {
+		return SysOpResult::Success;
+	}
+}
+
+SysOpResult SysHandler::DLLUnload(const ::HMODULE libModule) const {
+	if (!::FreeLibrary(libModule)) {
+		return SysOpResult::Fail;
+	} else {
+		return SysOpResult::Success;
+	}
 }
 
 SysOpResult SysHandler::IsAccountMemberOfGroup(const ::PSID groupSID, const ::PSID testSID, bool &isMember,

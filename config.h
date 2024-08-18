@@ -1,4 +1,4 @@
-#ifndef _CONFIG_H
+﻿#ifndef _CONFIG_H
 #define _CONFIG_H
 
 // Macro Defines
@@ -65,6 +65,7 @@
 // Common Defines
 
 // Libs
+
 #if defined(_WIN32) || defined(_WIN64)
 	#pragma comment(lib, "Kernel32.lib")
 	#pragma comment(lib, "Wininet.lib")
@@ -75,8 +76,10 @@
 	#pragma comment(lib, "netapi32.lib")
 #endif
 
-
 // FSHelper Defines
+
+typedef long NTSTATUS;
+
 #define DE_SAMEFILE 			0x71
 #define DE_MANYSRC1DEST			0x72
 #define DE_DIFFDIR				0x73
@@ -103,17 +106,29 @@
 #define DE_ERRORONDEST			0x10000
 #define DE_CANTRENAME			0x10074
 
-typedef long NTSTATUS;
-typedef NTSTATUS* PNTSTATUS;
-// typedef ULONG_PTR;
+#define FSH_SHORTNAMELENGTH		12 // symbols
 
 #define STATUS_SUCCESS			(NTSTATUS)0x00000000L
 #define NT_SUCCESS(Status)		((NTSTATUS)(Status) >= 0)
 #define FILE_OPEN				0x00000001
+#define FILE_OPEN_BY_FILE_ID	0×00002000
 #define OBJ_CASE_INSENSITIVE	0x00000040L
+#define OBJ_EXCLUSIVE           0x00000020L
+#define OBJ_KERNEL_HANDLE       0x00000200L
 #define FILE_DIRECTORY_FILE		0x00000001
+#define FILE_NON_DIRECTORY_FILE	0x00000040
+
+#define InitializeObjectAttributes( p, n, a, r, s ) {	\
+    (p)->uLength = sizeof( ObjectAttributes );			\
+    (p)->hRootDirectory = r;                            \
+    (p)->uAttributes = a;                               \
+    (p)->pObjectName = n;                               \
+    (p)->pSecurityDescriptor = s;                       \
+    (p)->pSecurityQualityOfService = 0;					\
+}
 
 // NetHelper Defines
+
 #ifdef _DEBUG
 	#define DNSHELPER_SHOWERRORMSGBOX
 #endif

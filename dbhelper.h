@@ -85,7 +85,11 @@ struct MSSQLBinding {
 	bool operator!=(const MSSQLBinding &other) const;
 	short			cDisplaySize;	/* size to display  */
 	wchar_t*		wszBuffer;		/* display buffer   */
+#ifdef _WIN64
 	long long		indPtr;			/* size or null     */
+#else
+	long			indPtr;			/* size or null     */
+#endif
 	BOOL			fChar;			/* character col?   */
 	MSSQLBinding	*sNext;			/* linked list      */
 };
