@@ -645,13 +645,13 @@ NetOpResult getHostnameByIPV6_DNSQuery(std::string &hostName, const std::string 
 	const std::string dnsAddr = "", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
 NetOpResult getHostnameByIPV6_DNSQuery(std::wstring &hostName, const std::wstring ipAddr,
 	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV4Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
+NetOpResult getIPV4AddrByHostname_DNSQuery(std::string &ipAddr, const std::string hostName,
 	const std::string dnsAddr = "", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
+NetOpResult getIPV4AddrByHostname_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
 	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV6Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
+NetOpResult getIPV6AddrByHostname_DNSQuery(std::string &ipAddr, const std::string hostName,
 	const std::string dnsAddr = "", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
+NetOpResult getIPV6AddrByHostname_DNSQuery(std::wstring &ipAddr, const std::wstring hostName,
 	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
 NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::string objectName,
 	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
@@ -659,14 +659,16 @@ NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::string objectNa
 NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::wstring objectName,
 	const std::wstring dnsAddr = L"", const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache,
 	const DNSRecordType dnsRecordType = DNSRecordType::CNameRec);
-NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName, const std::string dnsAddr = "",
-	const bool async = true, const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName, const std::wstring dnsAddr = L"",
-	const bool async = true, const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring>& ipAddrs, const std::string hostName,
+NetOpResult getIPV4AddrByHostname_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName,
 	const std::string dnsAddr = "", const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
-NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
+NetOpResult getIPV4AddrByHostname_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
+	const std::wstring dnsAddr = L"", const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
+NetOpResult getIPV6AddrByHostname_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName,
+	const std::string dnsAddr = "", const bool async = true,
+	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
+NetOpResult getIPV6AddrByHostname_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
 	const std::wstring dnsAddr = L"", const bool async = true,
 	const DNSQueryOpts queryOptions = DNSQueryOpts::BypassCache);
 NetOpResult getHostnameByIPV4_DNSQueryEx(std::vector<std::wstring> &hostName, const std::string ipV4Addr,

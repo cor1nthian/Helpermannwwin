@@ -1,6 +1,10 @@
 ﻿#ifndef _CONFIG_H
 #define _CONFIG_H
 
+// Common Defines
+
+typedef long NTSTATUS;
+
 // Macro Defines
 
 // malloc with ease
@@ -62,8 +66,6 @@
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
 
-// Common Defines
-
 // Libs
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -77,8 +79,6 @@
 #endif
 
 // FSHelper Defines
-
-typedef long NTSTATUS;
 
 #define DE_SAMEFILE 			0x71
 #define DE_MANYSRC1DEST			0x72

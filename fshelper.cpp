@@ -1,12 +1,6 @@
 #include <stdio.h>
 #include "fshelper.h"
 
-const unsigned long REG_READBUFSZ = 32768;
-
-const wchar_t* fs_pathseparator = L"\\";
-const wchar_t* fs_pathnolim = L"\\\\?\\";
-const wchar_t* fs_pathsall = L"\\*";
-
 NTSTATUS(WINAPI* pRtlInitUnicodeString)(UnicodeString*, wchar_t*);
 NTSTATUS(WINAPI* pNtCreateFile)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, IOStatusBlock*, LARGE_INTEGER*, unsigned long,
 	unsigned long, unsigned long, unsigned long, void*, unsigned long);
@@ -3158,7 +3152,7 @@ unsigned char* FSHandler::File2Buf(const std::wstring filePath) {
 		return 0;
 	}
 	if (fsize) {
-		NEW_ARR_NULLIFY(readBuf, unsigned char, REG_READBUFSZ);
+		NEW_ARR_NULLIFY(readBuf, unsigned char, FS_READBUFSZ);
 		if (readBuf) {
 			NEW_ARR_NULLIFY(fileBuf, unsigned char, fsize);
 			if (fileBuf) {
@@ -3167,7 +3161,7 @@ unsigned char* FSHandler::File2Buf(const std::wstring filePath) {
 				if (INVALID_HANDLE_VALUE != hFile) {
 					unsigned long bytesRead = 0;
 					unsigned long readBufPos = 0;
-					while ((ReadFile(hFile, readBuf, REG_READBUFSZ, &bytesRead, 0)) &&
+					while ((ReadFile(hFile, readBuf, FS_READBUFSZ, &bytesRead, 0)) &&
 						(readBufPos < fsize)) {
 						if (!bytesRead) {
 							break;

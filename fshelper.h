@@ -219,6 +219,12 @@ enum class HashType : unsigned long {
 	SHA256 = CALG_SHA_256
 };
 
+const unsigned long const FS_READBUFSZ = 32768;
+
+const wchar_t* const fs_pathseparator = L"\\";
+const wchar_t* const fs_pathnolim = L"\\\\?\\";
+const wchar_t* const fs_pathsall = L"\\*";
+
 struct UnicodeString;
 struct ANSIString;
 struct ObjectAttributes;

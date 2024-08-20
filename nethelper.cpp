@@ -2188,7 +2188,7 @@ NetOpResult getHostnameByIPV6_DNSQuery(std::wstring &hostName, const std::wstrin
     return NetOpResult::Success;
 }
 
-NetOpResult getIPV4Addr_DNSQuery(std::string &ipAddr, const std::string hostName,
+NetOpResult getIPV4AddrByHostname_DNSQuery(std::string &ipAddr, const std::string hostName,
     const std::string dnsIPV4Addr, const DNSQueryOpts queryOptions) {
     unsigned char addrtestres = isStringIP(hostName);
     if (2 != addrtestres) {
@@ -2253,7 +2253,7 @@ NetOpResult getIPV4Addr_DNSQuery(std::string &ipAddr, const std::string hostName
     return NetOpResult::Success;
 }
 
-NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipV4Addr, const std::wstring hostName,
+NetOpResult getIPV4AddrByHostname_DNSQuery(std::wstring &ipV4Addr, const std::wstring hostName,
     const std::wstring dnsIPV4Addr, const DNSQueryOpts queryOptions) {
     unsigned char addrtestres = isStringIP(hostName);
     if (2 != addrtestres) {
@@ -2318,7 +2318,7 @@ NetOpResult getIPV4Addr_DNSQuery(std::wstring &ipV4Addr, const std::wstring host
     return NetOpResult::Success;
 }
 
-NetOpResult getIPV6Addr_DNSQuery(std::string &ipV6Addr, const std::string hostName,
+NetOpResult getIPV6AddrByHostname_DNSQuery(std::string &ipV6Addr, const std::string hostName,
     const std::string dnsIPV4Addr, const DNSQueryOpts queryOptions) {
     unsigned char addrtestres = isStringIP(hostName);
     if (2 != addrtestres) {
@@ -2383,7 +2383,7 @@ NetOpResult getIPV6Addr_DNSQuery(std::string &ipV6Addr, const std::string hostNa
     return NetOpResult::Success;
 }
 
-NetOpResult getIPV6Addr_DNSQuery(std::wstring &ipV6Addr, const std::wstring hostName,
+NetOpResult getIPV6AddrByHostname_DNSQuery(std::wstring &ipV6Addr, const std::wstring hostName,
     const std::wstring dnsIPV4Addr, const DNSQueryOpts queryOptions) {
     unsigned char addrtestres = isStringIP(hostName);
     if (2 != addrtestres) {
@@ -2576,7 +2576,7 @@ NetOpResult customDNSQuery(PDNS_RECORD &queryResults, const std::wstring objectN
     return NetOpResult::Success;
 }
 
-NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName,
+NetOpResult getIPV4AddrByHostname_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName,
     const std::string dnsIPV4Addr, const bool async, const DNSQueryOpts queryOptions) {
     unsigned long Error = ERROR_SUCCESS;
     DNSQueryContext* QueryContext = 0;
@@ -2767,7 +2767,7 @@ NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std
     }
 }
 
-NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
+NetOpResult getIPV4AddrByHostname_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
     const std::wstring dnsIPV4Addr, const bool async, const DNSQueryOpts queryOptions) {
     unsigned long Error = ERROR_SUCCESS;
     DNSQueryContext* QueryContext = 0;
@@ -2958,7 +2958,7 @@ NetOpResult getIPV4Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std
     }
 }
 
-NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName,
+NetOpResult getIPV6AddrByHostname_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::string hostName,
     const bool async, const DNSQueryOpts queryOptions, const std::string dnsIPV4Addr) {
     unsigned long Error = ERROR_SUCCESS;
     DNSQueryContext* QueryContext = 0;
@@ -3143,7 +3143,7 @@ NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std
     }
 }
 
-NetOpResult getIPV6Addr_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
+NetOpResult getIPV6AddrByHostname_DNSQueryEx(std::vector<std::wstring> &ipAddrs, const std::wstring hostName,
     const std::wstring dnsIPV4Addr, const bool async, const DNSQueryOpts queryOptions) {
     unsigned long Error = ERROR_SUCCESS;
     DNSQueryContext* QueryContext = 0;
