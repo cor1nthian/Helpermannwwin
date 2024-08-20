@@ -370,8 +370,6 @@ class SysHandler {
 			Returns result code of the operation (enum value) */
 		SysOpResult EnumAccounts(std::vector<AccountDesc> &accountList,
 			const std::wstring machineName = L".", const bool enumGroups = true) const;
-		SysOpResult DLLLoad(::HMODULE &hModule, const std::wstring libPath) const;
-		SysOpResult DLLUnload(const ::HMODULE libModule) const;
 	protected:
 	private:
 };

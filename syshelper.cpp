@@ -1604,25 +1604,6 @@ SysOpResult SysHandler::EnumAccounts(std::vector<AccountDesc> &accountList,
 	return SysOpResult::Success;
 }
 
-SysOpResult SysHandler::DLLLoad(::HMODULE &hModule, const std::wstring libPath) const {
-	::HMODULE hMod = 0;
-	hMod = ::LoadLibrary(libPath.c_str());
-	if (!hMod) {
-		hModule = hMod;
-		return SysOpResult::Fail;
-	} else {
-		return SysOpResult::Success;
-	}
-}
-
-SysOpResult SysHandler::DLLUnload(const ::HMODULE libModule) const {
-	if (!::FreeLibrary(libModule)) {
-		return SysOpResult::Fail;
-	} else {
-		return SysOpResult::Success;
-	}
-}
-
 SysOpResult SysHandler::IsAccountMemberOfGroup(const ::PSID groupSID, const ::PSID testSID, bool &isMember,
 	const std::wstring machineName) const {
 	isMember = false;
