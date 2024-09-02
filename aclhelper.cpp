@@ -104,6 +104,7 @@ SecDesc::SecDesc(const SecDesc &other) {
         }
     }
 }
+
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 SecDesc::SecDesc(SecDesc &&other) noexcept {
     if (this != &other) {
