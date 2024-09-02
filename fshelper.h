@@ -39,6 +39,8 @@
 #include <winioctl.h>
 #include <fileapi.h>
 #include <shellapi.h>
+#include <WinIoCtl.h>
+#include <Ntddscsi.h>
 #include <regex>
 #include <sstream>
 #include <vector>
@@ -59,6 +61,16 @@ enum class HeapOpts : unsigned long {
 	EnableExecution = HEAP_CREATE_ENABLE_EXECUTE,
 	GenerateExceptions = HEAP_GENERATE_EXCEPTIONS,
 	NoSerialize = HEAP_NO_SERIALIZE
+};
+
+enum class DevType : unsigned char {
+	Unknown = 0,
+	NoRootDir,
+	Removable,
+	Fixed,
+	Remote,
+	CDROM,
+	RAMDisk
 };
 
 enum class RenameBehaviour : unsigned char {
@@ -233,7 +245,9 @@ struct FileDirBothInformation;
 struct BinData;
 struct FileRecord;
 struct FolderRecord;
-struct PartitionDesc;
+struct VolumeDiskExtents;
+struct DiskExtents;
+struct VolumeDesc;
 
 class FSHandler;
 
@@ -244,7 +258,9 @@ struct UnicodeString {
 	UnicodeString(const unsigned short length, const unsigned short maxlength);
 	UnicodeString(const unsigned short length, const unsigned short maxlength, const wchar_t* buffer);
 	UnicodeString(const UnicodeString &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	UnicodeString(UnicodeString &&other) noexcept;
+#endif
 	~UnicodeString();
 	UnicodeString& operator=(const UnicodeString &other);
 	UnicodeString& operator=(UnicodeString &&other) noexcept;
@@ -260,10 +276,14 @@ struct ANSIString {
 	ANSIString(const unsigned short length, const unsigned short maxlength);
 	ANSIString(const unsigned short length, const unsigned short maxlength, const char* buffer);
 	ANSIString(const ANSIString &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	ANSIString(ANSIString &&other) noexcept;
+#endif
 	~ANSIString();
 	ANSIString& operator=(const ANSIString &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	ANSIString& operator=(ANSIString &&other) noexcept;
+#endif
 	bool operator==(const ANSIString &other) const;
 	bool operator!=(const ANSIString &other) const;
 	unsigned short	Length;
@@ -274,10 +294,14 @@ struct ANSIString {
 struct ObjectAttributes {
 	ObjectAttributes();
 	ObjectAttributes(const ObjectAttributes &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	ObjectAttributes(ObjectAttributes &&other) noexcept;
+#endif
 	~ObjectAttributes();
 	ObjectAttributes& operator=(const ObjectAttributes &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	ObjectAttributes& operator=(ObjectAttributes &&other) noexcept;
+#endif
 	bool operator==(const ObjectAttributes &other) const;
 	bool operator!=(const ObjectAttributes &other) const;
 	unsigned long	uLength;
@@ -292,10 +316,14 @@ struct IOStatusBlock {
 	IOStatusBlock();
 	IOStatusBlock(const NTSTATUS statuus, const unsigned long long info);
 	IOStatusBlock(const IOStatusBlock &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	IOStatusBlock(IOStatusBlock &&other) noexcept;
+#endif
 	~IOStatusBlock();
 	IOStatusBlock& operator=(const IOStatusBlock &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	IOStatusBlock& operator=(IOStatusBlock &&other);
+#endif
 	bool operator==(const IOStatusBlock &other) const;
 	bool operator!=(const IOStatusBlock &other) const;
 	union {
@@ -308,10 +336,14 @@ struct IOStatusBlock {
 struct FileDirBothInformation {
 	FileDirBothInformation();
 	FileDirBothInformation(const FileDirBothInformation &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	FileDirBothInformation(FileDirBothInformation &&other) noexcept;
+#endif
 	~FileDirBothInformation();
 	FileDirBothInformation& operator=(const FileDirBothInformation &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	FileDirBothInformation& operator=(FileDirBothInformation &&other) noexcept;
+#endif
 	bool operator==(const FileDirBothInformation &other) const;
 	bool operator!=(const FileDirBothInformation &other) const;
 	unsigned long	NextEntryOffset;
@@ -334,10 +366,14 @@ struct BinData {
 	BinData();
 	BinData(const BinBitDepth bitDepth, const BinPlatform binPlatform);
 	BinData(const BinData &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	BinData(BinData &&other) noexcept;
+#endif
 	~BinData();
 	BinData& operator=(const BinData &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	BinData& operator=(BinData &&other) noexcept;
+#endif
 	bool operator==(const BinData &other) const;
 	bool operator!=(const BinData &other) const;
 	BinBitDepth BitDepth;
@@ -351,11 +387,15 @@ struct FileRecord {
 	// File description struct copy constructor
 	FileRecord(const FileRecord &other);
 	// File description struct move constructor
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	FileRecord(FileRecord &&other) noexcept;
+#endif
 	// File description struct destructor
 	~FileRecord();
 	FileRecord& operator=(const FileRecord &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	FileRecord& operator=(FileRecord &&other) noexcept;
+#endif
 	bool operator==(const FileRecord &other) const;
 	bool operator!=(const FileRecord &other) const;
 	// Name of a file
@@ -375,7 +415,9 @@ struct FolderRecord {
 	// Folder description struct copy constructor
 	FolderRecord(const FolderRecord &other);
 	// Folder description struct move constructor
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	FolderRecord(FolderRecord &&other) noexcept;
+#endif
 	// Folder description struct destructor
 	~FolderRecord();
 	// Folder description struct copy operator =
@@ -393,20 +435,61 @@ struct FolderRecord {
 	std::vector<FolderRecord> folders;
 };
 
-// Partition description struct
+struct DriveDesc {
+	DriveDesc();
+	DriveDesc(const DriveDesc &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+	DriveDesc(DriveDesc &&other) noexcept;
+#endif
+	~DriveDesc();
+	DriveDesc& operator=(const DriveDesc &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+	DriveDesc& operator=(DriveDesc &&other) noexcept;
+#endif
+	bool operator==(const DriveDesc &other) const;
+	bool operator!=(const DriveDesc &other) const;
+	unsigned long long spaceFree;
+	unsigned long long spaceTotal;
+	std::wstring drivePath;
+};
+
 struct PartitionDesc {
-	// Partition description struct constructor
 	PartitionDesc();
-	// Partition description struct copy constructor
 	PartitionDesc(const PartitionDesc &other);
-	// Partition description struct move constructor
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	PartitionDesc(PartitionDesc &&other) noexcept;
-	// Partition description struct destructor
+#endif
 	~PartitionDesc();
 	PartitionDesc& operator=(const PartitionDesc &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	PartitionDesc& operator=(PartitionDesc &&other) noexcept;
-	bool operator==(const PartitionDesc& other) const;
-	bool operator!=(const PartitionDesc& other) const;
+#endif
+	bool operator==(const PartitionDesc &other) const;
+	bool operator!=(const PartitionDesc &other) const;
+	unsigned long long spaceFree;
+	unsigned long long spaceTotal;
+	// GUID string
+	std::wstring partitionPath;
+};
+
+// Volume description struct
+struct VolumeDesc {
+	// Volume description struct constructor
+	VolumeDesc();
+	// Volume description struct copy constructor
+	VolumeDesc(const VolumeDesc &other);
+	// Volume description struct move constructor
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+	VolumeDesc(VolumeDesc &&other) noexcept;
+#endif
+	// Volume description struct destructor
+	~VolumeDesc();
+	VolumeDesc& operator=(const VolumeDesc &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+	VolumeDesc& operator=(VolumeDesc &&other) noexcept;
+#endif
+	bool operator==(const VolumeDesc &other) const;
+	bool operator!=(const VolumeDesc &other) const;
 	// True if volume supports case sensitive search
 	bool caseSensitiveSearch;
 	// True if volume supports case preserved names
@@ -460,6 +543,7 @@ struct PartitionDesc {
 	// True if volume is DAX
 	bool volumeDax;
 	bool seqWriteOnce;
+	DevType deviceType;
 	// Free space on volume, bytes
 	unsigned long long spaceFree;
 	// Total space on volume, bytes
@@ -471,7 +555,7 @@ struct PartitionDesc {
 	std::wstring volumeSerialStr;
 	// Partition letter
 	std::wstring partLetter;
-	// DOS style path to a drive/partition
+	// DOS style path to a drive/partition/Volume
 	std::wstring drivePath;
 	// GUID string
 	std::wstring volumePath;
@@ -479,6 +563,7 @@ struct PartitionDesc {
 	std::wstring volumeLabel;
 	// File system name
 	std::wstring fsName;
+	std::vector<std::wstring> physDrives;
 };
 
 // Handler class encapsulating file system functionality
@@ -487,30 +572,52 @@ class FSHandler {
 		// File system handler constructor
 		FSHandler();
 		// File system handler copy constructor disabled
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		FSHandler(const FSHandler &other) = delete;
+#else
+		FSHandler(const FSHandler &other) {}
+#endif
 		// File system handler move constructor disabled
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		FSHandler(FSHandler &&other) noexcept = delete;
+#endif
 		// File system handler operator = (copy) disabled
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		FSHandler& operator=(const FSHandler &other) = delete;
+#else
+		SHandler& operator=(const FSHandler &other) {}
+#endif
 		// File system handler operator = (move) disabled
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		FSHandler& operator=(FSHandler &&other) noexcept = delete;
+#endif
 		// File system handler equality comparison disabled
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		bool operator==(const FSHandler &other) const = delete;
+#else
+		bool operator==(const FSHandler &other) {}
+#endif
 		// File system handler inequality comparison disabled
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		bool operator!=(const FSHandler &other) const = delete;
+#else
+		bool operator!=(const FSHandler &other) {}
+#endif
 		// File system handler destructor
 		~FSHandler();
 		/* Lists all available partitions, providing description for each one
 			[out] partition description list/vector
 			[in] [default - true] cleat given list before collecting the data
 			Returns result code of the operation (enum value) */
-		FSOpResult EnumPartitions(std::vector<PartitionDesc> &partList, const bool clearList = true);
+		FSOpResult EnumVolumes(std::vector<VolumeDesc> &partList, const bool clearList = true);
+		FSOpResult EnumPartitions(std::vector<VolumeDesc> &partList, const bool clearList = true);
+		FSOpResult EnumDrives(std::vector<VolumeDesc> &partList, const bool clearList = true);
 		/* Gets the size for a given file
 			Param:
 			[in] path to a file to calc comtrol sum for
 			Returns control sum string */
 		FSOpResult GetPhysDriveIndexByPartLetter(const std::wstring partLetter,
-			unsigned long &driveIndex, std::vector<PartitionDesc> *parts = 0);
+			unsigned long &driveIndex, std::vector<VolumeDesc> *parts = 0);
 		FSOpResult GetBinaryFileInfo(const std::wstring binaryPath, BinData &binaryData) const;
 		/* Gets the control sum for a given file
 			Param:
@@ -578,7 +685,7 @@ class FSHandler {
 			const bool getSize = true, const bool getControlSum = true,
 			const bool excludeEmptyFiles = false, const HashType hash = HashType::SHA256,
 			const std::vector<std::wstring> exclusions = std::vector<std::wstring>(),
-			const std::vector<PartitionDesc> *parts = 0);
+			const std::vector<VolumeDesc> *parts = 0);
 		/* Does the file search starting in given folder baaed on a filename. Filename supports regex expressions.
 			Param:
 			[in] search start path
@@ -604,7 +711,7 @@ class FSHandler {
 			Returns partition letter matching given drive path */
 		std::wstring DrivePath2PartLetter(const std::wstring drivePath,
 			const bool ignoreCase = true, const bool addSlash = true,
-			std::vector<PartitionDesc> *parts = 0);
+			std::vector<VolumeDesc> *parts = 0);
 		/* Replaces drive path with partition letter in string
 			Param:
 			[in] drive path to replace
@@ -612,7 +719,7 @@ class FSHandler {
 			[in] [default - 0] pointer to partition list on which data replacement is based
 			Returns modified string with dtive path replaced with a partition letter */
 		std::wstring ReplaceDrivePathWithPartLetter(const std::wstring path,
-			const bool ignoreCase = true, std::vector<PartitionDesc> *parts = 0);
+			const bool ignoreCase = true, std::vector<VolumeDesc> *parts = 0);
 	protected:
 	private:
 		/* *** INTERNAL USE ONLY ***

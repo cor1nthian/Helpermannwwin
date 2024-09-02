@@ -1,3 +1,4 @@
+#include <iostream>
 #include <algorithm>
 #include "dbhelper.h"
 
@@ -66,24 +67,21 @@ MSSQLBinding::MSSQLBinding(const MSSQLBinding& other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLBinding::MSSQLBinding(MSSQLBinding &&other) noexcept {
 	if (this != &other) {
-		cDisplaySize = other.cDisplaySize;
-		other.cDisplaySize = 0;
-		wszBuffer = other.wszBuffer;
-		other.cDisplaySize = 0;
-		indPtr = other.indPtr;
-		other.indPtr = 0;
-		fChar = other.fChar;
-		other.fChar = false;
-		sNext = other.sNext;
+		cDisplaySize = valexchange(other.cDisplaySize, 0);
+		indPtr = valexchange(other.indPtr, 0);
+		fChar = valexchange(other.fChar, 0);
+		wszBuffer = valmove(other.wszBuffer);
+		other.wszBuffer = 0;
+		sNext = valmove(other.sNext);
 		other.sNext = 0;
 	}
 }
+#endif
 
-MSSQLBinding::~MSSQLBinding() {
-
-}
+MSSQLBinding::~MSSQLBinding() {}
 
 MSSQLBinding& MSSQLBinding::operator=(const MSSQLBinding &other) {
 	if (this != &other) {
@@ -96,21 +94,20 @@ MSSQLBinding& MSSQLBinding::operator=(const MSSQLBinding &other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLBinding& MSSQLBinding::operator=(MSSQLBinding &&other) noexcept {
 	if (this != &other) {
-		cDisplaySize = other.cDisplaySize;
-		other.cDisplaySize = 0;
-		wszBuffer = other.wszBuffer;
-		other.cDisplaySize = 0;
-		indPtr = other.indPtr;
-		other.indPtr = 0;
-		fChar = other.fChar;
-		other.fChar = false;
-		sNext = other.sNext;
+		cDisplaySize = valexchange(other.cDisplaySize, 0);
+		indPtr = valexchange(other.indPtr, 0);
+		fChar = valexchange(other.fChar, 0);
+		wszBuffer = valmove(other.wszBuffer);
+		other.wszBuffer = 0;
+		sNext = valmove(other.sNext);
 		other.sNext = 0;
 	}
 	return *this;
 }
+#endif
 
 bool MSSQLBinding::operator==(const MSSQLBinding &other) const {
 	if (this != &other) {
@@ -160,21 +157,24 @@ MSSQLOutBuf::MSSQLOutBuf(const MSSQLOutBuf &other) {
 		if (OutBuf) {
 			SAFE_ARR_DELETE(OutBuf);
 		}
-		NEW_ARR_NULLIFY_NO_REDEFINE(OutBuf, wchar_t, OutBufSz);
-		if (OutBuf) {
-			memcpy(OutBuf, other.OutBuf, OutBufSz * sizeof(wchar_t));
+		if (other.OutBuf) {
+			NEW_ARR_NULLIFY_NO_REDEFINE(OutBuf, wchar_t, OutBufSz);
+			if (OutBuf) {
+				memcpy(OutBuf, other.OutBuf, OutBufSz * sizeof(wchar_t));
+			}
 		}
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLOutBuf::MSSQLOutBuf(MSSQLOutBuf &&other) noexcept {
 	if (this != &other) {
-		OutBuf = other.OutBuf;
-		other.OutBuf = 0;
-		OutBufSz = other.OutBufSz;
+		OutBufSz = valexchange(other.OutBufSz, 0);
+		OutBuf = valmove(other.OutBuf);
 		other.OutBuf = 0;
 	}
 }
+#endif
 
 MSSQLOutBuf::~MSSQLOutBuf() {}
 
@@ -184,23 +184,26 @@ MSSQLOutBuf& MSSQLOutBuf::operator=(const MSSQLOutBuf &other) {
 		if (OutBuf) {
 			SAFE_ARR_DELETE(OutBuf);
 		}
-		NEW_ARR_NULLIFY_NO_REDEFINE(OutBuf, wchar_t, OutBufSz);
-		if (OutBuf) {
-			memcpy(OutBuf, other.OutBuf, OutBufSz * sizeof(wchar_t));
+		if (other.OutBuf) {
+			NEW_ARR_NULLIFY_NO_REDEFINE(OutBuf, wchar_t, OutBufSz);
+			if (OutBuf) {
+				memcpy(OutBuf, other.OutBuf, OutBufSz * sizeof(wchar_t));
+			}
 		}
 	}
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLOutBuf& MSSQLOutBuf::operator=(MSSQLOutBuf &&other) noexcept {
 	if (this != &other) {
-		OutBuf = other.OutBuf;
+		OutBufSz = valexchange(other.OutBufSz, 0);
+		OutBuf = valmove(other.OutBuf);
 		other.OutBuf = 0;
-		OutBufSz = other.OutBufSz;
-		other.OutBufSz = 0;
 	}
 	return *this;
 }
+#endif
 
 bool MSSQLOutBuf::operator==(const MSSQLOutBuf &other) const {
 	if (this != &other) {
@@ -239,16 +242,17 @@ MSSQLQuery::MSSQLQuery(const MSSQLQuery &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLQuery::MSSQLQuery(MSSQLQuery &&other) noexcept {
 	if (this != &other) {
-		DBID = other.DBID;
+		DBID = valmove(other.DBID);
 		other.DBID = 0;
-		QueryID = other.QueryID;
+		QueryID = valmove(other.QueryID);
 		other.QueryID = 0;
-		QueryStr = other.QueryStr;
-		other.QueryStr.~basic_string();
+		QueryStr = valmove(other.QueryStr);
 	}
 }
+#endif
 
 MSSQLQuery::~MSSQLQuery() {}
 
@@ -261,17 +265,18 @@ MSSQLQuery& MSSQLQuery::operator=(const MSSQLQuery &other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLQuery& MSSQLQuery::operator=(MSSQLQuery &&other) noexcept {
 	if (this != &other) {
-		DBID = other.DBID;
+		DBID = valmove(other.DBID);
 		other.DBID = 0;
-		QueryID = other.QueryID;
+		QueryID = valmove(other.QueryID);
 		other.QueryID = 0;
-		QueryStr = other.QueryStr;
-		other.QueryStr.~basic_string();
+		QueryStr = valmove(other.QueryStr);
 	}
 	return *this;
 }
+#endif
 
 bool MSSQLQuery::operator==(const MSSQLQuery &other) const {
 	if (this != &other) {
@@ -314,18 +319,17 @@ MSSQLDBHandler::MSSQLDBHandler(const MSSQLDBHandler &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLDBHandler::MSSQLDBHandler(MSSQLDBHandler &&other) noexcept {
 	if (this != &other) {
-		m_hEnv = other.m_hEnv;
+		m_ConnectedDBs = valmove(other.m_ConnectedDBs);
+		m_OutBuffers = valmove(other.m_OutBuffers);
+		m_RunningQueries = valmove(other.m_RunningQueries);
+		m_hEnv = valmove(other.m_hEnv);
 		other.m_hEnv = 0;
-		m_ConnectedDBs = other.m_ConnectedDBs;
-		other.m_ConnectedDBs.~map();
-		m_OutBuffers = other.m_OutBuffers;
-		other.m_OutBuffers.~map();
-		m_RunningQueries = other.m_RunningQueries;
-		other.m_RunningQueries.~vector();
 	}
 }
+#endif
 
 MSSQLDBHandler::~MSSQLDBHandler() {
 	short rc = 0;
@@ -357,19 +361,18 @@ MSSQLDBHandler& MSSQLDBHandler::operator=(const MSSQLDBHandler &other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLDBHandler& MSSQLDBHandler::operator=(MSSQLDBHandler &&other) noexcept {
 	if (this != &other) {
-		m_hEnv = other.m_hEnv;
+		m_ConnectedDBs = valmove(other.m_ConnectedDBs);
+		m_OutBuffers = valmove(other.m_OutBuffers);
+		m_RunningQueries = valmove(other.m_RunningQueries);
+		m_hEnv = valmove(other.m_hEnv);
 		other.m_hEnv = 0;
-		m_ConnectedDBs = other.m_ConnectedDBs;
-		other.m_ConnectedDBs.~map();
-		m_OutBuffers = other.m_OutBuffers;
-		other.m_OutBuffers.~map();
-		m_RunningQueries = other.m_RunningQueries;
-		other.m_RunningQueries.~vector();
 	}
 	return *this;
 }
+#endif
 
 bool MSSQLDBHandler::operator==(const MSSQLDBHandler &other) const {
 	if (this != &other) {
@@ -1144,6 +1147,90 @@ MSSQLOpResult MSSQLDBHandler::CancelQuery(const SQLHSTMT queryID, const std::wst
 	return QueryCancelled();
 }
 
+MSSQLOpResult MSSQLDBHandler::EvalSQLResult(const short resultCode, const SQLHANDLE objectID,
+	const unsigned char queryType, std::wstring *infoBuf, const unsigned short infoBufLen) const {
+	if (SQL_SUCCESS != resultCode) {
+		if (SQL_SUCCESS_WITH_INFO == resultCode) {
+			if (infoBuf) {
+				wchar_t* errBuf = (wchar_t*)malloc(MSSQLMAXINFOBUF * sizeof(wchar_t));
+				if (!errBuf) {
+					return MSSQLOpResult::Fail;
+				}
+				if (MSSQLOpResult::Success != SQLInfoDetails(objectID, queryType, resultCode, errBuf,
+					MSSQLMAXINFOBUF * sizeof(wchar_t))) {
+					SAFE_FREE(errBuf);
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = errBuf;
+				SAFE_FREE(errBuf);
+			}
+			return MSSQLOpResult::Success;
+		} else if(SQL_INVALID_HANDLE == resultCode) {
+			if (infoBuf) {
+				wchar_t* errBuf = (wchar_t*)malloc(MSSQLMAXINFOBUF * sizeof(wchar_t));
+				if (!errBuf) {
+					return MSSQLOpResult::Fail;
+				}
+				if (MSSQLOpResult::Success != SQLInfoDetails(objectID, queryType, resultCode, errBuf,
+					MSSQLMAXINFOBUF * sizeof(wchar_t))) {
+					SAFE_FREE(errBuf);
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = std::wstring(L"Invalid handle was specified. Details: ") + errBuf;
+				SAFE_FREE(errBuf);
+			}
+			return MSSQLOpResult::Fail;
+		} else if (SQL_ERROR == resultCode) {
+			if (infoBuf) {
+				wchar_t* errBuf = (wchar_t*)malloc(MSSQLMAXINFOBUF * sizeof(wchar_t));
+				if (!errBuf) {
+					return MSSQLOpResult::Fail;
+				}
+				if (MSSQLOpResult::Success != SQLInfoDetails(objectID, queryType, resultCode, errBuf,
+					MSSQLMAXINFOBUF * sizeof(wchar_t))) {
+					SAFE_FREE(errBuf);
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = std::wstring(L"Error ccured. Details: ") + errBuf;
+				SAFE_FREE(errBuf);
+			}
+			return MSSQLOpResult::Fail;
+		} else if (SQL_STILL_EXECUTING == resultCode) {
+			if (infoBuf) {
+				wchar_t* errBuf = (wchar_t*)malloc(MSSQLMAXINFOBUF * sizeof(wchar_t));
+				if (!errBuf) {
+					return MSSQLOpResult::Fail;
+				}
+				if (MSSQLOpResult::Success != SQLInfoDetails(objectID, queryType, resultCode, errBuf,
+					MSSQLMAXINFOBUF * sizeof(wchar_t))) {
+					SAFE_FREE(errBuf);
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = std::wstring(L"Query still executing. Details: ") + errBuf;
+				SAFE_FREE(errBuf);
+			}
+			return MSSQLOpResult::Fail;
+		} else if (SQL_NEED_DATA == resultCode) {
+			if (infoBuf) {
+				wchar_t* errBuf = (wchar_t*)malloc(MSSQLMAXINFOBUF * sizeof(wchar_t));
+				if (!errBuf) {
+					return MSSQLOpResult::Fail;
+				}
+				if (MSSQLOpResult::Success != SQLInfoDetails(objectID, queryType, resultCode, errBuf,
+					MSSQLMAXINFOBUF * sizeof(wchar_t))) {
+					SAFE_FREE(errBuf);
+					return MSSQLOpResult::Fail;
+				}
+				*infoBuf = std::wstring(L"More data required. Details: ") + errBuf;
+				SAFE_FREE(errBuf);
+			}
+			return MSSQLOpResult::Fail;
+		}
+	} else {
+		return MSSQLOpResult::Success;
+	}
+}
+
 MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring>> &results,
 	SQLHSTMT queryHandle, const std::wstring queryStr, std::wstring *infoBuf) {
 	if (!queryHandle && !queryStr.length()) {
@@ -1174,11 +1261,14 @@ MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring
 		SAFE_ARR_DELETE(errbuf);
 		return MSSQLOpResult::Fail;
 	}
-	results.front().clear();
 	results.clear();
-	size_t i = 0;
+	size_t i = 0, ri = 0;
 	short colNum = 0;
-	SQLLEN rowNum = 0;
+#ifdef _WIN64
+	long long rowNum = 0;
+#else
+	long rowNum = 0;
+#endif
 	short rc = ::SQLNumResultCols(qptr->QueryID, &colNum);
 	if (SQL_SUCCESS_WITH_INFO == rc) {
 		if (infoBuf) {
@@ -1245,9 +1335,92 @@ MSSQLOpResult MSSQLDBHandler::QueryComplete(std::vector<std::vector<std::wstring
 	short display = 0;
 	MSSQLBinding *binding;
 	if (colNum) {
-		if (MSSQLOpResult::Success != SQLAllocateBindings(qptr->QueryID, colNum, &binding, &display, infoBuf)) {
-
+		NEW_ARR_NULLIFY(wszTitle, wchar_t, MSSQLDISPLAYMAX);
+		if (!wszTitle) {
+			SAFE_ARR_DELETE(errbuf);
+			return MSSQLOpResult::Fail;
 		}
+		wchar_t* colName = 0;
+		for (i = 0; i < colNum; ++i) {
+			NEW_ARR_NULLIFY_NO_REDEFINE(colName, wchar_t, 128);
+			if (!colName) {
+				SAFE_ARR_DELETE(errbuf);
+				return MSSQLOpResult::Fail;
+			}
+#ifdef _WIN64
+			long long colTitleLen = 0;
+#else
+			long colTitleLen = 0;
+#endif
+			std::wstring infoDesc;
+			rc = ::SQLColAttribute(qptr->QueryID, i, SQL_DESC_DISPLAY_SIZE, 0, 0, 0, &colTitleLen);
+			if (MSSQLOpResult::Success != EvalSQLResult(rc, qptr->QueryID, SQL_HANDLE_STMT, &infoDesc,
+				MSSQLMAXINFOBUF)) {
+				return MSSQLOpResult::Fail;
+			}
+			rc = ::SQLBindCol(qptr->QueryID, i, SQL_C_WCHAR, colName, sizeof(colName), &colTitleLen);
+			if (MSSQLOpResult::Success != EvalSQLResult(rc, qptr->QueryID, SQL_HANDLE_STMT, &infoDesc,
+				MSSQLMAXINFOBUF)) {
+				return MSSQLOpResult::Fail;
+			}
+			rc = ::SQLColAttribute(queryHandle, i, SQL_DESC_NAME, wszTitle, sizeof(wszTitle), 0, 0);
+			if (!SQL_SUCCEEDED(rc)) {
+				SAFE_ARR_DELETE(errbuf);
+				return MSSQLOpResult::Fail;
+			}
+			results.push_back(std::vector<std::wstring>{wszTitle});
+			SAFE_ARR_DELETE(colName);
+			rc = ::SQLFreeStmt(qptr->QueryID, SQL_UNBIND);
+		}
+		short ret = 0;
+		if (-1 == rowNum) {
+			while (SQL_SUCCEEDED(ret = ::SQLFetch(qptr->QueryID))) {
+				for (i = 1; i <= colNum; ++i) {
+					SQLLEN indicator;
+					char buf[512] = { 0 };
+					/* retrieve column data as a string */
+					ret = ::SQLGetData(qptr->QueryID, i, SQL_C_CHAR, buf, sizeof(buf), &indicator);
+					if (SQL_SUCCEEDED(ret)) {
+						/* Handle null columns */
+						if (SQL_NULL_DATA == indicator) {
+							strcpy(buf, "<NULL>");
+						}
+						results[i].push_back(str2wstr(buf));
+						printf("  Column %u : %s\n", i, buf);
+					}
+				}
+			}
+		}
+		Sleep(1);
+		//if (MSSQLOpResult::Success == SQLAllocateBindings(qptr->QueryID, colNum, &binding, &display, infoBuf)) {
+		//	if (MSSQLOpResult::Success != SQLGetTitles(results, qptr->QueryID, display, binding, infoBuf)) {
+		//		SAFE_ARR_DELETE(errbuf);
+		//		return MSSQLOpResult::Fail;
+		//	}
+		//	//short ret = 0;
+		//	//if (-1 == rowNum) {
+		//	//	while (SQL_SUCCEEDED(ret = ::SQLFetch(qptr->QueryID))) {
+		//	//		for (i = 1; i <= colNum; ++i) {
+		//	//			SQLLEN indicator;
+		//	//			char buf[512] = { 0 };
+		//	//			/* retrieve column data as a string */
+		//	//			ret = ::SQLGetData(qptr->QueryID, i, SQL_C_CHAR, buf, sizeof(buf), &indicator);
+		//	//			if (SQL_SUCCEEDED(ret)) {
+		//	//				/* Handle null columns */
+		//	//				if (SQL_NULL_DATA == indicator) {
+		//	//					strcpy(buf, "<NULL>");
+		//	//				}
+		//	//				results[i].push_back(str2wstr(buf));
+		//	//				printf("  Column %u : %s\n", i, buf);
+		//	//			}
+		//	//		}
+		//	//	}
+		//	//}
+		//	Sleep(1);
+		//} else {
+		//	SAFE_ARR_DELETE(errbuf);
+		//	return MSSQLOpResult::Fail;
+		//}
 	} else {
 		for (i = 0; i < rowNum; ++i) {
 
@@ -1393,7 +1566,7 @@ MSSQLOpResult MSSQLDBHandler::SQLAllocateBindings(const SQLHSTMT queryHandle,
 			return MSSQLOpResult::Fail;
 		}
 		rc = ::SQLBindCol(queryHandle, iCol, SQL_C_TCHAR, (SQLPOINTER)pThisBinding->wszBuffer,
-			(cchDisplay + 1) * sizeof(WCHAR), &pThisBinding->indPtr);
+			(cchDisplay + 1) * sizeof(wchar_t), &pThisBinding->indPtr);
 		if (SQL_SUCCESS_WITH_INFO == rc) {
 			if (infoBuf) {
 				if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
@@ -1473,8 +1646,9 @@ MSSQLOpResult MSSQLDBHandler::SQLGetTitles(std::vector<std::vector<std::wstring>
 	if (!errbuf) {
 		return MSSQLOpResult::Fail;
 	}
+	size_t ci = 0;
 	for (; binding; binding = binding->sNext) {
-		short rc = SQLColAttribute(queryHandle, ++iCol, SQL_DESC_NAME, wszTitle, sizeof(wszTitle), 0, 0);
+		short rc = ::SQLColAttribute(queryHandle, iCol++, SQL_DESC_NAME, wszTitle, sizeof(wszTitle), 0, 0);
 		if (SQL_SUCCESS_WITH_INFO == rc) {
 			if (infoBuf) {
 				if (MSSQLOpResult::Success != SQLInfoDetails(queryHandle, SQL_HANDLE_STMT, rc, errbuf, MSSQLMAXOUTBUF)) {
@@ -1510,17 +1684,23 @@ MSSQLOpResult MSSQLDBHandler::SQLGetTitles(std::vector<std::vector<std::wstring>
 			SAFE_ARR_DELETE(errbuf);
 			return MSSQLOpResult::Fail;
 		}
+		// std::vector<std::wstring> tvec;
+		// tvec.push_back(wszTitle);
+		results.push_back(std::vector<std::wstring>{wszTitle});
+		++ci;
 	}
 	SAFE_ARR_DELETE(errbuf);
 	return MSSQLOpResult::Success;
 }
 
 MSSQLOpResult MSSQLDBHandler::SQLInfoDetails(const SQLHANDLE handle, const short recordType, const short code,
-	wchar_t* &infoBuf, const size_t infoBufSz) const {
+	wchar_t*& infoBuf, const size_t infoBufSz) const {
 	short iRec = 0; long  iError = 0;
-	wchar_t wszMessage[1000] = { 0 }, wszState[SQL_SQLSTATE_SIZE + 1] = { 0 };
+	size_t bufSz = infoBufSz;
+	wchar_t wszState[SQL_SQLSTATE_SIZE + 1] = { 0 };
 	if (!infoBuf) {
-		NEW_ARR_NULLIFY_NO_REDEFINE(infoBuf, wchar_t, MSSQLMAXOUTBUF);
+		infoBufSz ? bufSz = infoBufSz : bufSz = MSSQLMAXINFOBUF;
+		NEW_ARR_NULLIFY_NO_REDEFINE(infoBuf, wchar_t, bufSz);
 		if (!infoBuf) {
 			return MSSQLOpResult::Fail;
 		}
@@ -1531,18 +1711,23 @@ MSSQLOpResult MSSQLDBHandler::SQLInfoDetails(const SQLHANDLE handle, const short
 		wsprintf(infoBuf, L"%s", L"Invalid handle!\n");
 		return MSSQLOpResult::Success;
 	}
+	wchar_t* wszMessage = (wchar_t*)malloc((bufSz + 1) * sizeof(wchar_t));
+	if (!wszMessage) {
+		return MSSQLOpResult::Fail;
+	}
 	while (SQL_SUCCESS == ::SQLGetDiagRec(recordType,
 		handle,
 		++iRec,
 		wszState,
 		&iError,
 		wszMessage,
-		(short)(sizeof(wszMessage) / sizeof(wchar_t)), 0)) {
-		// Hide data truncated..
+		bufSz * sizeof(wchar_t), 0)) {
+		// Hide data truncated...
 		if (wcsncmp(wszState, L"01004", 5)) {
 			wsprintf(infoBuf, L"[%5.5s] %s (%d)\n", wszState, wszMessage, iError);
 		}
 	}
+	SAFE_FREE(wszMessage);
 	return MSSQLOpResult::Success;
 }
 

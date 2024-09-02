@@ -77,10 +77,14 @@ MSSQLOpResult getAvailableODBCDrivers(std::vector<std::wstring> &drivers, const 
 struct MSSQLBinding {
 	MSSQLBinding();
 	MSSQLBinding(const MSSQLBinding &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	MSSQLBinding(MSSQLBinding &&other) noexcept;
+#endif
 	~MSSQLBinding();
 	MSSQLBinding& operator=(const MSSQLBinding &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	MSSQLBinding& operator=(MSSQLBinding &&other) noexcept;
+#endif
 	bool operator==(const MSSQLBinding &other) const;
 	bool operator!=(const MSSQLBinding &other) const;
 	short			cDisplaySize;	/* size to display  */
@@ -90,7 +94,7 @@ struct MSSQLBinding {
 #else
 	long			indPtr;			/* size or null     */
 #endif
-	BOOL			fChar;			/* character col?   */
+	int				fChar;			/* character col?   */
 	MSSQLBinding	*sNext;			/* linked list      */
 };
 
@@ -99,10 +103,14 @@ struct MSSQLOutBuf {
 	MSSQLOutBuf(const size_t outbufsz);
 	MSSQLOutBuf(const wchar_t* outbuf, const size_t outbufsz);
 	MSSQLOutBuf(const MSSQLOutBuf &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	MSSQLOutBuf(MSSQLOutBuf &&other) noexcept;
+#endif
 	~MSSQLOutBuf();
 	MSSQLOutBuf& operator=(const MSSQLOutBuf &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	MSSQLOutBuf& operator=(MSSQLOutBuf &&other) noexcept;
+#endif
 	bool operator==(const MSSQLOutBuf &other) const;
 	bool operator!=(const MSSQLOutBuf &other) const;
 	wchar_t* OutBuf;
@@ -113,7 +121,9 @@ struct MSSQLQuery {
 	MSSQLQuery();
 	MSSQLQuery(const SQLHANDLE dbid, const SQLHSTMT queryid, const std::wstring querystr);
 	MSSQLQuery(const MSSQLQuery &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	MSSQLQuery(MSSQLQuery &&other) noexcept;
+#endif
 	~MSSQLQuery();
 	MSSQLQuery& operator=(const MSSQLQuery &other);
 	MSSQLQuery& operator=(MSSQLQuery &&other) noexcept;
@@ -130,10 +140,14 @@ class MSSQLDBHandler {
 		MSSQLDBHandler(const SQLHANDLE henv, const std::map<SQLHANDLE, std::wstring> connectedDBs,
 			const std::map<SQLHANDLE, MSSQLOutBuf> outBuffers, std::vector<MSSQLQuery> runningQueries);
 		MSSQLDBHandler(const MSSQLDBHandler &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		MSSQLDBHandler(MSSQLDBHandler &&other) noexcept;
+#endif
 		~MSSQLDBHandler();
 		MSSQLDBHandler& operator=(const MSSQLDBHandler &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		MSSQLDBHandler& operator=(MSSQLDBHandler &&other) noexcept;
+#endif
 		bool operator==(const MSSQLDBHandler &other) const;
 		bool operator!=(const MSSQLDBHandler &other) const;
 		MSSQLOpResult ConnectDB(SQLHANDLE &connID, const std::wstring serverAddr, std::wstring *infoBuf = 0,
@@ -155,6 +169,8 @@ class MSSQLDBHandler {
 
 	private:
 		/*       FUNCTIONS       */
+		MSSQLOpResult EvalSQLResult(const short resultCode, const SQLHANDLE objectID,
+			const unsigned char queryType, std::wstring *infoBuf, const unsigned short infoBufLen) const;
 		MSSQLOpResult QueryComplete(std::vector<std::vector<std::wstring>> &results, SQLHSTMT queryHandle = 0,
 			const std::wstring queryStr = L"", std::wstring *infoBuf = 0);
 		MSSQLOpResult QueryCancelled(std::wstring *infoBuf = 0);

@@ -333,14 +333,13 @@ WKSid::WKSid(const WKSid& other) {
 	SIDNameOrig = other.SIDNameOrig;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 WKSid::WKSid(WKSid &&other) noexcept {
-	StrSID = other.StrSID;
-	other.StrSID.~basic_string();
-	SIDName = other.SIDName;
-	other.SIDName.~basic_string();
-	SIDNameOrig = other.SIDNameOrig;
-	other.SIDNameOrig.~basic_string();
+	StrSID = valmove(other.StrSID);
+	SIDName = valmove(other.SIDName);
+	SIDNameOrig = valmove(other.SIDNameOrig);
 }
+#endif
 
 WKSid::~WKSid() {}
 
@@ -353,23 +352,22 @@ WKSid& WKSid::operator=(const WKSid &other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 WKSid& WKSid::operator=(WKSid &&other) noexcept {
 	if (this != &other) {
-		StrSID = other.StrSID;
-		other.StrSID.~basic_string();
-		SIDName = other.SIDName;
-		other.SIDName.~basic_string();
-		SIDNameOrig = other.SIDNameOrig;
-		other.SIDNameOrig.~basic_string();
+		StrSID = valmove(other.StrSID);
+		SIDName = valmove(other.SIDName);
+		SIDNameOrig = valmove(other.SIDNameOrig);
 	}
 	return *this;
 }
+#endif
 
 bool WKSid::operator==(const WKSid& other) const {
 	if (this != &other) {
 		return (lower_copy(StrSID) == lower_copy(other.StrSID) &&
-			lower_copy(SIDName) == lower_copy(other.SIDName) &&
-			lower_copy(SIDNameOrig) == lower_copy(other.SIDNameOrig));
+				lower_copy(SIDName) == lower_copy(other.SIDName) &&
+				lower_copy(SIDNameOrig) == lower_copy(other.SIDNameOrig));
 	} else {
 		return true;
 	}
@@ -378,8 +376,8 @@ bool WKSid::operator==(const WKSid& other) const {
 bool WKSid::operator!=(const WKSid& other) const {
 	if (this != &other) {
 		return (lower_copy(StrSID) != lower_copy(other.StrSID) ||
-			lower_copy(SIDName) != lower_copy(other.SIDName) ||
-			lower_copy(SIDNameOrig) != lower_copy(other.SIDNameOrig));
+				lower_copy(SIDName) != lower_copy(other.SIDName) ||
+				lower_copy(SIDNameOrig) != lower_copy(other.SIDNameOrig));
 	} else {
 		return false;
 	}
@@ -481,116 +479,65 @@ AccountDesc::AccountDesc(const AccountDesc &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 AccountDesc::AccountDesc(AccountDesc &&other) noexcept {
 	if (this != &other) {
-		ncNormalAcc = other.ncNormalAcc;
-		other.ncNormalAcc = false;
-		ncTempDupAcc = other.ncTempDupAcc;
-		other.ncTempDupAcc = false;
-		ncWorkstationTrustAcc = other.ncWorkstationTrustAcc;
-		other.ncWorkstationTrustAcc = false;
-		ncServerTrustAcc = other.ncServerTrustAcc;
-		other.ncServerTrustAcc = false;
-		ncInterdomainTrustAcc = other.ncInterdomainTrustAcc;
-		other.ncInterdomainTrustAcc = false;
-		accountLocked = other.accountLocked;
-		other.accountLocked = false;
-		accountDisabled = other.accountDisabled;
-		other.accountDisabled = false;
-		accountNotDelegated = other.accountNotDelegated;
-		other.accountNotDelegated = false;
-		accountDESKeysOnly = other.accountDESKeysOnly;
-		other.accountDESKeysOnly = false;
-		accountNoKerberosPreauth = other.accountNoKerberosPreauth;
-		other.accountNoKerberosPreauth = false;
-		accountTrustedToAuthForDelegation = other.accountTrustedToAuthForDelegation;
-		other.accountTrustedToAuthForDelegation = false;
-		accountTrustedForDelegation = other.accountTrustedForDelegation;
-		other.accountTrustedForDelegation = false;
-		logonScriptExecuted = other.logonScriptExecuted;
-		other.logonScriptExecuted = false;
-		passwordNotNeeded = other.passwordNotNeeded;
-		other.passwordNotNeeded = false;
-		passwordCantChange = other.passwordCantChange;
-		other.passwordCantChange = false;
-		passwordNoExpire = other.passwordNoExpire;
-		other.passwordNoExpire = false;
-		passwordReverseEncryption = other.passwordReverseEncryption;
-		other.passwordReverseEncryption = false;
-		passwordSmartCardNeeded = other.passwordSmartCardNeeded;
-		other.passwordSmartCardNeeded = false;
-		passwordExpired = other.passwordExpired;
-		other.passwordExpired = false;
-		passwordEncrypted = other.passwordEncrypted;
-		other.passwordEncrypted = false;
-		authPrintOp = other.authPrintOp;
-		other.authPrintOp = false;
-		authCommOp = other.authCommOp;
-		other.authCommOp = false;
-		authSrvOp = other.authSrvOp;
-		other.authSrvOp = false;
-		authAccOp = other.authAccOp;
-		other.authAccOp = false;
-		passwordAge = other.passwordAge;
-		other.authAccOp = 0;
-		passwordBadCount = other.passwordBadCount;
-		other.passwordBadCount = 0;
-		lastLogOn = other.lastLogOn;
-		other.lastLogOn = 0;
-		lastLogOff = other.lastLogOff;
-		other.lastLogOff = 0;
-		privileges = other.privileges;
-		other.privileges = 0;
-		expireDate = other.expireDate;
-		other.expireDate = 0;
-		maxStorage = other.maxStorage;
-		other.maxStorage = 0;
-		logonCount = other.logonCount;
-		other.logonCount = 0;
-		countryCode = other.countryCode;
-		other.countryCode = 0;
-		codePage = other.codePage;
-		other.codePage = 0;
-		primaryGroupId = other.primaryGroupId;
-		other.primaryGroupId = 0;
-		sid = other.sid;
-		other.sid.~basic_string();
-		comment = other.comment;
-		other.comment.~basic_string();
-		accountName = other.accountName;
-		other.accountName.~basic_string();
-		accountFullname = other.accountFullname;
-		other.accountFullname.~basic_string();
-		logonScriptPath = other.logonScriptPath;
-		other.logonScriptPath.~basic_string();
-		homeDirPath = other.homeDirPath;
-		other.homeDirPath.~basic_string();
-		homeDirDrive = other.homeDirDrive;
-		other.homeDirDrive.~basic_string();
-		profileDirPath = other.profileDirPath;
-		other.profileDirPath.~basic_string();
-		params = other.params;
-		other.params.~basic_string();
-		allowedWorkstations = other.allowedWorkstations;
-		other.allowedWorkstations.~basic_string();
-		logonServer = other.logonServer;
-		other.logonServer.~basic_string();
-		passwordSetStr = other.passwordSetStr;
-		other.passwordSetStr.~basic_string();
-		lastLogOnStr = other.lastLogOnStr;
-		other.lastLogOnStr.~basic_string();
-		lastLogOffStr = other.lastLogOffStr;
-		other.lastLogOffStr.~basic_string();
-		privilegesStr = other.privilegesStr;
-		other.privilegesStr.~basic_string();
-		expireDateStr = other.expireDateStr;
-		other.expireDateStr.~basic_string();
-		maxStorageStr = other.maxStorageStr;
-		other.maxStorageStr.~basic_string();
-		groups = other.groups;
-		other.groups.~vector();
+		ncNormalAcc = valexchange(other.ncNormalAcc, false);
+		ncTempDupAcc = valexchange(other.ncTempDupAcc, false);
+		ncWorkstationTrustAcc = valexchange(other.ncWorkstationTrustAcc, false);
+		ncServerTrustAcc = valexchange(other.ncServerTrustAcc, false);
+		ncInterdomainTrustAcc = valexchange(other.ncInterdomainTrustAcc, false);
+		accountLocked = valexchange(other.accountLocked, false);
+		accountDisabled = valexchange(other.accountDisabled, false);
+		accountNotDelegated = valexchange(other.accountNotDelegated, false);
+		accountDESKeysOnly = valexchange(other.accountDESKeysOnly, false);
+		accountNoKerberosPreauth = valexchange(other.accountNoKerberosPreauth, false);
+		accountTrustedToAuthForDelegation = valexchange(other.accountTrustedToAuthForDelegation, false);
+		accountTrustedForDelegation = valexchange(other.accountTrustedForDelegation, false);
+		logonScriptExecuted = valexchange(other.logonScriptExecuted, false);
+		passwordNotNeeded = valexchange(other.passwordNotNeeded, false);
+		passwordCantChange = valexchange(other.passwordCantChange, false);
+		passwordNoExpire = valexchange(other.passwordNoExpire, false);
+		passwordReverseEncryption = valexchange(other.passwordReverseEncryption, false);
+		passwordSmartCardNeeded = valexchange(other.passwordSmartCardNeeded, false);
+		passwordExpired = valexchange(other.passwordExpired, false);
+		passwordEncrypted = valexchange(other.passwordEncrypted, false);
+		authPrintOp = valexchange(other.authPrintOp, false);
+		authCommOp = valexchange(other.authCommOp, false);
+		authSrvOp = valexchange(other.authSrvOp, false);
+		authAccOp = valexchange(other.authAccOp, false);
+		passwordAge = valexchange(other.authAccOp, 0);
+		passwordBadCount = valexchange(other.passwordBadCount, 0);
+		lastLogOn = valexchange(other.lastLogOn, 0);
+		lastLogOff = valexchange(other.lastLogOff, 0);
+		privileges = valexchange(other.privileges, 0);
+		expireDate = valexchange(other.expireDate, 0);
+		maxStorage = valexchange(other.maxStorage, 0);
+		logonCount = valexchange(other.logonCount, 0);
+		countryCode = valexchange(other.countryCode, 0);
+		codePage = valexchange(other.codePage, 0);
+		primaryGroupId = valexchange(other.primaryGroupId, 0);
+		sid = valmove(other.sid);
+		comment = valmove(other.comment);
+		accountName = valmove(other.accountName);
+		accountFullname = valmove(other.accountFullname);
+		logonScriptPath = valmove(other.logonScriptPath);
+		homeDirPath = valmove(other.homeDirPath);
+		homeDirDrive = valmove(other.homeDirDrive);
+		profileDirPath = valmove(other.profileDirPath);
+		params = valmove(other.params);
+		allowedWorkstations = valmove(other.allowedWorkstations);
+		logonServer = valmove(other.logonServer);
+		passwordSetStr = valmove(other.passwordSetStr);
+		lastLogOnStr = valmove(other.lastLogOnStr);
+		lastLogOffStr = valmove(other.lastLogOffStr);
+		privilegesStr = valmove(other.privilegesStr);
+		expireDateStr = valmove(other.expireDateStr);
+		maxStorageStr = valmove(other.maxStorageStr);
+		groups = valmove(other.groups);
 	}
 }
+#endif
 
 AccountDesc::~AccountDesc() {}
 
@@ -653,173 +600,122 @@ AccountDesc& AccountDesc::operator=(const AccountDesc &other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 AccountDesc& AccountDesc::operator=(AccountDesc &&other) noexcept {
 	if (this != &other) {
-		ncNormalAcc = other.ncNormalAcc;
-		other.ncNormalAcc = false;
-		ncTempDupAcc = other.ncTempDupAcc;
-		other.ncTempDupAcc = false;
-		ncWorkstationTrustAcc = other.ncWorkstationTrustAcc;
-		other.ncWorkstationTrustAcc = false;
-		ncServerTrustAcc = other.ncServerTrustAcc;
-		other.ncServerTrustAcc = false;
-		ncInterdomainTrustAcc = other.ncInterdomainTrustAcc;
-		other.ncInterdomainTrustAcc = false;
-		accountLocked = other.accountLocked;
-		other.accountLocked = false;
-		accountDisabled = other.accountDisabled;
-		other.accountDisabled = false;
-		accountNotDelegated = other.accountNotDelegated;
-		other.accountNotDelegated = false;
-		accountDESKeysOnly = other.accountDESKeysOnly;
-		other.accountDESKeysOnly = false;
-		accountNoKerberosPreauth = other.accountNoKerberosPreauth;
-		other.accountNoKerberosPreauth = false;
-		accountTrustedToAuthForDelegation = other.accountTrustedToAuthForDelegation;
-		other.accountTrustedToAuthForDelegation = false;
-		accountTrustedForDelegation = other.accountTrustedForDelegation;
-		other.accountTrustedForDelegation = false;
-		logonScriptExecuted = other.logonScriptExecuted;
-		other.logonScriptExecuted = false;
-		passwordNotNeeded = other.passwordNotNeeded;
-		other.passwordNotNeeded = false;
-		passwordCantChange = other.passwordCantChange;
-		other.passwordCantChange = false;
-		passwordNoExpire = other.passwordNoExpire;
-		other.passwordNoExpire = false;
-		passwordReverseEncryption = other.passwordReverseEncryption;
-		other.passwordReverseEncryption = false;
-		passwordSmartCardNeeded = other.passwordSmartCardNeeded;
-		other.passwordSmartCardNeeded = false;
-		passwordExpired = other.passwordExpired;
-		other.passwordExpired = false;
-		passwordEncrypted = other.passwordEncrypted;
-		other.passwordEncrypted = false;
-		authPrintOp = other.authPrintOp;
-		other.authPrintOp = false;
-		authCommOp = other.authCommOp;
-		other.authCommOp = false;
-		authSrvOp = other.authSrvOp;
-		other.authSrvOp = false;
-		authAccOp = other.authAccOp;
-		other.authAccOp = false;
-		passwordAge = other.passwordAge;
-		other.authAccOp = 0;
-		passwordBadCount = other.passwordBadCount;
-		other.passwordBadCount = 0;
-		lastLogOn = other.lastLogOn;
-		other.lastLogOn = 0;
-		lastLogOff = other.lastLogOff;
-		other.lastLogOff = 0;
-		privileges = other.privileges;
-		other.privileges = 0;
-		expireDate = other.expireDate;
-		other.expireDate = 0;
-		maxStorage = other.maxStorage;
-		other.maxStorage = 0;
-		logonCount = other.logonCount;
-		other.logonCount = 0;
-		countryCode = other.countryCode;
-		other.countryCode = 0;
-		codePage = other.codePage;
-		other.codePage = 0;
-		primaryGroupId = other.primaryGroupId;
-		other.primaryGroupId = 0;
-		sid = other.sid;
-		other.sid.~basic_string();
-		comment = other.comment;
-		other.comment.~basic_string();
-		accountName = other.accountName;
-		other.accountName.~basic_string();
-		accountFullname = other.accountFullname;
-		other.accountFullname.~basic_string();
-		logonScriptPath = other.logonScriptPath;
-		other.logonScriptPath.~basic_string();
-		homeDirPath = other.homeDirPath;
-		other.homeDirPath.~basic_string();
-		homeDirDrive = other.homeDirDrive;
-		other.homeDirDrive.~basic_string();
-		profileDirPath = other.profileDirPath;
-		other.profileDirPath.~basic_string();
-		params = other.params;
-		other.params.~basic_string();
-		allowedWorkstations = other.allowedWorkstations;
-		other.allowedWorkstations.~basic_string();
-		logonServer = other.logonServer;
-		other.logonServer.~basic_string();
-		passwordSetStr = other.passwordSetStr;
-		other.passwordSetStr.~basic_string();
-		lastLogOnStr = other.lastLogOnStr;
-		other.lastLogOnStr.~basic_string();
-		lastLogOffStr = other.lastLogOffStr;
-		other.lastLogOffStr.~basic_string();
-		privilegesStr = other.privilegesStr;
-		other.privilegesStr.~basic_string();
-		expireDateStr = other.expireDateStr;
-		other.expireDateStr.~basic_string();
-		maxStorageStr = other.maxStorageStr;
-		other.maxStorageStr.~basic_string();
-		groups = other.groups;
-		other.groups.~vector();
+		ncNormalAcc = valexchange(other.ncNormalAcc, false);
+		ncTempDupAcc = valexchange(other.ncTempDupAcc, false);
+		ncWorkstationTrustAcc = valexchange(other.ncWorkstationTrustAcc, false);
+		ncServerTrustAcc = valexchange(other.ncServerTrustAcc, false);
+		ncInterdomainTrustAcc = valexchange(other.ncInterdomainTrustAcc, false);
+		accountLocked = valexchange(other.accountLocked, false);
+		accountDisabled = valexchange(other.accountDisabled, false);
+		accountNotDelegated = valexchange(other.accountNotDelegated, false);
+		accountDESKeysOnly = valexchange(other.accountDESKeysOnly, false);
+		accountNoKerberosPreauth = valexchange(other.accountNoKerberosPreauth, false);
+		accountTrustedToAuthForDelegation = valexchange(other.accountTrustedToAuthForDelegation, false);
+		accountTrustedForDelegation = valexchange(other.accountTrustedForDelegation, false);
+		logonScriptExecuted = valexchange(other.logonScriptExecuted, false);
+		passwordNotNeeded = valexchange(other.passwordNotNeeded, false);
+		passwordCantChange = valexchange(other.passwordCantChange, false);
+		passwordNoExpire = valexchange(other.passwordNoExpire, false);
+		passwordReverseEncryption = valexchange(other.passwordReverseEncryption, false);
+		passwordSmartCardNeeded = valexchange(other.passwordSmartCardNeeded, false);
+		passwordExpired = valexchange(other.passwordExpired, false);
+		passwordEncrypted = valexchange(other.passwordEncrypted, false);
+		authPrintOp = valexchange(other.authPrintOp, false);
+		authCommOp = valexchange(other.authCommOp, false);
+		authSrvOp = valexchange(other.authSrvOp, false);
+		authAccOp = valexchange(other.authAccOp, false);
+		passwordAge = valexchange(other.authAccOp, 0);
+		passwordBadCount = valexchange(other.passwordBadCount, 0);
+		lastLogOn = valexchange(other.lastLogOn, 0);
+		lastLogOff = valexchange(other.lastLogOff, 0);
+		privileges = valexchange(other.privileges, 0);
+		expireDate = valexchange(other.expireDate, 0);
+		maxStorage = valexchange(other.maxStorage, 0);
+		logonCount = valexchange(other.logonCount, 0);
+		countryCode = valexchange(other.countryCode, 0);
+		codePage = valexchange(other.codePage, 0);
+		primaryGroupId = valexchange(other.primaryGroupId, 0);
+		sid = valmove(other.sid);
+		comment = valmove(other.comment);
+		accountName = valmove(other.accountName);
+		accountFullname = valmove(other.accountFullname);
+		logonScriptPath = valmove(other.logonScriptPath);
+		homeDirPath = valmove(other.homeDirPath);
+		homeDirDrive = valmove(other.homeDirDrive);
+		profileDirPath = valmove(other.profileDirPath);
+		params = valmove(other.params);
+		allowedWorkstations = valmove(other.allowedWorkstations);
+		logonServer = valmove(other.logonServer);
+		passwordSetStr = valmove(other.passwordSetStr);
+		lastLogOnStr = valmove(other.lastLogOnStr);
+		lastLogOffStr = valmove(other.lastLogOffStr);
+		privilegesStr = valmove(other.privilegesStr);
+		expireDateStr = valmove(other.expireDateStr);
+		maxStorageStr = valmove(other.maxStorageStr);
+		groups = valmove(other.groups);
 	}
 	return *this;
 }
+#endif
 
 bool AccountDesc::operator==(const AccountDesc &other) const {
 	if (this != &other) {
 		return (ncNormalAcc == other.ncNormalAcc &&
-			ncTempDupAcc == other.ncTempDupAcc &&
-			ncWorkstationTrustAcc == other.ncWorkstationTrustAcc &&
-			ncServerTrustAcc == other.ncServerTrustAcc &&
-			ncInterdomainTrustAcc == other.ncInterdomainTrustAcc &&
-			accountLocked == other.accountLocked &&
-			accountDisabled == other.accountDisabled &&
-			accountNotDelegated == other.accountNotDelegated &&
-			accountDESKeysOnly == other.accountDESKeysOnly &&
-			accountNoKerberosPreauth == other.accountNoKerberosPreauth &&
-			accountTrustedToAuthForDelegation == other.accountTrustedToAuthForDelegation &&
-			accountTrustedForDelegation == other.accountTrustedForDelegation &&
-			logonScriptExecuted == other.logonScriptExecuted &&
-			passwordNotNeeded == other.passwordNotNeeded &&
-			passwordCantChange == other.passwordCantChange &&
-			passwordNoExpire == other.passwordNoExpire &&
-			passwordReverseEncryption == other.passwordReverseEncryption &&
-			passwordSmartCardNeeded == other.passwordSmartCardNeeded &&
-			passwordExpired == other.passwordExpired &&
-			authPrintOp == other.authPrintOp &&
-			authCommOp == other.authCommOp &&
-			authSrvOp == other.authSrvOp &&
-			authAccOp == other.authAccOp &&
-			passwordEncrypted == other.passwordEncrypted &&
-			passwordAge == other.passwordAge &&
-			passwordBadCount == other.passwordBadCount &&
-			lastLogOn == other.lastLogOn &&
-			lastLogOff == other.lastLogOff &&
-			privileges == other.privileges &&
-			expireDate == other.expireDate &&
-			maxStorage == other.maxStorage &&
-			logonCount == other.logonCount &&
-			countryCode == other.countryCode &&
-			codePage == other.codePage &&
-			primaryGroupId == other.primaryGroupId &&
-			groups == other.groups &&
-			lower_copy(sid) == lower_copy(other.sid) &&
-			lower_copy(comment) == lower_copy(other.comment) &&
-			lower_copy(accountName) == lower_copy(other.accountName) &&
-			lower_copy(accountFullname) == lower_copy(other.accountFullname) &&
-			lower_copy(logonScriptPath) == lower_copy(other.logonScriptPath) &&
-			lower_copy(homeDirPath) == lower_copy(other.homeDirPath) &&
-			lower_copy(homeDirDrive) == lower_copy(other.homeDirDrive) &&
-			lower_copy(profileDirPath) == lower_copy(other.profileDirPath) &&
-			lower_copy(params) == lower_copy(other.params) &&
-			lower_copy(allowedWorkstations) == lower_copy(other.allowedWorkstations) &&
-			lower_copy(logonServer) == lower_copy(other.logonServer) &&
-			lower_copy(passwordSetStr) == lower_copy(other.passwordSetStr) &&
-			lower_copy(lastLogOnStr) == lower_copy(other.lastLogOnStr) &&
-			lower_copy(lastLogOffStr) == lower_copy(other.lastLogOffStr) &&
-			lower_copy(privilegesStr) == lower_copy(other.privilegesStr) &&
-			lower_copy(expireDateStr) == lower_copy(other.expireDateStr) &&
-			lower_copy(maxStorageStr) == lower_copy(other.maxStorageStr));
+				ncTempDupAcc == other.ncTempDupAcc &&
+				ncWorkstationTrustAcc == other.ncWorkstationTrustAcc &&
+				ncServerTrustAcc == other.ncServerTrustAcc &&
+				ncInterdomainTrustAcc == other.ncInterdomainTrustAcc &&
+				accountLocked == other.accountLocked &&
+				accountDisabled == other.accountDisabled &&
+				accountNotDelegated == other.accountNotDelegated &&
+				accountDESKeysOnly == other.accountDESKeysOnly &&
+				accountNoKerberosPreauth == other.accountNoKerberosPreauth &&
+				accountTrustedToAuthForDelegation == other.accountTrustedToAuthForDelegation &&
+				accountTrustedForDelegation == other.accountTrustedForDelegation &&
+				logonScriptExecuted == other.logonScriptExecuted &&
+				passwordNotNeeded == other.passwordNotNeeded &&
+				passwordCantChange == other.passwordCantChange &&
+				passwordNoExpire == other.passwordNoExpire &&
+				passwordReverseEncryption == other.passwordReverseEncryption &&
+				passwordSmartCardNeeded == other.passwordSmartCardNeeded &&
+				passwordExpired == other.passwordExpired &&
+				authPrintOp == other.authPrintOp &&
+				authCommOp == other.authCommOp &&
+				authSrvOp == other.authSrvOp &&
+				authAccOp == other.authAccOp &&
+				passwordEncrypted == other.passwordEncrypted &&
+				passwordAge == other.passwordAge &&
+				passwordBadCount == other.passwordBadCount &&
+				lastLogOn == other.lastLogOn &&
+				lastLogOff == other.lastLogOff &&
+				privileges == other.privileges &&
+				expireDate == other.expireDate &&
+				maxStorage == other.maxStorage &&
+				logonCount == other.logonCount &&
+				countryCode == other.countryCode &&
+				codePage == other.codePage &&
+				primaryGroupId == other.primaryGroupId &&
+				groups == other.groups &&
+				lower_copy(sid) == lower_copy(other.sid) &&
+				lower_copy(comment) == lower_copy(other.comment) &&
+				lower_copy(accountName) == lower_copy(other.accountName) &&
+				lower_copy(accountFullname) == lower_copy(other.accountFullname) &&
+				lower_copy(logonScriptPath) == lower_copy(other.logonScriptPath) &&
+				lower_copy(homeDirPath) == lower_copy(other.homeDirPath) &&
+				lower_copy(homeDirDrive) == lower_copy(other.homeDirDrive) &&
+				lower_copy(profileDirPath) == lower_copy(other.profileDirPath) &&
+				lower_copy(params) == lower_copy(other.params) &&
+				lower_copy(allowedWorkstations) == lower_copy(other.allowedWorkstations) &&
+				lower_copy(logonServer) == lower_copy(other.logonServer) &&
+				lower_copy(passwordSetStr) == lower_copy(other.passwordSetStr) &&
+				lower_copy(lastLogOnStr) == lower_copy(other.lastLogOnStr) &&
+				lower_copy(lastLogOffStr) == lower_copy(other.lastLogOffStr) &&
+				lower_copy(privilegesStr) == lower_copy(other.privilegesStr) &&
+				lower_copy(expireDateStr) == lower_copy(other.expireDateStr) &&
+				lower_copy(maxStorageStr) == lower_copy(other.maxStorageStr));
 	} else {
 		return true;
 	}
@@ -828,59 +724,59 @@ bool AccountDesc::operator==(const AccountDesc &other) const {
 bool AccountDesc::operator!=(const AccountDesc &other) const {
 	if (this != &other) {
 		return (ncNormalAcc != other.ncNormalAcc ||
-			ncTempDupAcc != other.ncTempDupAcc ||
-			ncWorkstationTrustAcc != other.ncWorkstationTrustAcc ||
-			ncServerTrustAcc != other.ncServerTrustAcc ||
-			ncInterdomainTrustAcc != other.ncInterdomainTrustAcc ||
-			accountLocked != other.accountLocked ||
-			accountDisabled != other.accountDisabled ||
-			accountNotDelegated != other.accountNotDelegated ||
-			accountDESKeysOnly != other.accountDESKeysOnly ||
-			accountNoKerberosPreauth != other.accountNoKerberosPreauth ||
-			accountTrustedToAuthForDelegation != other.accountTrustedToAuthForDelegation ||
-			accountTrustedForDelegation != other.accountTrustedForDelegation ||
-			logonScriptExecuted != other.logonScriptExecuted ||
-			passwordNotNeeded != other.passwordNotNeeded ||
-			passwordCantChange != other.passwordCantChange ||
-			passwordNoExpire != other.passwordNoExpire ||
-			passwordReverseEncryption != other.passwordReverseEncryption ||
-			passwordSmartCardNeeded != other.passwordSmartCardNeeded ||
-			passwordExpired != other.passwordExpired ||
-			passwordEncrypted != other.passwordEncrypted ||
-			authPrintOp != other.authPrintOp ||
-			authCommOp != other.authCommOp ||
-			authSrvOp != other.authSrvOp ||
-			authAccOp != other.authAccOp ||
-			passwordAge != other.passwordAge ||
-			passwordBadCount != other.passwordBadCount ||
-			lastLogOn != other.lastLogOn ||
-			lastLogOff != other.lastLogOff ||
-			privileges != other.privileges ||
-			expireDate != other.expireDate ||
-			maxStorage != other.maxStorage ||
-			logonCount != other.logonCount ||
-			countryCode != other.countryCode ||
-			codePage != other.codePage ||
-			primaryGroupId != other.primaryGroupId ||
-			groups != other.groups ||
-			lower_copy(sid) != lower_copy(other.sid) ||
-			lower_copy(comment) != lower_copy(other.comment) ||
-			lower_copy(accountName) != lower_copy(other.accountName) ||
-			lower_copy(accountFullname) != lower_copy(other.accountFullname) ||
-			lower_copy(logonScriptPath) != lower_copy(other.logonScriptPath) ||
-			lower_copy(homeDirPath) != lower_copy(other.homeDirPath) ||
-			lower_copy(homeDirDrive) != lower_copy(other.homeDirDrive) ||
-			lower_copy(profileDirPath) != lower_copy(other.profileDirPath) ||
-			lower_copy(params) != lower_copy(other.params) ||
-			lower_copy(allowedWorkstations) != lower_copy(other.allowedWorkstations) ||
-			lower_copy(logonServer) != lower_copy(other.logonServer) ||
-			lower_copy(passwordSetStr) != lower_copy(other.passwordSetStr) ||
-			lower_copy(lastLogOnStr) != lower_copy(other.lastLogOnStr) ||
-			lower_copy(lastLogOffStr) != lower_copy(other.lastLogOffStr) ||
-			lower_copy(privilegesStr) != lower_copy(other.privilegesStr) ||
-			lower_copy(expireDateStr) != lower_copy(other.expireDateStr) ||
-			lower_copy(maxStorageStr) != lower_copy(other.maxStorageStr));
-} else {
+				ncTempDupAcc != other.ncTempDupAcc ||
+				ncWorkstationTrustAcc != other.ncWorkstationTrustAcc ||
+				ncServerTrustAcc != other.ncServerTrustAcc ||
+				ncInterdomainTrustAcc != other.ncInterdomainTrustAcc ||
+				accountLocked != other.accountLocked ||
+				accountDisabled != other.accountDisabled ||
+				accountNotDelegated != other.accountNotDelegated ||
+				accountDESKeysOnly != other.accountDESKeysOnly ||
+				accountNoKerberosPreauth != other.accountNoKerberosPreauth ||
+				accountTrustedToAuthForDelegation != other.accountTrustedToAuthForDelegation ||
+				accountTrustedForDelegation != other.accountTrustedForDelegation ||
+				logonScriptExecuted != other.logonScriptExecuted ||
+				passwordNotNeeded != other.passwordNotNeeded ||
+				passwordCantChange != other.passwordCantChange ||
+				passwordNoExpire != other.passwordNoExpire ||
+				passwordReverseEncryption != other.passwordReverseEncryption ||
+				passwordSmartCardNeeded != other.passwordSmartCardNeeded ||
+				passwordExpired != other.passwordExpired ||
+				passwordEncrypted != other.passwordEncrypted ||
+				authPrintOp != other.authPrintOp ||
+				authCommOp != other.authCommOp ||
+				authSrvOp != other.authSrvOp ||
+				authAccOp != other.authAccOp ||
+				passwordAge != other.passwordAge ||
+				passwordBadCount != other.passwordBadCount ||
+				lastLogOn != other.lastLogOn ||
+				lastLogOff != other.lastLogOff ||
+				privileges != other.privileges ||
+				expireDate != other.expireDate ||
+				maxStorage != other.maxStorage ||
+				logonCount != other.logonCount ||
+				countryCode != other.countryCode ||
+				codePage != other.codePage ||
+				primaryGroupId != other.primaryGroupId ||
+				groups != other.groups ||
+				lower_copy(sid) != lower_copy(other.sid) ||
+				lower_copy(comment) != lower_copy(other.comment) ||
+				lower_copy(accountName) != lower_copy(other.accountName) ||
+				lower_copy(accountFullname) != lower_copy(other.accountFullname) ||
+				lower_copy(logonScriptPath) != lower_copy(other.logonScriptPath) ||
+				lower_copy(homeDirPath) != lower_copy(other.homeDirPath) ||
+				lower_copy(homeDirDrive) != lower_copy(other.homeDirDrive) ||
+				lower_copy(profileDirPath) != lower_copy(other.profileDirPath) ||
+				lower_copy(params) != lower_copy(other.params) ||
+				lower_copy(allowedWorkstations) != lower_copy(other.allowedWorkstations) ||
+				lower_copy(logonServer) != lower_copy(other.logonServer) ||
+				lower_copy(passwordSetStr) != lower_copy(other.passwordSetStr) ||
+				lower_copy(lastLogOnStr) != lower_copy(other.lastLogOnStr) ||
+				lower_copy(lastLogOffStr) != lower_copy(other.lastLogOffStr) ||
+				lower_copy(privilegesStr) != lower_copy(other.privilegesStr) ||
+				lower_copy(expireDateStr) != lower_copy(other.expireDateStr) ||
+				lower_copy(maxStorageStr) != lower_copy(other.maxStorageStr));
+	} else {
 		return false;
 	}
 }
@@ -907,18 +803,16 @@ GroupDesc::GroupDesc(const GroupDesc &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 GroupDesc::GroupDesc(GroupDesc &&other) noexcept {
 	if (this != &other) {
-		IsADGroup = other.IsADGroup;
-		other.IsADGroup = false;
-		GroupName = other.GroupName;
-		other.GroupName.~basic_string();
-		GroupStrSid = other.GroupStrSid;
-		other.GroupStrSid.~basic_string();
-		Comment = other.Comment;
-		other.Comment.~basic_string();
+		IsADGroup = valexchange(other.IsADGroup, false);
+		GroupName = valmove(other.GroupName);
+		GroupStrSid = valmove(other.GroupStrSid);
+		Comment = valmove(other.Comment);
 	}
 }
+#endif
 
 GroupDesc::~GroupDesc() {}
 
@@ -932,19 +826,17 @@ GroupDesc& GroupDesc::operator=(const GroupDesc &other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 GroupDesc& GroupDesc::operator=(GroupDesc &&other) noexcept {
 	if (this != &other) {
-		IsADGroup = other.IsADGroup;
-		other.IsADGroup = false;
-		GroupName = other.GroupName;
-		other.GroupName.~basic_string();
-		GroupStrSid = other.GroupStrSid;
-		other.GroupStrSid.~basic_string();
-		Comment = other.Comment;
-		other.Comment.~basic_string();
+		IsADGroup = valexchange(other.IsADGroup, false);
+		GroupName = valmove(other.GroupName);
+		GroupStrSid = valmove(other.GroupStrSid);
+		Comment = valmove(other.Comment);
 	}
 	return *this;
 }
+#endif
 
 bool GroupDesc::operator==(const GroupDesc& other) const {
 	if (this != &other) {
@@ -1043,11 +935,11 @@ bool SysHandler::IsWow64Proc(const unsigned long pid, const unsigned long desire
 
 bool SysHandler::ExtractResource(const std::wstring extractPath, const unsigned long resId) const {
 	::HRSRC hResource = 0;
-	hResource = FindResource(NULL, MAKEINTRESOURCE(resId), RT_RCDATA);
+	hResource = ::FindResource(0, MAKEINTRESOURCE(resId), RT_RCDATA);
 	if (hResource) {
-		::HGLOBAL hGlobal = ::LoadResource(NULL, hResource);
+		::HGLOBAL hGlobal = ::LoadResource(0, hResource);
 		if (hGlobal) {
-			unsigned long exeSize = ::SizeofResource(NULL, hResource);
+			unsigned long exeSize = ::SizeofResource(0, hResource);
 			if (exeSize) {
 				void* exeBuf = ::LockResource(hGlobal);
 				if (exeBuf) {

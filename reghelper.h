@@ -127,11 +127,15 @@ enum class RegOpResult : unsigned char {
 struct RegValDesc {
 	RegValDesc();
 	RegValDesc(const RegValDesc &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	RegValDesc(RegValDesc &&other) noexcept;
+#endif
 	~RegValDesc();
 	void FreeData();
 	RegValDesc& operator=(const RegValDesc &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	RegValDesc& operator=(RegValDesc &&other) noexcept;
+#endif
 	bool operator==(const RegValDesc &other) const;
 	bool operator!=(const RegValDesc &other) const;
 	RegValType valType;
@@ -145,11 +149,15 @@ struct RegValDesc {
 struct RegKeyDesc {
 	RegKeyDesc();
 	RegKeyDesc(const RegKeyDesc &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	RegKeyDesc(RegKeyDesc &&other) noexcept;
+#endif
 	~RegKeyDesc();
 	void FreeValues();
 	RegKeyDesc& operator=(const RegKeyDesc &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	RegKeyDesc& operator=(RegKeyDesc &&other) noexcept;
+#endif
 	bool operator==(const RegKeyDesc &other) const;
 	bool operator!=(const RegKeyDesc &other) const;
 	std::wstring keyPath;
@@ -162,10 +170,14 @@ class RegHandler {
 	public:
 		RegHandler();
 		RegHandler(const RegHandler &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		RegHandler(RegHandler &&other) noexcept;
+#endif
 		~RegHandler();
 		RegHandler& operator=(const RegHandler &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		RegHandler& operator=(RegHandler &&other) noexcept;
+#endif
 		bool operator==(const RegHandler &other) const;
 		bool operator!=(const RegHandler &other) const;
 		RegOpResult GetStrVal(const std::wstring valName, std::wstring &val, const bool cleanupString = true,

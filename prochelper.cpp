@@ -24,18 +24,20 @@ ProcResource::ProcResource(const ProcResource &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 ProcResource::ProcResource(ProcResource &&other) noexcept {
 	if (this != &other) {
-		pid = other.pid;
-		other.pid = 0;
-		exitCode = other.exitCode;
-		other.exitCode = 0;
-		memcpy(&si, &other.si, sizeof(STARTUPINFO));
+		pid = valexchange(other.pid, 0);
+		exitCode = valexchange(other.exitCode, 0);
+		// memcpy(&si, &other.si, sizeof(STARTUPINFO));
+		si = valmove(other.si);
 		memset(&other.si, 0, sizeof(STARTUPINFO));
-		memcpy(&pi, &other.pi, sizeof(PROCESS_INFORMATION));
+		// memcpy(&pi, &other.pi, sizeof(PROCESS_INFORMATION));
+		pi = valmove(other.pi);
 		memset(&other.pi, 0, sizeof(PROCESS_INFORMATION));
 	}
 }
+#endif
 
 ProcResource::~ProcResource() {}
 
@@ -49,19 +51,21 @@ ProcResource& ProcResource::operator=(const ProcResource& other) {
 	return *this;
 }
 
-ProcResource& ProcResource::operator=(ProcResource&& other) noexcept {
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+ProcResource& ProcResource::operator=(ProcResource &&other) noexcept {
 	if (this != &other) {
-		pid = other.pid;
-		other.pid = 0;
-		exitCode = other.exitCode;
-		other.exitCode = 0;
-		memcpy(&si, &other.si, sizeof(STARTUPINFO));
+		pid = valexchange(other.pid, 0);
+		exitCode = valexchange(other.exitCode, 0);
+		// memcpy(&si, &other.si, sizeof(STARTUPINFO));
+		si = valmove(other.si);
 		memset(&other.si, 0, sizeof(STARTUPINFO));
-		memcpy(&pi, &other.pi, sizeof(PROCESS_INFORMATION));
+		// memcpy(&pi, &other.pi, sizeof(PROCESS_INFORMATION));
+		pi = valmove(other.pi);
 		memset(&other.pi, 0, sizeof(PROCESS_INFORMATION));
 	}
 	return *this;
 }
+#endif
 
 bool ProcResource::operator==(const ProcResource& other) const {
 	if (this != &other) {
@@ -132,34 +136,26 @@ ProcDesc::ProcDesc(const ProcDesc &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 ProcDesc::ProcDesc(ProcDesc &&other) noexcept {
 	if (this != &other) {
-		size = other.size;
-		other.size = 0;
-		usage = other.usage;
-		other.usage = 0;
-		pid = other.pid;
-		other.pid = 0;
-		threadnum = other.threadnum;
-		other.threadnum = 0;
-		parentPid = other.parentPid;
-		other.parentPid = 0;
-		flags = other.flags;
-		other.flags = 0;
-		moduleId = other.moduleId;
-		other.moduleId = 0;
-		defHeapId = other.defHeapId;
-		other.defHeapId = 0;
-		threadPriority = other.threadPriority;
-		other.threadPriority = 0;
-		exepath = other.exepath;
-		other.exepath.~basic_string();
+		size = valexchange(other.size, 0);
+		usage = valexchange(other.usage, 0);
+		pid = valexchange(other.pid, 0);
+		threadnum = valexchange(other.threadnum, 0);
+		parentPid = valexchange(other.parentPid, 0);
+		flags = valexchange(other.flags, 0);
+		moduleId = valexchange(other.moduleId, 0);
+		defHeapId = valexchange(other.defHeapId, 0);
+		threadPriority = valexchange(other.threadPriority, 0);
+		exepath = valmove(other.exepath);
 	}
 }
+#endif
 
 ProcDesc::~ProcDesc() {}
 
-ProcDesc& ProcDesc::operator=(const ProcDesc& other) {
+ProcDesc& ProcDesc::operator=(const ProcDesc &other) {
 	if (this != &other) {
 		size = other.size;
 		usage = other.usage;
@@ -175,33 +171,25 @@ ProcDesc& ProcDesc::operator=(const ProcDesc& other) {
 	return *this;
 }
 
-ProcDesc& ProcDesc::operator=(ProcDesc&& other) noexcept {
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+ProcDesc& ProcDesc::operator=(ProcDesc &&other) noexcept {
 	if (this != &other) {
-		size = other.size;
-		other.size = 0;
-		usage = other.usage;
-		other.usage = 0;
-		pid = other.pid;
-		other.pid = 0;
-		threadnum = other.threadnum;
-		other.threadnum = 0;
-		parentPid = other.parentPid;
-		other.parentPid = 0;
-		flags = other.flags;
-		other.flags = 0;
-		moduleId = other.moduleId;
-		other.moduleId = 0;
-		defHeapId = other.defHeapId;
-		other.defHeapId = 0;
-		threadPriority = other.threadPriority;
-		other.defHeapId = 0;
-		exepath = other.exepath;
-		other.exepath.~basic_string();
+		size = valexchange(other.size, 0);
+		usage = valexchange(other.usage, 0);
+		pid = valexchange(other.pid, 0);
+		threadnum = valexchange(other.threadnum, 0);
+		parentPid = valexchange(other.parentPid, 0);
+		flags = valexchange(other.flags, 0);
+		moduleId = valexchange(other.moduleId, 0);
+		defHeapId = valexchange(other.defHeapId, 0);
+		threadPriority = valexchange(other.threadPriority, 0);
+		exepath = valmove(other.exepath);
 	}
 	return *this;
 }
+#endif
 
-bool ProcDesc::operator==(const ProcDesc& other) const {
+bool ProcDesc::operator==(const ProcDesc &other) const {
 	if (this != &other) {
 		return (size == other.size &&
 			usage == other.usage &&
@@ -217,7 +205,8 @@ bool ProcDesc::operator==(const ProcDesc& other) const {
 		return true;
 	}
 }
-bool ProcDesc::operator!=(const ProcDesc& other) const {
+
+bool ProcDesc::operator!=(const ProcDesc &other) const {
 	if (this != &other) {
 		return (size != other.size ||
 			usage != other.usage ||

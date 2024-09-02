@@ -128,22 +128,19 @@ RegValDesc::RegValDesc(const RegValDesc &other) {
 	}
 }
 
-RegValDesc::RegValDesc(RegValDesc&& other) noexcept {
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+RegValDesc::RegValDesc(RegValDesc &&other) noexcept {
 	if (this != &other) {
-		valData = other.valData;
+		valType = valexchange(other.valType, RegValType::None);
+		valDataSz = valexchange(other.valDataSz, 0);
+		valData = valmove(other.valData);
 		other.valData = 0;
-		valType = other.valType;
-		other.valType = RegValType::None;
-		valDataSz = other.valDataSz;
-		other.valDataSz = 0;
-		valPath = other.valPath;
-		other.valPath.~basic_string();
-		valName = other.valName;
-		other.valName.~basic_string();
-		valDataHex = other.valDataHex;
-		other.valDataHex.~basic_string();
+		valPath = valmove(other.valPath);
+		valName = valmove(other.valName);
+		valDataHex = valmove(other.valDataHex);
 	}
 }
+#endif
 
 RegValDesc& RegValDesc::operator=(const RegValDesc &other) {
 	/*size_t sz = 0;
@@ -189,23 +186,20 @@ RegValDesc& RegValDesc::operator=(const RegValDesc &other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 RegValDesc& RegValDesc::operator=(RegValDesc &&other) noexcept {
 	if (this != &other) {
-		valData = other.valData;
+		valType = valexchange(other.valType, RegValType::None);
+		valDataSz = valexchange(other.valDataSz, 0);
+		valData = valmove(other.valData);
 		other.valData = 0;
-		valType = other.valType;
-		other.valType = RegValType::None;
-		valDataSz = other.valDataSz;
-		other.valDataSz = 0;
-		valPath = other.valPath;
-		other.valPath.~basic_string();
-		valName = other.valName;
-		other.valName.~basic_string();
-		valDataHex = other.valDataHex;
-		other.valDataHex.~basic_string();
+		valPath = valmove(other.valPath);
+		valName = valmove(other.valName);
+		valDataHex = valmove(other.valDataHex);
 	}
 	return *this;
 }
+#endif
 
 RegValDesc::~RegValDesc() {
 	if (valType == RegValType::DWord || valType == RegValType::DWordLE ||
@@ -315,16 +309,15 @@ RegHandler::RegHandler(const RegHandler &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 RegHandler::RegHandler(RegHandler &&other) noexcept {
 	if (this != &other) {
-		m_mountedHiveCount = other.m_mountedHiveCount;
-		other.m_mountedHiveCount = 0;
-		m_mountedHives = other.m_mountedHives;
-		other.m_mountedHives.~map();
-		m_connectedRegs = other.m_connectedRegs;
-		other.m_connectedRegs.~map();
+		m_mountedHiveCount = valexchange(other.m_mountedHiveCount, 0);
+		m_mountedHives = valmove(other.m_mountedHives);
+		m_connectedRegs = valmove(other.m_connectedRegs);
 	}
 }
+#endif
 
 RegHandler::~RegHandler() {
 	if (m_mountedHives.size()) {
@@ -348,17 +341,16 @@ RegHandler& RegHandler::operator=(const RegHandler &other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 RegHandler& RegHandler::operator=(RegHandler &&other) noexcept {
 	if (this != &other) {
-		m_mountedHiveCount = other.m_mountedHiveCount;
-		other.m_mountedHiveCount = 0;
-		m_mountedHives = other.m_mountedHives;
-		other.m_mountedHives.~map();
-		m_connectedRegs = other.m_connectedRegs;
-		other.m_connectedRegs.~map();
+		m_mountedHiveCount = valexchange(other.m_mountedHiveCount, 0);
+		m_mountedHives = valmove(other.m_mountedHives);
+		m_connectedRegs = valmove(other.m_connectedRegs);
 	}
 	return *this;
 }
+#endif
 
 bool RegHandler::operator==(const RegHandler &other) const {
 	if (this != &other) {

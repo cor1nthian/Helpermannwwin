@@ -13,18 +13,18 @@ SvcRunState::SvcRunState(const SvcRunState& other) {
 	}
 }
 
-SvcRunState::SvcRunState(SvcRunState&& other) noexcept {
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+SvcRunState::SvcRunState(SvcRunState &&other) noexcept {
 	if (this != &other) {
-		svcRunning = other.svcRunning;
-		other.svcRunning = false;
-		svcProcRunning = other.svcProcRunning;
-		other.svcProcRunning = false;
+		svcRunning = valexchange(other.svcRunning, false);
+		svcProcRunning = valexchange(other.svcProcRunning, false);
 	}
 }
+#endif
 
 SvcRunState::~SvcRunState() {}
 
-SvcRunState& SvcRunState::operator=(const SvcRunState& other) {
+SvcRunState& SvcRunState::operator=(const SvcRunState &other) {
 	if (this != &other) {
 		svcRunning = other.svcRunning;
 		svcProcRunning = other.svcProcRunning;
@@ -32,15 +32,15 @@ SvcRunState& SvcRunState::operator=(const SvcRunState& other) {
 	return *this;
 }
 
-SvcRunState& SvcRunState::operator=(SvcRunState&& other) noexcept {
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+SvcRunState& SvcRunState::operator=(SvcRunState &&other) noexcept {
 	if (this != &other) {
-		svcRunning = other.svcRunning;
-		other.svcRunning = false;
-		svcProcRunning = other.svcProcRunning;
-		other.svcProcRunning = false;
+		svcRunning = valexchange(other.svcRunning, false);
+		svcProcRunning = valexchange(other.svcProcRunning, false);
 	}
 	return *this;
 }
+#endif
 
 bool SvcRunState::operator==(const SvcRunState& other) const {
 	if (this != &other) {
@@ -81,16 +81,15 @@ SvcTriggerData::SvcTriggerData(const SvcTriggerData &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcTriggerData::SvcTriggerData(SvcTriggerData &&other) noexcept {
 	if (this != &other) {
-		triggerDataSize = other.triggerDataSize;
-		other.triggerDataSize = 0;
-		triggerDataType = other.triggerDataType;
-		other.triggerDataType = 0;
-		triggerData = other.triggerData;
-		other.triggerData.~vector();
+		triggerDataSize = valexchange(other.triggerDataSize, 0);
+		triggerDataType = valexchange(other.triggerDataType, 0);
+		triggerData = valmove(other.triggerData);
 	}
 }
+#endif
 
 SvcTriggerData::~SvcTriggerData() {}
 
@@ -103,17 +102,16 @@ SvcTriggerData& SvcTriggerData::operator=(const SvcTriggerData& other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcTriggerData& SvcTriggerData::operator=(SvcTriggerData&& other) noexcept {
 	if (this != &other) {
-		triggerDataSize = other.triggerDataSize;
-		other.triggerDataSize = 0;
-		triggerDataType = other.triggerDataType;
-		other.triggerDataType = 0;
-		triggerData = other.triggerData;
-		other.triggerData.~vector();
+		triggerDataSize = valexchange(other.triggerDataSize, 0);
+		triggerDataType = valexchange(other.triggerDataType, 0);
+		triggerData = valmove(other.triggerData);
 	}
 	return *this;
 }
+#endif
 
 bool SvcTriggerData::operator==(const SvcTriggerData& other) const {
 	if (this != &other) {
@@ -164,22 +162,20 @@ SvcTrigger::SvcTrigger(const SvcTrigger &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcTrigger::SvcTrigger(SvcTrigger &&other) noexcept {
 	if (this != &other) {
-		triggerType = other.triggerType;
-		other.triggerType = 0;
-		triggerAction = other.triggerAction;
-		other.triggerAction = 0;
-		triggerGuid = other.triggerGuid;
-		other.triggerGuid.~basic_string();
-		triggerData = other.triggerData;
-		other.triggerData.~vector();
+		triggerType = valexchange(other.triggerType, 0);
+		triggerAction = valexchange(other.triggerAction, 0);
+		triggerGuid = valmove(other.triggerGuid);
+		triggerData = valmove(other.triggerData);
 	}
 }
+#endif
 
 SvcTrigger::~SvcTrigger() {}
 
-SvcTrigger& SvcTrigger::operator=(const SvcTrigger& other) {
+SvcTrigger& SvcTrigger::operator=(const SvcTrigger &other) {
 	if (this != &other) {
 		triggerType = other.triggerType;
 		triggerAction = other.triggerAction;
@@ -189,21 +185,19 @@ SvcTrigger& SvcTrigger::operator=(const SvcTrigger& other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcTrigger& SvcTrigger::operator=(SvcTrigger &&other) noexcept {
 	if (this != &other) {
 		if (this != &other) {
-			triggerType = other.triggerType;
-			other.triggerType = 0;
-			triggerAction = other.triggerAction;
-			other.triggerAction = 0;
-			triggerGuid = other.triggerGuid;
-			other.triggerGuid.~basic_string();
-			triggerData = other.triggerData;
-			other.triggerData.~vector();
+			triggerType = valexchange(other.triggerType, 0);
+			triggerAction = valexchange(other.triggerAction, 0);
+			triggerGuid = valmove(other.triggerGuid);
+			triggerData = valmove(other.triggerData);
 		}
 	}
 	return *this;
 }
+#endif
 
 bool SvcTrigger::operator==(const SvcTrigger &other) const {
 	if (this != &other) {
@@ -384,64 +378,41 @@ SvcRecord::SvcRecord(const SvcRecord &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcRecord::SvcRecord(SvcRecord &&other) noexcept {
 	if (this != &other) {
-		svcName = other.svcName;
-		other.svcName.~basic_string();
-		svcDisplayName = other.svcDisplayName;
-		other.svcDisplayName.~basic_string();
-		svcDesc = other.svcDesc;
-		other.svcDesc.~basic_string();
-		binaryPath = other.binaryPath;
-		other.binaryPath.~basic_string();
-		startsFrom = other.startsFrom;
-		other.startsFrom.~basic_string();
-		dependencies = other.dependencies;
-		other.dependencies.~vector();
-		loadOrderGroup = other.loadOrderGroup;
-		other.loadOrderGroup.~basic_string();
-		failResetMsg = other.failResetMsg;
-		other.failResetMsg.~basic_string();
-		failCommand = other.failCommand;
-		other.failCommand.~basic_string();
-		privileges = other.privileges;
-		other.privileges.~basic_string();
-		serviceType = other.serviceType;
-		other.serviceType = 0;
-		startType = other.startType;
-		other.startType = 0;
-		errorControl = other.errorControl;
-		other.errorControl = 0;
-		tagId = other.tagId;
-		other.tagId = 0;
-		failResetPeriod = other.failResetPeriod;
-		other.failResetPeriod = 0;
-		failActions = other.failActions;
-		other.failActions = 0;
-		failActionDelay = other.failActionDelay;
-		other.failActionDelay = 0;
-		preshutdownTimeout = other.preshutdownTimeout;
-		other.preshutdownTimeout = 0;
-		svcSidType = other.svcSidType;
-		other.svcSidType = 0;
-		launchProtected = other.launchProtected;
-		other.launchProtected = 0;
-		preferredNode = other.preferredNode;
-		other.preferredNode = 0;
-		preferredNodeDeleteFlag = other.preferredNodeDeleteFlag;
-		other.preferredNodeDeleteFlag = false;
-		delayedAutoStart = other.delayedAutoStart;
-		other.delayedAutoStart = false;
-		failureActionsOnNonCrashFailures = other.failureActionsOnNonCrashFailures;
-		other.failureActionsOnNonCrashFailures = false;
-		triggers = other.triggers;
-		other.triggers.~vector();
-		failActionType = other.failActionType;
+		serviceType = valexchange(other.serviceType, 0);
+		startType = valexchange(other.startType, 0);
+		errorControl = valexchange(other.errorControl, 0);
+		tagId = valexchange(other.tagId, 0);
+		failResetPeriod = valexchange(other.failResetPeriod, 0);
+		failActions = valexchange(other.failActions, 0);
+		failActionDelay = valexchange(other.failActionDelay, 0);
+		preshutdownTimeout = valexchange(other.preshutdownTimeout, 0);
+		svcSidType = valexchange(other.svcSidType, 0);
+		launchProtected = valexchange(other.launchProtected, 0);
+		preferredNode = valexchange(other.preferredNode, 0);
+		preferredNodeDeleteFlag = valexchange(other.preferredNodeDeleteFlag, false);
+		delayedAutoStart = valexchange(other.delayedAutoStart, false);
+		failureActionsOnNonCrashFailures = valexchange(other.failureActionsOnNonCrashFailures, false);
+		svcName = valmove(other.svcName);
+		svcDisplayName = valmove(other.svcDisplayName);
+		svcDesc = valmove(other.svcDesc);
+		binaryPath = valmove(other.binaryPath);
+		startsFrom = valmove(other.startsFrom);
+		dependencies = valmove(other.dependencies);
+		loadOrderGroup = valmove(other.loadOrderGroup);
+		failResetMsg = valmove(other.failResetMsg);
+		failCommand = valmove(other.failCommand);
+		privileges = valmove(other.privileges);
+		triggers = valmove(other.triggers);
+		failActionType = valmove(other.failActionType);
 		memset(&other.failActionType, 0, sizeof(SC_ACTION_TYPE));
-		memcpy(&svcProcDetail, &other.svcProcDetail, sizeof(SERVICE_STATUS_PROCESS));
+		svcProcDetail = valmove(other.svcProcDetail);
 		memset(&other.svcProcDetail, 0, sizeof(SERVICE_STATUS_PROCESS));
 	}
 }
+#endif
 
 SvcRecord::~SvcRecord() {}
 
@@ -478,65 +449,42 @@ SvcRecord& SvcRecord::operator=(const SvcRecord &other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcRecord& SvcRecord::SvcRecord::operator=(SvcRecord &&other) noexcept {
 	if (this != &other) {
-		svcName = other.svcName;
-		other.svcName.~basic_string();
-		svcDisplayName = other.svcDisplayName;
-		other.svcDisplayName.~basic_string();
-		svcDesc = other.svcDesc;
-		other.svcDesc.~basic_string();
-		binaryPath = other.binaryPath;
-		other.binaryPath.~basic_string();
-		startsFrom = other.startsFrom;
-		other.startsFrom.~basic_string();
-		dependencies = other.dependencies;
-		other.dependencies.~vector();
-		loadOrderGroup = other.loadOrderGroup;
-		other.loadOrderGroup.~basic_string();
-		failResetMsg = other.failResetMsg;
-		other.failResetMsg.~basic_string();
-		failCommand = other.failCommand;
-		other.failCommand.~basic_string();
-		privileges = other.privileges;
-		other.privileges.~basic_string();
-		serviceType = other.serviceType;
-		other.serviceType = 0;
-		startType = other.startType;
-		other.startType = 0;
-		errorControl = other.errorControl;
-		other.errorControl = 0;
-		tagId = other.tagId;
-		other.tagId = 0;
-		failResetPeriod = other.failResetPeriod;
-		other.failResetPeriod = 0;
-		failActions = other.failActions;
-		other.failActions = 0;
-		failActionDelay = other.failActionDelay;
-		other.failActionDelay = 0;
-		preshutdownTimeout = other.preshutdownTimeout;
-		other.preshutdownTimeout = 0;
-		svcSidType = other.svcSidType;
-		other.svcSidType = 0;
-		launchProtected = other.launchProtected;
-		other.launchProtected = 0;
-		preferredNode = other.preferredNode;
-		other.preferredNode = 0;
-		preferredNodeDeleteFlag = other.preferredNodeDeleteFlag;
-		other.preferredNodeDeleteFlag = false;
-		delayedAutoStart = other.delayedAutoStart;
-		other.delayedAutoStart = false;
-		failureActionsOnNonCrashFailures = other.failureActionsOnNonCrashFailures;
-		other.failureActionsOnNonCrashFailures = false;
-		triggers = other.triggers;
-		other.triggers.~vector();
-		failActionType = other.failActionType;
+		serviceType = valexchange(other.serviceType, 0);
+		startType = valexchange(other.startType, 0);
+		errorControl = valexchange(other.errorControl, 0);
+		tagId = valexchange(other.tagId, 0);
+		failResetPeriod = valexchange(other.failResetPeriod, 0);
+		failActions = valexchange(other.failActions, 0);
+		failActionDelay = valexchange(other.failActionDelay, 0);
+		preshutdownTimeout = valexchange(other.preshutdownTimeout, 0);
+		svcSidType = valexchange(other.svcSidType, 0);
+		launchProtected = valexchange(other.launchProtected, 0);
+		preferredNode = valexchange(other.preferredNode, 0);
+		preferredNodeDeleteFlag = valexchange(other.preferredNodeDeleteFlag, false);
+		delayedAutoStart = valexchange(other.delayedAutoStart, false);
+		failureActionsOnNonCrashFailures = valexchange(other.failureActionsOnNonCrashFailures, false);
+		svcName = valmove(other.svcName);
+		svcDisplayName = valmove(other.svcDisplayName);
+		svcDesc = valmove(other.svcDesc);
+		binaryPath = valmove(other.binaryPath);
+		startsFrom = valmove(other.startsFrom);
+		dependencies = valmove(other.dependencies);
+		loadOrderGroup = valmove(other.loadOrderGroup);
+		failResetMsg = valmove(other.failResetMsg);
+		failCommand = valmove(other.failCommand);
+		privileges = valmove(other.privileges);
+		triggers = valmove(other.triggers);
+		failActionType = valmove(other.failActionType);
 		memset(&other.failActionType, 0, sizeof(SC_ACTION_TYPE));
-		memcpy(&svcProcDetail, &other.svcProcDetail, sizeof(SERVICE_STATUS_PROCESS));
+		svcProcDetail = valmove(other.svcProcDetail);
 		memset(&other.svcProcDetail, 0, sizeof(SERVICE_STATUS_PROCESS));
 	}
 	return *this;
 }
+#endif
 
 bool SvcRecord::operator ==(const SvcRecord& other) const {
 	if (this != &other) {
@@ -545,7 +493,7 @@ bool SvcRecord::operator ==(const SvcRecord& other) const {
 				lower_copy(svcDesc) == lower_copy(other.svcDesc) &&
 				lower_copy(binaryPath) == lower_copy(other.binaryPath) &&
 				lower_copy(startsFrom) == lower_copy(other.startsFrom) &&
-				dependencies == other.dependencies &&
+				lower_copy(dependencies) == lower_copy(other.dependencies) &&
 				lower_copy(loadOrderGroup) == lower_copy(other.loadOrderGroup) &&
 				lower_copy(failResetMsg) == lower_copy(other.failResetMsg) &&
 				lower_copy(failResetMsg) == lower_copy(other.failResetMsg) &&
@@ -579,7 +527,7 @@ bool SvcRecord::operator !=(const SvcRecord& other) const {
 				lower_copy(svcDesc) != lower_copy(other.svcDesc) ||
 				lower_copy(binaryPath) != lower_copy(other.binaryPath) ||
 				lower_copy(startsFrom) != lower_copy(other.startsFrom) ||
-				dependencies != other.dependencies ||
+				lower_copy(dependencies) != lower_copy(other.dependencies) ||
 				lower_copy(loadOrderGroup) != lower_copy(other.loadOrderGroup) ||
 				lower_copy(failResetMsg) != lower_copy(other.failResetMsg) ||
 				lower_copy(failResetMsg) != lower_copy(other.failResetMsg) ||
@@ -619,7 +567,7 @@ SvcHandler::SvcHandler(const SC_HANDLE schandle, const unsigned long scmrights, 
 	m_scmOpen = scmopen;
 }
 
-SvcHandler::SvcHandler(const SvcHandler& other) {
+SvcHandler::SvcHandler(const SvcHandler &other) {
 	if (this != &other) {
 		m_scmHandle = other.m_scmHandle;
 		m_scmRights = other.m_scmRights;
@@ -627,16 +575,16 @@ SvcHandler::SvcHandler(const SvcHandler& other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcHandler::SvcHandler(SvcHandler &&other) noexcept {
 	if (this != &other) {
-		m_scmHandle = other.m_scmHandle;
+		m_scmRights = valexchange(other.m_scmRights, 0);
+		m_scmOpen = valexchange(other.m_scmOpen, false);
+		m_scmHandle = valmove(other.m_scmHandle);
 		other.m_scmHandle = 0;
-		m_scmRights = other.m_scmRights;
-		other.m_scmRights = 0;
-		m_scmOpen = other.m_scmOpen;
-		other.m_scmOpen = false;
 	}
 }
+#endif
 
 SvcHandler::~SvcHandler() {
 	if (m_scmHandle) {
@@ -653,17 +601,17 @@ SvcHandler& SvcHandler::operator=(const SvcHandler &other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcHandler& SvcHandler::operator=(SvcHandler &&other) noexcept {
 	if (this != &other) {
-		m_scmHandle = other.m_scmHandle;
+		m_scmRights = valexchange(other.m_scmRights, 0);
+		m_scmOpen = valexchange(other.m_scmOpen, false);
+		m_scmHandle = valmove(other.m_scmHandle);
 		other.m_scmHandle = 0;
-		m_scmRights = other.m_scmRights;
-		other.m_scmRights = 0;
-		m_scmOpen = other.m_scmOpen;
-		other.m_scmOpen = false;
 	}
 	return *this;
 }
+#endif
 
 bool SvcHandler::operator==(const SvcHandler &other) const {
 	if (this != &other) {

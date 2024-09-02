@@ -104,42 +104,34 @@ SecDesc::SecDesc(const SecDesc &other) {
         }
     }
 }
-
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 SecDesc::SecDesc(SecDesc &&other) noexcept {
     if (this != &other) {
-        ownerInfo = other.ownerInfo;
-        other.ownerInfo.~basic_string();
-        primaryGroupInfo = other.primaryGroupInfo;
-        other.primaryGroupInfo.~basic_string();
-        selfRelativeSDInfo = other.selfRelativeSDInfo;
-        other.selfRelativeSDInfo = 0;
-        daclInfoSz = other.daclInfoSz;
-        other.daclInfoSz = 0;
-        daclAbsInfoSz = other.daclAbsInfoSz;
-        other.daclAbsInfoSz = 0;
-        saclInfoSz = other.saclInfoSz;
-        other.daclInfoSz = 0;
-        saclAbsInfoSz = other.saclAbsInfoSz;
-        other.saclAbsInfoSz = 0;
-        ownerInfoSz = other.ownerInfoSz;
-        other.ownerInfoSz = 0;
-        primaryGroupInfoSz = other.primaryGroupInfoSz;
-        other.primaryGroupInfoSz = 0;
-        absoluteSDInfoSz = other.absoluteSDInfoSz;
-        other.absoluteSDInfoSz = 0;
-        selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
-        other.selfRelativeSDInfoSz = 0;
-        daclInfo = other.daclInfo;
+        daclInfoSz = valexchange(other.daclInfoSz, 0);
+        daclAbsInfoSz = valexchange(other.daclAbsInfoSz, 0);
+        saclInfoSz = valexchange(other.saclInfoSz, 0);
+        saclAbsInfoSz = valexchange(other.saclAbsInfoSz, 0);
+        ownerInfoSz = valexchange(other.ownerInfoSz, 0);
+        primaryGroupInfoSz = valexchange(other.primaryGroupInfoSz, 0);
+        absoluteSDInfoSz = valexchange(other.absoluteSDInfoSz, 0);
+        selfRelativeSDInfoSz = valexchange(other.selfRelativeSDInfoSz, 0);
+        ownerInfo = valmove(other.ownerInfo);
+        primaryGroupInfo = valmove(other.primaryGroupInfo);
+        daclInfo = valmove(other.daclInfo);
         other.daclInfo = 0;
-        daclAbsInfo = other.daclAbsInfo;
+        daclAbsInfo = valmove(other.daclAbsInfo);
         other.daclAbsInfo = 0;
-        saclInfo = other.saclInfo;
+        saclInfo = valmove(other.saclInfo);
         other.saclInfo = 0;
-        saclAbsInfo = other.saclAbsInfo;
+        saclAbsInfo = valmove(other.saclAbsInfo);
         other.saclAbsInfo = 0;
+        absoluteSDInfo = valmove(other.absoluteSDInfo);
         other.absoluteSDInfo = 0;
+        selfRelativeSDInfo = valmove(other.selfRelativeSDInfo);
+        other.selfRelativeSDInfo = 0;
     }
 }
+#endif
 
 SecDesc::~SecDesc() {
     if (daclInfo) {
@@ -250,41 +242,35 @@ SecDesc& SecDesc::operator=(const SecDesc &other) {
     return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 SecDesc& SecDesc::operator=(SecDesc &&other) noexcept {
     if (this != &other) {
-        daclInfo = other.daclInfo;
+        daclInfoSz = valexchange(other.daclInfoSz, 0);
+        daclAbsInfoSz = valexchange(other.daclAbsInfoSz, 0);
+        saclInfoSz = valexchange(other.saclInfoSz, 0);
+        saclAbsInfoSz = valexchange(other.saclAbsInfoSz, 0);
+        ownerInfoSz = valexchange(other.ownerInfoSz, 0);
+        primaryGroupInfoSz = valexchange(other.primaryGroupInfoSz, 0);
+        absoluteSDInfoSz = valexchange(other.absoluteSDInfoSz, 0);
+        selfRelativeSDInfoSz = valexchange(other.selfRelativeSDInfoSz, 0);
+        ownerInfo = valmove(other.ownerInfo);
+        primaryGroupInfo = valmove(other.primaryGroupInfo);
+        daclInfo = valmove(other.daclInfo);
         other.daclInfo = 0;
-        daclAbsInfo = other.daclAbsInfo;
+        daclAbsInfo = valmove(other.daclAbsInfo);
         other.daclAbsInfo = 0;
-        saclInfo = other.saclInfo;
+        saclInfo = valmove(other.saclInfo);
         other.saclInfo = 0;
-        saclAbsInfo = other.saclAbsInfo;
+        saclAbsInfo = valmove(other.saclAbsInfo);
         other.saclAbsInfo = 0;
-        absoluteSDInfo = other.absoluteSDInfo;
+        absoluteSDInfo = valmove(other.absoluteSDInfo);
         other.absoluteSDInfo = 0;
-        ownerInfo = other.ownerInfo;
-        other.ownerInfo.~basic_string();
-        primaryGroupInfo = other.primaryGroupInfo;
-        other.primaryGroupInfo.~basic_string();
-        daclInfoSz = other.daclInfoSz;
-        other.daclInfoSz = 0;
-        daclAbsInfoSz = other.daclAbsInfoSz;
-        other.daclAbsInfoSz = 0;
-        saclInfoSz = other.saclInfoSz;
-        other.daclInfoSz = 0;
-        saclAbsInfoSz = other.saclAbsInfoSz;
-        other.saclAbsInfoSz = 0;
-        ownerInfoSz = other.ownerInfoSz;
-        other.ownerInfoSz = 0;
-        primaryGroupInfoSz = other.primaryGroupInfoSz;
-        other.primaryGroupInfoSz = 0;
-        absoluteSDInfoSz = other.absoluteSDInfoSz;
-        other.absoluteSDInfoSz = 0;
-        selfRelativeSDInfoSz = other.selfRelativeSDInfoSz;
-        other.selfRelativeSDInfoSz = 0;
+        selfRelativeSDInfo = valmove(other.selfRelativeSDInfo);
+        other.selfRelativeSDInfo = 0;
     }
     return *this;
 }
+#endif
 
 bool SecDesc::operator==(const SecDesc& other) const {
     bool bufeq = false, otheq = false, sideq = false;

@@ -37,30 +37,31 @@ DNSQueryContext::DNSQueryContext(const unsigned long refCount, const wchar_t* qu
 }
 
 DNSQueryContext::DNSQueryContext(const DNSQueryContext &other) {
-    RefCount = other.RefCount;
-    memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-    QueryType = other.QueryType;
-    QueryOptions = other.QueryOptions;
-    QueryResults = other.QueryResults;
-    QueryCancelContext = other.QueryCancelContext;
-    QueryCompletedEvent = other.QueryCompletedEvent;
+    if (this != &other) {
+        RefCount = other.RefCount;
+        memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
+        QueryType = other.QueryType;
+        QueryOptions = other.QueryOptions;
+        QueryResults = other.QueryResults;
+        QueryCancelContext = other.QueryCancelContext;
+        QueryCompletedEvent = other.QueryCompletedEvent;
+    }
 }
 
 DNSQueryContext::DNSQueryContext(DNSQueryContext &&other) noexcept {
-    RefCount = other.RefCount;
-    other.RefCount = 0;
-    memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-    memset(&other.QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-    QueryType = other.QueryType;
-    other.QueryType = 0;
-    QueryOptions = other.QueryOptions;
-    other.QueryOptions = 0;
-    QueryResults = other.QueryResults;
-    other.QueryResults = { 0 };
-    QueryCancelContext = other.QueryCancelContext;
-    other.QueryCancelContext = { 0 };
-    QueryCompletedEvent = other.QueryCompletedEvent;
-    other.QueryCompletedEvent = 0;
+    if (this != &other) {
+        RefCount = valexchange(other.RefCount, 0);
+        QueryType = valexchange(other.QueryType, 0);
+        QueryOptions = valexchange(other.QueryOptions, 0);
+        QueryResults = valmove(other.QueryResults);
+        other.QueryResults = { 0 };
+        QueryCancelContext = valmove(other.QueryCancelContext);
+        other.QueryCancelContext = { 0 };
+        QueryCompletedEvent = valmove(other.QueryCompletedEvent);
+        other.QueryCompletedEvent = 0;
+        memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
+        memset(&other.QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
+    }
 }
 
 DNSQueryContext::~DNSQueryContext() {}
@@ -80,20 +81,17 @@ DNSQueryContext& DNSQueryContext::operator=(const DNSQueryContext &other) {
 
 DNSQueryContext& DNSQueryContext::operator=(DNSQueryContext &&other) noexcept {
     if (this != &other) {
-        RefCount = other.RefCount;
-        other.RefCount = 0;
+        RefCount = valexchange(other.RefCount, 0);
+        QueryType = valexchange(other.QueryType, 0);
+        QueryOptions = valexchange(other.QueryOptions, 0);
+        QueryResults = valmove(other.QueryResults);
+        other.QueryResults = { 0 };
+        QueryCancelContext = valmove(other.QueryCancelContext);
+        other.QueryCancelContext = { 0 };
+        QueryCompletedEvent = valmove(other.QueryCompletedEvent);
+        other.QueryCompletedEvent = 0;
         memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
         memset(&other.QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
-        QueryType = other.QueryType;
-        other.QueryType = 0;
-        QueryOptions = other.QueryOptions;
-        other.QueryOptions = 0;
-        QueryResults = other.QueryResults;
-        other.QueryResults = { 0 };
-        QueryCancelContext = other.QueryCancelContext;
-        other.QueryCancelContext = { 0 };
-        QueryCompletedEvent = other.QueryCompletedEvent;
-        other.QueryCompletedEvent = 0;
     }
     return *this;
 }
@@ -151,14 +149,13 @@ HostNodeAddr::HostNodeAddr(const HostNodeAddr &other) {
 
 HostNodeAddr::HostNodeAddr(HostNodeAddr &&other) noexcept {
     if (this != &other) {
-        SockType = other.SockType;
-        Protocol = other.Protocol;
-        AddrType = other.AddrType;
-        Address = other.Address;
-        other.Address.~basic_string();
-        memset(&other.SockType, 0, sizeof(SocketType));
+        SockType = valexchange(other.SockType, SocketType::Stream);
+        Protocol = valexchange(other.Protocol, NWProtocol::HopOpts);
+        AddrType = valexchange(other.AddrType, AddressType::IPv4);
+        Address = valmove(other.Address);
+        /*memset(&other.SockType, 0, sizeof(SocketType));
         memset(&other.Protocol, 0, sizeof(NWProtocol));
-        memset(&other.AddrType, 0, sizeof(AddressType));
+        memset(&other.AddrType, 0, sizeof(AddressType));*/
     }
 }
 
@@ -174,16 +171,15 @@ HostNodeAddr& HostNodeAddr::operator=(const HostNodeAddr &other) {
     return *this;
 }
 
-HostNodeAddr& HostNodeAddr::operator=(HostNodeAddr&& other) noexcept {
+HostNodeAddr& HostNodeAddr::operator=(HostNodeAddr &&other) noexcept {
     if (this != &other) {
-        SockType = other.SockType;
-        Protocol = other.Protocol;
-        AddrType = other.AddrType;
-        Address = other.Address;
-        memset(&other.SockType, 0, sizeof(SocketType));
+        SockType = valexchange(other.SockType, SocketType::Stream);
+        Protocol = valexchange(other.Protocol, NWProtocol::HopOpts);
+        AddrType = valexchange(other.AddrType, AddressType::IPv4);
+        Address = valmove(other.Address);
+        /*memset(&other.SockType, 0, sizeof(SocketType));
         memset(&other.Protocol, 0, sizeof(NWProtocol));
-        memset(&other.AddrType, 0, sizeof(AddressType));
-        other.Address.~basic_string();
+        memset(&other.AddrType, 0, sizeof(AddressType));*/
     }
     return *this;
 }
@@ -217,12 +213,15 @@ HostNode::HostNode(const std::vector<HostNodeAddr> address) {
 }
 
 HostNode::HostNode(const HostNode &other) {
-    Address = other.Address;
+    if (this != &other) {
+        Address = other.Address;
+    }
 }
 
 HostNode::HostNode(HostNode &&other) noexcept {
-    Address = other.Address;
-    other.Address.~vector();
+    if (this != &other) {
+        Address = valmove(other.Address);
+    }
 }
 
 HostNode::~HostNode() {}
@@ -234,10 +233,9 @@ HostNode& HostNode::operator=(const HostNode &other) {
     return *this;
 }
 
-HostNode& HostNode::operator=(HostNode&& other) noexcept {
+HostNode& HostNode::operator=(HostNode &&other) noexcept {
     if (this != &other) {
-        Address = other.Address;
-        other.Address.~vector();
+        Address = valmove(other.Address);
     }
     return *this;
 }
@@ -278,20 +276,17 @@ PingResult::PingResult(const PingResult &other) {
     }
 }
 
-PingResult::PingResult(PingResult&& other) noexcept {
+PingResult::PingResult(PingResult &&other) noexcept {
     if (this != &other) {
-        Result = other.Result;
-        RoundTripTime = other.RoundTripTime;
-        TTL = other.TTL;
-        other.Result = 0;
-        other.RoundTripTime = 0;
-        other.TTL = 0;
+        Result = valexchange(other.Result, 0);
+        RoundTripTime = valexchange(other.RoundTripTime, 0);
+        TTL = valexchange(other.TTL, 0);
     }
 }
 
 PingResult::~PingResult() {}
 
-PingResult& PingResult::operator=(const PingResult& other) {
+PingResult& PingResult::operator=(const PingResult &other) {
     if (this != &other) {
         Result = other.Result;
         RoundTripTime = other.RoundTripTime;
@@ -299,14 +294,11 @@ PingResult& PingResult::operator=(const PingResult& other) {
     }
     return *this;
 }
-PingResult& PingResult::operator=(PingResult&& other) noexcept {
+PingResult& PingResult::operator=(PingResult &&other) noexcept {
     if (this != &other) {
-        Result = other.Result;
-        RoundTripTime = other.RoundTripTime;
-        TTL = other.TTL;
-        other.Result = 0;
-        other.RoundTripTime = 0;
-        other.TTL = 0;
+        Result = valexchange(other.Result, 0);
+        RoundTripTime = valexchange(other.RoundTripTime, 0);
+        TTL = valexchange(other.TTL, 0);
     }
     return *this;
 }
@@ -358,17 +350,12 @@ TracertResult::TracertResult(const TracertResult &other) {
 
 TracertResult::TracertResult(TracertResult &&other) noexcept {
     if (this != &other) {
-        TTL = other.TTL;
-        RoundTripTime = other.RoundTripTime;
-        Address = other.Address;
-        AddressIPV4 = other.AddressIPV4;
-        AddressIPV6 = other.AddressIPV6;
-        Pings = other.Pings;
-        other.TTL = 0;
-        other.RoundTripTime = 0;
-        other.Address.~basic_string();
-        other.AddressIPV4.~basic_string();
-        other.AddressIPV6.~basic_string();
+        TTL = valexchange(other.TTL, 0);
+        RoundTripTime = valexchange(other.RoundTripTime, 0);
+        Address = valmove(other.Address);
+        AddressIPV4 = valmove(other.AddressIPV4);
+        AddressIPV6 = valmove(other.AddressIPV6);
+        Pings = valmove(other.Pings);
     }
 }
 
@@ -385,18 +372,12 @@ TracertResult& TracertResult::operator=(const TracertResult &other) {
 }
 TracertResult& TracertResult::TracertResult::operator=(TracertResult &&other) noexcept {
     if (this != &other) {
-        TTL = other.TTL;
-        RoundTripTime = other.RoundTripTime;
-        Address = other.Address;
-        AddressIPV4 = other.AddressIPV4;
-        AddressIPV6 = other.AddressIPV6;
-        Pings = other.Pings;
-        other.TTL = 0;
-        other.RoundTripTime = 0;
-        other.Pings.~vector();
-        other.Address.~basic_string();
-        other.AddressIPV4.~basic_string();
-        other.AddressIPV6.~basic_string();
+        TTL = valexchange(other.TTL, 0);
+        RoundTripTime = valexchange(other.RoundTripTime, 0);
+        Address = valmove(other.Address);
+        AddressIPV4 = valmove(other.AddressIPV4);
+        AddressIPV6 = valmove(other.AddressIPV6);
+        Pings = valmove(other.Pings);
     }
     return *this;
 }
@@ -459,18 +440,12 @@ ICMPHeader::ICMPHeader(const ICMPHeader &other) {
 
 ICMPHeader::ICMPHeader(ICMPHeader &&other) noexcept {
     if (this != &other) {
-        type = other.type;
-        code = other.code;
-        checksum = other.checksum;
-        id = other.id;
-        seqnum = other.seqnum;
-        timestamp = other.timestamp;
-        other.type = 0;
-        other.code = 0;
-        other.checksum = 0;
-        other.id = 0;
-        other.seqnum = 0;
-        other.timestamp = 0;
+        type = valexchange(other.type, 0);
+        code = valexchange(other.code, 0);
+        checksum = valexchange(other.checksum, 0);
+        id = valexchange(other.id, 0);
+        seqnum = valexchange(other.seqnum, 0);
+        timestamp = valexchange(other.timestamp, 0);
     }
 }
 
@@ -490,18 +465,12 @@ ICMPHeader& ICMPHeader::operator=(const ICMPHeader &other) {
 
 ICMPHeader& ICMPHeader::operator=(ICMPHeader &&other) noexcept {
     if (this != &other) {
-        type = other.type;
-        code = other.code;
-        checksum = other.checksum;
-        id = other.id;
-        seqnum = other.seqnum;
-        timestamp = other.timestamp;
-        other.type = 0;
-        other.code = 0;
-        other.checksum = 0;
-        other.id = 0;
-        other.seqnum = 0;
-        other.timestamp = 0;
+        type = valexchange(other.type, 0);
+        code = valexchange(other.code, 0);
+        checksum = valexchange(other.checksum, 0);
+        id = valexchange(other.id, 0);
+        seqnum = valexchange(other.seqnum, 0);
+        timestamp = valexchange(other.timestamp, 0);
     }
     return *this;
 }
@@ -580,28 +549,17 @@ IPHeader::IPHeader(const IPHeader &other) {
 
 IPHeader::IPHeader(IPHeader &&other) noexcept {
     if (this != &other) {
-        headerlen = other.headerlen;
-        version = other.version;
-        typeofoservice = other.typeofoservice;
-        packetlen = other.packetlen;
-        identifier = other.identifier;
-        flags = other.flags;
-        ttl = other.ttl;
-        protocol = other.protocol;
-        checksum = other.checksum;
-        sourceIP = other.sourceIP;
-        destIP = other.destIP;
-        other.headerlen = 0;
-        other.version = 0;
-        other.typeofoservice = 0;
-        other.packetlen = 0;
-        other.identifier = 0;
-        other.flags = 0;
-        other.ttl = 0;
-        other.protocol = 0;
-        other.checksum = 0;
-        other.sourceIP = 0;
-        other.destIP = 0;
+        headerlen = valexchange(other.headerlen, 0);
+        version = valexchange(other.version, 0);
+        typeofoservice = valexchange(other.typeofoservice, 0);
+        packetlen = valexchange(other.packetlen, 0);
+        identifier = valexchange(other.identifier, 0);
+        flags = valexchange(other.flags, 0);
+        ttl = valexchange(other.ttl, 0);
+        protocol = valexchange(other.protocol, 0);
+        checksum = valexchange(other.checksum, 0);
+        sourceIP = valexchange(other.sourceIP, 0);
+        destIP = valexchange(other.destIP, 0);
     }
 }
 
@@ -625,28 +583,17 @@ IPHeader& IPHeader::operator=(const IPHeader &other) {
 }
 IPHeader& IPHeader::operator=(IPHeader &&other) noexcept {
     if (this != &other) {
-        headerlen = other.headerlen;
-        version = other.version;
-        typeofoservice = other.typeofoservice;
-        packetlen = other.packetlen;
-        identifier = other.identifier;
-        flags = other.flags;
-        ttl = other.ttl;
-        protocol = other.protocol;
-        checksum = other.checksum;
-        sourceIP = other.sourceIP;
-        destIP = other.destIP;
-        other.headerlen = 0;
-        other.version = 0;
-        other.typeofoservice = 0;
-        other.packetlen = 0;
-        other.identifier = 0;
-        other.flags = 0;
-        other.ttl = 0;
-        other.protocol = 0;
-        other.checksum = 0;
-        other.sourceIP = 0;
-        other.destIP = 0;
+        headerlen = valexchange(other.headerlen, 0);
+        version = valexchange(other.version, 0);
+        typeofoservice = valexchange(other.typeofoservice, 0);
+        packetlen = valexchange(other.packetlen, 0);
+        identifier = valexchange(other.identifier, 0);
+        flags = valexchange(other.flags, 0);
+        ttl = valexchange(other.ttl, 0);
+        protocol = valexchange(other.protocol, 0);
+        checksum = valexchange(other.checksum, 0);
+        sourceIP = valexchange(other.sourceIP, 0);
+        destIP = valexchange(other.destIP, 0);
     }
     return *this;
 }

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <iostream>
 #include "fshelper.h"
 
 NTSTATUS(WINAPI* pRtlInitUnicodeString)(UnicodeString*, wchar_t*);
@@ -42,26 +43,29 @@ UnicodeString::UnicodeString(const UnicodeString &other) {
 	if (this != &other) {
 		Length = other.Length;
 		MaximumLength = other.MaximumLength;
-		Buffer = (wchar_t*)malloc(Length * sizeof(wchar_t));
-		// Buffer = (wchar_t*)::LocalAlloc(LPTR, Length);
-		// NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, wchar_t, Length);
-		if (Buffer && other.Buffer) {
-			memset(Buffer, 0, Length * sizeof(wchar_t));
-			wsprintf(Buffer, L"%s", other.Buffer);
+		if (Buffer) {
+			SAFE_FREE(Buffer);
+		}
+		if (other.Buffer) {
+			Buffer = (wchar_t*)malloc(MaximumLength * sizeof(char));
+			if (Buffer) {
+				memset(Buffer, 0, MaximumLength * sizeof(wchar_t));
+				wsprintf(Buffer, L"%s", other.Buffer);
+			}
 		}
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 UnicodeString::UnicodeString(UnicodeString &&other) noexcept {
 	if (this != &other) {
-		Length = other.Length;
-		other.Length = 0;
-		MaximumLength = other.MaximumLength;
-		other.MaximumLength = 0;
-		Buffer = other.Buffer;
+		Length = valexchange(other.Length, 0);
+		MaximumLength = valexchange(other.MaximumLength, 0);
+		Buffer = valmove(other.Buffer);
 		other.Buffer = 0;
 	}
 }
+#endif
 
 UnicodeString::~UnicodeString() {
 	/*if (Buffer) {
@@ -73,22 +77,25 @@ UnicodeString& UnicodeString::operator=(const UnicodeString &other) {
 	if (this != &other) {
 		Length = other.Length;
 		MaximumLength = other.MaximumLength;
-		Buffer = (wchar_t*)malloc(Length * sizeof(wchar_t));
 		if (Buffer) {
-			memset(Buffer, 0, Length * sizeof(wchar_t));
+			SAFE_FREE(Buffer);
 		}
-		Buffer = other.Buffer;
+		if (other.Buffer) {
+			Buffer = (wchar_t*)malloc(MaximumLength * sizeof(char));
+			if (Buffer) {
+				memset(Buffer, 0, MaximumLength * sizeof(wchar_t));
+				wsprintf(Buffer, L"%s", other.Buffer);
+			}
+		}
 	}
 	return *this;
 }
 
 UnicodeString& UnicodeString::operator=(UnicodeString &&other) noexcept {
 	if (this != &other) {
-		Length = other.Length;
-		other.Length = 0;
-		MaximumLength = other.MaximumLength;
-		other.MaximumLength = 0;
-		Buffer = other.Buffer;
+		Length = valexchange(other.Length, 0);
+		MaximumLength = valexchange(other.MaximumLength, 0);
+		Buffer = valmove(other.Buffer);
 		other.Buffer = 0;
 	}
 	return *this;
@@ -145,26 +152,29 @@ ANSIString::ANSIString(const ANSIString &other) {
 	if (this != &other) {
 		Length = other.Length;
 		MaximumLength = other.MaximumLength;
-		Buffer = (char*)malloc(Length * sizeof(char));
 		if (Buffer) {
-			memset(Buffer, 0, Length * sizeof(wchar_t));
+			SAFE_FREE(Buffer);
 		}
-		if (Buffer && other.Buffer) {
-			sprintf(Buffer, "%s", other.Buffer);
+		if (other.Buffer) {
+			Buffer = (char*)malloc(MaximumLength * sizeof(char));
+			if (Buffer) {
+				memset(Buffer, 0, MaximumLength * sizeof(wchar_t));
+				sprintf(Buffer, "%s", other.Buffer);
+			}
 		}
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 ANSIString::ANSIString(ANSIString &&other) noexcept {
 	if (this != &other) {
-		Length = other.Length;
-		other.Length = 0;
-		MaximumLength = other.MaximumLength;
-		other.MaximumLength = 0;
-		Buffer = other.Buffer;
+		Length = valexchange(other.Length, 0);
+		MaximumLength = valexchange(other.MaximumLength, 0);
+		Buffer = valmove(other.Buffer);
 		other.Buffer = 0;
 	}
 }
+#endif
 
 ANSIString::~ANSIString() {
 	/*if (Buffer) {
@@ -172,32 +182,35 @@ ANSIString::~ANSIString() {
 	}*/
 }
 
-ANSIString& ANSIString::operator=(const ANSIString& other) {
+ANSIString& ANSIString::operator=(const ANSIString &other) {
 	if (this != &other) {
 		Length = other.Length;
 		MaximumLength = other.MaximumLength;
-		Buffer = (char*)malloc(Length * sizeof(char));
 		if (Buffer) {
-			memset(Buffer, 0, Length * sizeof(wchar_t));
+			SAFE_FREE(Buffer);
 		}
-		if (Buffer && other.Buffer) {
-			sprintf(Buffer, "%s", other.Buffer);
+		if (other.Buffer) {
+			Buffer = (char*)malloc(MaximumLength * sizeof(char));
+			if (Buffer) {
+				memset(Buffer, 0, MaximumLength * sizeof(wchar_t));
+				sprintf(Buffer, "%s", other.Buffer);
+			}
 		}
 	}
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 ANSIString& ANSIString::operator=(ANSIString&& other) noexcept {
 	if (this != &other) {
-		Length = other.Length;
-		other.Length = 0;
-		MaximumLength = other.MaximumLength;
-		other.MaximumLength = 0;
-		Buffer = other.Buffer;
+		Length = valexchange(other.Length, 0);
+		MaximumLength = valexchange(other.MaximumLength, 0);
+		Buffer = valmove(other.Buffer);
 		other.Buffer = 0;
 	}
 	return *this;
 }
+#endif
 
 bool ANSIString::operator==(const ANSIString& other) const {
 	if (this != &other) {
@@ -263,22 +276,22 @@ ObjectAttributes::ObjectAttributes(const ObjectAttributes &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 ObjectAttributes::ObjectAttributes(ObjectAttributes &&other) noexcept {
 	if (this != &other) {
-		uLength = other.uLength;
-		other.uLength = 0;
-		uAttributes = other.uAttributes;
-		other.uLength = 0;
-		pSecurityDescriptor = other.pSecurityDescriptor;
-		other.pSecurityDescriptor = 0;
-		pSecurityQualityOfService = other.pSecurityQualityOfService;
-		other.pSecurityQualityOfService = 0;
-		hRootDirectory = other.hRootDirectory;
+		uLength = valexchange(other.uLength, 0);
+		uAttributes = valexchange(other.uAttributes, 0);
+		hRootDirectory = valmove(other.hRootDirectory);
 		other.hRootDirectory = 0;
-		pObjectName = other.pObjectName;
+		pSecurityDescriptor = valmove(other.pSecurityDescriptor);
+		other.pSecurityDescriptor = 0;
+		pSecurityQualityOfService = valmove(other.pSecurityQualityOfService);
+		other.pSecurityQualityOfService = 0;
+		pObjectName = valmove(other.pObjectName);
 		other.pObjectName = 0;
 	}
 }
+#endif
 
 ObjectAttributes::~ObjectAttributes() {
 	/*if (pObjectName) {
@@ -322,23 +335,23 @@ ObjectAttributes& ObjectAttributes::operator=(const ObjectAttributes &other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 ObjectAttributes& ObjectAttributes::operator=(ObjectAttributes &&other) noexcept {
 	if (this != &other) {
-		uLength = other.uLength;
-		other.uLength = 0;
-		uAttributes = other.uAttributes;
-		other.uLength = 0;
-		pSecurityDescriptor = other.pSecurityDescriptor;
-		other.pSecurityDescriptor = 0;
-		pSecurityQualityOfService = other.pSecurityQualityOfService;
-		other.pSecurityQualityOfService = 0;
-		hRootDirectory = other.hRootDirectory;
+		uLength = valexchange(other.uLength, 0);
+		uAttributes = valexchange(other.uAttributes, 0);
+		hRootDirectory = valmove(other.hRootDirectory);
 		other.hRootDirectory = 0;
-		pObjectName = other.pObjectName;
+		pSecurityDescriptor = valmove(other.pSecurityDescriptor);
+		other.pSecurityDescriptor = 0;
+		pSecurityQualityOfService = valmove(other.pSecurityQualityOfService);
+		other.pSecurityQualityOfService = 0;
+		pObjectName = valmove(other.pObjectName);
 		other.pObjectName = 0;
 	}
 	return *this;
 }
+#endif
 
 bool ObjectAttributes::operator==(const ObjectAttributes& other) const {
 	if (this != &other) {
@@ -386,20 +399,20 @@ IOStatusBlock::IOStatusBlock(const IOStatusBlock &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 IOStatusBlock::IOStatusBlock(IOStatusBlock &&other) noexcept {
 	if (this != &other) {
-		Status = other.Status;
-		other.Status = 0;
-		Pointer = other.Pointer;
+		Status = valexchange(other.Status, 0);
+		Information = valexchange(other.Information, 0);
+		Pointer = valmove(other.Pointer);
 		other.Pointer = 0;
-		Information = other.Information;
-		other.Information = 0;
 	}
 }
+#endif
 
 IOStatusBlock::~IOStatusBlock() {}
 
-IOStatusBlock& IOStatusBlock::operator=(const IOStatusBlock& other) {
+IOStatusBlock& IOStatusBlock::operator=(const IOStatusBlock &other) {
 	if (this != &other) {
 		Status = other.Status;
 		Pointer = other.Pointer;
@@ -408,17 +421,17 @@ IOStatusBlock& IOStatusBlock::operator=(const IOStatusBlock& other) {
 	return *this;
 }
 
-IOStatusBlock& IOStatusBlock::operator=(IOStatusBlock&& other) {
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+IOStatusBlock& IOStatusBlock::operator=(IOStatusBlock &&other) {
 	if (this != &other) {
-		Status = other.Status;
-		other.Status = 0;
-		Pointer = other.Pointer;
+		Status = valexchange(other.Status, 0);
+		Information = valexchange(other.Information, 0);
+		Pointer = valmove(other.Pointer);
 		other.Pointer = 0;
-		Information = other.Information;
-		other.Information = 0;
 	}
 	return *this;
 }
+#endif
 
 bool IOStatusBlock::operator==(const IOStatusBlock& other) const {
 	if (this != &other) {
@@ -480,50 +493,34 @@ FileDirBothInformation::FileDirBothInformation(const FileDirBothInformation &oth
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 FileDirBothInformation::FileDirBothInformation(FileDirBothInformation &&other) noexcept {
 	if (this != &other) {
-		NextEntryOffset = other.NextEntryOffset;
-		other.NextEntryOffset = 0;
-		FileIndex = other.FileIndex;
-		other.FileIndex = 0;
-		FileAttributes = other.FileAttributes;
-		other.FileAttributes = 0;
-		FileNameLength = other.FileNameLength;
-		other.FileNameLength = 0;
-		EaSize = other.EaSize;
-		other.EaSize = 0;
-		ShortNameLength = other.ShortNameLength;
-		other.ShortNameLength = 0;
-		CreationTime.LowPart = other.CreationTime.LowPart;
-		CreationTime.HighPart = other.CreationTime.HighPart;
-		other.CreationTime.LowPart = 0;
-		other.CreationTime.HighPart = 0;
-		LastAccessTime.LowPart = other.LastAccessTime.LowPart;
-		LastAccessTime.HighPart = other.LastAccessTime.HighPart;
-		other.LastAccessTime.LowPart = 0;
-		other.LastAccessTime.HighPart = 0;
-		LastWriteTime.LowPart = other.LastWriteTime.LowPart;
-		LastWriteTime.HighPart = other.LastWriteTime.HighPart;
-		other.LastWriteTime.LowPart = 0;
-		other.LastWriteTime.HighPart = 0;
-		ChangeTime.LowPart = other.ChangeTime.LowPart;
-		ChangeTime.HighPart = other.ChangeTime.HighPart;
-		other.ChangeTime.LowPart = 0;
-		other.ChangeTime.HighPart = 0;
-		EndOfFile.LowPart = other.EndOfFile.LowPart;
-		EndOfFile.HighPart = other.EndOfFile.HighPart;
-		other.EndOfFile.LowPart = 0;
-		other.EndOfFile.HighPart = 0;
-		AllocationSize.LowPart = other.AllocationSize.LowPart;
-		AllocationSize.HighPart = other.AllocationSize.HighPart;
-		other.AllocationSize.LowPart = 0;
-		other.AllocationSize.HighPart = 0;
+		NextEntryOffset = valexchange(other.NextEntryOffset, 0);
+		FileIndex = valexchange(other.FileIndex, 0);
+		FileAttributes = valexchange(other.FileAttributes, 0);
+		FileNameLength = valexchange(other.FileNameLength, 0);
+		EaSize = valexchange(other.EaSize, 0);
+		ShortNameLength = valexchange(other.ShortNameLength, 0);
+		CreationTime.LowPart = valexchange(other.CreationTime.LowPart, 0);
+		CreationTime.HighPart = valexchange(other.CreationTime.HighPart, 0);
+		LastAccessTime.LowPart = valexchange(other.LastAccessTime.LowPart, 0);
+		LastAccessTime.HighPart = valexchange(other.LastAccessTime.HighPart, 0);
+		LastWriteTime.LowPart = valexchange(other.LastWriteTime.LowPart, 0);
+		LastWriteTime.HighPart = valexchange(other.LastWriteTime.HighPart, 0);
+		ChangeTime.LowPart = valexchange(other.ChangeTime.LowPart, 0);
+		ChangeTime.HighPart = valexchange(other.ChangeTime.HighPart, 0);
+		EndOfFile.LowPart = valexchange(other.EndOfFile.LowPart, 0);
+		EndOfFile.HighPart = valexchange(other.EndOfFile.HighPart, 0);
+		AllocationSize.LowPart = valexchange(other.AllocationSize.LowPart, 0);
+		AllocationSize.HighPart = valexchange(other.AllocationSize.HighPart, 0);
 		wsprintf(ShortName, L"%s", other.ShortName);
 		memset(other.ShortName, 0, FSH_SHORTNAMELENGTH * sizeof(wchar_t));
 		wsprintf(FileName, L"%s", other.FileName);
 		memset(other.FileName, 0, sizeof(wchar_t));
 	}
 }
+#endif
 
 FileDirBothInformation::~FileDirBothInformation() {}
 
@@ -553,44 +550,27 @@ FileDirBothInformation& FileDirBothInformation::operator=(const FileDirBothInfor
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 FileDirBothInformation& FileDirBothInformation::operator=(FileDirBothInformation &&other) noexcept {
 	if (this != &other) {
-		NextEntryOffset = other.NextEntryOffset;
-		other.NextEntryOffset = 0;
-		FileIndex = other.FileIndex;
-		other.FileIndex = 0;
-		FileAttributes = other.FileAttributes;
-		other.FileAttributes = 0;
-		FileNameLength = other.FileNameLength;
-		other.FileNameLength = 0;
-		EaSize = other.EaSize;
-		other.EaSize = 0;
-		ShortNameLength = other.ShortNameLength;
-		other.ShortNameLength = 0;
-		CreationTime.LowPart = other.CreationTime.LowPart;
-		CreationTime.HighPart = other.CreationTime.HighPart;
-		other.CreationTime.LowPart = 0;
-		other.CreationTime.HighPart = 0;
-		LastAccessTime.LowPart = other.LastAccessTime.LowPart;
-		LastAccessTime.HighPart = other.LastAccessTime.HighPart;
-		other.LastAccessTime.LowPart = 0;
-		other.LastAccessTime.HighPart = 0;
-		LastWriteTime.LowPart = other.LastWriteTime.LowPart;
-		LastWriteTime.HighPart = other.LastWriteTime.HighPart;
-		other.LastWriteTime.LowPart = 0;
-		other.LastWriteTime.HighPart = 0;
-		ChangeTime.LowPart = other.ChangeTime.LowPart;
-		ChangeTime.HighPart = other.ChangeTime.HighPart;
-		other.ChangeTime.LowPart = 0;
-		other.ChangeTime.HighPart = 0;
-		EndOfFile.LowPart = other.EndOfFile.LowPart;
-		EndOfFile.HighPart = other.EndOfFile.HighPart;
-		other.EndOfFile.LowPart = 0;
-		other.EndOfFile.HighPart = 0;
-		AllocationSize.LowPart = other.AllocationSize.LowPart;
-		AllocationSize.HighPart = other.AllocationSize.HighPart;
-		other.AllocationSize.LowPart = 0;
-		other.AllocationSize.HighPart = 0;
+		NextEntryOffset = valexchange(other.NextEntryOffset, 0);
+		FileIndex = valexchange(other.FileIndex, 0);
+		FileAttributes = valexchange(other.FileAttributes, 0);
+		FileNameLength = valexchange(other.FileNameLength, 0);
+		EaSize = valexchange(other.EaSize, 0);
+		ShortNameLength = valexchange(other.ShortNameLength, 0);
+		CreationTime.LowPart = valexchange(other.CreationTime.LowPart, 0);
+		CreationTime.HighPart = valexchange(other.CreationTime.HighPart, 0);
+		LastAccessTime.LowPart = valexchange(other.LastAccessTime.LowPart, 0);
+		LastAccessTime.HighPart = valexchange(other.LastAccessTime.HighPart, 0);
+		LastWriteTime.LowPart = valexchange(other.LastWriteTime.LowPart, 0);
+		LastWriteTime.HighPart = valexchange(other.LastWriteTime.HighPart, 0);
+		ChangeTime.LowPart = valexchange(other.ChangeTime.LowPart, 0);
+		ChangeTime.HighPart = valexchange(other.ChangeTime.HighPart, 0);
+		EndOfFile.LowPart = valexchange(other.EndOfFile.LowPart, 0);
+		EndOfFile.HighPart = valexchange(other.EndOfFile.HighPart, 0);
+		AllocationSize.LowPart = valexchange(other.AllocationSize.LowPart, 0);
+		AllocationSize.HighPart = valexchange(other.AllocationSize.HighPart, 0);
 		wsprintf(ShortName, L"%s", other.ShortName);
 		memset(other.ShortName, 0, FSH_SHORTNAMELENGTH * sizeof(wchar_t));
 		wsprintf(FileName, L"%s", other.FileName);
@@ -598,6 +578,7 @@ FileDirBothInformation& FileDirBothInformation::operator=(FileDirBothInformation
 	}
 	return *this;
 }
+#endif
 
 bool FileDirBothInformation::operator==(const FileDirBothInformation &other) const {
 	if (this != &other) {
@@ -658,18 +639,18 @@ BinData::BinData(const BinData &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 BinData::BinData(BinData&& other) noexcept {
 	if (this != &other) {
-		Platform = other.Platform;
-		other.Platform = BinPlatform::PlatformUnknown;
-		BitDepth = other.BitDepth;
-		other.BitDepth = BinBitDepth::BitDepthUnknown;
+		Platform = valexchange(other.Platform, BinPlatform::PlatformUnknown);
+		BitDepth = valexchange(other.BitDepth, BinBitDepth::BitDepthUnknown);
 	}
 }
+#endif
 
 BinData::~BinData() {}
 
-BinData& BinData::operator=(const BinData& other) {
+BinData& BinData::operator=(const BinData &other) {
 	if (this != &other) {
 		BitDepth = other.BitDepth;
 		Platform = other.Platform;
@@ -677,15 +658,15 @@ BinData& BinData::operator=(const BinData& other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 BinData& BinData::operator=(BinData &&other) noexcept {
 	if (this != &other) {
-		Platform = other.Platform;
-		other.Platform = BinPlatform::PlatformUnknown;
-		BitDepth = other.BitDepth;
-		other.BitDepth = BinBitDepth::BitDepthUnknown;
+		Platform = valexchange(other.Platform, BinPlatform::PlatformUnknown);
+		BitDepth = valexchange(other.BitDepth, BinBitDepth::BitDepthUnknown);
 	}
 	return *this;
 }
+#endif
 
 bool BinData::operator==(const BinData& other) const {
 	if (this != &other) {
@@ -716,18 +697,16 @@ FileRecord::FileRecord(const FileRecord& other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 FileRecord::FileRecord(FileRecord &&other) noexcept {
 	if (this != &other) {
-		fileName = other.fileName;
-		other.fileName.~basic_string();
-		filePath = other.filePath;
-		other.filePath.~basic_string();
-		hash = other.hash;
-		other.hash.~basic_string();
-		size = other.size;
-		other.size = 0;
+		fileName = valmove(other.fileName);
+		filePath = valmove(other.filePath);
+		hash = valmove(other.hash);
+		size = valexchange(other.size, 0);
 	}
 }
+#endif
 
 FileRecord::~FileRecord() {}
 
@@ -741,19 +720,17 @@ FileRecord& FileRecord::operator=(const FileRecord& other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 FileRecord& FileRecord::operator=(FileRecord &&other) noexcept {
 	if (this != &other) {
-		fileName = other.fileName;
-		other.fileName.~basic_string();
-		filePath = other.filePath;
-		other.filePath.~basic_string();
-		hash = other.hash;
-		other.hash.~basic_string();
-		size = other.size;
-		other.size = 0;
+		fileName = std::move(other.fileName);
+		filePath = std::move(other.filePath);
+		hash = std::move(other.hash);
+		size = std::exchange(other.size, 0);
 	}
 	return *this;
 }
+#endif
 
 bool FileRecord::operator==(const FileRecord& other) const {
 	if (this != &other) {
@@ -794,18 +771,16 @@ FolderRecord::FolderRecord(const FolderRecord &other) {
 	}
 }
 
-FolderRecord::FolderRecord(FolderRecord&& other) noexcept {
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+FolderRecord::FolderRecord(FolderRecord &&other) noexcept {
 	if (this != &other) {
-		folderName = other.folderName;
-		other.folderName.~basic_string();
-		folderPath = other.folderPath;
-		other.folderPath.~basic_string();
-		files = other.files;
-		other.files.~vector();
-		folders = other.folders;
-		other.folders.~vector();
+		folderName = valmove(other.folderName);
+		folderPath = valmove(other.folderPath);
+		files = valmove(other.files);
+		folders = valmove(other.folders);
 	}
 }
+#endif
 
 FolderRecord::~FolderRecord() {}
 
@@ -819,19 +794,17 @@ FolderRecord& FolderRecord::operator=(const FolderRecord& other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 FolderRecord& FolderRecord::operator=(const FolderRecord &&other) noexcept {
 	if (this != &other) {
-		folderName = other.folderName;
-		other.folderName.~basic_string();
-		folderPath = other.folderPath;
-		other.folderPath.~basic_string();
-		files = other.files;
-		other.files.~vector();
-		folders = other.folders;
-		other.folders.~vector();
+		folderName = valmove(other.folderName);
+		folderPath = valmove(other.folderPath);
+		files = valmove(other.files);
+		folders = valmove(other.folders);
 	}
 	return *this;
 }
+#endif
 
 bool FolderRecord::operator==(const FolderRecord &other) const {
 	if (this != &other) {
@@ -871,7 +844,138 @@ bool FolderRecord::operator!=(const FolderRecord &other) const {
 	}
 }
 
+DriveDesc::DriveDesc() {
+	spaceFree = 0;
+	spaceTotal = 0;
+}
+
+DriveDesc::DriveDesc(const DriveDesc &other) {
+	if (this != &other) {
+		spaceFree = other.spaceFree;
+		spaceTotal = other.spaceTotal;
+		drivePath = other.drivePath;
+	}
+}
+
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+DriveDesc::DriveDesc(DriveDesc &&other) noexcept {
+	if (this != &other) {
+		spaceFree = valexchange(other.spaceFree, 0);
+		spaceTotal = valexchange(other.spaceTotal, 0);
+		drivePath = valmove(other.drivePath);
+	}
+}
+#endif
+
+DriveDesc::~DriveDesc() {}
+
+DriveDesc& DriveDesc::operator=(const DriveDesc &other) {
+	if (this != &other) {
+		spaceFree = other.spaceFree;
+		spaceTotal = other.spaceTotal;
+		drivePath = other.drivePath;
+	}
+	return *this;
+}
+
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+DriveDesc& DriveDesc::operator=(DriveDesc &&other) noexcept {
+	if (this != &other) {
+		spaceFree = valexchange(other.spaceFree, 0);
+		spaceTotal = valexchange(other.spaceTotal, 0);
+		drivePath = valmove(other.drivePath);
+	}
+	return *this;
+}
+#endif
+
+bool DriveDesc::operator==(const DriveDesc &other) const {
+	if (this != &other) {
+		return (spaceFree == other.spaceFree &&
+				spaceTotal == other.spaceTotal&&
+				lower_copy(drivePath) == lower_copy(drivePath));
+	} else {
+		return true;
+	}
+}
+
+bool DriveDesc::operator!=(const DriveDesc &other) const {
+	if (this != &other) {
+		return (spaceFree != other.spaceFree ||
+				spaceTotal != other.spaceTotal ||
+				lower_copy(drivePath) != lower_copy(drivePath));
+	} else {
+		return false;
+	}
+}
+
 PartitionDesc::PartitionDesc() {
+	spaceFree = 0;
+	spaceTotal = 0;
+}
+
+PartitionDesc::PartitionDesc(const PartitionDesc &other) {
+	if (this != &other) {
+		spaceFree = other.spaceFree;
+		spaceTotal = other.spaceTotal;
+		partitionPath = other.partitionPath;
+	}
+}
+
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+PartitionDesc::PartitionDesc(PartitionDesc &&other) noexcept {
+	if (this != &other) {
+		spaceFree = valexchange(other.spaceFree, 0);
+		spaceTotal = valexchange(other.spaceTotal, 0);
+		partitionPath = valmove(other.partitionPath);
+	}
+}
+#endif
+
+PartitionDesc::~PartitionDesc() {}
+
+PartitionDesc& PartitionDesc:: operator=(const PartitionDesc &other) {
+	if (this != &other) {
+		spaceFree = other.spaceFree;
+		spaceTotal = other.spaceTotal;
+		partitionPath = other.partitionPath;
+	}
+	return *this;
+}
+
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+PartitionDesc& PartitionDesc::operator=(PartitionDesc &&other) noexcept {
+	if (this != &other) {
+		spaceFree = valexchange(other.spaceFree, 0);
+		spaceTotal = valexchange(other.spaceTotal, 0);
+		partitionPath = valmove(other.partitionPath);
+	}
+	return *this;
+}
+#endif
+
+bool PartitionDesc::operator==(const PartitionDesc &other) const {
+	if (this != &other) {
+		return (spaceFree == other.spaceFree &&
+				spaceTotal == other.spaceTotal &&
+				partitionPath == other.partitionPath);
+	} else {
+		return true;
+	}
+}
+
+bool PartitionDesc::operator!=(const PartitionDesc &other) const {
+	if (this != &other) {
+		return (spaceFree != other.spaceFree ||
+				spaceTotal != other.spaceTotal ||
+				partitionPath != other.partitionPath);
+	} else {
+		return false;
+	}
+}
+
+VolumeDesc::VolumeDesc() {
+	deviceType = DevType::Unknown;
 	volumeSerial = 0;
 	spaceFree = 0;
 	spaceTotal = 0;
@@ -905,8 +1009,10 @@ PartitionDesc::PartitionDesc() {
 	seqWriteOnce = false;
 }
 
-PartitionDesc::PartitionDesc(const PartitionDesc &other) {
+VolumeDesc::VolumeDesc(const VolumeDesc &other) {
 	if (this != &other) {
+		deviceType = other.deviceType;
+		physDrives = other.physDrives;
 		partLetter = other.partLetter;
 		volumeLabel = other.volumeLabel;
 		volumePath = other.volumePath;
@@ -947,8 +1053,11 @@ PartitionDesc::PartitionDesc(const PartitionDesc &other) {
 	}
 }
 
-PartitionDesc::PartitionDesc(PartitionDesc &&other) noexcept {
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+VolumeDesc::VolumeDesc(VolumeDesc &&other) noexcept {
 	if (this != &other) {
+		physDrives = other.physDrives;
+		other.physDrives.~vector();
 		partLetter = other.partLetter;
 		other.partLetter.~basic_string();
 		volumeLabel = other.volumeLabel;
@@ -957,6 +1066,8 @@ PartitionDesc::PartitionDesc(PartitionDesc &&other) noexcept {
 		other.volumePath.~basic_string();
 		drivePath = other.drivePath;
 		other.drivePath.~basic_string();
+		deviceType = other.deviceType;
+		other.deviceType = DevType::Unknown;
 		volumeSerial = other.volumeSerial;
 		other.volumeSerial = 0;
 		volumeSerialStr = other.volumeSerialStr;
@@ -1025,9 +1136,11 @@ PartitionDesc::PartitionDesc(PartitionDesc &&other) noexcept {
 		other.seqWriteOnce = false;
 	}
 }
+#endif
 
-PartitionDesc& PartitionDesc::operator=(const PartitionDesc &other) {
+VolumeDesc& VolumeDesc::operator=(const VolumeDesc &other) {
 	if (this != &other) {
+		physDrives = other.physDrives;
 		partLetter = other.partLetter;
 		drivePath = other.drivePath;
 		volumeSerial = other.volumeSerial;
@@ -1036,6 +1149,7 @@ PartitionDesc& PartitionDesc::operator=(const PartitionDesc &other) {
 		fsName = other.fsName;
 		spaceFree = other.spaceFree;
 		spaceTotal = other.spaceTotal;
+		deviceType = other.deviceType;
 		maxComponentLen = other.maxComponentLen;
 		caseSensitiveSearch = other.caseSensitiveSearch;
 		casePreservedMames = other.casePreservedMames;
@@ -1068,8 +1182,11 @@ PartitionDesc& PartitionDesc::operator=(const PartitionDesc &other) {
 	return *this;
 }
 
-PartitionDesc& PartitionDesc::operator=(PartitionDesc&& other) noexcept {
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
+VolumeDesc& VolumeDesc::operator=(VolumeDesc &&other) noexcept {
 	if (this != &other) {
+		physDrives = other.physDrives;
+		other.physDrives.~vector();
 		partLetter = other.partLetter;
 		other.partLetter.~basic_string();
 		volumeLabel = other.volumeLabel;
@@ -1088,6 +1205,8 @@ PartitionDesc& PartitionDesc::operator=(PartitionDesc&& other) noexcept {
 		other.spaceTotal = 0;
 		fsName = other.fsName;
 		other.fsName.~basic_string();
+		deviceType = other.deviceType;
+		other.deviceType = DevType::Unknown;
 		maxComponentLen = other.maxComponentLen;
 		other.maxComponentLen = 0;
 		caseSensitiveSearch = other.caseSensitiveSearch;
@@ -1147,8 +1266,9 @@ PartitionDesc& PartitionDesc::operator=(PartitionDesc&& other) noexcept {
 	}
 	return *this;
 }
+#endif
 
-bool PartitionDesc::operator==(const PartitionDesc& other) const {
+bool VolumeDesc::operator==(const VolumeDesc &other) const {
 	if (this != &other) {
 		return (lower_copy(partLetter) == lower_copy(other.partLetter) &&
 				lower_copy(drivePath) == lower_copy(other.drivePath) &&
@@ -1156,6 +1276,8 @@ bool PartitionDesc::operator==(const PartitionDesc& other) const {
 				lower_copy(volumeSerialStr) == lower_copy(other.volumeSerialStr) &&
 				lower_copy(volumeLabel) == lower_copy(other.volumeLabel) &&
 				lower_copy(fsName) == lower_copy(other.fsName) &&
+				lower_copy(physDrives) == lower_copy(other.physDrives) &&
+				deviceType == other.deviceType &&
 				volumeSerial == other.volumeSerial &&
 				spaceFree == other.spaceFree &&
 				spaceTotal == other.spaceTotal &&
@@ -1193,7 +1315,7 @@ bool PartitionDesc::operator==(const PartitionDesc& other) const {
 	}
 }
 
-bool PartitionDesc::operator!=(const PartitionDesc& other) const {
+bool VolumeDesc::operator!=(const VolumeDesc &other) const {
 	if (this != &other) {
 		return (lower_copy(partLetter) != lower_copy(other.partLetter) ||
 				lower_copy(drivePath) != lower_copy(other.drivePath) ||
@@ -1201,6 +1323,8 @@ bool PartitionDesc::operator!=(const PartitionDesc& other) const {
 				lower_copy(volumeSerialStr) != lower_copy(other.volumeSerialStr) ||
 				lower_copy(volumeLabel) != lower_copy(other.volumeLabel) ||
 				lower_copy(fsName) != lower_copy(other.fsName) ||
+				lower_copy(physDrives) != lower_copy(other.physDrives) ||
+				deviceType != other.deviceType ||
 				volumeSerial != other.volumeSerial ||
 				spaceFree != other.spaceFree ||
 				spaceTotal != other.spaceTotal ||
@@ -1238,37 +1362,38 @@ bool PartitionDesc::operator!=(const PartitionDesc& other) const {
 	}
 }
 
-PartitionDesc::~PartitionDesc() {}
+VolumeDesc::~VolumeDesc() {}
 
 FSHandler::FSHandler() {}
 
 FSHandler::~FSHandler() {}
 
-FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc>& partList,
+FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc>& partList,
 	const bool clearList) {
 	unsigned long psz = 0, psn = 0;
 	wchar_t plBuf[4] = { 0 };
 	wchar_t drivePathBuf[MAX_PATH + 1] = { 0 };
 	wchar_t vpnBuf[MAX_PATH + 1] = { 0 };
-	std::vector<PartitionDesc> ret;
-	PartitionDesc elem;
+	std::vector<VolumeDesc> ret;
 	// ::HANDLE hPart = FindFirstVolume(vol_name, ARRAYSIZE(vol_name))
-	unsigned long drives = GetLogicalDrives();
+	unsigned long drives = ::GetLogicalDrives();
 	if (drives) {
 		if (clearList) {
 			partList.clear();
 		}
 		for (int i = 0; i < 26; ++i) {
+			VolumeDesc elem;
 			plBuf[0] = wchar_t(65 + i);
 			plBuf[1] = L':';
 			plBuf[2] = L'\\';
 			plBuf[3] = L'\0';
 			elem.partLetter = plBuf;
-			if (GetVolumeNameForVolumeMountPoint(plBuf, drivePathBuf, MAX_PATH)) {
-					elem.volumePath = drivePathBuf;
-					unsigned long fileSystemFlags = 0;
-					wchar_t fsname[MAX_PATH + 1] = { 0 };
-				if (GetVolumeInformation(plBuf, drivePathBuf, MAX_PATH, &psn,
+			if (::GetVolumeNameForVolumeMountPoint(plBuf, drivePathBuf, MAX_PATH)) {
+				elem.deviceType = (DevType)::GetDriveType(plBuf);
+				elem.volumePath = drivePathBuf;
+				unsigned long fileSystemFlags = 0;
+				wchar_t fsname[MAX_PATH + 1] = { 0 };
+				if (::GetVolumeInformation(plBuf, drivePathBuf, MAX_PATH, &psn,
 					&elem.maxComponentLen, &fileSystemFlags, fsname, MAX_PATH)) {
 					wchar_t buf[16] = { 0 };
 					elem.volumeSerial = psn;
@@ -1304,14 +1429,65 @@ FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc>& partList,
 					elem.volumeReadOnly = fileSystemFlags & FILE_READ_ONLY_VOLUME;
 					elem.volumeDax = fileSystemFlags & FILE_DAX_VOLUME;
 					elem.seqWriteOnce = fileSystemFlags & FILE_SEQUENTIAL_WRITE_ONCE;
-				}	
+				} else {
+					return FSOpResult::Fail;
+				}
 				plBuf[0] = wchar_t(65 + i);
 				plBuf[1] = L':';
 				plBuf[2] = L'\0';
-				if (QueryDosDevice(plBuf, vpnBuf, elem.volumePath.length())) {
+				if(::QueryDosDevice(plBuf, vpnBuf, elem.volumePath.length())) {
 					elem.drivePath = vpnBuf;
 				}
-				GetDriveSpace(elem.partLetter, elem.spaceFree, elem.spaceTotal);
+				if (!GetDriveSpace(elem.partLetter, elem.spaceFree, elem.spaceTotal)) {
+					return FSOpResult::Fail;
+				}
+				std::wstring partpath = L"\\\\.\\" + std::wstring(plBuf);
+				::HANDLE hFile = INVALID_HANDLE_VALUE;
+				hFile = ::CreateFile(partpath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+					0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+				if (INVALID_HANDLE_VALUE != hFile) {
+					unsigned long bytes = 0, bytesReturned = 0;
+					// VolumeDiskExtents* volDiskExt = (VolumeDiskExtents*)malloc(sizeof(VolumeDiskExtents));
+					VOLUME_DISK_EXTENTS* volDiskExt = (VOLUME_DISK_EXTENTS*)malloc(sizeof(VOLUME_DISK_EXTENTS));
+					if (!volDiskExt) {
+						return FSOpResult::Fail;
+					}
+					bool ret = ::DeviceIoControl(hFile, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, 0, 0, volDiskExt,
+						sizeof(VOLUME_DISK_EXTENTS), &bytes, 0);
+					if (!ret) {
+						if (ERROR_MORE_DATA == getLastErrorCode()) {
+							unsigned long numDisks = volDiskExt->NumberOfDiskExtents;
+							SAFE_FREE(volDiskExt);
+							volDiskExt = (VOLUME_DISK_EXTENTS*)malloc((numDisks * sizeof(DISK_EXTENT)) +
+								sizeof(VOLUME_DISK_EXTENTS));
+							if (!volDiskExt) {
+								return FSOpResult::Fail;
+							}
+							ret = ::DeviceIoControl(hFile, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, 0, 0, volDiskExt,
+								(numDisks * sizeof(DISK_EXTENT)) + sizeof(VOLUME_DISK_EXTENTS), &bytes, 0);
+							if (!ret) {
+								return FSOpResult::Fail;
+							}
+							for (unsigned long i = 0; i < volDiskExt->NumberOfDiskExtents; ++i) {
+#ifdef FSH_FULLPHYSDRIVESTRING
+								elem.physDrives.push_back(L"\\\\.\\PhysicalDrive" + std::to_wstring(volDiskExt->Extents[i].DiskNumber));
+#else
+								elem.physDrives.push_back(L"PhysicalDrive" + std::to_wstring(volDiskExt));
+#endif
+							}
+						}
+					} else {
+						for (unsigned long i = 0; i < volDiskExt->NumberOfDiskExtents; ++i) {
+#ifdef FSH_FULLPHYSDRIVESTRING
+							elem.physDrives.push_back(L"\\\\.\\PhysicalDrive" + std::to_wstring(volDiskExt->Extents[i].DiskNumber));
+#else
+							elem.physDrives.push_back(L"PhysicalDrive" + std::to_wstring(volDiskExt));
+#endif
+						}
+					}
+					::CloseHandle(hFile);
+					SAFE_FREE(volDiskExt);
+				}
 				partList.push_back(elem);
 			}
 			memset(plBuf, 0, 4 * sizeof(wchar_t));
@@ -1328,12 +1504,12 @@ FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc>& partList,
 }
 
 FSOpResult FSHandler::GetPhysDriveIndexByPartLetter(const std::wstring partLetter,
-	unsigned long &driveIndex, std::vector<PartitionDesc> *parts) {
-	std::vector<PartitionDesc> vec;
+	unsigned long &driveIndex, std::vector<VolumeDesc> *parts) {
+	std::vector<VolumeDesc> vec;
 	if (parts) {
 		vec = *parts;
 	} else {
-		if (FSOpResult::Success != EnumPartitions(vec)) {
+		if (FSOpResult::Success != EnumVolumes(vec)) {
 			return FSOpResult::Fail;
 		}
 	}
@@ -2582,13 +2758,13 @@ FSOpResult FSHandler::EnumFolderContents(FolderRecord &folderInfo, const std::ws
 std::vector<FileRecord> FSHandler::SeekFile(const std::wstring filename,
 	const bool getSize, const bool getControlSum,
 	const bool excludeEmptyFiles, const HashType hash, const std::vector<std::wstring> exclusions,
-	const std::vector<PartitionDesc>* parts) {
+	const std::vector<VolumeDesc>* parts) {
 	std::vector<FileRecord> ret;
-	std::vector<PartitionDesc> drives;
+	std::vector<VolumeDesc> drives;
 	if (parts) {
 		drives = *parts;
 	} else {
-		if (FSOpResult::Success != EnumPartitions(drives)) {
+		if (FSOpResult::Success != EnumVolumes(drives)) {
 			return ret;
 		}
 	}
@@ -2831,12 +3007,12 @@ std::vector<FileRecord> FSHandler::SeekFileRecursive(const std::wstring startPat
 }
 
 std::wstring FSHandler::DrivePath2PartLetter(const std::wstring drivePath,
-	const bool addSlash, const bool ignoreCase, std::vector<PartitionDesc> *parts) {
-	std::vector<PartitionDesc> vec;
+	const bool addSlash, const bool ignoreCase, std::vector<VolumeDesc> *parts) {
+	std::vector<VolumeDesc> vec;
 	if (parts) {
 		vec = *parts;
 	} else {
-		if (FSOpResult::Fail == EnumPartitions(vec)) {
+		if (FSOpResult::Fail == EnumVolumes(vec)) {
 			return drivePath;
 		}
 	}
@@ -2856,12 +3032,12 @@ std::wstring FSHandler::DrivePath2PartLetter(const std::wstring drivePath,
 }
 
 std::wstring FSHandler::ReplaceDrivePathWithPartLetter(const std::wstring path,
-	const bool ignoreCase, std::vector<PartitionDesc> *parts) {
-	std::vector<PartitionDesc> vec;
+	const bool ignoreCase, std::vector<VolumeDesc> *parts) {
+	std::vector<VolumeDesc> vec;
 	if (parts) {
 		vec = *parts;
 	} else {
-		if (FSOpResult::Fail == EnumPartitions(vec)) {
+		if (FSOpResult::Fail == EnumVolumes(vec)) {
 			return path;
 		}
 	}

@@ -60,10 +60,14 @@ struct ProcResource {
 	ProcResource(const unsigned long PID, unsigned long ExitCode, STARTUPINFO SI,
 		PROCESS_INFORMATION PI);
 	ProcResource(const ProcResource &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	ProcResource(ProcResource &&other) noexcept;
+#endif
 	~ProcResource();
 	ProcResource& operator=(const ProcResource &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	ProcResource& operator=(ProcResource &&other) noexcept;
+#endif
 	bool operator==(const ProcResource &other) const;
 	bool operator!=(const ProcResource &other) const;
 	unsigned long pid;
@@ -85,12 +89,16 @@ struct ProcDesc {
 		const long threadpriority,
 		const std::wstring pathexe);
 	ProcDesc(const ProcDesc &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	ProcDesc(ProcDesc &&other) noexcept;
+#endif
 	~ProcDesc();
-	ProcDesc& operator=(const ProcDesc& other);
+	ProcDesc& operator=(const ProcDesc &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	ProcDesc& operator=(ProcDesc &&other) noexcept;
-	bool operator==(const ProcDesc& other) const;
-	bool operator!=(const ProcDesc& other) const;
+#endif
+	bool operator==(const ProcDesc &other) const;
+	bool operator!=(const ProcDesc &other) const;
 	unsigned long size;
 	unsigned long usage;
 	unsigned long pid;
@@ -106,13 +114,33 @@ struct ProcDesc {
 class ProcessHandler {
 	public:
 		ProcessHandler();
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		ProcessHandler(const ProcessHandler &other) = delete;
+#else
+		ProcessHandler(const ProcessHandler &other) {}
+#endif
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		ProcessHandler(ProcessHandler &&other) noexcept = delete;
+#endif
 		~ProcessHandler();
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		ProcessHandler& operator=(const ProcessHandler &other) = delete;
+#else
+		ProcessHandler& operator=(const ProcessHandler &other) {}
+#endif
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		ProcessHandler& operator=(ProcessHandler &other) noexcept = delete;
+#endif
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		bool operator==(const ProcessHandler &other) const = delete;
+#else
+		bool operator==(const ProcessHandler &other) {}
+#endif
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		bool operator!=(const ProcessHandler &other) const = delete;
+#else
+		bool operator!=(const ProcessHandler &other) {}
+#endif
 		ProcResource StartProc(const std::wstring exepath, const std::wstring args = L"",
 			const ProcAwait awaitTime = ProcAwait::Infinite, const unsigned long procAwaitTime = 0,
 			const bool freeRes = true);
@@ -279,6 +307,7 @@ class ProcessHandler {
 	protected:
 
 	private:
+		/*       FUNCTIONS       */
 		bool privilegeController(const unsigned long pid, const std::wstring privName,
 			const bool enable = true, const unsigned long desiredProcRights = PROCESS_ALL_ACCESS) const;
 };

@@ -549,9 +549,51 @@ void lower(std::string& s) {
     for (char &c : s) c = tolower(c, loc);
 }
 
-void upper(std::string& s) {
+void lower(std::wstring &s) {
     std::locale loc;
-    for (char &c : s) c = tolower(c, loc);
+    for (wchar_t& c : s) c = tolower(c, loc);
+}
+
+void lower(std::vector<std::string> &vec) {
+    if (vec.size()) {
+        for (size_t i = 0; i < vec.size(); ++i) {
+            lower(vec[i]);
+        }
+    }
+}
+
+void lower(std::vector<std::wstring> &vec) {
+    if (vec.size()) {
+        for (size_t i = 0; i < vec.size(); ++i) {
+            lower(vec[i]);
+        }
+    }
+}
+
+void upper(std::string &s) {
+    std::locale loc;
+    for (char &c : s) c = toupper(c, loc);
+}
+
+void upper(std::wstring& s) {
+    std::locale loc;
+    for (wchar_t& c : s) c = toupper(c, loc);
+}
+
+void upper(std::vector<std::string> &vec) {
+    if (vec.size()) {
+        for (size_t i = 0; i < vec.size(); ++i) {
+            upper(vec[i]);
+        }
+    }
+}
+
+void upper(std::vector<std::wstring> &vec) {
+    if (vec.size()) {
+        for (size_t i = 0; i < vec.size(); ++i) {
+            upper(vec[i]);
+        }
+    }
 }
 
 std::string lower_copy(const std::string s) {
@@ -563,6 +605,18 @@ std::string lower_copy(const std::string s) {
     return temp;
 }
 
+std::vector<std::string> lower_copy(const std::vector<std::string> vec) {
+    std::vector<std::string> ret = vec;
+    if (ret.size()) {
+        std::locale loc;
+        ret.clear();
+        for (size_t i = 0; i < vec.size(); ++i) {
+            ret.push_back(lower_copy(vec[i]));
+        }
+    }
+    return ret;
+}
+
 std::string upper_copy(const std::string s) {
     std::string temp = s;
     for (char &c : temp) {
@@ -571,27 +625,53 @@ std::string upper_copy(const std::string s) {
     return temp;
 }
 
-void lower(std::wstring& s) {
-    for (wchar_t &c : s) c = tolower(c);
-}
-
-void upper(std::wstring& s) {
-    for (wchar_t &c : s) c = towupper(c);
+std::vector<std::string> upper_copy(const std::vector<std::string> vec) {
+    std::vector<std::string> ret = vec;
+    if (ret.size()) {
+        std::locale loc;
+        ret.clear();
+        for (size_t i = 0; i < vec.size(); ++i) {
+            ret.push_back(upper_copy(vec[i]));
+        }
+    }
+    return ret;
 }
 
 std::wstring lower_copy(const std::wstring s) {
     std::locale loc;
     std::wstring temp = s;
-    /* std::transform(temp.begin(), temp.end(), temp.begin(),
-        ::towlower ); */
     for (wchar_t &c : temp) c = towlower(c);
     return temp;
+}
+
+std::vector<std::wstring> lower_copy(const std::vector<std::wstring> vec) {
+    std::vector<std::wstring> ret = vec;
+    if (ret.size()) {
+        std::locale loc;
+        ret.clear();
+        for (size_t i = 0; i < vec.size(); ++i) {
+            ret.push_back(lower_copy(vec[i]));
+        }
+    }
+    return ret;
 }
 
 std::wstring upper_copy(const std::wstring s) {
     std::wstring temp = s;
     for (wchar_t &c : temp) c = towupper(c);
     return temp;
+}
+
+std::vector<std::wstring> upper_copy(const std::vector<std::wstring> vec) {
+    std::vector<std::wstring> ret = vec;
+    if (ret.size()) {
+        std::locale loc;
+        ret.clear();
+        for (size_t i = 0; i < vec.size(); ++i) {
+            ret.push_back(upper_copy(vec[i]));
+        }
+    }
+    return ret;
 }
 
 void prepRegexString(std::string &regexString) {
@@ -2172,12 +2252,12 @@ unsigned char isNumericDec(const std::wstring str) {
    1 - ipv6
    2 - dns name
    3 - none */
-unsigned char isStringIP(const std::wstring testStr) {
-    std::basic_regex<wchar_t> ipv4regex(L"(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])");
+unsigned char isStringIP(const std::string testStr) {
+    std::regex ipv4regex("(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])");
     if (!(std::regex_match(testStr, ipv4regex))) {
-        std::basic_regex<wchar_t> ipv6regex(L"(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))");
+        std::regex ipv6regex("(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))");
         if (!(std::regex_match(testStr, ipv6regex))) {
-            std::basic_regex<wchar_t> domainregex(L"^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$");
+            std::regex domainregex("^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$");
             if (!(std::regex_match(testStr, domainregex))) {
                 return 3;
             } else {
@@ -2196,14 +2276,14 @@ unsigned char isStringIP(const std::wstring testStr) {
    1 - ipv6
    2 - dns name
    3 - none */
-unsigned char isStringIP(const std::string testStr) {
-    std::regex ipv4regex("(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])");
+unsigned char isStringIP(const std::wstring testStr) {
+    std::basic_regex<wchar_t> ipv4regex(L"(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])");
     if (!(std::regex_match(testStr, ipv4regex))) {
-        std::regex ipv6regex("(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))");
+        std::basic_regex<wchar_t> ipv6regex(L"(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))");
         if (!(std::regex_match(testStr, ipv6regex))) {
             // std::regex domainregex("^((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\.(xn--)?([a-z0-9\-]{1,61}|[a-z0-9-]{1,30}\.[a-z]{2,})$");
             // std::regex domainregex("[a-zA-Z0-9][-a-zA-Z0-9]+[a-zA-Z0-9].[a-z]{2,5}(.[a-z]{3,5})?(.[a-z]{2,5})?$");
-            std::regex domainregex("^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$");
+            std::basic_regex<wchar_t> domainregex(L"^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$");
             if (!(std::regex_match(testStr, domainregex))) {
                 return 3;
             } else {

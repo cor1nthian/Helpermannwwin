@@ -113,10 +113,14 @@ enum class SvcErrControl : unsigned char {
 struct SvcRunState {
 	SvcRunState();
 	SvcRunState(const SvcRunState &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	SvcRunState(SvcRunState &&other) noexcept;
+#endif
 	~SvcRunState();
 	SvcRunState& operator=(const SvcRunState &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	SvcRunState& operator=(SvcRunState &&other) noexcept;
+#endif
 	bool operator==(const SvcRunState &other) const;
 	bool operator!=(const SvcRunState &other) const;
 	bool svcRunning;
@@ -129,10 +133,14 @@ struct SvcTriggerData {
 		const unsigned long triggerdatatype,
 		std::vector<unsigned char> triggerdata);
 	SvcTriggerData(const SvcTriggerData &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	SvcTriggerData(SvcTriggerData &&other) noexcept;
+#endif
 	~SvcTriggerData();
 	SvcTriggerData& operator=(const SvcTriggerData& other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	SvcTriggerData& operator=(SvcTriggerData &&other) noexcept;
+#endif
 	bool operator ==(const SvcTriggerData& other) const;
 	bool operator !=(const SvcTriggerData& other) const;
 	unsigned short triggerDataSize;
@@ -147,10 +155,14 @@ struct SvcTrigger {
 		const std::wstring triggerguid,
 		std::vector <SvcTriggerData> trigdata);
 	SvcTrigger(const SvcTrigger &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	SvcTrigger(SvcTrigger &&other) noexcept;
+#endif
 	~SvcTrigger();
 	SvcTrigger& operator=(const SvcTrigger &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	SvcTrigger& operator=(SvcTrigger &&other) noexcept;
+#endif
 	bool operator==(const SvcTrigger &other) const;
 	bool operator!=(const SvcTrigger &other) const;
 	unsigned long triggerType;
@@ -212,7 +224,9 @@ struct SvcRecord {
 		const SC_ACTION_TYPE failactiontype,
 		const SERVICE_STATUS_PROCESS svcprocdetial);
 	SvcRecord(const SvcRecord &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 	SvcRecord(SvcRecord&& other) noexcept;
+#endif
 	~SvcRecord();
 	SvcRecord& operator=(const SvcRecord &other);
 	SvcRecord& operator=(SvcRecord &&other) noexcept;
@@ -252,10 +266,14 @@ class SvcHandler {
 		SvcHandler();
 		SvcHandler(const SC_HANDLE schandle, const unsigned long scmrights, const bool scmopen);
 		SvcHandler(const SvcHandler &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		SvcHandler(SvcHandler &&other) noexcept;
+#endif
 		~SvcHandler();
 		SvcHandler& operator=(const SvcHandler &other);
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		SvcHandler& operator=(SvcHandler &&other) noexcept;
+#endif
 		bool operator==(const SvcHandler &other) const;
 		bool operator!=(const SvcHandler &other) const;
 		ScmOpResult SCM_OpenManager(unsigned long desiredRghts = 0);

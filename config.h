@@ -55,20 +55,78 @@ typedef long NTSTATUS;
 #define MAX(a,b)            (((a) > (b)) ? (a) : (b))
 #define MIN(a,b)            (((a) < (b)) ? (a) : (b))
 
-#define MAKEWORD(a, b)      ((WORD)(((BYTE)(((DWORD_PTR)(a)) & 0xFF)) | ((WORD)((BYTE)(((DWORD_PTR)(b)) & 0xFF))) << 8))
-#define MAKELONG(a, b)      ((LONG)(((WORD)(((DWORD_PTR)(a)) & 0xFFFF)) | ((DWORD)((WORD)(((DWORD_PTR)(b)) & 0xFFFF))) << 16))
-#define LOWORD(l)           ((WORD)(((DWORD_PTR)(l)) & 0xFFFF))
-#define HIWORD(l)           ((WORD)((((DWORD_PTR)(l)) >> 16) & 0xFFFF))
-#define LOBYTE(w)           ((BYTE)(((DWORD_PTR)(w)) & 0xFF))
-#define HIBYTE(w)           ((BYTE)((((DWORD_PTR)(w)) >> 8) & 0xFF))
+#ifndef _MSC_VER
+    #define MAKEWORD(a, b)  ((unsigned short)(((unsigned char)(((unsigned long long)(a)) & 0xFF)) | ((unsigned short)((unsigned char)(((unsigned long long)(b)) & 0xFF))) << 8))
+    #define MAKELONG(a, b)  ((long)(((unsigned short)(((unsigned long long)(a)) & 0xFFFF)) | ((unsigned long)((unsigned short)(((unsigned long long)(b)) & 0xFFFF))) << 16))
+    #define LOWORD(l)       ((unsigned short)(((unsigned long long)(l)) & 0xFFFF))
+    #define HIWORD(l)       ((unsigned short)((((unsigned long long)(l)) >> 16) & 0xFFFF))
+    #define LOBYTE(w)       ((unsigned char)(((unsigned long long)(w)) & 0xFF))
+    #define HIBYTE(w)       ((unsigned char)((((unsigned long long)(w)) >> 8) & 0xFF))
+#endif
+
+// C++ version
+
+/* With MSVS build with flags: 
+    /std:c++latest /Zc:__cplusplus
+    Project properties => C/C++ => Command Line => Additional flags */
+#if defined(_MSC_VER) && (defined(_WIN32) || defined(_WIN64))
+    #if (__cplusplus == 202101L)
+        #define COMPILERVER 23
+    #elif (__cplusplus == 202002L) || (__cplusplus == 202004L)
+        #define COMPILERVER 20
+    #elif (__cplusplus == 201703L)
+        #define COMPILERVER 17
+    #elif (__cplusplus == 201402L)
+        #define COMPILERVER 14
+    #elif (__cplusplus == 201103L)
+        #define COMPILERVER 11
+    #elif (__cplusplus == 199711L)
+        #define COMPILERVER 98
+    #endif
+
+    #if (COMPILERVER == 98) || (COMPILERVER < 14)
+        template<typename T>
+        constexpr remove_reference_t<T> &&move(T &&t) noexcept {
+            return static_cast<remove_reference_t<T>&&>(t);
+        }
+        template<class T>
+        constexpr T&& forward(remove_reference_t<T> &t) noexcept {
+            return static_cast<T&&>(t);
+        }
+        template<class T>
+        constexpr T&& move(remove_reference_t<T> &t) noexcept {
+            return static_cast<T&&>(t);
+        }
+        template<class T, class U = T>
+        T exchange(T &obj, U &&new_value) {
+            T old_value = std::move(obj);
+            obj = std::forward<U>(new_value);
+            return old_value;
+        }
+
+        #define valremovereference remove_reference_t
+        #define valforward forward
+        #define valexchnage exchange
+        #define valmove move
+    #else
+        #define valremovereference std::remove_reference_t
+        #define valforward std::forward
+        #define valexchange std::exchange
+        #define valmove std::move
+    #endif
+#else
+    #define valremovereference std::remove_reference_t
+    #define valforward std::forward
+    #define valexchange std::exchange
+    #define valmove std::move
+#endif
 
 // Disable warnings
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
 
 // Libs
-
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_MSC_VER) && (defined(_WIN32) || defined(_WIN64))
 	#pragma comment(lib, "Kernel32.lib")
 	#pragma comment(lib, "Wininet.lib")
 	#pragma comment(lib, "iphlpapi.lib")
@@ -107,6 +165,7 @@ typedef long NTSTATUS;
 #define DE_CANTRENAME			0x10074
 
 #define FSH_SHORTNAMELENGTH		12 // symbols
+#define FSH_FULLPHYSDRIVESTRING
 
 #define STATUS_SUCCESS			(NTSTATUS)0x00000000L
 #define NT_SUCCESS(Status)		((NTSTATUS)(Status) >= 0)
@@ -144,6 +203,7 @@ typedef long NTSTATUS;
 #define MSSQLDISPLAYFORMATC		L"%c %-*.*s "
 // max connection out buffer size, characters
 #define MSSQLMAXOUTBUF			2048
+#define MSSQLMAXINFOBUF			1024
 // min connection out buffer size, characters
 #define MSSQLMINOUTBUF			1024
 #define MSSQLCONNTOOMANY		-1
