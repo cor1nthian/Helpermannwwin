@@ -85,7 +85,7 @@ typedef long NTSTATUS;
     #endif
 
     #if (COMPILERVER == 98) || (COMPILERVER < 14)
-        template<typename T>
+        template<class T>
         constexpr remove_reference_t<T> &&move(T &&t) noexcept {
             return static_cast<remove_reference_t<T>&&>(t);
         }
@@ -132,8 +132,9 @@ typedef long NTSTATUS;
 	#pragma comment(lib, "iphlpapi.lib")
 	#pragma comment(lib, "ws2_32.lib")
 	#pragma comment(lib, "Dnsapi.lib")
-	#pragma comment(lib, "Advapi32.lib")
 	#pragma comment(lib, "netapi32.lib")
+    #pragma comment(lib, "Advapi32.lib")
+    #pragma comment(lib, "setupapi.lib")
 #endif
 
 // FSHelper Defines

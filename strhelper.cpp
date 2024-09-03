@@ -605,8 +605,27 @@ std::string lower_copy(const std::string s) {
     return temp;
 }
 
+std::wstring lower_copy(const std::wstring s) {
+    std::locale loc;
+    std::wstring temp = s;
+    for (wchar_t& c : temp) c = towlower(c);
+    return temp;
+}
+
 std::vector<std::string> lower_copy(const std::vector<std::string> vec) {
     std::vector<std::string> ret = vec;
+    if (ret.size()) {
+        std::locale loc;
+        ret.clear();
+        for (size_t i = 0; i < vec.size(); ++i) {
+            ret.push_back(lower_copy(vec[i]));
+        }
+    }
+    return ret;
+}
+
+std::vector<std::wstring> lower_copy(const std::vector<std::wstring> vec) {
+    std::vector<std::wstring> ret = vec;
     if (ret.size()) {
         std::locale loc;
         ret.clear();
@@ -625,6 +644,12 @@ std::string upper_copy(const std::string s) {
     return temp;
 }
 
+std::wstring upper_copy(const std::wstring s) {
+    std::wstring temp = s;
+    for (wchar_t &c : temp) c = towupper(c);
+    return temp;
+}
+
 std::vector<std::string> upper_copy(const std::vector<std::string> vec) {
     std::vector<std::string> ret = vec;
     if (ret.size()) {
@@ -635,31 +660,6 @@ std::vector<std::string> upper_copy(const std::vector<std::string> vec) {
         }
     }
     return ret;
-}
-
-std::wstring lower_copy(const std::wstring s) {
-    std::locale loc;
-    std::wstring temp = s;
-    for (wchar_t &c : temp) c = towlower(c);
-    return temp;
-}
-
-std::vector<std::wstring> lower_copy(const std::vector<std::wstring> vec) {
-    std::vector<std::wstring> ret = vec;
-    if (ret.size()) {
-        std::locale loc;
-        ret.clear();
-        for (size_t i = 0; i < vec.size(); ++i) {
-            ret.push_back(lower_copy(vec[i]));
-        }
-    }
-    return ret;
-}
-
-std::wstring upper_copy(const std::wstring s) {
-    std::wstring temp = s;
-    for (wchar_t &c : temp) c = towupper(c);
-    return temp;
 }
 
 std::vector<std::wstring> upper_copy(const std::vector<std::wstring> vec) {

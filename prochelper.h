@@ -294,8 +294,7 @@ class ProcessHandler {
 		bool IsProcRunning(const std::wstring exepath, const std::vector<ProcDesc> *proclist = 0);
 		std::wstring GetProcessExePathByPid(const unsigned long pid,
 			const unsigned long desiredProcRights = PROCESS_ALL_ACCESS);
-		ProcDesc GetProcessByPid(const unsigned long pid,
-			std::vector<ProcDesc> *procList = 0);
+		ProcDesc GetProcessByPid(const unsigned long pid, std::vector<ProcDesc> *procList = 0);
 		std::vector<ProcDesc> GetProcessByExePath(const std::wstring exePath,
 			std::vector<ProcDesc> *procList = 0);
 		unsigned long GetCurrentProcPid() const;
