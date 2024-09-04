@@ -27,13 +27,13 @@ ProcResource::ProcResource(const ProcResource &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 ProcResource::ProcResource(ProcResource &&other) noexcept {
 	if (this != &other) {
-		pid = valexchange(other.pid, 0);
-		exitCode = valexchange(other.exitCode, 0);
+		pid = std::exchange(other.pid, 0);
+		exitCode = std::exchange(other.exitCode, 0);
 		// memcpy(&si, &other.si, sizeof(STARTUPINFO));
-		si = valmove(other.si);
+		si = std::move(other.si);
 		memset(&other.si, 0, sizeof(STARTUPINFO));
 		// memcpy(&pi, &other.pi, sizeof(PROCESS_INFORMATION));
-		pi = valmove(other.pi);
+		pi = std::move(other.pi);
 		memset(&other.pi, 0, sizeof(PROCESS_INFORMATION));
 	}
 }
@@ -54,13 +54,13 @@ ProcResource& ProcResource::operator=(const ProcResource& other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 ProcResource& ProcResource::operator=(ProcResource &&other) noexcept {
 	if (this != &other) {
-		pid = valexchange(other.pid, 0);
-		exitCode = valexchange(other.exitCode, 0);
+		pid = std::exchange(other.pid, 0);
+		exitCode = std::exchange(other.exitCode, 0);
 		// memcpy(&si, &other.si, sizeof(STARTUPINFO));
-		si = valmove(other.si);
+		si = std::move(other.si);
 		memset(&other.si, 0, sizeof(STARTUPINFO));
 		// memcpy(&pi, &other.pi, sizeof(PROCESS_INFORMATION));
-		pi = valmove(other.pi);
+		pi = std::move(other.pi);
 		memset(&other.pi, 0, sizeof(PROCESS_INFORMATION));
 	}
 	return *this;
@@ -139,16 +139,16 @@ ProcDesc::ProcDesc(const ProcDesc &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 ProcDesc::ProcDesc(ProcDesc &&other) noexcept {
 	if (this != &other) {
-		size = valexchange(other.size, 0);
-		usage = valexchange(other.usage, 0);
-		pid = valexchange(other.pid, 0);
-		threadnum = valexchange(other.threadnum, 0);
-		parentPid = valexchange(other.parentPid, 0);
-		flags = valexchange(other.flags, 0);
-		moduleId = valexchange(other.moduleId, 0);
-		defHeapId = valexchange(other.defHeapId, 0);
-		threadPriority = valexchange(other.threadPriority, 0);
-		exepath = valmove(other.exepath);
+		size = std::exchange(other.size, 0);
+		usage = std::exchange(other.usage, 0);
+		pid = std::exchange(other.pid, 0);
+		threadnum = std::exchange(other.threadnum, 0);
+		parentPid = std::exchange(other.parentPid, 0);
+		flags = std::exchange(other.flags, 0);
+		moduleId = std::exchange(other.moduleId, 0);
+		defHeapId = std::exchange(other.defHeapId, 0);
+		threadPriority = std::exchange(other.threadPriority, 0);
+		exepath = std::move(other.exepath);
 	}
 }
 #endif
@@ -174,16 +174,16 @@ ProcDesc& ProcDesc::operator=(const ProcDesc &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 ProcDesc& ProcDesc::operator=(ProcDesc &&other) noexcept {
 	if (this != &other) {
-		size = valexchange(other.size, 0);
-		usage = valexchange(other.usage, 0);
-		pid = valexchange(other.pid, 0);
-		threadnum = valexchange(other.threadnum, 0);
-		parentPid = valexchange(other.parentPid, 0);
-		flags = valexchange(other.flags, 0);
-		moduleId = valexchange(other.moduleId, 0);
-		defHeapId = valexchange(other.defHeapId, 0);
-		threadPriority = valexchange(other.threadPriority, 0);
-		exepath = valmove(other.exepath);
+		size = std::exchange(other.size, 0);
+		usage = std::exchange(other.usage, 0);
+		pid = std::exchange(other.pid, 0);
+		threadnum = std::exchange(other.threadnum, 0);
+		parentPid = std::exchange(other.parentPid, 0);
+		flags = std::exchange(other.flags, 0);
+		moduleId = std::exchange(other.moduleId, 0);
+		defHeapId = std::exchange(other.defHeapId, 0);
+		threadPriority = std::exchange(other.threadPriority, 0);
+		exepath = std::move(other.exepath);
 	}
 	return *this;
 }

@@ -108,27 +108,27 @@ SecDesc::SecDesc(const SecDesc &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 SecDesc::SecDesc(SecDesc &&other) noexcept {
     if (this != &other) {
-        daclInfoSz = valexchange(other.daclInfoSz, 0);
-        daclAbsInfoSz = valexchange(other.daclAbsInfoSz, 0);
-        saclInfoSz = valexchange(other.saclInfoSz, 0);
-        saclAbsInfoSz = valexchange(other.saclAbsInfoSz, 0);
-        ownerInfoSz = valexchange(other.ownerInfoSz, 0);
-        primaryGroupInfoSz = valexchange(other.primaryGroupInfoSz, 0);
-        absoluteSDInfoSz = valexchange(other.absoluteSDInfoSz, 0);
-        selfRelativeSDInfoSz = valexchange(other.selfRelativeSDInfoSz, 0);
-        ownerInfo = valmove(other.ownerInfo);
-        primaryGroupInfo = valmove(other.primaryGroupInfo);
-        daclInfo = valmove(other.daclInfo);
+        daclInfoSz = std::exchange(other.daclInfoSz, 0);
+        daclAbsInfoSz = std::exchange(other.daclAbsInfoSz, 0);
+        saclInfoSz = std::exchange(other.saclInfoSz, 0);
+        saclAbsInfoSz = std::exchange(other.saclAbsInfoSz, 0);
+        ownerInfoSz = std::exchange(other.ownerInfoSz, 0);
+        primaryGroupInfoSz = std::exchange(other.primaryGroupInfoSz, 0);
+        absoluteSDInfoSz = std::exchange(other.absoluteSDInfoSz, 0);
+        selfRelativeSDInfoSz = std::exchange(other.selfRelativeSDInfoSz, 0);
+        ownerInfo = std::move(other.ownerInfo);
+        primaryGroupInfo = std::move(other.primaryGroupInfo);
+        daclInfo = std::move(other.daclInfo);
         other.daclInfo = 0;
-        daclAbsInfo = valmove(other.daclAbsInfo);
+        daclAbsInfo = std::move(other.daclAbsInfo);
         other.daclAbsInfo = 0;
-        saclInfo = valmove(other.saclInfo);
+        saclInfo = std::move(other.saclInfo);
         other.saclInfo = 0;
-        saclAbsInfo = valmove(other.saclAbsInfo);
+        saclAbsInfo = std::move(other.saclAbsInfo);
         other.saclAbsInfo = 0;
-        absoluteSDInfo = valmove(other.absoluteSDInfo);
+        absoluteSDInfo = std::move(other.absoluteSDInfo);
         other.absoluteSDInfo = 0;
-        selfRelativeSDInfo = valmove(other.selfRelativeSDInfo);
+        selfRelativeSDInfo = std::move(other.selfRelativeSDInfo);
         other.selfRelativeSDInfo = 0;
     }
 }
@@ -246,27 +246,27 @@ SecDesc& SecDesc::operator=(const SecDesc &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 SecDesc& SecDesc::operator=(SecDesc &&other) noexcept {
     if (this != &other) {
-        daclInfoSz = valexchange(other.daclInfoSz, 0);
-        daclAbsInfoSz = valexchange(other.daclAbsInfoSz, 0);
-        saclInfoSz = valexchange(other.saclInfoSz, 0);
-        saclAbsInfoSz = valexchange(other.saclAbsInfoSz, 0);
-        ownerInfoSz = valexchange(other.ownerInfoSz, 0);
-        primaryGroupInfoSz = valexchange(other.primaryGroupInfoSz, 0);
-        absoluteSDInfoSz = valexchange(other.absoluteSDInfoSz, 0);
-        selfRelativeSDInfoSz = valexchange(other.selfRelativeSDInfoSz, 0);
-        ownerInfo = valmove(other.ownerInfo);
-        primaryGroupInfo = valmove(other.primaryGroupInfo);
-        daclInfo = valmove(other.daclInfo);
+        daclInfoSz = std::exchange(other.daclInfoSz, 0);
+        daclAbsInfoSz = std::exchange(other.daclAbsInfoSz, 0);
+        saclInfoSz = std::exchange(other.saclInfoSz, 0);
+        saclAbsInfoSz = std::exchange(other.saclAbsInfoSz, 0);
+        ownerInfoSz = std::exchange(other.ownerInfoSz, 0);
+        primaryGroupInfoSz = std::exchange(other.primaryGroupInfoSz, 0);
+        absoluteSDInfoSz = std::exchange(other.absoluteSDInfoSz, 0);
+        selfRelativeSDInfoSz = std::exchange(other.selfRelativeSDInfoSz, 0);
+        ownerInfo = std::move(other.ownerInfo);
+        primaryGroupInfo = std::move(other.primaryGroupInfo);
+        daclInfo = std::move(other.daclInfo);
         other.daclInfo = 0;
-        daclAbsInfo = valmove(other.daclAbsInfo);
+        daclAbsInfo = std::move(other.daclAbsInfo);
         other.daclAbsInfo = 0;
-        saclInfo = valmove(other.saclInfo);
+        saclInfo = std::move(other.saclInfo);
         other.saclInfo = 0;
-        saclAbsInfo = valmove(other.saclAbsInfo);
+        saclAbsInfo = std::move(other.saclAbsInfo);
         other.saclAbsInfo = 0;
-        absoluteSDInfo = valmove(other.absoluteSDInfo);
+        absoluteSDInfo = std::move(other.absoluteSDInfo);
         other.absoluteSDInfo = 0;
-        selfRelativeSDInfo = valmove(other.selfRelativeSDInfo);
+        selfRelativeSDInfo = std::move(other.selfRelativeSDInfo);
         other.selfRelativeSDInfo = 0;
     }
     return *this;

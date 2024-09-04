@@ -70,12 +70,12 @@ MSSQLBinding::MSSQLBinding(const MSSQLBinding& other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLBinding::MSSQLBinding(MSSQLBinding &&other) noexcept {
 	if (this != &other) {
-		cDisplaySize = valexchange(other.cDisplaySize, 0);
-		indPtr = valexchange(other.indPtr, 0);
-		fChar = valexchange(other.fChar, 0);
-		wszBuffer = valmove(other.wszBuffer);
+		cDisplaySize = std::exchange(other.cDisplaySize, 0);
+		indPtr = std::exchange(other.indPtr, 0);
+		fChar = std::exchange(other.fChar, 0);
+		wszBuffer = std::move(other.wszBuffer);
 		other.wszBuffer = 0;
-		sNext = valmove(other.sNext);
+		sNext = std::move(other.sNext);
 		other.sNext = 0;
 	}
 }
@@ -97,12 +97,12 @@ MSSQLBinding& MSSQLBinding::operator=(const MSSQLBinding &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLBinding& MSSQLBinding::operator=(MSSQLBinding &&other) noexcept {
 	if (this != &other) {
-		cDisplaySize = valexchange(other.cDisplaySize, 0);
-		indPtr = valexchange(other.indPtr, 0);
-		fChar = valexchange(other.fChar, 0);
-		wszBuffer = valmove(other.wszBuffer);
+		cDisplaySize = std::exchange(other.cDisplaySize, 0);
+		indPtr = std::exchange(other.indPtr, 0);
+		fChar = std::exchange(other.fChar, 0);
+		wszBuffer = std::move(other.wszBuffer);
 		other.wszBuffer = 0;
-		sNext = valmove(other.sNext);
+		sNext = std::move(other.sNext);
 		other.sNext = 0;
 	}
 	return *this;
@@ -169,8 +169,8 @@ MSSQLOutBuf::MSSQLOutBuf(const MSSQLOutBuf &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLOutBuf::MSSQLOutBuf(MSSQLOutBuf &&other) noexcept {
 	if (this != &other) {
-		OutBufSz = valexchange(other.OutBufSz, 0);
-		OutBuf = valmove(other.OutBuf);
+		OutBufSz = std::exchange(other.OutBufSz, 0);
+		OutBuf = std::move(other.OutBuf);
 		other.OutBuf = 0;
 	}
 }
@@ -197,8 +197,8 @@ MSSQLOutBuf& MSSQLOutBuf::operator=(const MSSQLOutBuf &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLOutBuf& MSSQLOutBuf::operator=(MSSQLOutBuf &&other) noexcept {
 	if (this != &other) {
-		OutBufSz = valexchange(other.OutBufSz, 0);
-		OutBuf = valmove(other.OutBuf);
+		OutBufSz = std::exchange(other.OutBufSz, 0);
+		OutBuf = std::move(other.OutBuf);
 		other.OutBuf = 0;
 	}
 	return *this;
@@ -245,11 +245,11 @@ MSSQLQuery::MSSQLQuery(const MSSQLQuery &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLQuery::MSSQLQuery(MSSQLQuery &&other) noexcept {
 	if (this != &other) {
-		DBID = valmove(other.DBID);
+		DBID = std::move(other.DBID);
 		other.DBID = 0;
-		QueryID = valmove(other.QueryID);
+		QueryID = std::move(other.QueryID);
 		other.QueryID = 0;
-		QueryStr = valmove(other.QueryStr);
+		QueryStr = std::move(other.QueryStr);
 	}
 }
 #endif
@@ -268,11 +268,11 @@ MSSQLQuery& MSSQLQuery::operator=(const MSSQLQuery &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLQuery& MSSQLQuery::operator=(MSSQLQuery &&other) noexcept {
 	if (this != &other) {
-		DBID = valmove(other.DBID);
+		DBID = std::move(other.DBID);
 		other.DBID = 0;
-		QueryID = valmove(other.QueryID);
+		QueryID = std::move(other.QueryID);
 		other.QueryID = 0;
-		QueryStr = valmove(other.QueryStr);
+		QueryStr = std::move(other.QueryStr);
 	}
 	return *this;
 }
@@ -322,10 +322,10 @@ MSSQLDBHandler::MSSQLDBHandler(const MSSQLDBHandler &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLDBHandler::MSSQLDBHandler(MSSQLDBHandler &&other) noexcept {
 	if (this != &other) {
-		m_ConnectedDBs = valmove(other.m_ConnectedDBs);
-		m_OutBuffers = valmove(other.m_OutBuffers);
-		m_RunningQueries = valmove(other.m_RunningQueries);
-		m_hEnv = valmove(other.m_hEnv);
+		m_ConnectedDBs = std::move(other.m_ConnectedDBs);
+		m_OutBuffers = std::move(other.m_OutBuffers);
+		m_RunningQueries = std::move(other.m_RunningQueries);
+		m_hEnv = std::move(other.m_hEnv);
 		other.m_hEnv = 0;
 	}
 }
@@ -364,10 +364,10 @@ MSSQLDBHandler& MSSQLDBHandler::operator=(const MSSQLDBHandler &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 MSSQLDBHandler& MSSQLDBHandler::operator=(MSSQLDBHandler &&other) noexcept {
 	if (this != &other) {
-		m_ConnectedDBs = valmove(other.m_ConnectedDBs);
-		m_OutBuffers = valmove(other.m_OutBuffers);
-		m_RunningQueries = valmove(other.m_RunningQueries);
-		m_hEnv = valmove(other.m_hEnv);
+		m_ConnectedDBs = std::move(other.m_ConnectedDBs);
+		m_OutBuffers = std::move(other.m_OutBuffers);
+		m_RunningQueries = std::move(other.m_RunningQueries);
+		m_hEnv = std::move(other.m_hEnv);
 		other.m_hEnv = 0;
 	}
 	return *this;

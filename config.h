@@ -83,42 +83,6 @@ typedef long NTSTATUS;
     #elif (__cplusplus == 199711L)
         #define COMPILERVER 98
     #endif
-
-    #if (COMPILERVER == 98) || (COMPILERVER < 14)
-        template<class T>
-        constexpr remove_reference_t<T> &&move(T &&t) noexcept {
-            return static_cast<remove_reference_t<T>&&>(t);
-        }
-        template<class T>
-        constexpr T&& forward(remove_reference_t<T> &t) noexcept {
-            return static_cast<T&&>(t);
-        }
-        template<class T>
-        constexpr T&& move(remove_reference_t<T> &t) noexcept {
-            return static_cast<T&&>(t);
-        }
-        template<class T, class U = T>
-        T exchange(T &obj, U &&new_value) {
-            T old_value = std::move(obj);
-            obj = std::forward<U>(new_value);
-            return old_value;
-        }
-
-        #define valremovereference remove_reference_t
-        #define valforward forward
-        #define valexchnage exchange
-        #define valmove move
-    #else
-        #define valremovereference std::remove_reference_t
-        #define valforward std::forward
-        #define valexchange std::exchange
-        #define valmove std::move
-    #endif
-#else
-    #define valremovereference std::remove_reference_t
-    #define valforward std::forward
-    #define valexchange std::exchange
-    #define valmove std::move
 #endif
 
 // Disable warnings
@@ -126,7 +90,7 @@ typedef long NTSTATUS;
 #pragma warning(disable : 4996)
 
 // Libs
-#if defined(_MSC_VER) && (defined(_WIN32) || defined(_WIN64))
+#if (defined(_WIN32) || defined(_WIN64))
 	#pragma comment(lib, "Kernel32.lib")
 	#pragma comment(lib, "Wininet.lib")
 	#pragma comment(lib, "iphlpapi.lib")
@@ -134,7 +98,6 @@ typedef long NTSTATUS;
 	#pragma comment(lib, "Dnsapi.lib")
 	#pragma comment(lib, "netapi32.lib")
     #pragma comment(lib, "Advapi32.lib")
-    #pragma comment(lib, "setupapi.lib")
 #endif
 
 // FSHelper Defines
@@ -164,6 +127,8 @@ typedef long NTSTATUS;
 #define DE_UNKNOWN				0x402
 #define DE_ERRORONDEST			0x10000
 #define DE_CANTRENAME			0x10074
+
+#define WM_USER                 0x0400
 
 #define FSH_SHORTNAMELENGTH		12 // symbols
 #define FSH_FULLPHYSDRIVESTRING

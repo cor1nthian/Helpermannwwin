@@ -48,21 +48,23 @@ DNSQueryContext::DNSQueryContext(const DNSQueryContext &other) {
     }
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 DNSQueryContext::DNSQueryContext(DNSQueryContext &&other) noexcept {
     if (this != &other) {
-        RefCount = valexchange(other.RefCount, 0);
-        QueryType = valexchange(other.QueryType, 0);
-        QueryOptions = valexchange(other.QueryOptions, 0);
-        QueryResults = valmove(other.QueryResults);
+        RefCount = std::exchange(other.RefCount, 0);
+        QueryType = std::exchange(other.QueryType, 0);
+        QueryOptions = std::exchange(other.QueryOptions, 0);
+        QueryResults = std::move(other.QueryResults);
         other.QueryResults = { 0 };
-        QueryCancelContext = valmove(other.QueryCancelContext);
+        QueryCancelContext = std::move(other.QueryCancelContext);
         other.QueryCancelContext = { 0 };
-        QueryCompletedEvent = valmove(other.QueryCompletedEvent);
+        QueryCompletedEvent = std::move(other.QueryCompletedEvent);
         other.QueryCompletedEvent = 0;
         memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
         memset(&other.QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
     }
 }
+#endif
 
 DNSQueryContext::~DNSQueryContext() {}
 
@@ -79,22 +81,24 @@ DNSQueryContext& DNSQueryContext::operator=(const DNSQueryContext &other) {
     return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 DNSQueryContext& DNSQueryContext::operator=(DNSQueryContext &&other) noexcept {
     if (this != &other) {
-        RefCount = valexchange(other.RefCount, 0);
-        QueryType = valexchange(other.QueryType, 0);
-        QueryOptions = valexchange(other.QueryOptions, 0);
-        QueryResults = valmove(other.QueryResults);
+        RefCount = std::exchange(other.RefCount, 0);
+        QueryType = std::exchange(other.QueryType, 0);
+        QueryOptions = std::exchange(other.QueryOptions, 0);
+        QueryResults = std::move(other.QueryResults);
         other.QueryResults = { 0 };
-        QueryCancelContext = valmove(other.QueryCancelContext);
+        QueryCancelContext = std::move(other.QueryCancelContext);
         other.QueryCancelContext = { 0 };
-        QueryCompletedEvent = valmove(other.QueryCompletedEvent);
+        QueryCompletedEvent = std::move(other.QueryCompletedEvent);
         other.QueryCompletedEvent = 0;
         memcpy(&QueryName, &other.QueryName, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
         memset(&other.QueryName, 0, (DNS_MAX_NAME_BUFFER_LENGTH + 16) * sizeof(wchar_t));
     }
     return *this;
 }
+#endif
 
 bool DNSQueryContext::operator==(const DNSQueryContext& other) const {
     if (this != &other) {
@@ -147,17 +151,19 @@ HostNodeAddr::HostNodeAddr(const HostNodeAddr &other) {
     }
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 HostNodeAddr::HostNodeAddr(HostNodeAddr &&other) noexcept {
     if (this != &other) {
-        SockType = valexchange(other.SockType, SocketType::Stream);
-        Protocol = valexchange(other.Protocol, NWProtocol::HopOpts);
-        AddrType = valexchange(other.AddrType, AddressType::IPv4);
-        Address = valmove(other.Address);
+        SockType = std::exchange(other.SockType, SocketType::Stream);
+        Protocol = std::exchange(other.Protocol, NWProtocol::HopOpts);
+        AddrType = std::exchange(other.AddrType, AddressType::IPv4);
+        Address = std::move(other.Address);
         /*memset(&other.SockType, 0, sizeof(SocketType));
         memset(&other.Protocol, 0, sizeof(NWProtocol));
         memset(&other.AddrType, 0, sizeof(AddressType));*/
     }
 }
+#endif
 
 HostNodeAddr::~HostNodeAddr() {}
 
@@ -171,18 +177,20 @@ HostNodeAddr& HostNodeAddr::operator=(const HostNodeAddr &other) {
     return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 HostNodeAddr& HostNodeAddr::operator=(HostNodeAddr &&other) noexcept {
     if (this != &other) {
-        SockType = valexchange(other.SockType, SocketType::Stream);
-        Protocol = valexchange(other.Protocol, NWProtocol::HopOpts);
-        AddrType = valexchange(other.AddrType, AddressType::IPv4);
-        Address = valmove(other.Address);
+        SockType = std::exchange(other.SockType, SocketType::Stream);
+        Protocol = std::exchange(other.Protocol, NWProtocol::HopOpts);
+        AddrType = std::exchange(other.AddrType, AddressType::IPv4);
+        Address = std::move(other.Address);
         /*memset(&other.SockType, 0, sizeof(SocketType));
         memset(&other.Protocol, 0, sizeof(NWProtocol));
         memset(&other.AddrType, 0, sizeof(AddressType));*/
     }
     return *this;
 }
+#endif
 
 bool HostNodeAddr::operator==(const HostNodeAddr& other) const {
     if (this != &other) {
@@ -218,11 +226,13 @@ HostNode::HostNode(const HostNode &other) {
     }
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 HostNode::HostNode(HostNode &&other) noexcept {
     if (this != &other) {
-        Address = valmove(other.Address);
+        Address = std::move(other.Address);
     }
 }
+#endif
 
 HostNode::~HostNode() {}
 
@@ -233,12 +243,14 @@ HostNode& HostNode::operator=(const HostNode &other) {
     return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 HostNode& HostNode::operator=(HostNode &&other) noexcept {
     if (this != &other) {
-        Address = valmove(other.Address);
+        Address = std::move(other.Address);
     }
     return *this;
 }
+#endif
 
 bool HostNode::operator==(const HostNode& other) const {
     if (this != &other) {
@@ -276,13 +288,15 @@ PingResult::PingResult(const PingResult &other) {
     }
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 PingResult::PingResult(PingResult &&other) noexcept {
     if (this != &other) {
-        Result = valexchange(other.Result, 0);
-        RoundTripTime = valexchange(other.RoundTripTime, 0);
-        TTL = valexchange(other.TTL, 0);
+        Result = std::exchange(other.Result, 0);
+        RoundTripTime = std::exchange(other.RoundTripTime, 0);
+        TTL = std::exchange(other.TTL, 0);
     }
 }
+#endif
 
 PingResult::~PingResult() {}
 
@@ -294,14 +308,18 @@ PingResult& PingResult::operator=(const PingResult &other) {
     }
     return *this;
 }
+
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 PingResult& PingResult::operator=(PingResult &&other) noexcept {
     if (this != &other) {
-        Result = valexchange(other.Result, 0);
-        RoundTripTime = valexchange(other.RoundTripTime, 0);
-        TTL = valexchange(other.TTL, 0);
+        Result = std::exchange(other.Result, 0);
+        RoundTripTime = std::exchange(other.RoundTripTime, 0);
+        TTL = std::exchange(other.TTL, 0);
     }
     return *this;
 }
+#endif
+
 bool PingResult::operator==(const PingResult& other) const {
     if (this != &other) {
         return (Result == other.Result &&
@@ -348,16 +366,18 @@ TracertResult::TracertResult(const TracertResult &other) {
     }
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 TracertResult::TracertResult(TracertResult &&other) noexcept {
     if (this != &other) {
-        TTL = valexchange(other.TTL, 0);
-        RoundTripTime = valexchange(other.RoundTripTime, 0);
-        Address = valmove(other.Address);
-        AddressIPV4 = valmove(other.AddressIPV4);
-        AddressIPV6 = valmove(other.AddressIPV6);
-        Pings = valmove(other.Pings);
+        TTL = std::exchange(other.TTL, 0);
+        RoundTripTime = std::exchange(other.RoundTripTime, 0);
+        Address = std::move(other.Address);
+        AddressIPV4 = std::move(other.AddressIPV4);
+        AddressIPV6 = std::move(other.AddressIPV6);
+        Pings = std::move(other.Pings);
     }
 }
+#endif
 
 TracertResult& TracertResult::operator=(const TracertResult &other) {
     if (this != &other) {
@@ -370,17 +390,20 @@ TracertResult& TracertResult::operator=(const TracertResult &other) {
     }
     return *this;
 }
+
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 TracertResult& TracertResult::TracertResult::operator=(TracertResult &&other) noexcept {
     if (this != &other) {
-        TTL = valexchange(other.TTL, 0);
-        RoundTripTime = valexchange(other.RoundTripTime, 0);
-        Address = valmove(other.Address);
-        AddressIPV4 = valmove(other.AddressIPV4);
-        AddressIPV6 = valmove(other.AddressIPV6);
-        Pings = valmove(other.Pings);
+        TTL = std::exchange(other.TTL, 0);
+        RoundTripTime = std::exchange(other.RoundTripTime, 0);
+        Address = std::move(other.Address);
+        AddressIPV4 = std::move(other.AddressIPV4);
+        AddressIPV6 = std::move(other.AddressIPV6);
+        Pings = std::move(other.Pings);
     }
     return *this;
 }
+#endif
 
 bool TracertResult::operator==(const TracertResult &other) const {
     if (this != &other) {
@@ -438,16 +461,18 @@ ICMPHeader::ICMPHeader(const ICMPHeader &other) {
     }
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 ICMPHeader::ICMPHeader(ICMPHeader &&other) noexcept {
     if (this != &other) {
-        type = valexchange(other.type, 0);
-        code = valexchange(other.code, 0);
-        checksum = valexchange(other.checksum, 0);
-        id = valexchange(other.id, 0);
-        seqnum = valexchange(other.seqnum, 0);
-        timestamp = valexchange(other.timestamp, 0);
+        type = std::exchange(other.type, 0);
+        code = std::exchange(other.code, 0);
+        checksum = std::exchange(other.checksum, 0);
+        id = std::exchange(other.id, 0);
+        seqnum = std::exchange(other.seqnum, 0);
+        timestamp = std::exchange(other.timestamp, 0);
     }
 }
+#endif
 
 ICMPHeader::~ICMPHeader() {}
 
@@ -463,17 +488,19 @@ ICMPHeader& ICMPHeader::operator=(const ICMPHeader &other) {
     return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 ICMPHeader& ICMPHeader::operator=(ICMPHeader &&other) noexcept {
     if (this != &other) {
-        type = valexchange(other.type, 0);
-        code = valexchange(other.code, 0);
-        checksum = valexchange(other.checksum, 0);
-        id = valexchange(other.id, 0);
-        seqnum = valexchange(other.seqnum, 0);
-        timestamp = valexchange(other.timestamp, 0);
+        type = std::exchange(other.type, 0);
+        code = std::exchange(other.code, 0);
+        checksum = std::exchange(other.checksum, 0);
+        id = std::exchange(other.id, 0);
+        seqnum = std::exchange(other.seqnum, 0);
+        timestamp = std::exchange(other.timestamp, 0);
     }
     return *this;
 }
+#endif
 
 bool ICMPHeader::operator==(const ICMPHeader &other) const {
     if (this != &other) {
@@ -547,21 +574,23 @@ IPHeader::IPHeader(const IPHeader &other) {
     }
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 IPHeader::IPHeader(IPHeader &&other) noexcept {
     if (this != &other) {
-        headerlen = valexchange(other.headerlen, 0);
-        version = valexchange(other.version, 0);
-        typeofoservice = valexchange(other.typeofoservice, 0);
-        packetlen = valexchange(other.packetlen, 0);
-        identifier = valexchange(other.identifier, 0);
-        flags = valexchange(other.flags, 0);
-        ttl = valexchange(other.ttl, 0);
-        protocol = valexchange(other.protocol, 0);
-        checksum = valexchange(other.checksum, 0);
-        sourceIP = valexchange(other.sourceIP, 0);
-        destIP = valexchange(other.destIP, 0);
+        headerlen = std::exchange(other.headerlen, 0);
+        version = std::exchange(other.version, 0);
+        typeofoservice = std::exchange(other.typeofoservice, 0);
+        packetlen = std::exchange(other.packetlen, 0);
+        identifier = std::exchange(other.identifier, 0);
+        flags = std::exchange(other.flags, 0);
+        ttl = std::exchange(other.ttl, 0);
+        protocol = std::exchange(other.protocol, 0);
+        checksum = std::exchange(other.checksum, 0);
+        sourceIP = std::exchange(other.sourceIP, 0);
+        destIP = std::exchange(other.destIP, 0);
     }
 }
+#endif
 
 IPHeader::~IPHeader() {}
 
@@ -581,22 +610,25 @@ IPHeader& IPHeader::operator=(const IPHeader &other) {
     }
     return *this;
 }
+
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 IPHeader& IPHeader::operator=(IPHeader &&other) noexcept {
     if (this != &other) {
-        headerlen = valexchange(other.headerlen, 0);
-        version = valexchange(other.version, 0);
-        typeofoservice = valexchange(other.typeofoservice, 0);
-        packetlen = valexchange(other.packetlen, 0);
-        identifier = valexchange(other.identifier, 0);
-        flags = valexchange(other.flags, 0);
-        ttl = valexchange(other.ttl, 0);
-        protocol = valexchange(other.protocol, 0);
-        checksum = valexchange(other.checksum, 0);
-        sourceIP = valexchange(other.sourceIP, 0);
-        destIP = valexchange(other.destIP, 0);
+        headerlen = std::exchange(other.headerlen, 0);
+        version = std::exchange(other.version, 0);
+        typeofoservice = std::exchange(other.typeofoservice, 0);
+        packetlen = std::exchange(other.packetlen, 0);
+        identifier = std::exchange(other.identifier, 0);
+        flags = std::exchange(other.flags, 0);
+        ttl = std::exchange(other.ttl, 0);
+        protocol = std::exchange(other.protocol, 0);
+        checksum = std::exchange(other.checksum, 0);
+        sourceIP = std::exchange(other.sourceIP, 0);
+        destIP = std::exchange(other.destIP, 0);
     }
     return *this;
 }
+#endif
 
 bool IPHeader::operator==(const IPHeader &other) const {
     if (this != &other) {

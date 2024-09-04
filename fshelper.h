@@ -2,37 +2,37 @@
 #define _FS_HELPER_H
 
 /*       In loving memory of @pixo $oft       */
-#define WIN32_LEAN_AND_MEAN
-#define NOGDICAPMASKS
-#define NOVIRTUALKEYCODES
-#define NOSYSMETRICS
-#define NOMENUS
-#define NOICONS
-#define NOKEYSTATES
-#define NOSYSCOMMANDS
-#define NORASTEROPS
-#define NOATOM
-#define NOCLIPBOARD
-#define NOCOLOR
-#define NOKERNEL
-#define NOMEMMGR
-#define NOOPENFILE
-#define NOSCROLL
-#define NOSERVICE
-#define NOSOUND
-#define NOTEXTMETRIC
-#define NOWINOFFSETS
-#define NOCOMM
-#define NOKANJI
-#define NOHELP
-#define NOPROFILER
-#define NODEFERWINDOWPOS
-#define NOMCX
-#define NODRAWTEXT
-#define NOWINSTYLES
-#define NOSHOWWINDOW
-#define NOWINMESSAGES
-#define NOWH
+// #define WIN32_LEAN_AND_MEAN
+//#define NOGDICAPMASKS
+//#define NOVIRTUALKEYCODES
+//#define NOSYSMETRICS
+//#define NOMENUS
+//#define NOICONS
+//#define NOKEYSTATES
+//#define NOSYSCOMMANDS
+//#define NORASTEROPS
+//#define NOATOM
+//#define NOCLIPBOARD
+//#define NOCOLOR
+//#define NOKERNEL
+//#define NOMEMMGR
+//#define NOOPENFILE
+//#define NOSCROLL
+//#define NOSERVICE
+//#define NOSOUND
+//#define NOTEXTMETRIC
+//#define NOWINOFFSETS
+//#define NOCOMM
+//#define NOKANJI
+//#define NOHELP
+//#define NOPROFILER
+//#define NODEFERWINDOWPOS
+//#define NOMCX
+//#define NODRAWTEXT
+//#define NOWINSTYLES
+//#define NOSHOWWINDOW
+//#define NOWINMESSAGES
+//#define NOWH
 
 #include <Windows.h>
 #include <Wincrypt.h>
@@ -49,6 +49,7 @@
 #include "aclhelper.h"
 #include "prochelper.h"
 #include "winerrhelper.h"
+#include "HWGetter.h"
 
 // File system operation result
 enum class FSOpResult : unsigned char {
@@ -585,7 +586,7 @@ class FSHandler {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 		FSHandler& operator=(const FSHandler &other) = delete;
 #else
-		SHandler& operator=(const FSHandler &other) {}
+		FSHandler& operator=(const FSHandler &other) {}
 #endif
 		// File system handler operator = (move) disabled
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
@@ -610,8 +611,8 @@ class FSHandler {
 			[in] [default - true] cleat given list before collecting the data
 			Returns result code of the operation (enum value) */
 		FSOpResult EnumVolumes(std::vector<VolumeDesc> &partList, const bool clearList = true);
-		FSOpResult EnumPartitions(std::vector<VolumeDesc> &partList, const bool clearList = true);
-		FSOpResult EnumDrives(std::vector<VolumeDesc> &partList, const bool clearList = true);
+		FSOpResult EnumPartitions(std::vector<PartitionDesc> &partList, const bool clearList = true);
+		FSOpResult EnumDrives(std::vector<DriveDesc> &driveList, const bool clearList = true);
 		/* Gets the size for a given file
 			Param:
 			[in] path to a file to calc comtrol sum for

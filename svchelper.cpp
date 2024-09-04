@@ -16,8 +16,8 @@ SvcRunState::SvcRunState(const SvcRunState& other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcRunState::SvcRunState(SvcRunState &&other) noexcept {
 	if (this != &other) {
-		svcRunning = valexchange(other.svcRunning, false);
-		svcProcRunning = valexchange(other.svcProcRunning, false);
+		svcRunning = std::exchange(other.svcRunning, false);
+		svcProcRunning = std::exchange(other.svcProcRunning, false);
 	}
 }
 #endif
@@ -35,8 +35,8 @@ SvcRunState& SvcRunState::operator=(const SvcRunState &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcRunState& SvcRunState::operator=(SvcRunState &&other) noexcept {
 	if (this != &other) {
-		svcRunning = valexchange(other.svcRunning, false);
-		svcProcRunning = valexchange(other.svcProcRunning, false);
+		svcRunning = std::exchange(other.svcRunning, false);
+		svcProcRunning = std::exchange(other.svcProcRunning, false);
 	}
 	return *this;
 }
@@ -84,9 +84,9 @@ SvcTriggerData::SvcTriggerData(const SvcTriggerData &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcTriggerData::SvcTriggerData(SvcTriggerData &&other) noexcept {
 	if (this != &other) {
-		triggerDataSize = valexchange(other.triggerDataSize, 0);
-		triggerDataType = valexchange(other.triggerDataType, 0);
-		triggerData = valmove(other.triggerData);
+		triggerDataSize = std::exchange(other.triggerDataSize, 0);
+		triggerDataType = std::exchange(other.triggerDataType, 0);
+		triggerData = std::move(other.triggerData);
 	}
 }
 #endif
@@ -105,9 +105,9 @@ SvcTriggerData& SvcTriggerData::operator=(const SvcTriggerData& other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcTriggerData& SvcTriggerData::operator=(SvcTriggerData&& other) noexcept {
 	if (this != &other) {
-		triggerDataSize = valexchange(other.triggerDataSize, 0);
-		triggerDataType = valexchange(other.triggerDataType, 0);
-		triggerData = valmove(other.triggerData);
+		triggerDataSize = std::exchange(other.triggerDataSize, 0);
+		triggerDataType = std::exchange(other.triggerDataType, 0);
+		triggerData = std::move(other.triggerData);
 	}
 	return *this;
 }
@@ -165,10 +165,10 @@ SvcTrigger::SvcTrigger(const SvcTrigger &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcTrigger::SvcTrigger(SvcTrigger &&other) noexcept {
 	if (this != &other) {
-		triggerType = valexchange(other.triggerType, 0);
-		triggerAction = valexchange(other.triggerAction, 0);
-		triggerGuid = valmove(other.triggerGuid);
-		triggerData = valmove(other.triggerData);
+		triggerType = std::exchange(other.triggerType, 0);
+		triggerAction = std::exchange(other.triggerAction, 0);
+		triggerGuid = std::move(other.triggerGuid);
+		triggerData = std::move(other.triggerData);
 	}
 }
 #endif
@@ -189,10 +189,10 @@ SvcTrigger& SvcTrigger::operator=(const SvcTrigger &other) {
 SvcTrigger& SvcTrigger::operator=(SvcTrigger &&other) noexcept {
 	if (this != &other) {
 		if (this != &other) {
-			triggerType = valexchange(other.triggerType, 0);
-			triggerAction = valexchange(other.triggerAction, 0);
-			triggerGuid = valmove(other.triggerGuid);
-			triggerData = valmove(other.triggerData);
+			triggerType = std::exchange(other.triggerType, 0);
+			triggerAction = std::exchange(other.triggerAction, 0);
+			triggerGuid = std::move(other.triggerGuid);
+			triggerData = std::move(other.triggerData);
 		}
 	}
 	return *this;
@@ -381,34 +381,34 @@ SvcRecord::SvcRecord(const SvcRecord &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcRecord::SvcRecord(SvcRecord &&other) noexcept {
 	if (this != &other) {
-		serviceType = valexchange(other.serviceType, 0);
-		startType = valexchange(other.startType, 0);
-		errorControl = valexchange(other.errorControl, 0);
-		tagId = valexchange(other.tagId, 0);
-		failResetPeriod = valexchange(other.failResetPeriod, 0);
-		failActions = valexchange(other.failActions, 0);
-		failActionDelay = valexchange(other.failActionDelay, 0);
-		preshutdownTimeout = valexchange(other.preshutdownTimeout, 0);
-		svcSidType = valexchange(other.svcSidType, 0);
-		launchProtected = valexchange(other.launchProtected, 0);
-		preferredNode = valexchange(other.preferredNode, 0);
-		preferredNodeDeleteFlag = valexchange(other.preferredNodeDeleteFlag, false);
-		delayedAutoStart = valexchange(other.delayedAutoStart, false);
-		failureActionsOnNonCrashFailures = valexchange(other.failureActionsOnNonCrashFailures, false);
-		svcName = valmove(other.svcName);
-		svcDisplayName = valmove(other.svcDisplayName);
-		svcDesc = valmove(other.svcDesc);
-		binaryPath = valmove(other.binaryPath);
-		startsFrom = valmove(other.startsFrom);
-		dependencies = valmove(other.dependencies);
-		loadOrderGroup = valmove(other.loadOrderGroup);
-		failResetMsg = valmove(other.failResetMsg);
-		failCommand = valmove(other.failCommand);
-		privileges = valmove(other.privileges);
-		triggers = valmove(other.triggers);
-		failActionType = valmove(other.failActionType);
+		serviceType = std::exchange(other.serviceType, 0);
+		startType = std::exchange(other.startType, 0);
+		errorControl = std::exchange(other.errorControl, 0);
+		tagId = std::exchange(other.tagId, 0);
+		failResetPeriod = std::exchange(other.failResetPeriod, 0);
+		failActions = std::exchange(other.failActions, 0);
+		failActionDelay = std::exchange(other.failActionDelay, 0);
+		preshutdownTimeout = std::exchange(other.preshutdownTimeout, 0);
+		svcSidType = std::exchange(other.svcSidType, 0);
+		launchProtected = std::exchange(other.launchProtected, 0);
+		preferredNode = std::exchange(other.preferredNode, 0);
+		preferredNodeDeleteFlag = std::exchange(other.preferredNodeDeleteFlag, false);
+		delayedAutoStart = std::exchange(other.delayedAutoStart, false);
+		failureActionsOnNonCrashFailures = std::exchange(other.failureActionsOnNonCrashFailures, false);
+		svcName = std::move(other.svcName);
+		svcDisplayName = std::move(other.svcDisplayName);
+		svcDesc = std::move(other.svcDesc);
+		binaryPath = std::move(other.binaryPath);
+		startsFrom = std::move(other.startsFrom);
+		dependencies = std::move(other.dependencies);
+		loadOrderGroup = std::move(other.loadOrderGroup);
+		failResetMsg = std::move(other.failResetMsg);
+		failCommand = std::move(other.failCommand);
+		privileges = std::move(other.privileges);
+		triggers = std::move(other.triggers);
+		failActionType = std::move(other.failActionType);
 		memset(&other.failActionType, 0, sizeof(SC_ACTION_TYPE));
-		svcProcDetail = valmove(other.svcProcDetail);
+		svcProcDetail = std::move(other.svcProcDetail);
 		memset(&other.svcProcDetail, 0, sizeof(SERVICE_STATUS_PROCESS));
 	}
 }
@@ -452,34 +452,34 @@ SvcRecord& SvcRecord::operator=(const SvcRecord &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcRecord& SvcRecord::SvcRecord::operator=(SvcRecord &&other) noexcept {
 	if (this != &other) {
-		serviceType = valexchange(other.serviceType, 0);
-		startType = valexchange(other.startType, 0);
-		errorControl = valexchange(other.errorControl, 0);
-		tagId = valexchange(other.tagId, 0);
-		failResetPeriod = valexchange(other.failResetPeriod, 0);
-		failActions = valexchange(other.failActions, 0);
-		failActionDelay = valexchange(other.failActionDelay, 0);
-		preshutdownTimeout = valexchange(other.preshutdownTimeout, 0);
-		svcSidType = valexchange(other.svcSidType, 0);
-		launchProtected = valexchange(other.launchProtected, 0);
-		preferredNode = valexchange(other.preferredNode, 0);
-		preferredNodeDeleteFlag = valexchange(other.preferredNodeDeleteFlag, false);
-		delayedAutoStart = valexchange(other.delayedAutoStart, false);
-		failureActionsOnNonCrashFailures = valexchange(other.failureActionsOnNonCrashFailures, false);
-		svcName = valmove(other.svcName);
-		svcDisplayName = valmove(other.svcDisplayName);
-		svcDesc = valmove(other.svcDesc);
-		binaryPath = valmove(other.binaryPath);
-		startsFrom = valmove(other.startsFrom);
-		dependencies = valmove(other.dependencies);
-		loadOrderGroup = valmove(other.loadOrderGroup);
-		failResetMsg = valmove(other.failResetMsg);
-		failCommand = valmove(other.failCommand);
-		privileges = valmove(other.privileges);
-		triggers = valmove(other.triggers);
-		failActionType = valmove(other.failActionType);
+		serviceType = std::exchange(other.serviceType, 0);
+		startType = std::exchange(other.startType, 0);
+		errorControl = std::exchange(other.errorControl, 0);
+		tagId = std::exchange(other.tagId, 0);
+		failResetPeriod = std::exchange(other.failResetPeriod, 0);
+		failActions = std::exchange(other.failActions, 0);
+		failActionDelay = std::exchange(other.failActionDelay, 0);
+		preshutdownTimeout = std::exchange(other.preshutdownTimeout, 0);
+		svcSidType = std::exchange(other.svcSidType, 0);
+		launchProtected = std::exchange(other.launchProtected, 0);
+		preferredNode = std::exchange(other.preferredNode, 0);
+		preferredNodeDeleteFlag = std::exchange(other.preferredNodeDeleteFlag, false);
+		delayedAutoStart = std::exchange(other.delayedAutoStart, false);
+		failureActionsOnNonCrashFailures = std::exchange(other.failureActionsOnNonCrashFailures, false);
+		svcName = std::move(other.svcName);
+		svcDisplayName = std::move(other.svcDisplayName);
+		svcDesc = std::move(other.svcDesc);
+		binaryPath = std::move(other.binaryPath);
+		startsFrom = std::move(other.startsFrom);
+		dependencies = std::move(other.dependencies);
+		loadOrderGroup = std::move(other.loadOrderGroup);
+		failResetMsg = std::move(other.failResetMsg);
+		failCommand = std::move(other.failCommand);
+		privileges = std::move(other.privileges);
+		triggers = std::move(other.triggers);
+		failActionType = std::move(other.failActionType);
 		memset(&other.failActionType, 0, sizeof(SC_ACTION_TYPE));
-		svcProcDetail = valmove(other.svcProcDetail);
+		svcProcDetail = std::move(other.svcProcDetail);
 		memset(&other.svcProcDetail, 0, sizeof(SERVICE_STATUS_PROCESS));
 	}
 	return *this;
@@ -578,9 +578,9 @@ SvcHandler::SvcHandler(const SvcHandler &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcHandler::SvcHandler(SvcHandler &&other) noexcept {
 	if (this != &other) {
-		m_scmRights = valexchange(other.m_scmRights, 0);
-		m_scmOpen = valexchange(other.m_scmOpen, false);
-		m_scmHandle = valmove(other.m_scmHandle);
+		m_scmRights = std::exchange(other.m_scmRights, 0);
+		m_scmOpen = std::exchange(other.m_scmOpen, false);
+		m_scmHandle = std::move(other.m_scmHandle);
 		other.m_scmHandle = 0;
 	}
 }
@@ -604,9 +604,9 @@ SvcHandler& SvcHandler::operator=(const SvcHandler &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 SvcHandler& SvcHandler::operator=(SvcHandler &&other) noexcept {
 	if (this != &other) {
-		m_scmRights = valexchange(other.m_scmRights, 0);
-		m_scmOpen = valexchange(other.m_scmOpen, false);
-		m_scmHandle = valmove(other.m_scmHandle);
+		m_scmRights = std::exchange(other.m_scmRights, 0);
+		m_scmOpen = std::exchange(other.m_scmOpen, false);
+		m_scmHandle = std::move(other.m_scmHandle);
 		other.m_scmHandle = 0;
 	}
 	return *this;

@@ -335,9 +335,9 @@ WKSid::WKSid(const WKSid& other) {
 
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 WKSid::WKSid(WKSid &&other) noexcept {
-	StrSID = valmove(other.StrSID);
-	SIDName = valmove(other.SIDName);
-	SIDNameOrig = valmove(other.SIDNameOrig);
+	StrSID = std::move(other.StrSID);
+	SIDName = std::move(other.SIDName);
+	SIDNameOrig = std::move(other.SIDNameOrig);
 }
 #endif
 
@@ -355,9 +355,9 @@ WKSid& WKSid::operator=(const WKSid &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 WKSid& WKSid::operator=(WKSid &&other) noexcept {
 	if (this != &other) {
-		StrSID = valmove(other.StrSID);
-		SIDName = valmove(other.SIDName);
-		SIDNameOrig = valmove(other.SIDNameOrig);
+		StrSID = std::move(other.StrSID);
+		SIDName = std::move(other.SIDName);
+		SIDNameOrig = std::move(other.SIDNameOrig);
 	}
 	return *this;
 }
@@ -482,59 +482,59 @@ AccountDesc::AccountDesc(const AccountDesc &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 AccountDesc::AccountDesc(AccountDesc &&other) noexcept {
 	if (this != &other) {
-		ncNormalAcc = valexchange(other.ncNormalAcc, false);
-		ncTempDupAcc = valexchange(other.ncTempDupAcc, false);
-		ncWorkstationTrustAcc = valexchange(other.ncWorkstationTrustAcc, false);
-		ncServerTrustAcc = valexchange(other.ncServerTrustAcc, false);
-		ncInterdomainTrustAcc = valexchange(other.ncInterdomainTrustAcc, false);
-		accountLocked = valexchange(other.accountLocked, false);
-		accountDisabled = valexchange(other.accountDisabled, false);
-		accountNotDelegated = valexchange(other.accountNotDelegated, false);
-		accountDESKeysOnly = valexchange(other.accountDESKeysOnly, false);
-		accountNoKerberosPreauth = valexchange(other.accountNoKerberosPreauth, false);
-		accountTrustedToAuthForDelegation = valexchange(other.accountTrustedToAuthForDelegation, false);
-		accountTrustedForDelegation = valexchange(other.accountTrustedForDelegation, false);
-		logonScriptExecuted = valexchange(other.logonScriptExecuted, false);
-		passwordNotNeeded = valexchange(other.passwordNotNeeded, false);
-		passwordCantChange = valexchange(other.passwordCantChange, false);
-		passwordNoExpire = valexchange(other.passwordNoExpire, false);
-		passwordReverseEncryption = valexchange(other.passwordReverseEncryption, false);
-		passwordSmartCardNeeded = valexchange(other.passwordSmartCardNeeded, false);
-		passwordExpired = valexchange(other.passwordExpired, false);
-		passwordEncrypted = valexchange(other.passwordEncrypted, false);
-		authPrintOp = valexchange(other.authPrintOp, false);
-		authCommOp = valexchange(other.authCommOp, false);
-		authSrvOp = valexchange(other.authSrvOp, false);
-		authAccOp = valexchange(other.authAccOp, false);
-		passwordAge = valexchange(other.authAccOp, 0);
-		passwordBadCount = valexchange(other.passwordBadCount, 0);
-		lastLogOn = valexchange(other.lastLogOn, 0);
-		lastLogOff = valexchange(other.lastLogOff, 0);
-		privileges = valexchange(other.privileges, 0);
-		expireDate = valexchange(other.expireDate, 0);
-		maxStorage = valexchange(other.maxStorage, 0);
-		logonCount = valexchange(other.logonCount, 0);
-		countryCode = valexchange(other.countryCode, 0);
-		codePage = valexchange(other.codePage, 0);
-		primaryGroupId = valexchange(other.primaryGroupId, 0);
-		sid = valmove(other.sid);
-		comment = valmove(other.comment);
-		accountName = valmove(other.accountName);
-		accountFullname = valmove(other.accountFullname);
-		logonScriptPath = valmove(other.logonScriptPath);
-		homeDirPath = valmove(other.homeDirPath);
-		homeDirDrive = valmove(other.homeDirDrive);
-		profileDirPath = valmove(other.profileDirPath);
-		params = valmove(other.params);
-		allowedWorkstations = valmove(other.allowedWorkstations);
-		logonServer = valmove(other.logonServer);
-		passwordSetStr = valmove(other.passwordSetStr);
-		lastLogOnStr = valmove(other.lastLogOnStr);
-		lastLogOffStr = valmove(other.lastLogOffStr);
-		privilegesStr = valmove(other.privilegesStr);
-		expireDateStr = valmove(other.expireDateStr);
-		maxStorageStr = valmove(other.maxStorageStr);
-		groups = valmove(other.groups);
+		ncNormalAcc = std::exchange(other.ncNormalAcc, false);
+		ncTempDupAcc = std::exchange(other.ncTempDupAcc, false);
+		ncWorkstationTrustAcc = std::exchange(other.ncWorkstationTrustAcc, false);
+		ncServerTrustAcc = std::exchange(other.ncServerTrustAcc, false);
+		ncInterdomainTrustAcc = std::exchange(other.ncInterdomainTrustAcc, false);
+		accountLocked = std::exchange(other.accountLocked, false);
+		accountDisabled = std::exchange(other.accountDisabled, false);
+		accountNotDelegated = std::exchange(other.accountNotDelegated, false);
+		accountDESKeysOnly = std::exchange(other.accountDESKeysOnly, false);
+		accountNoKerberosPreauth = std::exchange(other.accountNoKerberosPreauth, false);
+		accountTrustedToAuthForDelegation = std::exchange(other.accountTrustedToAuthForDelegation, false);
+		accountTrustedForDelegation = std::exchange(other.accountTrustedForDelegation, false);
+		logonScriptExecuted = std::exchange(other.logonScriptExecuted, false);
+		passwordNotNeeded = std::exchange(other.passwordNotNeeded, false);
+		passwordCantChange = std::exchange(other.passwordCantChange, false);
+		passwordNoExpire = std::exchange(other.passwordNoExpire, false);
+		passwordReverseEncryption = std::exchange(other.passwordReverseEncryption, false);
+		passwordSmartCardNeeded = std::exchange(other.passwordSmartCardNeeded, false);
+		passwordExpired = std::exchange(other.passwordExpired, false);
+		passwordEncrypted = std::exchange(other.passwordEncrypted, false);
+		authPrintOp = std::exchange(other.authPrintOp, false);
+		authCommOp = std::exchange(other.authCommOp, false);
+		authSrvOp = std::exchange(other.authSrvOp, false);
+		authAccOp = std::exchange(other.authAccOp, false);
+		passwordAge = std::exchange(other.authAccOp, 0);
+		passwordBadCount = std::exchange(other.passwordBadCount, 0);
+		lastLogOn = std::exchange(other.lastLogOn, 0);
+		lastLogOff = std::exchange(other.lastLogOff, 0);
+		privileges = std::exchange(other.privileges, 0);
+		expireDate = std::exchange(other.expireDate, 0);
+		maxStorage = std::exchange(other.maxStorage, 0);
+		logonCount = std::exchange(other.logonCount, 0);
+		countryCode = std::exchange(other.countryCode, 0);
+		codePage = std::exchange(other.codePage, 0);
+		primaryGroupId = std::exchange(other.primaryGroupId, 0);
+		sid = std::move(other.sid);
+		comment = std::move(other.comment);
+		accountName = std::move(other.accountName);
+		accountFullname = std::move(other.accountFullname);
+		logonScriptPath = std::move(other.logonScriptPath);
+		homeDirPath = std::move(other.homeDirPath);
+		homeDirDrive = std::move(other.homeDirDrive);
+		profileDirPath = std::move(other.profileDirPath);
+		params = std::move(other.params);
+		allowedWorkstations = std::move(other.allowedWorkstations);
+		logonServer = std::move(other.logonServer);
+		passwordSetStr = std::move(other.passwordSetStr);
+		lastLogOnStr = std::move(other.lastLogOnStr);
+		lastLogOffStr = std::move(other.lastLogOffStr);
+		privilegesStr = std::move(other.privilegesStr);
+		expireDateStr = std::move(other.expireDateStr);
+		maxStorageStr = std::move(other.maxStorageStr);
+		groups = std::move(other.groups);
 	}
 }
 #endif
@@ -603,59 +603,59 @@ AccountDesc& AccountDesc::operator=(const AccountDesc &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 AccountDesc& AccountDesc::operator=(AccountDesc &&other) noexcept {
 	if (this != &other) {
-		ncNormalAcc = valexchange(other.ncNormalAcc, false);
-		ncTempDupAcc = valexchange(other.ncTempDupAcc, false);
-		ncWorkstationTrustAcc = valexchange(other.ncWorkstationTrustAcc, false);
-		ncServerTrustAcc = valexchange(other.ncServerTrustAcc, false);
-		ncInterdomainTrustAcc = valexchange(other.ncInterdomainTrustAcc, false);
-		accountLocked = valexchange(other.accountLocked, false);
-		accountDisabled = valexchange(other.accountDisabled, false);
-		accountNotDelegated = valexchange(other.accountNotDelegated, false);
-		accountDESKeysOnly = valexchange(other.accountDESKeysOnly, false);
-		accountNoKerberosPreauth = valexchange(other.accountNoKerberosPreauth, false);
-		accountTrustedToAuthForDelegation = valexchange(other.accountTrustedToAuthForDelegation, false);
-		accountTrustedForDelegation = valexchange(other.accountTrustedForDelegation, false);
-		logonScriptExecuted = valexchange(other.logonScriptExecuted, false);
-		passwordNotNeeded = valexchange(other.passwordNotNeeded, false);
-		passwordCantChange = valexchange(other.passwordCantChange, false);
-		passwordNoExpire = valexchange(other.passwordNoExpire, false);
-		passwordReverseEncryption = valexchange(other.passwordReverseEncryption, false);
-		passwordSmartCardNeeded = valexchange(other.passwordSmartCardNeeded, false);
-		passwordExpired = valexchange(other.passwordExpired, false);
-		passwordEncrypted = valexchange(other.passwordEncrypted, false);
-		authPrintOp = valexchange(other.authPrintOp, false);
-		authCommOp = valexchange(other.authCommOp, false);
-		authSrvOp = valexchange(other.authSrvOp, false);
-		authAccOp = valexchange(other.authAccOp, false);
-		passwordAge = valexchange(other.authAccOp, 0);
-		passwordBadCount = valexchange(other.passwordBadCount, 0);
-		lastLogOn = valexchange(other.lastLogOn, 0);
-		lastLogOff = valexchange(other.lastLogOff, 0);
-		privileges = valexchange(other.privileges, 0);
-		expireDate = valexchange(other.expireDate, 0);
-		maxStorage = valexchange(other.maxStorage, 0);
-		logonCount = valexchange(other.logonCount, 0);
-		countryCode = valexchange(other.countryCode, 0);
-		codePage = valexchange(other.codePage, 0);
-		primaryGroupId = valexchange(other.primaryGroupId, 0);
-		sid = valmove(other.sid);
-		comment = valmove(other.comment);
-		accountName = valmove(other.accountName);
-		accountFullname = valmove(other.accountFullname);
-		logonScriptPath = valmove(other.logonScriptPath);
-		homeDirPath = valmove(other.homeDirPath);
-		homeDirDrive = valmove(other.homeDirDrive);
-		profileDirPath = valmove(other.profileDirPath);
-		params = valmove(other.params);
-		allowedWorkstations = valmove(other.allowedWorkstations);
-		logonServer = valmove(other.logonServer);
-		passwordSetStr = valmove(other.passwordSetStr);
-		lastLogOnStr = valmove(other.lastLogOnStr);
-		lastLogOffStr = valmove(other.lastLogOffStr);
-		privilegesStr = valmove(other.privilegesStr);
-		expireDateStr = valmove(other.expireDateStr);
-		maxStorageStr = valmove(other.maxStorageStr);
-		groups = valmove(other.groups);
+		ncNormalAcc = std::exchange(other.ncNormalAcc, false);
+		ncTempDupAcc = std::exchange(other.ncTempDupAcc, false);
+		ncWorkstationTrustAcc = std::exchange(other.ncWorkstationTrustAcc, false);
+		ncServerTrustAcc = std::exchange(other.ncServerTrustAcc, false);
+		ncInterdomainTrustAcc = std::exchange(other.ncInterdomainTrustAcc, false);
+		accountLocked = std::exchange(other.accountLocked, false);
+		accountDisabled = std::exchange(other.accountDisabled, false);
+		accountNotDelegated = std::exchange(other.accountNotDelegated, false);
+		accountDESKeysOnly = std::exchange(other.accountDESKeysOnly, false);
+		accountNoKerberosPreauth = std::exchange(other.accountNoKerberosPreauth, false);
+		accountTrustedToAuthForDelegation = std::exchange(other.accountTrustedToAuthForDelegation, false);
+		accountTrustedForDelegation = std::exchange(other.accountTrustedForDelegation, false);
+		logonScriptExecuted = std::exchange(other.logonScriptExecuted, false);
+		passwordNotNeeded = std::exchange(other.passwordNotNeeded, false);
+		passwordCantChange = std::exchange(other.passwordCantChange, false);
+		passwordNoExpire = std::exchange(other.passwordNoExpire, false);
+		passwordReverseEncryption = std::exchange(other.passwordReverseEncryption, false);
+		passwordSmartCardNeeded = std::exchange(other.passwordSmartCardNeeded, false);
+		passwordExpired = std::exchange(other.passwordExpired, false);
+		passwordEncrypted = std::exchange(other.passwordEncrypted, false);
+		authPrintOp = std::exchange(other.authPrintOp, false);
+		authCommOp = std::exchange(other.authCommOp, false);
+		authSrvOp = std::exchange(other.authSrvOp, false);
+		authAccOp = std::exchange(other.authAccOp, false);
+		passwordAge = std::exchange(other.authAccOp, 0);
+		passwordBadCount = std::exchange(other.passwordBadCount, 0);
+		lastLogOn = std::exchange(other.lastLogOn, 0);
+		lastLogOff = std::exchange(other.lastLogOff, 0);
+		privileges = std::exchange(other.privileges, 0);
+		expireDate = std::exchange(other.expireDate, 0);
+		maxStorage = std::exchange(other.maxStorage, 0);
+		logonCount = std::exchange(other.logonCount, 0);
+		countryCode = std::exchange(other.countryCode, 0);
+		codePage = std::exchange(other.codePage, 0);
+		primaryGroupId = std::exchange(other.primaryGroupId, 0);
+		sid = std::move(other.sid);
+		comment = std::move(other.comment);
+		accountName = std::move(other.accountName);
+		accountFullname = std::move(other.accountFullname);
+		logonScriptPath = std::move(other.logonScriptPath);
+		homeDirPath = std::move(other.homeDirPath);
+		homeDirDrive = std::move(other.homeDirDrive);
+		profileDirPath = std::move(other.profileDirPath);
+		params = std::move(other.params);
+		allowedWorkstations = std::move(other.allowedWorkstations);
+		logonServer = std::move(other.logonServer);
+		passwordSetStr = std::move(other.passwordSetStr);
+		lastLogOnStr = std::move(other.lastLogOnStr);
+		lastLogOffStr = std::move(other.lastLogOffStr);
+		privilegesStr = std::move(other.privilegesStr);
+		expireDateStr = std::move(other.expireDateStr);
+		maxStorageStr = std::move(other.maxStorageStr);
+		groups = std::move(other.groups);
 	}
 	return *this;
 }
@@ -806,10 +806,10 @@ GroupDesc::GroupDesc(const GroupDesc &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 GroupDesc::GroupDesc(GroupDesc &&other) noexcept {
 	if (this != &other) {
-		IsADGroup = valexchange(other.IsADGroup, false);
-		GroupName = valmove(other.GroupName);
-		GroupStrSid = valmove(other.GroupStrSid);
-		Comment = valmove(other.Comment);
+		IsADGroup = std::exchange(other.IsADGroup, false);
+		GroupName = std::move(other.GroupName);
+		GroupStrSid = std::move(other.GroupStrSid);
+		Comment = std::move(other.Comment);
 	}
 }
 #endif
@@ -829,10 +829,10 @@ GroupDesc& GroupDesc::operator=(const GroupDesc &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 GroupDesc& GroupDesc::operator=(GroupDesc &&other) noexcept {
 	if (this != &other) {
-		IsADGroup = valexchange(other.IsADGroup, false);
-		GroupName = valmove(other.GroupName);
-		GroupStrSid = valmove(other.GroupStrSid);
-		Comment = valmove(other.Comment);
+		IsADGroup = std::exchange(other.IsADGroup, false);
+		GroupName = std::move(other.GroupName);
+		GroupStrSid = std::move(other.GroupStrSid);
+		Comment = std::move(other.Comment);
 	}
 	return *this;
 }

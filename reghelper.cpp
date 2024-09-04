@@ -18,6 +18,7 @@ RegKeyDesc::RegKeyDesc(const RegKeyDesc &other) {
 	}
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 RegKeyDesc::RegKeyDesc(RegKeyDesc &&other) noexcept {
 	if (this != &other) {
 		keyPath = other.keyPath;
@@ -30,6 +31,7 @@ RegKeyDesc::RegKeyDesc(RegKeyDesc &&other) noexcept {
 		other.values.~vector();
 	}
 }
+#endif
 
 RegKeyDesc::~RegKeyDesc() {}
 
@@ -49,6 +51,7 @@ RegKeyDesc& RegKeyDesc::operator=(const RegKeyDesc &other) {
 	return *this;
 }
 
+#if (COMPILERVER >= 11 && COMPILERVER != 98)
 RegKeyDesc& RegKeyDesc::operator=(RegKeyDesc &&other) noexcept {
 	if (this != &other) {
 		keyPath = other.keyPath;
@@ -62,6 +65,7 @@ RegKeyDesc& RegKeyDesc::operator=(RegKeyDesc &&other) noexcept {
 	}
 	return *this;
 }
+#endif
 
 bool RegKeyDesc::operator==(const RegKeyDesc& other) const {
 	if (this != &other) {
@@ -131,13 +135,13 @@ RegValDesc::RegValDesc(const RegValDesc &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 RegValDesc::RegValDesc(RegValDesc &&other) noexcept {
 	if (this != &other) {
-		valType = valexchange(other.valType, RegValType::None);
-		valDataSz = valexchange(other.valDataSz, 0);
-		valData = valmove(other.valData);
+		valType = std::exchange(other.valType, RegValType::None);
+		valDataSz = std::exchange(other.valDataSz, 0);
+		valData = std::move(other.valData);
 		other.valData = 0;
-		valPath = valmove(other.valPath);
-		valName = valmove(other.valName);
-		valDataHex = valmove(other.valDataHex);
+		valPath = std::move(other.valPath);
+		valName = std::move(other.valName);
+		valDataHex = std::move(other.valDataHex);
 	}
 }
 #endif
@@ -189,13 +193,13 @@ RegValDesc& RegValDesc::operator=(const RegValDesc &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 RegValDesc& RegValDesc::operator=(RegValDesc &&other) noexcept {
 	if (this != &other) {
-		valType = valexchange(other.valType, RegValType::None);
-		valDataSz = valexchange(other.valDataSz, 0);
-		valData = valmove(other.valData);
+		valType = std::exchange(other.valType, RegValType::None);
+		valDataSz = std::exchange(other.valDataSz, 0);
+		valData = std::move(other.valData);
 		other.valData = 0;
-		valPath = valmove(other.valPath);
-		valName = valmove(other.valName);
-		valDataHex = valmove(other.valDataHex);
+		valPath = std::move(other.valPath);
+		valName = std::move(other.valName);
+		valDataHex = std::move(other.valDataHex);
 	}
 	return *this;
 }
@@ -312,9 +316,9 @@ RegHandler::RegHandler(const RegHandler &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 RegHandler::RegHandler(RegHandler &&other) noexcept {
 	if (this != &other) {
-		m_mountedHiveCount = valexchange(other.m_mountedHiveCount, 0);
-		m_mountedHives = valmove(other.m_mountedHives);
-		m_connectedRegs = valmove(other.m_connectedRegs);
+		m_mountedHiveCount = std::exchange(other.m_mountedHiveCount, 0);
+		m_mountedHives = std::move(other.m_mountedHives);
+		m_connectedRegs = std::move(other.m_connectedRegs);
 	}
 }
 #endif
@@ -344,9 +348,9 @@ RegHandler& RegHandler::operator=(const RegHandler &other) {
 #if (COMPILERVER >= 11 && COMPILERVER != 98)
 RegHandler& RegHandler::operator=(RegHandler &&other) noexcept {
 	if (this != &other) {
-		m_mountedHiveCount = valexchange(other.m_mountedHiveCount, 0);
-		m_mountedHives = valmove(other.m_mountedHives);
-		m_connectedRegs = valmove(other.m_connectedRegs);
+		m_mountedHiveCount = std::exchange(other.m_mountedHiveCount, 0);
+		m_mountedHives = std::move(other.m_mountedHives);
+		m_connectedRegs = std::move(other.m_connectedRegs);
 	}
 	return *this;
 }

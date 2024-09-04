@@ -4,7 +4,7 @@
 /*       In loving memory of @pixo $oft       */
 #if defined(_WIN32) || defined(_WIN64)
 	#define WIN32_LEAN_AND_MEAN
-	#define NOGDICAPMASKS
+	/*#define NOGDICAPMASKS
 	#define NOVIRTUALKEYCODES
 	#define NOSYSMETRICS
 	#define NOMENUS
@@ -33,7 +33,7 @@
 	#define NOWINSTYLES
 	#define NOSHOWWINDOW
 	#define NOWINMESSAGES
-	#define NOWH
+	#define NOWH*/
 #endif
 
 // #include <codecvt>
