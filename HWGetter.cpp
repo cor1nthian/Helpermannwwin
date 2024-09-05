@@ -28,7 +28,7 @@ std::vector<std::wstring> HW_GetHardDrives() {
 					deviceInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
 					if (::SetupDiGetDeviceInterfaceDetail(devHandle, &deviceInterfaceData, deviceInterfaceDetailData,
 						requiredSize, 0, 0)) {
-						HANDLE hFile = CreateFile(deviceInterfaceDetailData->DevicePath, GENERIC_READ,
+						HANDLE hFile = ::CreateFile(deviceInterfaceDetailData->DevicePath, GENERIC_READ,
 							FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 						if (INVALID_HANDLE_VALUE != hFile) {
 							unsigned long bytesReturned = 0;
@@ -89,5 +89,10 @@ std::vector<std::wstring> HW_GetHardDrives() {
 	if (INVALID_HANDLE_VALUE != devHandle) {
 		::SetupDiDestroyDeviceInfoList(devHandle);
 	}
+	return ret;
+}
+
+std::vector<std::wstring> HW_EnumAllDevies() {
+	std::vector<std::wstring> ret;
 	return ret;
 }
