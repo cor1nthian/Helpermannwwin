@@ -131,6 +131,7 @@ typedef long NTSTATUS;
 #define WM_USER                 0x0400
 
 #define FSH_SHORTNAMELENGTH		12 // symbols
+#define FSH_PHYSDRIVEBUFLEN     256
 #define FSH_FULLPHYSDRIVESTRING
 
 #define STATUS_SUCCESS			(NTSTATUS)0x00000000L

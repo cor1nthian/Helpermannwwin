@@ -851,10 +851,19 @@ DriveDesc::DriveDesc() {
 	spaceTotal = 0;
 }
 
+DriveDesc::DriveDesc(const unsigned long long freespace, const unsigned long long totalspace,
+	const std::wstring drivephyspath, const std::wstring drivepath) {
+	spaceFree = freespace;
+	spaceTotal = totalspace;
+	drivePhysPath = drivephyspath;
+	drivePath = drivepath;
+}
+
 DriveDesc::DriveDesc(const DriveDesc &other) {
 	if (this != &other) {
 		spaceFree = other.spaceFree;
 		spaceTotal = other.spaceTotal;
+		drivePhysPath = other.drivePhysPath;
 		drivePath = other.drivePath;
 	}
 }
@@ -864,6 +873,7 @@ DriveDesc::DriveDesc(DriveDesc &&other) noexcept {
 	if (this != &other) {
 		spaceFree = std::exchange(other.spaceFree, 0);
 		spaceTotal = std::exchange(other.spaceTotal, 0);
+		drivePhysPath = std::move(other.drivePhysPath);
 		drivePath = std::move(other.drivePath);
 	}
 }
@@ -875,6 +885,7 @@ DriveDesc& DriveDesc::operator=(const DriveDesc &other) {
 	if (this != &other) {
 		spaceFree = other.spaceFree;
 		spaceTotal = other.spaceTotal;
+		drivePhysPath = other.drivePhysPath;
 		drivePath = other.drivePath;
 	}
 	return *this;
@@ -885,6 +896,7 @@ DriveDesc& DriveDesc::operator=(DriveDesc &&other) noexcept {
 	if (this != &other) {
 		spaceFree = std::exchange(other.spaceFree, 0);
 		spaceTotal = std::exchange(other.spaceTotal, 0);
+		drivePhysPath = std::move(other.drivePhysPath);
 		drivePath = std::move(other.drivePath);
 	}
 	return *this;
@@ -895,6 +907,7 @@ bool DriveDesc::operator==(const DriveDesc &other) const {
 	if (this != &other) {
 		return (spaceFree == other.spaceFree &&
 				spaceTotal == other.spaceTotal&&
+				lower_copy(drivePhysPath) == lower_copy(drivePhysPath) &&
 				lower_copy(drivePath) == lower_copy(drivePath));
 	} else {
 		return true;
@@ -905,6 +918,7 @@ bool DriveDesc::operator!=(const DriveDesc &other) const {
 	if (this != &other) {
 		return (spaceFree != other.spaceFree ||
 				spaceTotal != other.spaceTotal ||
+				lower_copy(drivePhysPath) != lower_copy(drivePhysPath) ||
 				lower_copy(drivePath) != lower_copy(drivePath));
 	} else {
 		return false;
@@ -1511,7 +1525,14 @@ FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc> &partList, const
 
 FSOpResult FSHandler::EnumDrives(std::vector<DriveDesc> &driveList, const bool clearList) {
 	std::vector<std::wstring> physDrives = HW_GetHardDrives();
-	return FSOpResult::Success;
+	if (physDrives.size() % 2 == 0 && physDrives.size() > 1) {
+		for (size_t i = 0; i < physDrives.size() - 1; i += 2) {
+			driveList.emplace_back(0, 0, physDrives[i], physDrives[i + 1]);
+		}
+		return FSOpResult::Success;
+	} else {
+		return FSOpResult::Fail;
+	}
 }
 
 FSOpResult FSHandler::GetPhysDriveIndexByPartLetter(const std::wstring partLetter,

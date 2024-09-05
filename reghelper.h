@@ -175,9 +175,7 @@ class RegHandler {
 #endif
 		~RegHandler();
 		RegHandler& operator=(const RegHandler &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
 		RegHandler& operator=(RegHandler &&other) noexcept;
-#endif
 		bool operator==(const RegHandler &other) const;
 		bool operator!=(const RegHandler &other) const;
 		RegOpResult GetStrVal(const std::wstring valName, std::wstring &val, const bool cleanupString = true,

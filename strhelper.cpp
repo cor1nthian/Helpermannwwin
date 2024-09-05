@@ -1539,7 +1539,7 @@ std::wstring reverseJoinStrs(const std::vector<std::wstring> strs, const std::ws
     return ret;
 }
 
-void removeSubstr(std::string& str, const std::string substr, const bool ignoreCase) {
+void removeSubstr(std::string &str, const std::string substr, const bool ignoreCase) {
     size_t pos = 0;
     if (ignoreCase) {
         size_t posLow = 0;
@@ -1579,7 +1579,7 @@ void removeSubstr(std::string& str, const std::string substr, const bool ignoreC
     }
 }
 
-void removeSubstr(std::wstring& str, const std::wstring substr, const bool ignoreCase) {
+void removeSubstr(std::wstring &str, const std::wstring substr, const bool ignoreCase) {
     size_t pos = 0;
     if (ignoreCase) {
         size_t posLow = 0;
@@ -1619,7 +1619,7 @@ void removeSubstr(std::wstring& str, const std::wstring substr, const bool ignor
     }
 }
 
-void removeSubstr(std::string& str, const std::vector<std::string> sequences, const bool ignoreCase) {
+void removeSubstr(std::string &str, const std::vector<std::string> sequences, const bool ignoreCase) {
     for (unsigned int i = 0; i < sequences.size(); ++i) {
         size_t pos = 0;
         if (ignoreCase) {
@@ -1662,7 +1662,7 @@ void removeSubstr(std::string& str, const std::vector<std::string> sequences, co
     }
 }
 
-void removeSubstr(std::wstring& str, const std::vector<std::wstring> sequences, const bool ignoreCase) {
+void removeSubstr(std::wstring &str, const std::vector<std::wstring> sequences, const bool ignoreCase) {
     for (unsigned int i = 0; i < sequences.size(); ++i) {
         size_t pos = 0;
         if (ignoreCase) {

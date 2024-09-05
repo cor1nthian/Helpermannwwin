@@ -4,7 +4,7 @@
 /*       In loving memory of @pixo $oft       */
 #if defined(_WIN32) || defined(_WIN64)
 	#define WIN32_LEAN_AND_MEAN
-	/*#define NOGDICAPMASKS
+	#define NOGDICAPMASKS
 	#define NOVIRTUALKEYCODES
 	#define NOSYSMETRICS
 	#define NOMENUS
@@ -33,7 +33,7 @@
 	#define NOWINSTYLES
 	#define NOSHOWWINDOW
 	#define NOWINMESSAGES
-	#define NOWH*/
+	#define NOWH
 #endif
 
 // #include <codecvt>
@@ -152,9 +152,9 @@ std::string reverseJoinStrs(const std::vector<std::string> strs, const std::stri
 	const size_t startIdx = 0, const size_t endIdx = 0);
 std::wstring reverseJoinStrs(const std::vector<std::wstring> strs, const std::wstring delimiter = L"",
 	const size_t startIdx = 0, const size_t endIdx = 0);
-void removeSubstr(std::string& str, const std::string substr, const bool ignoreCase = true);
-void removeSubstr(std::wstring& str, const std::wstring substr, const bool ignoreCase = true);
-void removeSubstr(std::string& str, const std::vector<std::string> sequences, const bool ignoreCase = true);
+void removeSubstr(std::string &str, const std::string substr, const bool ignoreCase = true);
+void removeSubstr(std::wstring &str, const std::wstring substr, const bool ignoreCase = true);
+void removeSubstr(std::string &str, const std::vector<std::string> sequences, const bool ignoreCase = true);
 std::string removeSubstr_copy(const std::string str, const std::string substr, const bool ignoreCase = true);
 std::wstring removeSubstr_copy(const std::wstring str, const std::wstring substr, const bool ignoreCase = true);
 std::string removeSubstr_copy(const std::string str, const std::vector <std::string> sequences, const bool ignoreCase = true);
