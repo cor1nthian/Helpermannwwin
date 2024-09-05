@@ -7,7 +7,7 @@
 
 #pragma comment(lib, "setupapi.lib")
 
-std::vector<std::wstring> HW_EnumAllDevies();
 std::vector<std::wstring> HW_GetHardDrives();
+std::vector<std::wstring> HW_EnumAllDevies();
 
 #endif
