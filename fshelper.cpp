@@ -1384,7 +1384,7 @@ FSHandler::FSHandler() {}
 
 FSHandler::~FSHandler() {}
 
-FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc> &partList,
+FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc> &volumeList,
 	const bool clearList) {
 	unsigned long psz = 0, psn = 0;
 	wchar_t plBuf[4] = { 0 };
@@ -1395,7 +1395,7 @@ FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc> &partList,
 	unsigned long drives = ::GetLogicalDrives();
 	if (drives) {
 		if (clearList) {
-			partList.clear();
+			volumeList.clear();
 		}
 		for (int i = 0; i < 26; ++i) {
 			VolumeDesc elem;
@@ -1504,7 +1504,7 @@ FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc> &partList,
 					::CloseHandle(hFile);
 					SAFE_FREE(volDiskExt);
 				}
-				partList.push_back(elem);
+				volumeList.push_back(elem);
 			}
 			memset(plBuf, 0, 4 * sizeof(wchar_t));
 			memset(drivePathBuf, 0, (MAX_PATH + 1) * sizeof(wchar_t));
@@ -1512,7 +1512,7 @@ FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc> &partList,
 			psn = 0;
 		}
 	}
-	if (partList.size()) {
+	if (volumeList.size()) {
 		return FSOpResult::Success;
 	} else {
 		return FSOpResult::Fail;
@@ -1524,8 +1524,9 @@ FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc> &partList, const
 }
 
 FSOpResult FSHandler::EnumDrives(std::vector<DriveDesc> &driveList, const bool clearList) {
+	HW_GetHardDrives();
 	std::vector<std::wstring> physDrives = HW_GetHardDrives();
-	if (physDrives.size() % 2 == 0 && physDrives.size() > 1) {
+	if (physDrives.size() > 1 && physDrives.size() % HW_LINESDRIVE == 0) {
 		for (size_t i = 0; i < physDrives.size() - 1; i += 2) {
 			driveList.emplace_back(0, 0, physDrives[i], physDrives[i + 1]);
 		}

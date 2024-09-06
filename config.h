@@ -66,7 +66,7 @@ typedef long NTSTATUS;
 
 // C++ version
 
-/* With MSVS build with flags: 
+/* With MSVS build with flags:
     /std:c++latest /Zc:__cplusplus
     Project properties => C/C++ => Command Line => Additional flags */
 #if defined(_MSC_VER) && (defined(_WIN32) || defined(_WIN64))
@@ -158,6 +158,11 @@ typedef long NTSTATUS;
 #ifdef _DEBUG
 	#define DNSHELPER_SHOWERRORMSGBOX
 #endif
+
+// Hardware geter defines
+
+#define HW_LINESDRIVE           2
+#define HW_LINESCOMMON          4
 
 // DBHelper defines
 

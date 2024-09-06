@@ -613,7 +613,7 @@ class FSHandler {
 			[out] partition description list/vector
 			[in] [default - true] cleat given list before collecting the data
 			Returns result code of the operation (enum value) */
-		FSOpResult EnumVolumes(std::vector<VolumeDesc> &partList, const bool clearList = true);
+		FSOpResult EnumVolumes(std::vector<VolumeDesc> &volumeList, const bool clearList = true);
 		FSOpResult EnumPartitions(std::vector<PartitionDesc> &partList, const bool clearList = true);
 		FSOpResult EnumDrives(std::vector<DriveDesc> &driveList, const bool clearList = true);
 		/* Gets the size for a given file

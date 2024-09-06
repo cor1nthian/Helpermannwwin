@@ -1072,6 +1072,14 @@ SysOpResult SysHandler::GetSIDType(const ::PSID sid, SidType &sidType, const std
 	}
 }
 
+SysOpResult SysHandler::GetPhysRAM(unsigned long long &ramAmount) const {
+	if (::GetPhysicallyInstalledSystemMemory(&ramAmount)) {
+		return SysOpResult::Success;
+	} else {
+		return SysOpResult::Fail;
+	}
+}
+
 SysOpResult SysHandler::GetRam(unsigned long long &freeRam,
 	unsigned long long &totalRam, unsigned char &precentInUse) const {
 	MEMORYSTATUSEX statex;

@@ -359,6 +359,7 @@ class SysHandler {
 			bool &isMember, const std::wstring machineName = L".") const;
 		SysOpResult GetSIDType(const ::PSID sid, SidType &sidType, const std::wstring machineName = L".", 
 			const std::wstring domainName = L".") const;
+		SysOpResult GetPhysRAM(unsigned long long &ramAmount) const;
 		/* Gets RAM info
 			Param:
 			[out]	free RAM
