@@ -78,6 +78,8 @@ int wmain(int argc, wchar_t* argv[]) {
 	std::vector<std::wstring> drvec;
 	std::wstring info;
 	std::vector<DriveDesc> ddesc;
+	std::vector<VolumeDesc> vdesc;
+	fsh.EnumVolumes(vdesc);
 	fsh.EnumDrives(ddesc);
 	std::vector<VolumeDesc> pdesc;
 	fsh.EnumVolumes(pdesc);

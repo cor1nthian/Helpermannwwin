@@ -616,12 +616,6 @@ class FSHandler {
 		FSOpResult EnumVolumes(std::vector<VolumeDesc> &volumeList, const bool clearList = true);
 		FSOpResult EnumPartitions(std::vector<PartitionDesc> &partList, const bool clearList = true);
 		FSOpResult EnumDrives(std::vector<DriveDesc> &driveList, const bool clearList = true);
-		/* Gets the size for a given file
-			Param:
-			[in] path to a file to calc comtrol sum for
-			Returns control sum string */
-		FSOpResult GetPhysDriveIndexByPartLetter(const std::wstring partLetter,
-			unsigned long &driveIndex, std::vector<VolumeDesc> *parts = 0);
 		FSOpResult GetBinaryFileInfo(const std::wstring binaryPath, BinData &binaryData) const;
 		/* Gets the control sum for a given file
 			Param:

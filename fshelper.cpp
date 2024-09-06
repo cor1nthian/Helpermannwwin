@@ -1536,35 +1536,6 @@ FSOpResult FSHandler::EnumDrives(std::vector<DriveDesc> &driveList, const bool c
 	}
 }
 
-FSOpResult FSHandler::GetPhysDriveIndexByPartLetter(const std::wstring partLetter,
-	unsigned long &driveIndex, std::vector<VolumeDesc> *parts) {
-	std::vector<VolumeDesc> vec;
-	if (parts) {
-		vec = *parts;
-	} else {
-		if (FSOpResult::Success != EnumVolumes(vec)) {
-			return FSOpResult::Fail;
-		}
-	}
-	std::wstring partLetterMod = partLetter;
-	if (endsWith(partLetterMod, L":")) {
-		partLetterMod += L"\\";
-	} else {
-		if (!endsWith(partLetterMod, L":\\")) {
-			partLetterMod += L":\\";
-		}
-	}
-	size_t i = 0;
-	wchar_t* digits = (wchar_t*)L"0123456789";
-	for (i = 0; i < vec.size(); ++i) {
-		if (lower_copy(vec[i].partLetter) == lower_copy(partLetterMod)) {
-			driveIndex = wstr2ul(firstNumberFromString(vec[i].drivePath));
-			return FSOpResult::Success;
-		}
-	}
-	return FSOpResult::Success;
-}
-
 FSOpResult FSHandler::GetBinaryFileInfo(const std::wstring binaryPath, BinData &binaryData) const {
 	if (INVALID_FILE_ATTRIBUTES != GetFileAttributes(binaryPath.c_str())) {
 		unsigned long binType = 0;
