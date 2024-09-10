@@ -455,6 +455,8 @@ struct DriveDesc {
 	unsigned long long spaceTotal;
 	std::wstring drivePhysPath;
 	std::wstring drivePath;
+	std::vector<std::wstring> volumes;
+	std::vector<std::wstring> partitions;
 };
 
 struct PartitionDesc {
@@ -474,6 +476,9 @@ struct PartitionDesc {
 	unsigned long long spaceTotal;
 	// GUID string
 	std::wstring partitionPath;
+	std::wstring volumePath;
+	std::vector<std::wstring> volumes;
+	std::vector<std::wstring> drives;
 };
 
 // Volume description struct
@@ -636,7 +641,7 @@ class FSHandler {
 		FSOpResult IsCompressed(bool &isCompressed, const std::wstring path) const;
 		FSOpResult IsHidden(bool &isHidden, const std::wstring path) const;
 		FSOpResult IsEncrypted(bool &isEncrtpted, const std::wstring path) const;
-		FSOpResult IsVirtual(bool& isVirtual, const std::wstring path) const;
+		FSOpResult IsVirtual(bool &isVirtual, const std::wstring path) const;
 		FSOpResult CreateFolder(const std::wstring folderPath) const;
 		FSOpResult CreateFolder(const std::wstring folderPath, const SECURITY_ATTRIBUTES *secAttr = 0) const;
 		FSOpResult CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const;
@@ -666,9 +671,9 @@ class FSHandler {
 		FSOpResult SetObjectSecurity(const SecDesc secDesc, const std::wstring objectPath) const;
 		FSOpResult EnumFolderContents(FolderRecord &folderInfo, const std::wstring folderPath,
 			const bool getFileHashes = true, const HashType hashType = HashType::SHA256, const bool getFileSize = true);
-		bool GetDriveSpace(const std::wstring partLetter, unsigned long long &freeSpace,
+		FSOpResult GetDriveSpace(const std::wstring partLetter, unsigned long long &freeSpace,
 			unsigned long long &totalSpace);
-		bool GetDriveSpace_DriveGeometry(const std::wstring partLetter, unsigned long long &totalSpace) const;
+		FSOpResult GetDriveSpace_DriveGeometry(const std::wstring partLetter, unsigned long long &totalSpace) const;
 		/* Does the file search baaed on a filename on all available partitions. Filename supports regex expressions.
 			Param:
 			[in] filename to search. Supports regex.

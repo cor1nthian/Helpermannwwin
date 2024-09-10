@@ -181,8 +181,8 @@ std::string reverseIPV6_copy(const std::string ipaddrstr);
 std::wstring reverseIPV6_copy(const std::wstring ipaddrstr);
 std::string firstNumberFromString(const std::string line);
 std::wstring firstNumberFromString(const std::wstring line);
-bool valInList(const std::vector<std::string> &list, const std::string val, const bool ignoreCase = true);
-bool valInList(const std::vector<std::wstring> &list, const std::wstring val, const bool ignoreCase = true);
+bool valInList(const std::vector<std::string> &list, const std::string val, size_t *posptr = 0, const bool ignoreCase = true);
+bool valInList(const std::vector<std::wstring> &list, const std::wstring val, size_t* posptr = 0, const bool ignoreCase = true);
 /* Returns:
    0 - not numeric
    1 - numeric w/o fract part

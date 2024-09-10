@@ -47,6 +47,7 @@
 #include "aclhelper.h"
 #include "nethelper.h"
 #include "dbhelper.h"
+#include "wmihelper.h"
 
 const wchar_t* muname = L"mymutex";
 
@@ -71,7 +72,13 @@ int wmain(int argc, wchar_t* argv[]) {
 	SvcHandler svch;
 	FolderRecord fr;
 	ACLHandler aclh;
+	WMIHandler wmih;
 	MSSQLDBHandler mssqlh;
+	std::vector<std::wstring> reqfields{ L"DeviceID" };
+	std::map<std::wstring, std::wstring> wmires;
+	wmih.RunWMIQuery(wmires, reqfields, L"select * from win32_DiskDrive");
+	std::vector<std::wstring> cpud;
+	reg.GetCPUDesc(cpud);
 	SecDesc secdesc, secdesc2;
 	unsigned long szlim = 0;
 	SQLHANDLE connid = 0;
@@ -79,12 +86,13 @@ int wmain(int argc, wchar_t* argv[]) {
 	std::wstring info;
 	std::vector<DriveDesc> ddesc;
 	std::vector<VolumeDesc> vdesc;
+	std::vector<PartitionDesc> padesc;
+	fsh.EnumPartitions(padesc);
 	fsh.EnumVolumes(vdesc);
 	fsh.EnumDrives(ddesc);
 	std::vector<VolumeDesc> pdesc;
 	fsh.EnumVolumes(pdesc);
 	unsigned long pdi = 0;
-	fsh.GetPhysDriveIndexByPartLetter(L"E:", pdi);
 	getAvailableODBCDrivers(drvec);
 	/*mssqlh.ConnectDBWConnLine(connid,
 		L"DRIVER={SQL Server};SERVER=localhost\\TESTINSTANCE,50100;DATABASE=master;UID=sa;PWD=mittim;",

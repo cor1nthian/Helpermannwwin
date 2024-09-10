@@ -98,6 +98,7 @@ typedef long NTSTATUS;
 	#pragma comment(lib, "Dnsapi.lib")
 	#pragma comment(lib, "netapi32.lib")
     #pragma comment(lib, "Advapi32.lib")
+    #pragma comment(lib, "wbemuuid.lib")
 #endif
 
 // FSHelper Defines
@@ -179,5 +180,9 @@ typedef long NTSTATUS;
 // min connection out buffer size, characters
 #define MSSQLMINOUTBUF			1024
 #define MSSQLCONNTOOMANY		-1
+
+// WMI Helper defines
+
+#define WH_MAXRESCNTCHANGE      1000
 
 #endif

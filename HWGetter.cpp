@@ -6,7 +6,7 @@
 
 std::wstring HWH_Property2WStr(::HDEVINFO hDevInfo, ::SP_DEVINFO_DATA deviceInfoData, const std::wstring label,
 	unsigned long property)  {
-	unsigned long  DataT = 0, buffersize = 0;
+	unsigned long DataT = 0, buffersize = 0;
 	wchar_t* buffer = 0;
 	while (!SetupDiGetDeviceRegistryProperty(hDevInfo, &deviceInfoData, property, &DataT, (unsigned char*)buffer,
 		buffersize, &buffersize)) {
@@ -74,7 +74,6 @@ std::vector<std::wstring> HW_GetHardDrives() {
 								ret.push_back(L"PhysicalDrive" + std::to_wstring(diskNumber.DeviceNumber));
 #endif
 								SAFE_FREE(physDiskBuf);
-
 							} else {
 								if (INVALID_HANDLE_VALUE != devHandle) {
 									::SetupDiDestroyDeviceInfoList(devHandle);
@@ -109,6 +108,9 @@ std::vector<std::wstring> HW_GetHardDrives() {
 				return ret;
 			}
 		}
+	}
+	if (INVALID_HANDLE_VALUE != devHandle) {
+		::SetupDiDestroyDeviceInfoList(devHandle);
 	}
 	return ret;
 }

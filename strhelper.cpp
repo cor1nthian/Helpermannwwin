@@ -149,8 +149,7 @@ char* replaceChars(const char* source, const char* replaceWhat, const char* repl
     } else {
         replaceWithLen = strlen(replaceWith);
     }
-    if (!(source && replaceWhat && replaceWith) ||
-        !(srcLen && replaceWhatLen)) {
+    if (!(srcLen && replaceWhatLen && replaceWithLen)) {
         return 0;
     }
     if ((replaceWhatLen > srcLen) || (!memcmp(source, replaceWhat, srcLen))) {
@@ -207,8 +206,7 @@ wchar_t* replaceChars(const wchar_t* source, const wchar_t* replaceWhat,
     } else {
         replaceWithLen = wcslen_c(replaceWith);
     }
-    if (!(source && replaceWhat && replaceWith) ||
-        !(srcLen && replaceWhatLen && replaceWithLen)) {
+    if (!(srcLen && replaceWhatLen && replaceWithLen)) {
         return 0;
     }
     if ((replaceWhatLen > srcLen) || (!memcmp(source, replaceWhat, srcLen))) {
@@ -2161,11 +2159,14 @@ std::wstring firstNumberFromString(const std::wstring line) {
     return L"";
 }
 
-bool valInList(const std::vector<std::string> &list, const std::string val, const bool ignoreCase) {
+bool valInList(const std::vector<std::string> &list, const std::string val, size_t *posptr, const bool ignoreCase) {
     if (ignoreCase) {
         for (size_t i = 0; i < list.size(); ++i) {
             if (lower_copy(list[i]) == lower_copy(val) ||
                 std::wstring::npos != lower_copy(list[i]).find(lower_copy(val))) {
+                if (posptr) {
+                    *posptr = i;
+                }
                 return true;
             }
         }
@@ -2174,6 +2175,9 @@ bool valInList(const std::vector<std::string> &list, const std::string val, cons
         for (size_t i = 0; i < list.size(); ++i) {
             if (list[i] == val ||
                 std::wstring::npos != list[i].find(val)) {
+                if (posptr) {
+                    *posptr = i;
+                }
                 return true;
             }
         }
@@ -2181,11 +2185,14 @@ bool valInList(const std::vector<std::string> &list, const std::string val, cons
     }
 }
 
-bool valInList(const std::vector<std::wstring> &list, const std::wstring val, const bool ignoreCase) {
+bool valInList(const std::vector<std::wstring> &list, const std::wstring val, size_t *posptr, const bool ignoreCase) {
     if (ignoreCase) {
         for (size_t i = 0; i < list.size(); ++i) {
             if (lower_copy(list[i]) == lower_copy(val) ||
                 std::wstring::npos != lower_copy(list[i]).find(lower_copy(val))) {
+                if (posptr) {
+                    *posptr = i;
+                }
                 return true;
             }
         }
@@ -2194,6 +2201,9 @@ bool valInList(const std::vector<std::wstring> &list, const std::wstring val, co
         for (size_t i = 0; i < list.size(); ++i) {
             if (list[i] == val ||
                 std::wstring::npos != list[i].find(val)) {
+                if (posptr) {
+                    *posptr = i;
+                }
                 return true;
             }
         }

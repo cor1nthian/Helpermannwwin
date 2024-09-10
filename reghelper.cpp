@@ -777,6 +777,32 @@ RegOpResult RegHandler::GetValueType(const std::wstring valName, RegValType &val
 	return RegOpResult::Fail;
 }
 
+RegOpResult RegHandler::GetCPUDesc(std::vector<std::wstring> &cpuDesc, const HKEY* root) const {
+	std::wstring tval;
+	if (RegOpResult::Success == GetStrVal(
+		L"HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0\\ProcessorNameString",
+		tval, false, root)) {
+		cpuDesc.push_back(tval);
+		if (RegOpResult::Success == GetStrVal(
+			L"HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0\\Identifier",
+			tval, false, root)) {
+			cpuDesc.push_back(tval);
+			if (RegOpResult::Success == GetStrVal(
+				L"HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0\\VendorIdentifier",
+				tval, false, root)) {
+				cpuDesc.push_back(tval);
+				return RegOpResult::Success;
+			} else {
+				return RegOpResult::Fail;
+			}
+		} else {
+			return RegOpResult::Fail;
+		}
+	} else {
+		return RegOpResult::Fail;
+	}
+}
+
 RegOpResult RegHandler::CreateStrVal(const std::wstring valName, const std::wstring& val, const HKEY *root) const {
 	if (valName.length()) {
 		// REGHELPERVALBEGIN

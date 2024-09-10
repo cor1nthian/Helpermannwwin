@@ -192,6 +192,7 @@ class RegHandler {
 		RegOpResult GetVal(const std::wstring valName, unsigned char* &buf, unsigned long &bufSz, RegValType &valType,
 			const HKEY *root = 0) const;
 		RegOpResult GetValueType(const std::wstring valName, RegValType &valtype, const HKEY *root = 0) const;
+		RegOpResult GetCPUDesc(std::vector<std::wstring> &cpuDesc, const HKEY *root = 0) const;
 		RegOpResult CreateStrVal(const std::wstring valName, const std::wstring& val, const HKEY *root = 0) const;
 		RegOpResult CreateDWordVal(const std::wstring valName, const unsigned long& val, const HKEY *root = 0) const;
 		RegOpResult CreateQWordVal(const std::wstring valName, const unsigned long long &val,

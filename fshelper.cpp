@@ -935,6 +935,9 @@ PartitionDesc::PartitionDesc(const PartitionDesc &other) {
 		spaceFree = other.spaceFree;
 		spaceTotal = other.spaceTotal;
 		partitionPath = other.partitionPath;
+		volumePath = other.volumePath;
+		volumes = other.volumes;
+		drives = other.drives;
 	}
 }
 
@@ -944,6 +947,9 @@ PartitionDesc::PartitionDesc(PartitionDesc &&other) noexcept {
 		spaceFree = std::exchange(other.spaceFree, 0);
 		spaceTotal = std::exchange(other.spaceTotal, 0);
 		partitionPath = std::move(other.partitionPath);
+		volumePath = std::move(other.volumePath);
+		volumes = std::move(other.volumes);
+		drives = std::move(other.drives);
 	}
 }
 #endif
@@ -955,6 +961,9 @@ PartitionDesc& PartitionDesc:: operator=(const PartitionDesc &other) {
 		spaceFree = other.spaceFree;
 		spaceTotal = other.spaceTotal;
 		partitionPath = other.partitionPath;
+		volumePath = other.volumePath;
+		volumes = other.volumes;
+		drives = other.drives;
 	}
 	return *this;
 }
@@ -965,6 +974,9 @@ PartitionDesc& PartitionDesc::operator=(PartitionDesc &&other) noexcept {
 		spaceFree = std::exchange(other.spaceFree, 0);
 		spaceTotal = std::exchange(other.spaceTotal, 0);
 		partitionPath = std::move(other.partitionPath);
+		volumePath = std::move(other.volumePath);
+		volumes = std::move(other.volumes);
+		drives = std::move(other.drives);
 	}
 	return *this;
 }
@@ -974,7 +986,10 @@ bool PartitionDesc::operator==(const PartitionDesc &other) const {
 	if (this != &other) {
 		return (spaceFree == other.spaceFree &&
 				spaceTotal == other.spaceTotal &&
-				partitionPath == other.partitionPath);
+				lower_copy(partitionPath) == lower_copy(other.partitionPath) &&
+				lower_copy(volumePath) == lower_copy(other.volumePath) &&
+				lower_copy(volumes) == lower_copy(other.volumes) &&
+				lower_copy(drives) == lower_copy(other.drives));
 	} else {
 		return true;
 	}
@@ -984,7 +999,10 @@ bool PartitionDesc::operator!=(const PartitionDesc &other) const {
 	if (this != &other) {
 		return (spaceFree != other.spaceFree ||
 				spaceTotal != other.spaceTotal ||
-				partitionPath != other.partitionPath);
+				lower_copy(partitionPath) != lower_copy(other.partitionPath) ||
+				lower_copy(volumePath) != lower_copy(other.volumePath) ||
+				lower_copy(volumes) != lower_copy(other.volumes) ||
+				lower_copy(drives) != lower_copy(other.drives));
 	} else {
 		return false;
 	}
@@ -1384,8 +1402,10 @@ FSHandler::FSHandler() {}
 
 FSHandler::~FSHandler() {}
 
-FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc> &volumeList,
-	const bool clearList) {
+FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc> &volumeList, const bool clearList) {
+	if (clearList) {
+		volumeList.clear();
+	}
 	unsigned long psz = 0, psn = 0;
 	wchar_t plBuf[4] = { 0 };
 	wchar_t drivePathBuf[MAX_PATH + 1] = { 0 };
@@ -1454,16 +1474,14 @@ FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc> &volumeList,
 				if(::QueryDosDevice(plBuf, vpnBuf, elem.volumePath.length())) {
 					elem.drivePath = vpnBuf;
 				}
-				if (!GetDriveSpace(elem.partLetter, elem.spaceFree, elem.spaceTotal)) {
+				if (FSOpResult::Success != GetDriveSpace(elem.partLetter, elem.spaceFree, elem.spaceTotal)) {
 					return FSOpResult::Fail;
 				}
 				std::wstring partpath = L"\\\\.\\" + std::wstring(plBuf);
-				::HANDLE hFile = INVALID_HANDLE_VALUE;
-				hFile = ::CreateFile(partpath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+				::HANDLE hFile = ::CreateFile(partpath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
 					0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 				if (INVALID_HANDLE_VALUE != hFile) {
 					unsigned long bytes = 0, bytesReturned = 0;
-					// VolumeDiskExtents* volDiskExt = (VolumeDiskExtents*)malloc(sizeof(VolumeDiskExtents));
 					VOLUME_DISK_EXTENTS* volDiskExt = (VOLUME_DISK_EXTENTS*)malloc(sizeof(VOLUME_DISK_EXTENTS));
 					if (!volDiskExt) {
 						return FSOpResult::Fail;
@@ -1482,6 +1500,7 @@ FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc> &volumeList,
 							ret = ::DeviceIoControl(hFile, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, 0, 0, volDiskExt,
 								(numDisks * sizeof(DISK_EXTENT)) + sizeof(VOLUME_DISK_EXTENTS), &bytes, 0);
 							if (!ret) {
+								SAFE_FREE(volDiskExt);
 								return FSOpResult::Fail;
 							}
 							for (unsigned long i = 0; i < volDiskExt->NumberOfDiskExtents; ++i) {
@@ -1503,6 +1522,8 @@ FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc> &volumeList,
 					}
 					::CloseHandle(hFile);
 					SAFE_FREE(volDiskExt);
+				} else {
+					return FSOpResult::Fail;
 				}
 				volumeList.push_back(elem);
 			}
@@ -1520,15 +1541,213 @@ FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc> &volumeList,
 }
 
 FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc> &partList, const bool clearList) {
+	size_t Index = 0, bufSz = (MAX_PATH + 1) * sizeof(wchar_t);
+	if (clearList) {
+		partList.clear();
+	}
+	MALLOC_NULLIFY(VolumeName, wchar_t, bufSz);
+	if (!VolumeName) {
+		return FSOpResult::Fail;
+	}
+	MALLOC_NULLIFY(DeviceName, wchar_t, bufSz);
+	if (!DeviceName) {
+		SAFE_FREE(VolumeName);
+		return FSOpResult::Fail;
+	}
+	MALLOC_NULLIFY(partLetters, wchar_t, bufSz);
+	if (!partLetters) {
+		SAFE_FREE(VolumeName);
+		SAFE_FREE(DeviceName);
+		return FSOpResult::Fail;
+	}
+	::HANDLE FindHandle = ::FindFirstVolume(VolumeName, bufSz);
+	if (INVALID_HANDLE_VALUE != FindHandle) {
+		for (;;) {
+			PartitionDesc partdesc;
+			Index = wcslen_c(VolumeName) - 1;
+			if (VolumeName[0] != L'\\' || VolumeName[1] != L'\\' ||
+				VolumeName[2] != L'?' || VolumeName[3] != L'\\' ||
+				VolumeName[Index] != L'\\') {
+				SAFE_FREE(VolumeName);
+				SAFE_FREE(DeviceName);
+				SAFE_FREE(partLetters);
+				return FSOpResult::Fail;
+			}
+			VolumeName[Index] = L'\0';
+			if (!::QueryDosDevice(&VolumeName[4], DeviceName, bufSz)) {
+				SAFE_FREE(VolumeName);
+				SAFE_FREE(DeviceName);
+				SAFE_FREE(partLetters);
+				return FSOpResult::Fail;
+			}
+			VolumeName[Index] = L'\\';
+			partdesc.partitionPath = DeviceName;
+			partdesc.volumePath = VolumeName;
+			if (FSOpResult::Success != GetDriveSpace(partdesc.volumePath, partdesc.spaceFree, partdesc.spaceTotal)) {
+				SAFE_FREE(VolumeName);
+				SAFE_FREE(DeviceName);
+				SAFE_FREE(partLetters);
+				return FSOpResult::Fail;
+			}
+			unsigned long charCount = MAX_PATH + 1;
+			for (;;) {
+				if (::GetVolumePathNamesForVolumeName(VolumeName, partLetters, charCount, &charCount)) {
+					if (charCount) {
+						std::wstring repl = replaceChars(partLetters, L"\0", L"\n", charCount, 1, 1);
+						partdesc.volumes = splitStr(repl, L"\n");
+					}
+					memset(partLetters, 0, bufSz);
+					break;
+				} else {
+					if (ERROR_MORE_DATA != getLastErrorCode()) {
+						SAFE_FREE(VolumeName);
+						SAFE_FREE(DeviceName);
+						SAFE_FREE(partLetters);
+						return FSOpResult::Fail;
+					}
+				}
+			}
+			std::wstring partpath = replaceAll(partdesc.volumePath, fs_pathnolim, L"\\\\.\\");
+			if (endsWith(partpath, L"\\")) {
+				partpath = removeFromEnd_copy(partpath, L"\\");
+			}
+			::HANDLE hFile = ::CreateFile(partpath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+				0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+			if (INVALID_HANDLE_VALUE != hFile) {
+				unsigned long bytes = 0, bytesReturned = 0;
+				VOLUME_DISK_EXTENTS* volDiskExt = (VOLUME_DISK_EXTENTS*)malloc(sizeof(VOLUME_DISK_EXTENTS));
+				if (!volDiskExt) {
+					SAFE_FREE(VolumeName);
+					SAFE_FREE(DeviceName);
+					SAFE_FREE(partLetters);
+					return FSOpResult::Fail;
+				}
+				bool ret = ::DeviceIoControl(hFile, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, 0, 0, volDiskExt,
+					sizeof(VOLUME_DISK_EXTENTS), &bytes, 0);
+				if (!ret) {
+					if (ERROR_MORE_DATA == getLastErrorCode()) {
+						unsigned long numDisks = volDiskExt->NumberOfDiskExtents;
+						SAFE_FREE(volDiskExt);
+						volDiskExt = (VOLUME_DISK_EXTENTS*)malloc((numDisks * sizeof(DISK_EXTENT)) +
+							sizeof(VOLUME_DISK_EXTENTS));
+						if (!volDiskExt) {
+							SAFE_FREE(VolumeName);
+							SAFE_FREE(DeviceName);
+							SAFE_FREE(partLetters);
+							return FSOpResult::Fail;
+						}
+						ret = ::DeviceIoControl(hFile, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, 0, 0, volDiskExt,
+							(numDisks * sizeof(DISK_EXTENT)) + sizeof(VOLUME_DISK_EXTENTS), &bytes, 0);
+						if (!ret) {
+							SAFE_FREE(volDiskExt);
+							SAFE_FREE(VolumeName);
+							SAFE_FREE(DeviceName);
+							SAFE_FREE(partLetters);
+							return FSOpResult::Fail;
+						}
+						for (unsigned long i = 0; i < volDiskExt->NumberOfDiskExtents; ++i) {
+#ifdef FSH_FULLPHYSDRIVESTRING
+							partdesc.drives.push_back(L"\\\\.\\PhysicalDrive" + std::to_wstring(volDiskExt->Extents[i].DiskNumber));
+#else
+							partdesc.drives.push_back(L"PhysicalDrive" + std::to_wstring(volDiskExt));
+#endif
+						}
+					}
+				} else {
+					for (unsigned long i = 0; i < volDiskExt->NumberOfDiskExtents; ++i) {
+#ifdef FSH_FULLPHYSDRIVESTRING
+						partdesc.drives.push_back(L"\\\\.\\PhysicalDrive" + std::to_wstring(volDiskExt->Extents[i].DiskNumber));
+#else
+						partdesc.drives.push_back(L"PhysicalDrive" + std::to_wstring(volDiskExt));
+#endif
+					}
+				}
+				::CloseHandle(hFile);
+				SAFE_FREE(volDiskExt);
+			} else {
+				SAFE_FREE(VolumeName);
+				SAFE_FREE(DeviceName);
+				SAFE_FREE(partLetters);
+				return FSOpResult::Fail;
+			}
+			partList.push_back(partdesc);
+			if (!::FindNextVolume(FindHandle, VolumeName, bufSz)) {
+				if (ERROR_NO_MORE_FILES != getLastErrorCode()) {
+					SAFE_FREE(VolumeName);
+					SAFE_FREE(DeviceName);
+					SAFE_FREE(partLetters);
+					return FSOpResult::Fail;
+				}
+				break;
+			}
+		}
+		::FindVolumeClose(FindHandle);
+	} else {
+		SAFE_FREE(VolumeName);
+		SAFE_FREE(DeviceName);
+		SAFE_FREE(partLetters);
+		return FSOpResult::Fail;
+	}
+	SAFE_FREE(VolumeName);
+	SAFE_FREE(DeviceName);
+	SAFE_FREE(partLetters);
 	return FSOpResult::Success;
 }
 
 FSOpResult FSHandler::EnumDrives(std::vector<DriveDesc> &driveList, const bool clearList) {
-	HW_GetHardDrives();
+	// HW_GetHardDrives();
+	if (clearList) {
+		driveList.clear();
+	}
 	std::vector<std::wstring> physDrives = HW_GetHardDrives();
-	if (physDrives.size() > 1 && physDrives.size() % HW_LINESDRIVE == 0) {
-		for (size_t i = 0; i < physDrives.size() - 1; i += 2) {
-			driveList.emplace_back(0, 0, physDrives[i], physDrives[i + 1]);
+	if (physDrives.size() && 0 == physDrives.size() % HW_LINESDRIVE) {
+		unsigned long long spacetotal = 0;
+		size_t i = 0;
+		for (i = 0; i < physDrives.size() - 1; i += 2) {
+			spacetotal = 0;
+			if (FSOpResult::Success != GetDriveSpace_DriveGeometry(physDrives[i + 1], spacetotal)) {
+				return FSOpResult::Fail;
+			}
+			driveList.emplace_back(0, spacetotal, physDrives[i], physDrives[i + 1]);
+		}
+		std::wstring dptrh;
+		for (i = 0; i < driveList.size(); ++i) {
+#ifdef FSH_FULLPHYSDRIVESTRING
+			dptrh = driveList[i].drivePath;
+#else
+			dptrh = L"\\\\.\\" + driveList[i].drivePath;
+#endif
+			if (endsWith(dptrh, L"\\")) {
+				dptrh = removeFromEnd_copy(dptrh, L"\\");
+			}
+			::HANDLE hFile = ::CreateFile(dptrh.c_str(), GENERIC_READ,
+				FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+			if (INVALID_HANDLE_VALUE != hFile) {
+				unsigned long outBudSz = 8192, bytesReturned = 0;
+				// DRIVE_LAYOUT_INFORMATION_EX* outBuf = (DRIVE_LAYOUT_INFORMATION_EX*)malloc(outBudSz);
+				void* outBuf = malloc(outBudSz);
+				if (::DeviceIoControl(hFile, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, 0, 0, outBuf, outBudSz, &bytesReturned,
+					0)) {
+					Sleep(1);
+				} else {
+					return FSOpResult::Fail;
+				}
+				if (outBuf) {
+					// void* outBufUntyoed = (void*)outBuf;
+					DRIVE_LAYOUT_INFORMATION_EX* bufTyped = (DRIVE_LAYOUT_INFORMATION_EX*)outBuf;
+					// unsigned long offset = offsetof(DRIVE_LAYOUT_INFORMATION_EX, PartitionEntry[0]);
+					unsigned long offset = 2 * sizeof(unsigned long);
+					for (size_t j = 0; j < bufTyped->PartitionCount; ++j) {
+						PARTITION_INFORMATION_EX* partdata =
+							(PARTITION_INFORMATION_EX*)&bufTyped->PartitionEntry[0] + offset;
+						offset += sizeof(PARTITION_INFORMATION_EX);
+					}
+				}
+				SAFE_FREE(outBuf);
+				::CloseHandle(hFile);
+			} else {
+				return FSOpResult::Fail;
+			}
 		}
 		return FSOpResult::Success;
 	} else {
@@ -1572,10 +1791,10 @@ FSOpResult FSHandler::GetBinaryFileInfo(const std::wstring binaryPath, BinData &
 }
 
 std::wstring FSHandler::GetFileControlSum(const std::wstring filePath, const HashType sumType) {
-	if (INVALID_FILE_ATTRIBUTES == GetFileAttributes(filePath.c_str())) {
-		return L"";
-	} else {
+	if (INVALID_FILE_ATTRIBUTES != GetFileAttributes(filePath.c_str())) {
 		return calcHash(filePath, sumType);
+	} else {
+		return L"";
 	}
 }
 
@@ -1851,7 +2070,7 @@ FSOpResult FSHandler::MoveFolder(const std::wstring folderPath, const std::wstri
 		if (endsWith(partLetter, L"\\")) {
 			partLetter = removeFromEnd_copy(partLetter, L"\\");
 		}
-		if (!GetDriveSpace(partLetter, freeSpace, totalSpace)) {
+		if (FSOpResult::Success != GetDriveSpace(partLetter, freeSpace, totalSpace)) {
 			return FSOpResult::Fail;
 		}
 		unsigned long long foldersz = 0;
@@ -1895,7 +2114,7 @@ FSOpResult FSHandler::CopyFolder(const std::wstring folderPath, const std::wstri
 		if (endsWith(partLetter, L"\\")) {
 			partLetter = removeFromEnd_copy(partLetter, L"\\");
 		}
-		if (!GetDriveSpace(partLetter, freeSpace, totalSpace)) {
+		if (FSOpResult::Success != GetDriveSpace(partLetter, freeSpace, totalSpace)) {
 			return FSOpResult::Fail;
 		}
 		unsigned long long foldersz = 0;
@@ -1999,7 +2218,7 @@ FSOpResult FSHandler::FileCopy(const std::wstring filePath, const std::wstring f
 		if (endsWith(partLetter, L"\\")) {
 			partLetter = removeFromEnd_copy(partLetter, L"\\");
 		}
-		if (!GetDriveSpace(partLetter, freeSpace, totalSpace)) {
+		if (FSOpResult::Success != GetDriveSpace(partLetter, freeSpace, totalSpace)) {
 			return FSOpResult::Fail;
 		}
 		unsigned long long filesz = 0;
@@ -3222,23 +3441,26 @@ FSOpResult FSHandler::GetFolderSizeOnDriveRec(unsigned long long &folderSize, co
 	return FSOpResult::Success;
 }
 
-bool FSHandler::GetDriveSpace(const std::wstring partLetter,
+FSOpResult FSHandler::GetDriveSpace(const std::wstring partLetter,
 	unsigned long long &freeSpace, unsigned long long &totalSpace) {
-	std::wstring partLetterMod = fs_pathnolim + partLetter;
+	std::wstring partLetterMod = partLetter;
+	if (!startsWith(partLetterMod, fs_pathnolim)) {
+		partLetterMod = fs_pathnolim + partLetter;
+	}
 	if (!endsWith(partLetterMod, L"\\")) {
 		partLetterMod = partLetterMod + L"\\";
 	}
 	ULARGE_INTEGER fSpace = { 0 }, tSpace = { 0 }, fSpacePU = { 0 };
 	if (::GetDiskFreeSpaceEx(partLetterMod.c_str(), &fSpacePU, &tSpace, &fSpace)) {
-		freeSpace = fSpacePU.QuadPart;
+		freeSpace = fSpace.QuadPart;
 		totalSpace = tSpace.QuadPart;
-		return true;
+		return FSOpResult::Success;
 	} else {
-		return false;
+		return FSOpResult::Fail;
 	}
 }
 
-bool FSHandler::GetDriveSpace_DriveGeometry(const std::wstring partLetter, unsigned long long &totalSpace) const {
+FSOpResult FSHandler::GetDriveSpace_DriveGeometry(const std::wstring partLetter, unsigned long long &totalSpace) const {
 	std::wstring path = lower_copy(partLetter);
 	if (endsWith(partLetter, L"\\")) {
 		removeFromEnd(path, L"\\");
@@ -3267,10 +3489,12 @@ bool FSHandler::GetDriveSpace_DriveGeometry(const std::wstring partLetter, unsig
 		if (result) {
 			totalSpace = pdg.Cylinders.QuadPart * (unsigned long)pdg.TracksPerCylinder *
 				(unsigned long)pdg.SectorsPerTrack * (unsigned long)pdg.BytesPerSector;
+			return FSOpResult::Success;
+		} else {
+			return FSOpResult::Fail;
 		}
-		return result;
 	}
-	return false;
+	return FSOpResult::Fail;
 }
 
 std::wstring FSHandler::calcHash(const std::wstring filePath,
