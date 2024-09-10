@@ -82,4 +82,4 @@ class HTTPHelper {
 		std::wstring uriFromLink(const std::wstring link, const bool caseInsensitive = true) const;
 };
 
-#endif
+#endif // _HTTP_HELPER_H

@@ -216,4 +216,4 @@ class PGSQLDBHandler {
 		std::map<unsigned long, std::wstring> m_RunningQueries;
 };
 
-#endif
+#endif // _DBHELPER_H

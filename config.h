@@ -185,4 +185,4 @@ typedef long NTSTATUS;
 
 #define WH_MAXRESCNTCHANGE      1000
 
-#endif
+#endif // _CONFIG_H

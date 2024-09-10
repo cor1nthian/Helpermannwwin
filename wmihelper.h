@@ -1,5 +1,5 @@
-#ifndef _WMIHandler_H
-#define _WMIHandler_H
+#ifndef _WMIHELPER_H
+#define _WMIHELPER_H
 
 #define _WIN32_DCOM
 #include <comdef.h>
@@ -40,4 +40,4 @@ class WMIHandler {
 		::IWbemServices *m_pSvc;
 };
 
-#endif
+#endif // _WMIHELPER_H

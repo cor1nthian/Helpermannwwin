@@ -44,4 +44,4 @@ unsigned long getLastErrorCode();
 std::wstring getErrorDetails(const unsigned long errcode, const std::wstring funcName = L"",
 	const std::wstring additionalInfo = L"");
 
-#endif
+#endif // _WINERR_HELP_H
