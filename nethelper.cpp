@@ -48,7 +48,7 @@ DNSQueryContext::DNSQueryContext(const DNSQueryContext &other) {
     }
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 DNSQueryContext::DNSQueryContext(DNSQueryContext &&other) noexcept {
     if (this != &other) {
         RefCount = std::exchange(other.RefCount, 0);
@@ -81,7 +81,7 @@ DNSQueryContext& DNSQueryContext::operator=(const DNSQueryContext &other) {
     return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 DNSQueryContext& DNSQueryContext::operator=(DNSQueryContext &&other) noexcept {
     if (this != &other) {
         RefCount = std::exchange(other.RefCount, 0);
@@ -151,7 +151,7 @@ HostNodeAddr::HostNodeAddr(const HostNodeAddr &other) {
     }
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 HostNodeAddr::HostNodeAddr(HostNodeAddr &&other) noexcept {
     if (this != &other) {
         SockType = std::exchange(other.SockType, SocketType::Stream);
@@ -177,7 +177,7 @@ HostNodeAddr& HostNodeAddr::operator=(const HostNodeAddr &other) {
     return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 HostNodeAddr& HostNodeAddr::operator=(HostNodeAddr &&other) noexcept {
     if (this != &other) {
         SockType = std::exchange(other.SockType, SocketType::Stream);
@@ -226,7 +226,7 @@ HostNode::HostNode(const HostNode &other) {
     }
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 HostNode::HostNode(HostNode &&other) noexcept {
     if (this != &other) {
         Address = std::move(other.Address);
@@ -243,7 +243,7 @@ HostNode& HostNode::operator=(const HostNode &other) {
     return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 HostNode& HostNode::operator=(HostNode &&other) noexcept {
     if (this != &other) {
         Address = std::move(other.Address);
@@ -288,7 +288,7 @@ PingResult::PingResult(const PingResult &other) {
     }
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 PingResult::PingResult(PingResult &&other) noexcept {
     if (this != &other) {
         Result = std::exchange(other.Result, 0);
@@ -309,7 +309,7 @@ PingResult& PingResult::operator=(const PingResult &other) {
     return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 PingResult& PingResult::operator=(PingResult &&other) noexcept {
     if (this != &other) {
         Result = std::exchange(other.Result, 0);
@@ -366,7 +366,7 @@ TracertResult::TracertResult(const TracertResult &other) {
     }
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 TracertResult::TracertResult(TracertResult &&other) noexcept {
     if (this != &other) {
         TTL = std::exchange(other.TTL, 0);
@@ -391,7 +391,7 @@ TracertResult& TracertResult::operator=(const TracertResult &other) {
     return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 TracertResult& TracertResult::TracertResult::operator=(TracertResult &&other) noexcept {
     if (this != &other) {
         TTL = std::exchange(other.TTL, 0);
@@ -461,7 +461,7 @@ ICMPHeader::ICMPHeader(const ICMPHeader &other) {
     }
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 ICMPHeader::ICMPHeader(ICMPHeader &&other) noexcept {
     if (this != &other) {
         type = std::exchange(other.type, 0);
@@ -488,7 +488,7 @@ ICMPHeader& ICMPHeader::operator=(const ICMPHeader &other) {
     return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 ICMPHeader& ICMPHeader::operator=(ICMPHeader &&other) noexcept {
     if (this != &other) {
         type = std::exchange(other.type, 0);
@@ -574,7 +574,7 @@ IPHeader::IPHeader(const IPHeader &other) {
     }
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 IPHeader::IPHeader(IPHeader &&other) noexcept {
     if (this != &other) {
         headerlen = std::exchange(other.headerlen, 0);
@@ -611,7 +611,7 @@ IPHeader& IPHeader::operator=(const IPHeader &other) {
     return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 IPHeader& IPHeader::operator=(IPHeader &&other) noexcept {
     if (this != &other) {
         headerlen = std::exchange(other.headerlen, 0);

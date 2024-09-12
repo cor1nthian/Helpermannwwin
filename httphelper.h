@@ -42,29 +42,29 @@
 class HTTPHelper {
 	public:
 		HTTPHelper();
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		HTTPHelper(const HTTPHelper &other) = delete;
 #else
 		HTTPHelper(const HTTPHelper &other) {}
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		HTTPHelper(HTTPHelper &&other) noexcept = delete;
 #endif
 		~HTTPHelper();
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		HTTPHelper& operator=(const HTTPHelper &other) = delete;
 #else
 		HTTPHelper& operator=(const HTTPHelper &other) {}
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		HTTPHelper& operator=(const HTTPHelper &&other) = delete;
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		bool operator==(const HTTPHelper &other) const = delete;
 #else
 		bool operator==(const HTTPHelper &other) {}
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		bool operator!=(const HTTPHelper &other) const = delete;
 #else
 		bool operator!=(const HTTPHelper &other) {}

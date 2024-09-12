@@ -259,7 +259,7 @@ struct UnicodeString {
 	UnicodeString(const unsigned short length, const unsigned short maxlength);
 	UnicodeString(const unsigned short length, const unsigned short maxlength, const wchar_t* buffer);
 	UnicodeString(const UnicodeString &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	UnicodeString(UnicodeString &&other) noexcept;
 #endif
 	~UnicodeString();
@@ -277,12 +277,12 @@ struct ANSIString {
 	ANSIString(const unsigned short length, const unsigned short maxlength);
 	ANSIString(const unsigned short length, const unsigned short maxlength, const char* buffer);
 	ANSIString(const ANSIString &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	ANSIString(ANSIString &&other) noexcept;
 #endif
 	~ANSIString();
 	ANSIString& operator=(const ANSIString &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	ANSIString& operator=(ANSIString &&other) noexcept;
 #endif
 	bool operator==(const ANSIString &other) const;
@@ -295,12 +295,12 @@ struct ANSIString {
 struct ObjectAttributes {
 	ObjectAttributes();
 	ObjectAttributes(const ObjectAttributes &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	ObjectAttributes(ObjectAttributes &&other) noexcept;
 #endif
 	~ObjectAttributes();
 	ObjectAttributes& operator=(const ObjectAttributes &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	ObjectAttributes& operator=(ObjectAttributes &&other) noexcept;
 #endif
 	bool operator==(const ObjectAttributes &other) const;
@@ -317,12 +317,12 @@ struct IOStatusBlock {
 	IOStatusBlock();
 	IOStatusBlock(const NTSTATUS statuus, const unsigned long long info);
 	IOStatusBlock(const IOStatusBlock &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	IOStatusBlock(IOStatusBlock &&other) noexcept;
 #endif
 	~IOStatusBlock();
 	IOStatusBlock& operator=(const IOStatusBlock &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	IOStatusBlock& operator=(IOStatusBlock &&other);
 #endif
 	bool operator==(const IOStatusBlock &other) const;
@@ -337,12 +337,12 @@ struct IOStatusBlock {
 struct FileDirBothInformation {
 	FileDirBothInformation();
 	FileDirBothInformation(const FileDirBothInformation &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	FileDirBothInformation(FileDirBothInformation &&other) noexcept;
 #endif
 	~FileDirBothInformation();
 	FileDirBothInformation& operator=(const FileDirBothInformation &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	FileDirBothInformation& operator=(FileDirBothInformation &&other) noexcept;
 #endif
 	bool operator==(const FileDirBothInformation &other) const;
@@ -367,12 +367,12 @@ struct BinData {
 	BinData();
 	BinData(const BinBitDepth bitDepth, const BinPlatform binPlatform);
 	BinData(const BinData &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	BinData(BinData &&other) noexcept;
 #endif
 	~BinData();
 	BinData& operator=(const BinData &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	BinData& operator=(BinData &&other) noexcept;
 #endif
 	bool operator==(const BinData &other) const;
@@ -388,13 +388,13 @@ struct FileRecord {
 	// File description struct copy constructor
 	FileRecord(const FileRecord &other);
 	// File description struct move constructor
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	FileRecord(FileRecord &&other) noexcept;
 #endif
 	// File description struct destructor
 	~FileRecord();
 	FileRecord& operator=(const FileRecord &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	FileRecord& operator=(FileRecord &&other) noexcept;
 #endif
 	bool operator==(const FileRecord &other) const;
@@ -416,7 +416,7 @@ struct FolderRecord {
 	// Folder description struct copy constructor
 	FolderRecord(const FolderRecord &other);
 	// Folder description struct move constructor
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	FolderRecord(FolderRecord &&other) noexcept;
 #endif
 	// Folder description struct destructor
@@ -441,12 +441,12 @@ struct DriveDesc {
 	DriveDesc(const unsigned long long freespace, const unsigned long long totalspace, const std::wstring drivephyspath,
 		const std::wstring drivepath);
 	DriveDesc(const DriveDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	DriveDesc(DriveDesc &&other) noexcept;
 #endif
 	~DriveDesc();
 	DriveDesc& operator=(const DriveDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	DriveDesc& operator=(DriveDesc &&other) noexcept;
 #endif
 	bool operator==(const DriveDesc &other) const;
@@ -462,12 +462,12 @@ struct DriveDesc {
 struct PartitionDesc {
 	PartitionDesc();
 	PartitionDesc(const PartitionDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	PartitionDesc(PartitionDesc &&other) noexcept;
 #endif
 	~PartitionDesc();
 	PartitionDesc& operator=(const PartitionDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	PartitionDesc& operator=(PartitionDesc &&other) noexcept;
 #endif
 	bool operator==(const PartitionDesc &other) const;
@@ -488,13 +488,13 @@ struct VolumeDesc {
 	// Volume description struct copy constructor
 	VolumeDesc(const VolumeDesc &other);
 	// Volume description struct move constructor
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	VolumeDesc(VolumeDesc &&other) noexcept;
 #endif
 	// Volume description struct destructor
 	~VolumeDesc();
 	VolumeDesc& operator=(const VolumeDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	VolumeDesc& operator=(VolumeDesc &&other) noexcept;
 #endif
 	bool operator==(const VolumeDesc &other) const;
@@ -581,33 +581,33 @@ class FSHandler {
 		// File system handler constructor
 		FSHandler();
 		// File system handler copy constructor disabled
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		FSHandler(const FSHandler &other) = delete;
 #else
 		FSHandler(const FSHandler &other) {}
 #endif
 		// File system handler move constructor disabled
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		FSHandler(FSHandler &&other) noexcept = delete;
 #endif
 		// File system handler operator = (copy) disabled
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		FSHandler& operator=(const FSHandler &other) = delete;
 #else
 		FSHandler& operator=(const FSHandler &other) {}
 #endif
 		// File system handler operator = (move) disabled
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		FSHandler& operator=(FSHandler &&other) noexcept = delete;
 #endif
 		// File system handler equality comparison disabled
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		bool operator==(const FSHandler &other) const = delete;
 #else
 		bool operator==(const FSHandler &other) {}
 #endif
 		// File system handler inequality comparison disabled
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		bool operator!=(const FSHandler &other) const = delete;
 #else
 		bool operator!=(const FSHandler &other) {}

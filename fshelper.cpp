@@ -56,7 +56,7 @@ UnicodeString::UnicodeString(const UnicodeString &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 UnicodeString::UnicodeString(UnicodeString &&other) noexcept {
 	if (this != &other) {
 		Length = std::exchange(other.Length, 0);
@@ -91,7 +91,7 @@ UnicodeString& UnicodeString::operator=(const UnicodeString &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 UnicodeString& UnicodeString::operator=(UnicodeString &&other) noexcept {
 	if (this != &other) {
 		Length = std::exchange(other.Length, 0);
@@ -167,7 +167,7 @@ ANSIString::ANSIString(const ANSIString &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 ANSIString::ANSIString(ANSIString &&other) noexcept {
 	if (this != &other) {
 		Length = std::exchange(other.Length, 0);
@@ -202,7 +202,7 @@ ANSIString& ANSIString::operator=(const ANSIString &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 ANSIString& ANSIString::operator=(ANSIString&& other) noexcept {
 	if (this != &other) {
 		Length = std::exchange(other.Length, 0);
@@ -278,7 +278,7 @@ ObjectAttributes::ObjectAttributes(const ObjectAttributes &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 ObjectAttributes::ObjectAttributes(ObjectAttributes &&other) noexcept {
 	if (this != &other) {
 		uLength = std::exchange(other.uLength, 0);
@@ -337,7 +337,7 @@ ObjectAttributes& ObjectAttributes::operator=(const ObjectAttributes &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 ObjectAttributes& ObjectAttributes::operator=(ObjectAttributes &&other) noexcept {
 	if (this != &other) {
 		uLength = std::exchange(other.uLength, 0);
@@ -401,7 +401,7 @@ IOStatusBlock::IOStatusBlock(const IOStatusBlock &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 IOStatusBlock::IOStatusBlock(IOStatusBlock &&other) noexcept {
 	if (this != &other) {
 		Status = std::exchange(other.Status, 0);
@@ -423,7 +423,7 @@ IOStatusBlock& IOStatusBlock::operator=(const IOStatusBlock &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 IOStatusBlock& IOStatusBlock::operator=(IOStatusBlock &&other) {
 	if (this != &other) {
 		Status = std::exchange(other.Status, 0);
@@ -495,7 +495,7 @@ FileDirBothInformation::FileDirBothInformation(const FileDirBothInformation &oth
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 FileDirBothInformation::FileDirBothInformation(FileDirBothInformation &&other) noexcept {
 	if (this != &other) {
 		NextEntryOffset = std::exchange(other.NextEntryOffset, 0);
@@ -552,7 +552,7 @@ FileDirBothInformation& FileDirBothInformation::operator=(const FileDirBothInfor
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 FileDirBothInformation& FileDirBothInformation::operator=(FileDirBothInformation &&other) noexcept {
 	if (this != &other) {
 		NextEntryOffset = std::exchange(other.NextEntryOffset, 0);
@@ -641,7 +641,7 @@ BinData::BinData(const BinData &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 BinData::BinData(BinData&& other) noexcept {
 	if (this != &other) {
 		Platform = std::exchange(other.Platform, BinPlatform::PlatformUnknown);
@@ -660,7 +660,7 @@ BinData& BinData::operator=(const BinData &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 BinData& BinData::operator=(BinData &&other) noexcept {
 	if (this != &other) {
 		Platform = std::exchange(other.Platform, BinPlatform::PlatformUnknown);
@@ -699,7 +699,7 @@ FileRecord::FileRecord(const FileRecord& other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 FileRecord::FileRecord(FileRecord &&other) noexcept {
 	if (this != &other) {
 		fileName = std::move(other.fileName);
@@ -722,7 +722,7 @@ FileRecord& FileRecord::operator=(const FileRecord& other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 FileRecord& FileRecord::operator=(FileRecord &&other) noexcept {
 	if (this != &other) {
 		fileName = std::move(other.fileName);
@@ -773,7 +773,7 @@ FolderRecord::FolderRecord(const FolderRecord &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 FolderRecord::FolderRecord(FolderRecord &&other) noexcept {
 	if (this != &other) {
 		folderName = std::move(other.folderName);
@@ -796,7 +796,7 @@ FolderRecord& FolderRecord::operator=(const FolderRecord& other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 FolderRecord& FolderRecord::operator=(const FolderRecord &&other) noexcept {
 	if (this != &other) {
 		folderName = std::move(other.folderName);
@@ -868,7 +868,7 @@ DriveDesc::DriveDesc(const DriveDesc &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 DriveDesc::DriveDesc(DriveDesc &&other) noexcept {
 	if (this != &other) {
 		spaceFree = std::exchange(other.spaceFree, 0);
@@ -891,7 +891,7 @@ DriveDesc& DriveDesc::operator=(const DriveDesc &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 DriveDesc& DriveDesc::operator=(DriveDesc &&other) noexcept {
 	if (this != &other) {
 		spaceFree = std::exchange(other.spaceFree, 0);
@@ -941,7 +941,7 @@ PartitionDesc::PartitionDesc(const PartitionDesc &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 PartitionDesc::PartitionDesc(PartitionDesc &&other) noexcept {
 	if (this != &other) {
 		spaceFree = std::exchange(other.spaceFree, 0);
@@ -968,7 +968,7 @@ PartitionDesc& PartitionDesc:: operator=(const PartitionDesc &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 PartitionDesc& PartitionDesc::operator=(PartitionDesc &&other) noexcept {
 	if (this != &other) {
 		spaceFree = std::exchange(other.spaceFree, 0);
@@ -1087,7 +1087,7 @@ VolumeDesc::VolumeDesc(const VolumeDesc &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 VolumeDesc::VolumeDesc(VolumeDesc &&other) noexcept {
 	if (this != &other) {
 		physDrives = other.physDrives;
@@ -1216,7 +1216,7 @@ VolumeDesc& VolumeDesc::operator=(const VolumeDesc &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 VolumeDesc& VolumeDesc::operator=(VolumeDesc &&other) noexcept {
 	if (this != &other) {
 		physDrives = other.physDrives;

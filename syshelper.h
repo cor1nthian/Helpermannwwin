@@ -123,12 +123,12 @@ struct WKSid {
 	WKSid();
 	WKSid(std::wstring strsid, std::wstring sidname, std::wstring sidnameorig);
 	WKSid(const WKSid &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	WKSid(WKSid &&other) noexcept;
 #endif
 	~WKSid();
 	WKSid& operator=(const WKSid &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	WKSid& operator=(WKSid &&other) noexcept;
 #endif
 	bool operator==(const WKSid &other) const;
@@ -142,12 +142,12 @@ struct WKSid {
 struct AccountDesc {
 	AccountDesc();
 	AccountDesc(const AccountDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	AccountDesc(AccountDesc &&other) noexcept;
 #endif
 	~AccountDesc();
 	AccountDesc& operator=(const AccountDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	AccountDesc& operator=(AccountDesc &&other) noexcept;
 #endif
 	bool operator==(const AccountDesc &other) const;
@@ -213,12 +213,12 @@ struct GroupDesc {
 	GroupDesc(const bool isADGroyp, const std::wstring groupName, const std::wstring groupStrSid,
 		const std::wstring comment, const std::vector<AccountDesc> accounts);
 	GroupDesc(const GroupDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	GroupDesc(GroupDesc &&other) noexcept;
 #endif
 	~GroupDesc();
 	GroupDesc& operator=(const GroupDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	GroupDesc& operator=(GroupDesc &&other) noexcept;
 #endif
 	bool operator==(const GroupDesc &other) const;
@@ -233,29 +233,29 @@ struct GroupDesc {
 class SysHandler {
 	public:
 		SysHandler();
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		SysHandler(const SysHandler &other) = delete;
 #else
 		SysHandler(const SysHandler &other) {}
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		SysHandler(SysHandler &&other) noexcept = delete;
 #endif
 		~SysHandler();
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		SysHandler& operator=(const SysHandler &other) = delete;
 #else
 		SysHandler& operator=(const SysHandler &other) {}
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		SysHandler& operator=(SysHandler &&other) = delete;
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		bool operator==(const SysHandler &other) const = delete;
 #else
 		bool operator==(const SysHandler &other) {}
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		bool operator!=(const SysHandler &other) const = delete;
 #else
 		bool operator!=(const SysHandler &other) {}

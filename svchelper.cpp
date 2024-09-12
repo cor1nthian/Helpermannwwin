@@ -13,7 +13,7 @@ SvcRunState::SvcRunState(const SvcRunState& other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 SvcRunState::SvcRunState(SvcRunState &&other) noexcept {
 	if (this != &other) {
 		svcRunning = std::exchange(other.svcRunning, false);
@@ -32,7 +32,7 @@ SvcRunState& SvcRunState::operator=(const SvcRunState &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 SvcRunState& SvcRunState::operator=(SvcRunState &&other) noexcept {
 	if (this != &other) {
 		svcRunning = std::exchange(other.svcRunning, false);
@@ -81,7 +81,7 @@ SvcTriggerData::SvcTriggerData(const SvcTriggerData &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 SvcTriggerData::SvcTriggerData(SvcTriggerData &&other) noexcept {
 	if (this != &other) {
 		triggerDataSize = std::exchange(other.triggerDataSize, 0);
@@ -102,7 +102,7 @@ SvcTriggerData& SvcTriggerData::operator=(const SvcTriggerData& other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 SvcTriggerData& SvcTriggerData::operator=(SvcTriggerData&& other) noexcept {
 	if (this != &other) {
 		triggerDataSize = std::exchange(other.triggerDataSize, 0);
@@ -162,7 +162,7 @@ SvcTrigger::SvcTrigger(const SvcTrigger &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 SvcTrigger::SvcTrigger(SvcTrigger &&other) noexcept {
 	if (this != &other) {
 		triggerType = std::exchange(other.triggerType, 0);
@@ -185,7 +185,7 @@ SvcTrigger& SvcTrigger::operator=(const SvcTrigger &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 SvcTrigger& SvcTrigger::operator=(SvcTrigger &&other) noexcept {
 	if (this != &other) {
 		if (this != &other) {
@@ -378,7 +378,7 @@ SvcRecord::SvcRecord(const SvcRecord &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 SvcRecord::SvcRecord(SvcRecord &&other) noexcept {
 	if (this != &other) {
 		serviceType = std::exchange(other.serviceType, 0);
@@ -449,7 +449,7 @@ SvcRecord& SvcRecord::operator=(const SvcRecord &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 SvcRecord& SvcRecord::SvcRecord::operator=(SvcRecord &&other) noexcept {
 	if (this != &other) {
 		serviceType = std::exchange(other.serviceType, 0);
@@ -575,7 +575,7 @@ SvcHandler::SvcHandler(const SvcHandler &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 SvcHandler::SvcHandler(SvcHandler &&other) noexcept {
 	if (this != &other) {
 		m_scmRights = std::exchange(other.m_scmRights, 0);
@@ -601,7 +601,7 @@ SvcHandler& SvcHandler::operator=(const SvcHandler &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 SvcHandler& SvcHandler::operator=(SvcHandler &&other) noexcept {
 	if (this != &other) {
 		m_scmRights = std::exchange(other.m_scmRights, 0);

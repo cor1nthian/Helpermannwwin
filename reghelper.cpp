@@ -18,7 +18,7 @@ RegKeyDesc::RegKeyDesc(const RegKeyDesc &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 RegKeyDesc::RegKeyDesc(RegKeyDesc &&other) noexcept {
 	if (this != &other) {
 		keyPath = other.keyPath;
@@ -51,7 +51,7 @@ RegKeyDesc& RegKeyDesc::operator=(const RegKeyDesc &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 RegKeyDesc& RegKeyDesc::operator=(RegKeyDesc &&other) noexcept {
 	if (this != &other) {
 		keyPath = other.keyPath;
@@ -132,7 +132,7 @@ RegValDesc::RegValDesc(const RegValDesc &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 RegValDesc::RegValDesc(RegValDesc &&other) noexcept {
 	if (this != &other) {
 		valType = std::exchange(other.valType, RegValType::None);
@@ -190,7 +190,7 @@ RegValDesc& RegValDesc::operator=(const RegValDesc &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 RegValDesc& RegValDesc::operator=(RegValDesc &&other) noexcept {
 	if (this != &other) {
 		valType = std::exchange(other.valType, RegValType::None);
@@ -313,7 +313,7 @@ RegHandler::RegHandler(const RegHandler &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 RegHandler::RegHandler(RegHandler &&other) noexcept {
 	if (this != &other) {
 		m_mountedHiveCount = std::exchange(other.m_mountedHiveCount, 0);
@@ -345,7 +345,7 @@ RegHandler& RegHandler::operator=(const RegHandler &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 RegHandler& RegHandler::operator=(RegHandler &&other) noexcept {
 	if (this != &other) {
 		m_mountedHiveCount = std::exchange(other.m_mountedHiveCount, 0);

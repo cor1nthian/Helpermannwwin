@@ -127,13 +127,13 @@ enum class RegOpResult : unsigned char {
 struct RegValDesc {
 	RegValDesc();
 	RegValDesc(const RegValDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	RegValDesc(RegValDesc &&other) noexcept;
 #endif
 	~RegValDesc();
 	void FreeData();
 	RegValDesc& operator=(const RegValDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	RegValDesc& operator=(RegValDesc &&other) noexcept;
 #endif
 	bool operator==(const RegValDesc &other) const;
@@ -149,13 +149,13 @@ struct RegValDesc {
 struct RegKeyDesc {
 	RegKeyDesc();
 	RegKeyDesc(const RegKeyDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	RegKeyDesc(RegKeyDesc &&other) noexcept;
 #endif
 	~RegKeyDesc();
 	void FreeValues();
 	RegKeyDesc& operator=(const RegKeyDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	RegKeyDesc& operator=(RegKeyDesc &&other) noexcept;
 #endif
 	bool operator==(const RegKeyDesc &other) const;
@@ -170,7 +170,7 @@ class RegHandler {
 	public:
 		RegHandler();
 		RegHandler(const RegHandler &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		RegHandler(RegHandler &&other) noexcept;
 #endif
 		~RegHandler();

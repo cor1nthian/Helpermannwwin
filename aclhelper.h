@@ -96,12 +96,12 @@ enum class ACLOpResult : unsigned char {
 struct SecDesc {
 	SecDesc();
 	SecDesc(const SecDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	SecDesc(SecDesc &&other) noexcept;
 #endif
 	~SecDesc();
 	SecDesc& operator=(const SecDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	SecDesc& operator=(SecDesc &&other) noexcept;
 #endif
 	bool operator==(const SecDesc &other) const;
@@ -127,29 +127,29 @@ struct SecDesc {
 class ACLHandler {
 	public:
 		ACLHandler();
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		ACLHandler(const ACLHandler &other) = delete;
 #else
 		ACLHandler(const ACLHandler &other) {}
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		ACLHandler(ACLHandler &&other) noexcept = delete;
 #endif
 		~ACLHandler();
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		ACLHandler& operator=(const ACLHandler &other) = delete;
 #else
 		ACLHandler& operator=(const ACLHandler &other) {}
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		ACLHandler& operator=(ACLHandler &&other) noexcept = delete;
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		bool operator==(const ACLHandler &other) const = delete;
 #else
 		bool operator==(const ACLHandler &other) {}
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		bool operator!=(const ACLHandler &other) const = delete;
 #else
 		bool operator!=(const ACLHandler &other) {}

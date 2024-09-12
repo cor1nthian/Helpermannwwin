@@ -105,7 +105,7 @@ SecDesc::SecDesc(const SecDesc &other) {
     }
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 SecDesc::SecDesc(SecDesc &&other) noexcept {
     if (this != &other) {
         daclInfoSz = std::exchange(other.daclInfoSz, 0);
@@ -243,7 +243,7 @@ SecDesc& SecDesc::operator=(const SecDesc &other) {
     return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 SecDesc& SecDesc::operator=(SecDesc &&other) noexcept {
     if (this != &other) {
         daclInfoSz = std::exchange(other.daclInfoSz, 0);

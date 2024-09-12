@@ -71,17 +71,17 @@ typedef long NTSTATUS;
     Project properties => C/C++ => Command Line => Additional flags */
 #if defined(_MSC_VER) && (defined(_WIN32) || defined(_WIN64))
     #if (__cplusplus == 202101L)
-        #define COMPILERVER 23
+        #define STDVER 23
     #elif (__cplusplus == 202002L) || (__cplusplus == 202004L)
-        #define COMPILERVER 20
+        #define STDVER 20
     #elif (__cplusplus == 201703L)
-        #define COMPILERVER 17
+        #define STDVER 17
     #elif (__cplusplus == 201402L)
-        #define COMPILERVER 14
+        #define STDVER 14
     #elif (__cplusplus == 201103L)
-        #define COMPILERVER 11
+        #define STDVER 11
     #elif (__cplusplus == 199711L)
-        #define COMPILERVER 98
+        #define STDVER 98
     #endif
 #endif
 
@@ -102,7 +102,6 @@ typedef long NTSTATUS;
 #endif
 
 // FSHelper Defines
-
 #define DE_SAMEFILE 			0x71
 #define DE_MANYSRC1DEST			0x72
 #define DE_DIFFDIR				0x73
@@ -155,13 +154,11 @@ typedef long NTSTATUS;
 }
 
 // NetHelper Defines
-
 #ifdef _DEBUG
 	#define DNSHELPER_SHOWERRORMSGBOX
 #endif
 
 // Hardware geter defines
-
 #define HW_LINESDRIVE           2
 #define HW_LINESCOMMON          4
 
@@ -182,7 +179,10 @@ typedef long NTSTATUS;
 #define MSSQLCONNTOOMANY		-1
 
 // WMI Helper defines
-
-#define WH_MAXRESCNTCHANGE      1000
+#undef  WH_ADDEMPTYVALS
+#undef  WH_SKIPARRAYS
+#define WH_TRIMDATA
+#define WH_MIMAWAITTIMEOUT      500
+#define WH_MAXAWAITTIMEOUT      3000
 
 #endif // _CONFIG_H

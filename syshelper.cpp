@@ -333,7 +333,7 @@ WKSid::WKSid(const WKSid& other) {
 	SIDNameOrig = other.SIDNameOrig;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 WKSid::WKSid(WKSid &&other) noexcept {
 	StrSID = std::move(other.StrSID);
 	SIDName = std::move(other.SIDName);
@@ -352,7 +352,7 @@ WKSid& WKSid::operator=(const WKSid &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 WKSid& WKSid::operator=(WKSid &&other) noexcept {
 	if (this != &other) {
 		StrSID = std::move(other.StrSID);
@@ -479,7 +479,7 @@ AccountDesc::AccountDesc(const AccountDesc &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 AccountDesc::AccountDesc(AccountDesc &&other) noexcept {
 	if (this != &other) {
 		ncNormalAcc = std::exchange(other.ncNormalAcc, false);
@@ -600,7 +600,7 @@ AccountDesc& AccountDesc::operator=(const AccountDesc &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 AccountDesc& AccountDesc::operator=(AccountDesc &&other) noexcept {
 	if (this != &other) {
 		ncNormalAcc = std::exchange(other.ncNormalAcc, false);
@@ -803,7 +803,7 @@ GroupDesc::GroupDesc(const GroupDesc &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 GroupDesc::GroupDesc(GroupDesc &&other) noexcept {
 	if (this != &other) {
 		IsADGroup = std::exchange(other.IsADGroup, false);
@@ -826,7 +826,7 @@ GroupDesc& GroupDesc::operator=(const GroupDesc &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 GroupDesc& GroupDesc::operator=(GroupDesc &&other) noexcept {
 	if (this != &other) {
 		IsADGroup = std::exchange(other.IsADGroup, false);

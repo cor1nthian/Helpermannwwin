@@ -24,7 +24,7 @@ ProcResource::ProcResource(const ProcResource &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 ProcResource::ProcResource(ProcResource &&other) noexcept {
 	if (this != &other) {
 		pid = std::exchange(other.pid, 0);
@@ -51,7 +51,7 @@ ProcResource& ProcResource::operator=(const ProcResource& other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 ProcResource& ProcResource::operator=(ProcResource &&other) noexcept {
 	if (this != &other) {
 		pid = std::exchange(other.pid, 0);
@@ -136,7 +136,7 @@ ProcDesc::ProcDesc(const ProcDesc &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 ProcDesc::ProcDesc(ProcDesc &&other) noexcept {
 	if (this != &other) {
 		size = std::exchange(other.size, 0);
@@ -171,7 +171,7 @@ ProcDesc& ProcDesc::operator=(const ProcDesc &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 ProcDesc& ProcDesc::operator=(ProcDesc &&other) noexcept {
 	if (this != &other) {
 		size = std::exchange(other.size, 0);

@@ -77,12 +77,12 @@ MSSQLOpResult getAvailableODBCDrivers(std::vector<std::wstring> &drivers, const 
 struct MSSQLBinding {
 	MSSQLBinding();
 	MSSQLBinding(const MSSQLBinding &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	MSSQLBinding(MSSQLBinding &&other) noexcept;
 #endif
 	~MSSQLBinding();
 	MSSQLBinding& operator=(const MSSQLBinding &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	MSSQLBinding& operator=(MSSQLBinding &&other) noexcept;
 #endif
 	bool operator==(const MSSQLBinding &other) const;
@@ -103,12 +103,12 @@ struct MSSQLOutBuf {
 	MSSQLOutBuf(const size_t outbufsz);
 	MSSQLOutBuf(const wchar_t* outbuf, const size_t outbufsz);
 	MSSQLOutBuf(const MSSQLOutBuf &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	MSSQLOutBuf(MSSQLOutBuf &&other) noexcept;
 #endif
 	~MSSQLOutBuf();
 	MSSQLOutBuf& operator=(const MSSQLOutBuf &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	MSSQLOutBuf& operator=(MSSQLOutBuf &&other) noexcept;
 #endif
 	bool operator==(const MSSQLOutBuf &other) const;
@@ -121,12 +121,12 @@ struct MSSQLQuery {
 	MSSQLQuery();
 	MSSQLQuery(const SQLHANDLE dbid, const SQLHSTMT queryid, const std::wstring querystr);
 	MSSQLQuery(const MSSQLQuery &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	MSSQLQuery(MSSQLQuery &&other) noexcept;
 #endif
 	~MSSQLQuery();
 	MSSQLQuery& operator=(const MSSQLQuery &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	MSSQLQuery& operator=(MSSQLQuery &&other) noexcept;
 #endif
 	bool operator==(const MSSQLQuery &other) const;
@@ -142,12 +142,12 @@ class MSSQLDBHandler {
 		MSSQLDBHandler(const SQLHANDLE henv, const std::map<SQLHANDLE, std::wstring> connectedDBs,
 			const std::map<SQLHANDLE, MSSQLOutBuf> outBuffers, std::vector<MSSQLQuery> runningQueries);
 		MSSQLDBHandler(const MSSQLDBHandler &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		MSSQLDBHandler(MSSQLDBHandler &&other) noexcept;
 #endif
 		~MSSQLDBHandler();
 		MSSQLDBHandler& operator=(const MSSQLDBHandler &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		MSSQLDBHandler& operator=(MSSQLDBHandler &&other) noexcept;
 #endif
 		bool operator==(const MSSQLDBHandler &other) const;

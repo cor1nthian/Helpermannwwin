@@ -465,12 +465,12 @@ struct DNSQueryContext {
 		const unsigned short int queryType, const unsigned long queryOptions, const DNS_QUERY_RESULT queryRes,
 		const DNS_QUERY_CANCEL queryCancel, const ::HANDLE queryCompletedEvent);
 	DNSQueryContext(const DNSQueryContext &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	DNSQueryContext(DNSQueryContext &&other) noexcept;
 #endif
 	~DNSQueryContext();
 	DNSQueryContext& operator=(const DNSQueryContext &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	DNSQueryContext& operator=(DNSQueryContext &&other) noexcept;
 #endif
 	bool operator==(const DNSQueryContext &other) const;
@@ -489,12 +489,12 @@ struct HostNodeAddr {
 	HostNodeAddr(const SocketType sockType, const NWProtocol protocol, const AddressType addrType,
 		const std::wstring address);
 	HostNodeAddr(const HostNodeAddr &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	HostNodeAddr(HostNodeAddr &&other) noexcept;
 #endif
 	~HostNodeAddr();
 	HostNodeAddr& operator=(const HostNodeAddr &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	HostNodeAddr& operator=(HostNodeAddr &&other) noexcept;
 #endif
 	bool operator==(const HostNodeAddr &other) const;
@@ -509,12 +509,12 @@ struct HostNode {
 	HostNode();
 	HostNode(const std::vector<HostNodeAddr> address);
 	HostNode(const HostNode &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	HostNode(HostNode&& other) noexcept;
 #endif
 	~HostNode();
 	HostNode& operator=(const HostNode &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	HostNode& operator=(HostNode &&other) noexcept;
 #endif
 	bool operator==(const HostNode &other) const;
@@ -526,7 +526,7 @@ struct PingResult {
 	PingResult();
 	PingResult(const bool result, const unsigned short int rtt, const unsigned short int ttl);
 	PingResult(const PingResult &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	PingResult(PingResult &&other) noexcept;
 #endif
 	~PingResult();
@@ -545,11 +545,11 @@ struct TracertResult {
 		const std::wstring addressv6, const unsigned short int ttl,
 		const unsigned short int rtt, const std::vector<PingResult> pings);
 	TracertResult(const TracertResult &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	TracertResult(TracertResult &&other) noexcept;
 #endif
 	TracertResult& operator=(const TracertResult &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	TracertResult& operator=(TracertResult &&other) noexcept;
 #endif
 	bool operator==(const TracertResult &other) const;
@@ -568,12 +568,12 @@ struct ICMPHeader {
 	ICMPHeader(const unsigned char Type, const unsigned char Code, const unsigned short int Checksum,
 		const unsigned long ID, const unsigned short int SeqNum, const unsigned long Timestamp);
 	ICMPHeader(const ICMPHeader &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	ICMPHeader(ICMPHeader &&other) noexcept;
 #endif
 	~ICMPHeader();
 	ICMPHeader& operator=(const ICMPHeader &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	ICMPHeader& operator=(ICMPHeader &&other) noexcept;
 #endif
 	bool operator==(const ICMPHeader &other) const;
@@ -594,12 +594,12 @@ struct IPHeader {
 		const unsigned char proto, const unsigned short int chksum, const unsigned int srcIP,
 		const unsigned int destinationIP);
 	IPHeader(const IPHeader &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	IPHeader(IPHeader &&other) noexcept;
 #endif
 	~IPHeader();
 	IPHeader& operator=(const IPHeader &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	IPHeader& operator=(IPHeader &&other) noexcept;
 #endif
 	bool operator==(const IPHeader &other) const;

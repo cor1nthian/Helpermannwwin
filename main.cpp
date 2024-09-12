@@ -74,9 +74,19 @@ int wmain(int argc, wchar_t* argv[]) {
 	ACLHandler aclh;
 	WMIHandler wmih;
 	MSSQLDBHandler mssqlh;
-	std::vector<std::wstring> reqfields{ L"DeviceID" };
+	unsigned long procid = proc.GetCurrentProcPid();
+	std::vector<std::wstring> reqfields{ L"Name", L"Index" };
+	// std::vector<std::wstring> reqfields{ L"Name", L"BootPartition" };
 	std::map<std::wstring, std::wstring> wmires;
+	// wmih.RunWMIQuery(wmires, reqfields, L"select * from win32_DiskDrive");
+	wmih.GetFieldsFromObject(reqfields, L"win32_DiskDrive");
+	// wmih.GetFieldsFromQuery(reqfields, L"select * from win32_DiskDrive");
+	// wmih.RunWMIQuery(wmires, reqfields, L"Associators of {Win32_DiskDrive.DeviceID='\\\\.\\PHYSICALDRIVE0'} where AssocClass=Win32_DiskDriveToDiskPartition");
 	wmih.RunWMIQuery(wmires, reqfields, L"select * from win32_DiskDrive");
+	std::wcout << wmires[L"DeviceID0"] << std::endl;
+	std::wcout << wmires[L"DeviceID1"] << std::endl;
+	std::wcout << wmires[L"DeviceID2"] << std::endl;
+	std::wcout << wmires[L"FirmwareRevision0"] << std::endl;
 	std::vector<std::wstring> cpud;
 	reg.GetCPUDesc(cpud);
 	SecDesc secdesc, secdesc2;
@@ -113,17 +123,16 @@ int wmain(int argc, wchar_t* argv[]) {
 	std::vector<DNS_RECORD> lres;
 	RegKeyDesc regkey;
 	RegValType rvt;
-	unsigned long procid = proc.GetCurrentProcPid();
 	std::vector<std::wstring> privs = proc.GetProcPrivileges(procid);
 	if (!valInList(privs, L"SeBackupPrivilege")) {
 		if (!proc.EnableBackupPrivilege(procid)) {
 			return 0;
 		}
 	}
-	proc.DisableBackupPrivilege(procid);
+	/*proc.DisableBackupPrivilege(procid);
 	privs = proc.GetProcPrivileges(procid);
 	reg.GetValueType(L"HKEY_LOCAL_MACHINE\\SYSTEM\\DriverDatabase\\DriverPackages\\netevbda.inf_amd64_1503f4d5a0d6ba56\\onfigurations\\cm57810_14c0_0083_amd64wlh\\Driver\\create_pdo_flag",
-		rvt);
+		rvt);*/
 	/*customDNSQueryEx(lres, reverseIPV4_copy(L"8.8.8.8") + L".in-addr.arpa", L"", true, DNSQueryOpts::BypassCache,
 		DNSRecordType::PtrRec);*/
 	// std::vector<SOFTWAREVERSION> softver;

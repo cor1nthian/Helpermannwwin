@@ -60,12 +60,12 @@ struct ProcResource {
 	ProcResource(const unsigned long PID, unsigned long ExitCode, STARTUPINFO SI,
 		PROCESS_INFORMATION PI);
 	ProcResource(const ProcResource &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	ProcResource(ProcResource &&other) noexcept;
 #endif
 	~ProcResource();
 	ProcResource& operator=(const ProcResource &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	ProcResource& operator=(ProcResource &&other) noexcept;
 #endif
 	bool operator==(const ProcResource &other) const;
@@ -89,12 +89,12 @@ struct ProcDesc {
 		const long threadpriority,
 		const std::wstring pathexe);
 	ProcDesc(const ProcDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	ProcDesc(ProcDesc &&other) noexcept;
 #endif
 	~ProcDesc();
 	ProcDesc& operator=(const ProcDesc &other);
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	ProcDesc& operator=(ProcDesc &&other) noexcept;
 #endif
 	bool operator==(const ProcDesc &other) const;
@@ -114,29 +114,29 @@ struct ProcDesc {
 class ProcessHandler {
 	public:
 		ProcessHandler();
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		ProcessHandler(const ProcessHandler &other) = delete;
 #else
 		ProcessHandler(const ProcessHandler &other) {}
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		ProcessHandler(ProcessHandler &&other) noexcept = delete;
 #endif
 		~ProcessHandler();
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		ProcessHandler& operator=(const ProcessHandler &other) = delete;
 #else
 		ProcessHandler& operator=(const ProcessHandler &other) {}
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		ProcessHandler& operator=(ProcessHandler &other) noexcept = delete;
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		bool operator==(const ProcessHandler &other) const = delete;
 #else
 		bool operator==(const ProcessHandler &other) {}
 #endif
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		bool operator!=(const ProcessHandler &other) const = delete;
 #else
 		bool operator!=(const ProcessHandler &other) {}

@@ -67,7 +67,7 @@ MSSQLBinding::MSSQLBinding(const MSSQLBinding& other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 MSSQLBinding::MSSQLBinding(MSSQLBinding &&other) noexcept {
 	if (this != &other) {
 		cDisplaySize = std::exchange(other.cDisplaySize, 0);
@@ -94,7 +94,7 @@ MSSQLBinding& MSSQLBinding::operator=(const MSSQLBinding &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 MSSQLBinding& MSSQLBinding::operator=(MSSQLBinding &&other) noexcept {
 	if (this != &other) {
 		cDisplaySize = std::exchange(other.cDisplaySize, 0);
@@ -166,7 +166,7 @@ MSSQLOutBuf::MSSQLOutBuf(const MSSQLOutBuf &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 MSSQLOutBuf::MSSQLOutBuf(MSSQLOutBuf &&other) noexcept {
 	if (this != &other) {
 		OutBufSz = std::exchange(other.OutBufSz, 0);
@@ -194,7 +194,7 @@ MSSQLOutBuf& MSSQLOutBuf::operator=(const MSSQLOutBuf &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 MSSQLOutBuf& MSSQLOutBuf::operator=(MSSQLOutBuf &&other) noexcept {
 	if (this != &other) {
 		OutBufSz = std::exchange(other.OutBufSz, 0);
@@ -242,7 +242,7 @@ MSSQLQuery::MSSQLQuery(const MSSQLQuery &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 MSSQLQuery::MSSQLQuery(MSSQLQuery &&other) noexcept {
 	if (this != &other) {
 		DBID = std::move(other.DBID);
@@ -265,7 +265,7 @@ MSSQLQuery& MSSQLQuery::operator=(const MSSQLQuery &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 MSSQLQuery& MSSQLQuery::operator=(MSSQLQuery &&other) noexcept {
 	if (this != &other) {
 		DBID = std::move(other.DBID);
@@ -319,7 +319,7 @@ MSSQLDBHandler::MSSQLDBHandler(const MSSQLDBHandler &other) {
 	}
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 MSSQLDBHandler::MSSQLDBHandler(MSSQLDBHandler &&other) noexcept {
 	if (this != &other) {
 		m_ConnectedDBs = std::move(other.m_ConnectedDBs);
@@ -361,7 +361,7 @@ MSSQLDBHandler& MSSQLDBHandler::operator=(const MSSQLDBHandler &other) {
 	return *this;
 }
 
-#if (COMPILERVER >= 11 && COMPILERVER != 98)
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 MSSQLDBHandler& MSSQLDBHandler::operator=(MSSQLDBHandler &&other) noexcept {
 	if (this != &other) {
 		m_ConnectedDBs = std::move(other.m_ConnectedDBs);
