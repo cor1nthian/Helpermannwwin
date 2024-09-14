@@ -99,6 +99,7 @@ typedef long NTSTATUS;
 	#pragma comment(lib, "netapi32.lib")
     #pragma comment(lib, "Advapi32.lib")
     #pragma comment(lib, "wbemuuid.lib")
+    #pragma comment(lib, "Propsys.lib")
 #endif
 
 // FSHelper Defines
@@ -184,5 +185,6 @@ typedef long NTSTATUS;
 #define WH_TRIMDATA
 #define WH_MIMAWAITTIMEOUT      500
 #define WH_MAXAWAITTIMEOUT      3000
+#define WH_ARRAYELBUF           1024
 
 #endif // _CONFIG_H

@@ -2146,7 +2146,7 @@ std::string firstNumberFromString(const std::string line) {
         size_t epos = line.find_first_of(digits, pos);
         return line.substr(pos, epos);
     }
-    return "";
+    return line;
 }
 
 std::wstring firstNumberFromString(const std::wstring line) {
@@ -2156,7 +2156,156 @@ std::wstring firstNumberFromString(const std::wstring line) {
         size_t epos = line.find_first_of(digits, pos);
         return line.substr(pos, epos);
     }
-    return L"";
+    return line;
+}
+
+std::string wmiObjectFromQuery(const std::string query) {
+    std::string querylow = lower_copy(query);
+    if (!startsWith(querylow, "gwmi")) {
+        if (partialMatch(querylow, "associators")) {
+            size_t opbpos = querylow.find("{");
+            if (std::string::npos != opbpos) {
+                size_t cpbpos = querylow.find("}");
+                if (std::string::npos != cpbpos) {
+                    size_t lng = cpbpos - opbpos - 1;
+                    if (query.length() > (cpbpos + lng)) {
+                        return query.substr(opbpos + 1, lng);
+                    } else {
+                        return query;
+                    }
+                } else {
+                    return query;
+                }
+            } else {
+                return query;
+            }
+        } else {
+            size_t frompos = querylow.find(" from ");
+            if (std::string::npos != frompos) {
+                std::vector<std::string> qspl = splitStr(query, " ", false);
+                for (size_t i = 0; i < qspl.size(); ++i) {
+                    if ("from" == lower_copy(qspl[i])) {
+                        if (qspl.size() - 1 > i) {
+                            return qspl[i + 1];
+                        } else {
+                            return query;
+                        }
+                    }
+                }
+            } else {
+                return query;
+            }
+        }
+    } else {
+        if (querylow.length() > 5) {
+            size_t qstrippos = querylow.find(" ", 6);
+            if (std::string::npos != qstrippos) {
+                size_t lng = (querylow.length() - 6) - qstrippos;
+                return query.substr(6, lng);
+            } else {
+                size_t lng = querylow.length() - 5;
+                return query.substr(5, lng);
+            }
+        } else {
+            return query;
+        }
+    }
+}
+
+std::wstring wmiObjectFromQuery(const std::wstring query) {
+    std::wstring querylow = lower_copy(query);
+    if (!startsWith(querylow, L"gwmi")) {
+        if (partialMatch(querylow, L"associators")) {
+            size_t opbpos = querylow.find(L"{");
+            if (std::string::npos != opbpos) {
+                size_t cpbpos = querylow.find(L"}");
+                if (std::string::npos != cpbpos) {
+                    size_t lng = cpbpos - opbpos - 1;
+                    if (query.length() > (cpbpos + lng)) {
+                        return query.substr(opbpos + 1, lng);
+                    } else {
+                        return query;
+                    }
+                } else {
+                    return query;
+                }
+            } else {
+                return query;
+            }
+        }
+        else {
+            size_t frompos = querylow.find(L" from ");
+            if (std::string::npos != frompos) {
+                std::vector<std::wstring> qspl = splitStr(query, L" ", false);
+                for (size_t i = 0; i < qspl.size(); ++i) {
+                    if (L"from" == lower_copy(qspl[i])) {
+                        if (qspl.size() - 1 > i) {
+                            return qspl[i + 1];
+                        } else {
+                            return query;
+                        }
+                    }
+                }
+            } else {
+                return query;
+            }
+        }
+    } else {
+        if (querylow.length() > 5) {
+            size_t qstrippos = querylow.find(L" ", 6);
+            if (std::string::npos != qstrippos) {
+                size_t lng = (querylow.length() - 6) - qstrippos;
+                return query.substr(6, lng);
+            } else {
+                size_t lng = querylow.length() - 5;
+                return query.substr(5, lng);
+            }
+        } else {
+            return query;
+        }
+    }
+}
+
+std::string wmiQuerySimpleFromObject(const std::string objectName, const std::string namespacePath,
+    const std::vector<std::string> queryFields, const bool anyQueryFields) {
+    std::string queryfields;
+    std::wstring queryfieldsw;
+    std::vector<std::wstring> queryFlds;
+    if (valInList(queryFields, "*")) {
+        if (anyQueryFields) {
+            queryfields = " * ";
+        } else {
+            WMIHandler wmih;
+            if (WMIOpResult::Success == wmih.GetFieldsFromObject(queryFlds, str2wstr(objectName),
+                str2wstr(namespacePath), false, true, true)) {
+                queryfieldsw = joinStrs(queryFlds, L", ");
+                queryfields = " " + wstr2str(queryfieldsw) + " ";
+            } else {
+                return objectName;
+            }
+        }
+        return ("select" + queryfields + "from " + objectName);
+    }
+}
+
+std::wstring wmiQuerySimpleFromObject(const std::wstring objectName, const std::wstring namespacePath,
+    const std::vector<std::wstring> queryFields, const bool anyQueryFields) {
+    std::wstring queryfieldsw;
+    std::vector<std::wstring> queryFlds;
+    if (valInList(queryFields, L"*")) {
+        if (anyQueryFields) {
+            queryfieldsw = L" * ";
+        } else {
+            WMIHandler wmih;
+            if (WMIOpResult::Success == wmih.GetFieldsFromObject(queryFlds, objectName,
+                namespacePath, false, true, true)) {
+                queryfieldsw = L" " + joinStrs(queryFlds, L", ") + L" ";
+            } else {
+                return objectName;
+            }
+        }
+        return (L"select" + queryfieldsw + L"from " + objectName);
+    }
 }
 
 bool valInList(const std::vector<std::string> &list, const std::string val,

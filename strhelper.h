@@ -48,6 +48,7 @@
 #include <map>
 #include <regex>
 #include "config.h"
+#include "wmihelper.h"
 
 size_t wcslen_c(const wchar_t* line);
 bool contentInBuf(const char* buf, size_t bufSz);
@@ -181,6 +182,14 @@ std::string reverseIPV6_copy(const std::string ipaddrstr);
 std::wstring reverseIPV6_copy(const std::wstring ipaddrstr);
 std::string firstNumberFromString(const std::string line);
 std::wstring firstNumberFromString(const std::wstring line);
+std::string wmiObjectFromQuery(const std::string query);
+std::wstring wmiObjectFromQuery(const std::wstring query);
+std::string wmiQuerySimpleFromObject(const std::string objectName,
+	const std::string namespacePath = "ROOT\\CIMV2", const std::vector<std::string> queryFields = { "*" },
+	const bool anyQueryFields = false);
+std::wstring wmiQuerySimpleFromObject(const std::wstring objectName,
+	const std::wstring namespacePath = L"ROOT\\CIMV2", const std::vector<std::wstring> queryFields = { L"*" },
+	const bool anyQueryFields = false);
 bool valInList(const std::vector<std::string> &list, const std::string val, const bool ignoreCase = true,
 	const bool exactMatch = false, size_t* posptr = 0);
 bool valInList(const std::vector<std::wstring> &list, const std::wstring val, const bool ignoreCase = true,

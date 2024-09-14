@@ -1,4 +1,5 @@
 #include "WMIHelper.h"
+#include <propvarutil.h>
 
 WMIQueryAsyncSink::WMIQueryAsyncSink() {
 	m_lRef = 0;
@@ -70,11 +71,11 @@ WMIQueryAsyncSink::~WMIQueryAsyncSink() {
 	m_bDone = 1;
 }
 
-unsigned long __stdcall WMIQueryAsyncSink::AddRef() {
+unsigned long STDMETHODCALLTYPE WMIQueryAsyncSink::AddRef() {
 	return ::InterlockedIncrement(&m_lRef);
 }
 
-unsigned long __stdcall WMIQueryAsyncSink::Release() {
+unsigned long STDMETHODCALLTYPE WMIQueryAsyncSink::Release() {
 	long lRef = ::InterlockedDecrement(&m_lRef);
 	if (!lRef) {
 		delete this;
@@ -82,7 +83,7 @@ unsigned long __stdcall WMIQueryAsyncSink::Release() {
 	return lRef;
 }
 
-::HRESULT __stdcall WMIQueryAsyncSink::QueryInterface(const GUID &riid, void** ppv) {
+::HRESULT STDMETHODCALLTYPE WMIQueryAsyncSink::QueryInterface(const GUID &riid, void** ppv) {
 	if (::IID_IUnknown == riid || ::IID_IWbemObjectSink == riid) {
 		*ppv = (::IWbemObjectSink*)this;
 		AddRef();
@@ -92,7 +93,7 @@ unsigned long __stdcall WMIQueryAsyncSink::Release() {
 	}
 }
 
-::HRESULT __stdcall WMIQueryAsyncSink::Indicate(long lObjectCount,
+::HRESULT STDMETHODCALLTYPE WMIQueryAsyncSink::Indicate(long lObjectCount,
 	::IWbemClassObject __RPC_FAR* __RPC_FAR* apObjArray) {
 	std::vector<std::wstring> requiredFields = m_WMIHandler->m_asyncRequiredFields;
 	if (!requiredFields.size()) {
@@ -128,7 +129,7 @@ unsigned long __stdcall WMIQueryAsyncSink::Release() {
 				}
 			}
 			if (t) {
-				::VariantClear((::VARIANTARG*)t);
+				::VariantClear((::VARIANT*)t);
 			}
 		}
 		// ... use the object.
@@ -139,7 +140,7 @@ unsigned long __stdcall WMIQueryAsyncSink::Release() {
 	return ::WBEMSTATUS::WBEM_S_NO_ERROR;
 }
 
-::HRESULT __stdcall WMIQueryAsyncSink::SetStatus(long lFlags, ::HRESULT hResult, ::BSTR strParam,
+::HRESULT STDMETHODCALLTYPE WMIQueryAsyncSink::SetStatus(long lFlags, ::HRESULT hResult, ::BSTR strParam,
 	::IWbemClassObject __RPC_FAR *pObjParam) {
 	return ::WBEMSTATUS::WBEM_S_NO_ERROR;
 }
@@ -299,10 +300,9 @@ WMIOpResult WMIHandler::InitWMI(const std::wstring namespacePath) {
 	return WMIOpResult::Success;
 }
 
-WMIOpResult WMIHandler::RunWMIQuery(std::map<std::wstring, std::wstring> &results,
-	const std::vector<std::wstring> requiredFields, const std::wstring query,
-	const std::wstring namespacePath, const std::wstring queryLanguage,
-	const bool initWMI, const bool shutdownWMI) {
+WMIOpResult WMIHandler::RunWMIQuery(std::map<std::wstring, std::wstring>& results, const std::wstring query,
+	const std::vector<std::wstring> requiredFields, const std::wstring namespacePath,
+	const std::wstring queryLanguage, const bool clearResults, const bool initWMI, const bool shutdownWMI) {
 	if (!m_WMIInitialized) {
 		if (initWMI) {
 			if (WMIOpResult::Success != InitWMI(namespacePath)) {
@@ -312,155 +312,52 @@ WMIOpResult WMIHandler::RunWMIQuery(std::map<std::wstring, std::wstring> &result
 			return WMIOpResult::Fail;
 		}
 	}
+	std::vector<std::wstring> reqFields;
+	if (valInList(requiredFields, gc_wmiAnyField, true, true)) {
+		if (WMIOpResult::Success != GetFieldsFromQuery(reqFields, query, namespacePath, queryLanguage, false,
+			initWMI, shutdownWMI)) {
+			return WMIOpResult::Fail;
+		}
+	} else {
+		reqFields = requiredFields;
+	}
 	::BSTR qLang = ::_bstr_t(queryLanguage.c_str());
 	if (!qLang) {
 		return WMIOpResult::Fail;
 	}
 	::BSTR q = ::_bstr_t(query.c_str());
 	if (!q) {
-		::VariantClear((::VARIANTARG*)qLang);
+		::VariantClear((::VARIANT*)qLang);
 		return WMIOpResult::Fail;
 	}
 	::IEnumWbemClassObject *pEnumerator = 0;
 	::HRESULT hres = m_pSvc->ExecQuery(qLang, q, ::WBEM_GENERIC_FLAG_TYPE::WBEM_FLAG_FORWARD_ONLY |
 		::WBEM_GENERIC_FLAG_TYPE::WBEM_FLAG_RETURN_IMMEDIATELY, 0, &pEnumerator);
 	if (FAILED(hres)) {
-		::VariantClear((::VARIANTARG*)qLang);
-		::VariantClear((::VARIANTARG*)q);
+		::VariantClear((::VARIANT*)qLang);
+		::VariantClear((::VARIANT*)q);
 		return WMIOpResult::Fail;
 	}
-	results.clear();
-	::IWbemClassObject *pclsObj = 0;
-	unsigned long uReturn = 0;
-	size_t cmaxpart = 0, cminpart = 0;
-	while (pEnumerator) {
-		hres = pEnumerator->Next(::WBEM_INFINITE, 1, &pclsObj, &uReturn);
-		if (!uReturn) {
-			break;
-		}
-		size_t ind = 0;
-		::VARIANT vtProp = { 0 };
-		::CIMTYPE type = { 0 };
-		::BSTR t = 0;
-		std::wstring reskey, temp;
-		for (size_t i = 0; i < requiredFields.size(); ++i) {
-			hres = pclsObj->Get(requiredFields[i].c_str(), 0, &vtProp, &type, 0);
-			if(FAILED(hres)) {
-#ifdef WH_ADDEMPTYVALS
-				temp = gc_wmiEmptyval;
-#else
-				continue;
-#endif
-			} else {
-				if (vtProp.vt != ::VARENUM::VT_NULL) {
-					if (::CIMTYPE_ENUMERATION::CIM_FLAG_ARRAY & type) {
-#ifdef WH_SKIPARRAYS
-						temp = gc_wmiArray;
-#else
-						long lLower = 0, lUpper = 0;
-						void* Element = malloc(1024);
-						if (!Element) {
-							::VariantClear((::VARIANTARG*)qLang);
-							::VariantClear((::VARIANTARG*)q);
-							return WMIOpResult::Fail;
-						}
-						::SAFEARRAY* pSafeArray = vtProp.parray;
-						hres = ::SafeArrayGetLBound(pSafeArray, 1, &lLower);
-						if (FAILED(hres)) {
-							::VariantClear((::VARIANTARG*)qLang);
-							::VariantClear((::VARIANTARG*)q);
-							::SafeArrayDestroy(pSafeArray);
-							return WMIOpResult::Fail;
-						}
-						hres = ::SafeArrayGetUBound(pSafeArray, 1, &lUpper);
-						if (FAILED(hres)) {
-							::VariantClear((::VARIANTARG*)qLang);
-							::VariantClear((::VARIANTARG*)q);
-							::SafeArrayDestroy(pSafeArray);
-							return WMIOpResult::Fail;
-						}
-						for (long i = lLower; i <= lUpper; ++i) {
-							memset(Element, 0, 1024);
-							hres = ::SafeArrayGetElement(pSafeArray, &i, Element);
-							if (FAILED(hres)) {
-								::VariantClear((::VARIANTARG*)qLang);
-								::VariantClear((::VARIANTARG*)q);
-								::SafeArrayDestroy(pSafeArray);
-								return WMIOpResult::Fail;
-							}
-							if (i < lUpper) {
-								// temp = temp + std::wstring(::_bstr_t(Element)) + gc_wmiJoinSymbol;
-								temp = temp + char2wchar((char*)Element) + gc_wmiJoinSymbol;
-							} else {
-								// temp = temp + std::wstring(::_bstr_t(Element));
-								temp = temp + char2wchar((char*)Element);
-							}
-						}
-						::SafeArrayDestroy(pSafeArray);
-#endif
-					} else {
-						t = ::_bstr_t(vtProp);
-						if (t) {
-#ifdef WH_TRIMDATA
-							temp = trim_copy(t);
-#else
-							temp = t;
-#endif
-							::SysFreeString(t);
-						} else {
-							temp = gc_wmiEmptyval;
-						}
-						hres = ::VariantClear(&vtProp);
-						if (S_OK != hres) {
-							::VariantClear((::VARIANTARG*)qLang);
-							::VariantClear((::VARIANTARG*)q);
-							return WMIOpResult::Fail;
-						}
-					}
-				} else {
-#ifdef WH_ADDEMPTYVALS
-					temp = gc_wmiEmptyval;
-#endif
-					hres = ::VariantClear(&vtProp);
-					if (S_OK != hres) {
-						::VariantClear((::VARIANTARG*)qLang);
-						::VariantClear((::VARIANTARG*)q);
-						return WMIOpResult::Fail;
-					}
-#ifndef WH_ADDEMPTYVALS
-					continue;
-#endif
-				}
-			}
-			ind = 0;
-			while (true) {
-				reskey = requiredFields[i] + std::to_wstring(ind);
-				if (!results.count(reskey)) {
-					results.insert(std::make_pair(reskey, temp));
-					temp = L"";
-					break;
-				} else {
-					++ind;
-				}
-			}
-		}
+	if (clearResults) {
+		results.clear();
 	}
+	WMIOpResult opres = processQueryFields(results, reqFields, pEnumerator);
 	if (shutdownWMI) {
 		if (WMIOpResult::Success != ShutdownWMI()) {
-			::VariantClear((::VARIANTARG*)qLang);
-			::VariantClear((::VARIANTARG*)q);
+			::VariantClear((::VARIANT*)qLang);
+			::VariantClear((::VARIANT*)q);
 			return WMIOpResult::Fail;
 		}
 	}
-	::VariantClear((::VARIANTARG*)qLang);
-	::VariantClear((::VARIANTARG*)q);
-	return WMIOpResult::Success;
+	::VariantClear((::VARIANT*)qLang);
+	::VariantClear((::VARIANT*)q);
+	return ((WMIOpResult)(static_cast<unsigned char>(WMIOpResult::Success) &
+		static_cast<unsigned char>(opres)));
 }
 
 WMIOpResult WMIHandler::RunWMIQueryAsync(std::map<std::wstring, std::wstring> &results,
-	const std::vector<std::wstring> requiredFields,
-	const std::wstring query, const std::wstring namespacePath,
-	const std::wstring queryLanguage, const bool initWMI, const bool shutdownWMI,
+	const std::wstring query, const std::vector<std::wstring> requiredFields, const std::wstring namespacePath,
+	const std::wstring queryLanguage, const bool clearResults, const bool initWMI, const bool shutdownWMI,
 	const unsigned long awaitTimeout) {
 	if (!m_WMIInitialized) {
 		if (initWMI) {
@@ -477,55 +374,66 @@ WMIOpResult WMIHandler::RunWMIQueryAsync(std::map<std::wstring, std::wstring> &r
 	} else if (WH_MAXAWAITTIMEOUT < awaitTime) {
 		awaitTime = WH_MAXAWAITTIMEOUT;
 	}
+	std::vector<std::wstring> reqFields;
+	if (valInList(requiredFields, gc_wmiAnyField, true, true)) {
+		if (WMIOpResult::Success != GetFieldsFromQuery(reqFields, query, namespacePath, queryLanguage, false,
+			initWMI, shutdownWMI)) {
+			return WMIOpResult::Fail;
+		}
+	} else {
+		reqFields = requiredFields;
+	}
 	::BSTR qLang = ::_bstr_t(queryLanguage.c_str());
 	if (!qLang) {
 		return WMIOpResult::Fail;
 	}
 	::BSTR q = ::_bstr_t(query.c_str());
 	if (!q) {
-		::VariantClear((::VARIANTARG*)qLang);
+		::VariantClear((::VARIANT*)qLang);
 		return WMIOpResult::Fail;
 	}
 	WMIQueryAsyncSink* pSink = new WMIQueryAsyncSink;
 	if (!pSink) {
-		::VariantClear((::VARIANTARG*)qLang);
-		::VariantClear((::VARIANTARG*)q);
+		::VariantClear((::VARIANT*)qLang);
+		::VariantClear((::VARIANT*)q);
 		return WMIOpResult::Fail;
 	}
 	if (WMIOpResult::Success != pSink->SetHandler(this)) {
 		return WMIOpResult::Fail;
 	}
-	results.clear();
 	m_asyncResults = &results;
-	m_asyncRequiredFields = requiredFields;
+	m_asyncRequiredFields = reqFields;
 	::HRESULT hres = m_pSvc->ExecQueryAsync(qLang, q, 0, 0, pSink);
-	Sleep(awaitTime);
 	if (FAILED(hres)) {
-		::VariantClear((::VARIANTARG*)qLang);
-		::VariantClear((::VARIANTARG*)q);
+		::VariantClear((::VARIANT*)qLang);
+		::VariantClear((::VARIANT*)q);
 		pSink->Release();
 		SAFE_DELETE(pSink);
 		return WMIOpResult::Fail;
 	}
+	if (clearResults) {
+		results.clear();
+	}
+	Sleep(awaitTime);
 	hres = m_pSvc->CancelAsyncCall(pSink);
 	if (FAILED(hres)) {
-		::VariantClear((::VARIANTARG*)qLang);
-		::VariantClear((::VARIANTARG*)q);
+		::VariantClear((::VARIANT*)qLang);
+		::VariantClear((::VARIANT*)q);
 		pSink->Release();
 		SAFE_DELETE(pSink);
 		return WMIOpResult::Fail;
 	}
 	if (shutdownWMI) {
 		if (WMIOpResult::Success != ShutdownWMI()) {
-			::VariantClear((::VARIANTARG*)qLang);
-			::VariantClear((::VARIANTARG*)q);
+			::VariantClear((::VARIANT*)qLang);
+			::VariantClear((::VARIANT*)q);
 			pSink->Release();
 			SAFE_DELETE(pSink);
 			return WMIOpResult::Fail;
 		}
 	}
-	::VariantClear((::VARIANTARG*)qLang);
-	::VariantClear((::VARIANTARG*)q);
+	::VariantClear((::VARIANT*)qLang);
+	::VariantClear((::VARIANT*)q);
 	// pSink->Release();
 	// SAFE_DELETE(pSink);
 	return WMIOpResult::Success;
@@ -549,7 +457,7 @@ WMIOpResult WMIHandler::GetFieldsFromQuery(std::vector<std::wstring> &fields, co
 	}
 	::BSTR q = ::_bstr_t(query.c_str());
 	if (!q) {
-		::VariantClear((::VARIANTARG*)qLang);
+		::VariantClear((::VARIANT*)qLang);
 		return WMIOpResult::Fail;
 	}
 	unsigned long uReturn = 0;
@@ -558,8 +466,8 @@ WMIOpResult WMIHandler::GetFieldsFromQuery(std::vector<std::wstring> &fields, co
 	::HRESULT hres = m_pSvc->ExecQuery(qLang, q, ::WBEM_GENERIC_FLAG_TYPE::WBEM_FLAG_FORWARD_ONLY |
 		::WBEM_GENERIC_FLAG_TYPE::WBEM_FLAG_RETURN_IMMEDIATELY, 0, &pEnumerator);
 	if (FAILED(hres)) {
-		::VariantClear((::VARIANTARG*)qLang);
-		::VariantClear((::VARIANTARG*)q);
+		::VariantClear((::VARIANT*)qLang);
+		::VariantClear((::VARIANT*)q);
 		return WMIOpResult::Fail;
 	}
 	while (pEnumerator) {
@@ -571,23 +479,23 @@ WMIOpResult WMIHandler::GetFieldsFromQuery(std::vector<std::wstring> &fields, co
 		hres = pObj->GetNames(0, ::WBEM_CONDITION_FLAG_TYPE::WBEM_FLAG_ALWAYS |
 			::WBEM_CONDITION_FLAG_TYPE::WBEM_FLAG_NONSYSTEM_ONLY, 0, &psaNames);
 		if (FAILED(hres)) {
-			::VariantClear((::VARIANTARG*)qLang);
-			::VariantClear((::VARIANTARG*)q);
+			::VariantClear((::VARIANT*)qLang);
+			::VariantClear((::VARIANT*)q);
 			return WMIOpResult::Fail;
 		}
 		long lLower = 0, lUpper = 0;
 		::BSTR PropName = 0;
 		hres = ::SafeArrayGetLBound(psaNames, 1, &lLower);
 		if (FAILED(hres)) {
-			::VariantClear((::VARIANTARG*)qLang);
-			::VariantClear((::VARIANTARG*)q);
+			::VariantClear((::VARIANT*)qLang);
+			::VariantClear((::VARIANT*)q);
 			::SafeArrayDestroy(psaNames);
 			return WMIOpResult::Fail;
 		}
 		hres = ::SafeArrayGetUBound(psaNames, 1, &lUpper);
 		if (FAILED(hres)) {
-			::VariantClear((::VARIANTARG*)qLang);
-			::VariantClear((::VARIANTARG*)q);
+			::VariantClear((::VARIANT*)qLang);
+			::VariantClear((::VARIANT*)q);
 			::SafeArrayDestroy(psaNames);
 			return WMIOpResult::Fail;
 		}
@@ -598,8 +506,8 @@ WMIOpResult WMIHandler::GetFieldsFromQuery(std::vector<std::wstring> &fields, co
 			// Get this property.
 			hres = SafeArrayGetElement(psaNames, &i, &PropName);
 			if (FAILED(hres)) {
-				::VariantClear((::VARIANTARG*)qLang);
-				::VariantClear((::VARIANTARG*)q);
+				::VariantClear((::VARIANT*)qLang);
+				::VariantClear((::VARIANT*)q);
 				::SafeArrayDestroy(psaNames);
 				return WMIOpResult::Fail;
 			}
@@ -607,20 +515,20 @@ WMIOpResult WMIHandler::GetFieldsFromQuery(std::vector<std::wstring> &fields, co
 				if (std::find(fields.begin(), fields.end(), PropName) == fields.end()) {
 					fields.push_back(PropName);
 				}
-				::VariantClear((::VARIANTARG*)PropName);
+				::VariantClear((::VARIANT*)PropName);
 			}
 		}
 		::SafeArrayDestroy(psaNames);
 	}
 	if (shutdownWMI) {
 		if (WMIOpResult::Success != ShutdownWMI()) {
-			::VariantClear((::VARIANTARG*)qLang);
-			::VariantClear((::VARIANTARG*)q);
+			::VariantClear((::VARIANT*)qLang);
+			::VariantClear((::VARIANT*)q);
 			return WMIOpResult::Fail;
 		}
 	}
-	// ::VariantClear((::VARIANTARG*)qLang);
-	::VariantClear((::VARIANTARG*)q);
+	// ::VariantClear((::VARIANT*)qLang);
+	::VariantClear((::VARIANT*)q);
 	return WMIOpResult::Success;
 }
 
@@ -643,7 +551,7 @@ WMIOpResult WMIHandler::GetFieldsFromObject(std::vector<std::wstring> &fields, c
 	::IWbemClassObject* pClass = 0;
 	::HRESULT hres = m_pSvc->GetObject(wmiobj, 0, 0, &pClass, 0);
 	if (FAILED(hres)) {
-		::VariantClear((::VARIANTARG*)wmiobj);
+		::VariantClear((::VARIANT*)wmiobj);
 		return WMIOpResult::Fail;
 	}
 	::SAFEARRAY* psaNames = 0;
@@ -651,20 +559,20 @@ WMIOpResult WMIHandler::GetFieldsFromObject(std::vector<std::wstring> &fields, c
 		::WBEM_CONDITION_FLAG_TYPE::WBEM_FLAG_ALWAYS | ::WBEM_CONDITION_FLAG_TYPE::WBEM_FLAG_NONSYSTEM_ONLY,
 		0, &psaNames);
 	if (FAILED(hres)) {
-		::VariantClear((::VARIANTARG*)wmiobj);
+		::VariantClear((::VARIANT*)wmiobj);
 		return WMIOpResult::Fail;
 	}
 	long lLower = 0, lUpper = 0;
 	::BSTR PropName = 0;
 	hres = ::SafeArrayGetLBound(psaNames, 1, &lLower);
 	if (FAILED(hres)) {
-		::VariantClear((::VARIANTARG*)wmiobj);
+		::VariantClear((::VARIANT*)wmiobj);
 		::SafeArrayDestroy(psaNames);
 		return WMIOpResult::Fail;
 	}
 	hres = ::SafeArrayGetUBound(psaNames, 1, &lUpper);
 	if (FAILED(hres)) {
-		::VariantClear((::VARIANTARG*)wmiobj);
+		::VariantClear((::VARIANT*)wmiobj);
 		::SafeArrayDestroy(psaNames);
 		return WMIOpResult::Fail;
 	}
@@ -675,7 +583,7 @@ WMIOpResult WMIHandler::GetFieldsFromObject(std::vector<std::wstring> &fields, c
 		// Get this property.
 		hres = ::SafeArrayGetElement(psaNames, &i, &PropName);
 		if (FAILED(hres)) {
-			::VariantClear((::VARIANTARG*)wmiobj);
+			::VariantClear((::VARIANT*)wmiobj);
 			::SafeArrayDestroy(psaNames);
 			return WMIOpResult::Fail;
 		}
@@ -683,18 +591,22 @@ WMIOpResult WMIHandler::GetFieldsFromObject(std::vector<std::wstring> &fields, c
 			if (std::find(fields.begin(), fields.end(), PropName) == fields.end()) {
 				fields.push_back(PropName);
 			}
-			::VariantClear((::VARIANTARG*)PropName);
+			::VariantClear((::VARIANT*)PropName);
 		}
 	}
 	::SafeArrayDestroy(psaNames);
 	if (shutdownWMI) {
 		if (WMIOpResult::Success != ShutdownWMI()) {
-			::VariantClear((::VARIANTARG*)wmiobj);
+			::VariantClear((::VARIANT*)wmiobj);
 			return WMIOpResult::Fail;
 		}
 	}
-	::VariantClear((::VARIANTARG*)wmiobj);
-	::VariantClear((::VARIANTARG*)wmiobj);
+	::VariantClear((::VARIANT*)wmiobj);
+	::VariantClear((::VARIANT*)wmiobj);
+	return WMIOpResult::Success;
+}
+
+WMIOpResult WMIHandler::CheckWMIAvailable(bool &available) {
 	return WMIOpResult::Success;
 }
 
@@ -709,5 +621,185 @@ WMIOpResult WMIHandler::ShutdownWMI() {
 	m_pSvc = 0;
 	m_pLoc = 0;
 	m_WMIInitialized = false;
+	return WMIOpResult::Success;
+}
+
+WMIOpResult WMIHandler::processQueryFields(std::map<std::wstring, std::wstring> &results,
+	const std::vector<std::wstring> requiredFields, ::IEnumWbemClassObject* enumerator) const {
+	if (!enumerator) {
+		return WMIOpResult::Fail;
+	}
+	::IWbemClassObject* pclsObj = 0;
+	unsigned long uReturn = 0;
+	while (enumerator) {
+		::HRESULT hres = enumerator->Next(::WBEM_INFINITE, 1, &pclsObj, &uReturn);
+		if (!uReturn) {
+			break;
+		}
+		long lLower = 0, lUpper = 0;
+		::CIMTYPE type = 0;
+		size_t ind = 0;
+		::BSTR t = 0;
+		::VARIANT vtProp = { 0 };
+		std::wstring reskey, temp;
+		for (size_t i = 0; i < requiredFields.size(); ++i) {
+			if (L"MediaLoaded" == requiredFields[i]) {
+				Sleep(1);
+			}
+			hres = pclsObj->Get(requiredFields[i].c_str(), 0, &vtProp, &type, 0);
+			if (FAILED(hres)) {
+#ifdef WH_ADDEMPTYVALS
+				temp = gc_wmiEmptyval;
+#else
+				continue;
+#endif
+			} else {
+				if ((::VARENUM::VT_NULL != vtProp.vt) && (::VARENUM::VT_EMPTY != vtProp.vt)) {
+					if (::CIMTYPE_ENUMERATION::CIM_FLAG_ARRAY & type) {
+						if (::CIMTYPE_ENUMERATION::CIM_STRING & type) {
+							SAFEARRAY* pSafeArray = V_ARRAY(&vtProp);
+							hres = ::SafeArrayGetLBound(pSafeArray, 1, &lLower);
+							if (FAILED(hres)) {
+								::VariantClear(&vtProp);
+								::SafeArrayDestroy(pSafeArray);
+								return WMIOpResult::Fail;
+							}
+							hres = ::SafeArrayGetUBound(pSafeArray, 1, &lUpper);
+							if (FAILED(hres)) {
+								::VariantClear(&vtProp);
+								::SafeArrayDestroy(pSafeArray);
+								return WMIOpResult::Fail;
+							}
+							::BSTR HUGEP* pbstr = 0;
+							hres = ::SafeArrayAccessData(pSafeArray, (void HUGEP**) & pbstr);
+							if (FAILED(hres)) {
+								::VariantClear(&vtProp);
+								::SafeArrayDestroy(pSafeArray);
+								return WMIOpResult::Fail;
+							}
+							for (long j = lLower; j <= lUpper; ++j) {
+								if (j < lUpper) {
+									temp = temp + pbstr[j] + gc_wmiJoinSymbol;
+								} else {
+									temp = temp + pbstr[j];
+								}
+							}
+							hres = ::SafeArrayUnaccessData(pSafeArray);
+							if (FAILED(hres)) {
+								::VariantClear(&vtProp);
+								::SafeArrayDestroy(pSafeArray);
+								return WMIOpResult::Fail;
+							}
+						} else {
+#ifdef WH_SKIPARRAYS
+							temp = gc_wmiArray;
+#else
+							::VARIANT Element = { 0 };
+							/*void* Element = malloc(sizeof(::VARIANT));
+							if (!Element) {
+								::VariantClear(&vtProp);
+								return WMIOpResult::Fail;
+							}*/
+							::SAFEARRAY* pSafeArray = vtProp.parray;
+							hres = ::SafeArrayGetLBound(pSafeArray, 1, &lLower);
+							if (FAILED(hres)) {
+								::SafeArrayDestroy(pSafeArray);
+								::VariantClear(&vtProp);
+								return WMIOpResult::Fail;
+							}
+							hres = ::SafeArrayGetUBound(pSafeArray, 1, &lUpper);
+							if (FAILED(hres)) {
+								::SafeArrayDestroy(pSafeArray);
+								return WMIOpResult::Fail;
+							}
+							for (long j = lLower; j <= lUpper; ++j) {
+								// memset(Element, 0, sizeof(::VARIANT));
+								hres = ::SafeArrayGetElement(pSafeArray, &j, &Element);
+								int aaa = V_INT(&Element);
+								if (FAILED(hres)) {
+									::SafeArrayDestroy(pSafeArray);
+									return WMIOpResult::Fail;
+								}
+								if (j < lUpper) {
+									// temp = temp + std::wstring(::_bstr_t(Element)) + gc_wmiJoinSymbol;
+									// temp = temp + Element + gc_wmiJoinSymbol;
+									temp = temp + std::wstring(_bstr_t(Element)) + gc_wmiJoinSymbol;
+								} else {
+									// temp = temp + std::wstring(::_bstr_t(Element));
+									// temp = temp + Element;
+									temp = temp + std::wstring(_bstr_t(Element));
+								}
+							}
+							// SAFE_FREE(Element);
+							::SafeArrayDestroy(pSafeArray);
+#endif
+						}
+					} else if (::CIMTYPE_ENUMERATION::CIM_BOOLEAN == type) {
+						int boolval = false;
+						hres = ::VariantToBoolean(vtProp, &boolval);
+						if (FAILED(hres)) {
+							::VariantClear(&vtProp);
+							return WMIOpResult::Fail;
+						}
+						if (boolval) {
+							temp = L"true";
+						} else {
+							temp = L"false";
+						}
+						hres = ::VariantClear(&vtProp);
+						if (S_OK != hres) {
+							::VariantClear(&vtProp);
+							return WMIOpResult::Fail;
+						}
+					} else {
+						t = ::_bstr_t(vtProp);
+						if (t) {
+#ifdef WH_TRIMDATA
+							temp = trim_copy(t);
+#else
+							temp = t;
+#endif
+							::SysFreeString(t);
+						} else {
+							temp = gc_wmiEmptyval;
+						}
+						hres = ::VariantClear(&vtProp);
+						if (S_OK != hres) {
+							::VariantClear(&vtProp);
+							return WMIOpResult::Fail;
+						}
+					}
+				} else {
+#ifdef WH_ADDEMPTYVALS
+					temp = gc_wmiEmptyval;
+#endif
+					hres = ::VariantClear(&vtProp);
+					if (S_OK != hres) {
+						::VariantClear(&vtProp);
+						return WMIOpResult::Fail;
+					}
+#ifndef WH_ADDEMPTYVALS
+					continue;
+#endif
+				}
+			}
+			ind = 0;
+			while (true) {
+				reskey = requiredFields[i] + std::to_wstring(ind);
+				if (!results.count(reskey)) {
+					results.insert(std::make_pair(reskey, temp));
+					temp = L"";
+					break;
+				} else {
+					++ind;
+				}
+			}
+		}
+	}
+	return WMIOpResult::Success;
+}
+
+WMIOpResult WMIHandler::processQueryFieldsAsync(std::map<std::wstring, std::wstring>& results,
+	const std::vector<std::wstring> requiredFields) const {
 	return WMIOpResult::Success;
 }

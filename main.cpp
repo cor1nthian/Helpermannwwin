@@ -74,7 +74,8 @@ int wmain(int argc, wchar_t* argv[]) {
 	ACLHandler aclh;
 	WMIHandler wmih;
 	MSSQLDBHandler mssqlh;
-	unsigned long procid = proc.GetCurrentProcPid();
+	// std::string wmiobj = wmiObjectFromQuery("SELECT * FROM WIN32_DISKDRIVE");
+	// std::string wmiobj = wmiObjectFromQuery("Associators Of{Win32_NetworkAdapter.DeviceId = 1}Where AssocClass = Win32_NetworkAdapterSetting");
 	std::vector<std::wstring> reqfields{ L"Name", L"Index" };
 	// std::vector<std::wstring> reqfields{ L"Name", L"BootPartition" };
 	std::map<std::wstring, std::wstring> wmires;
@@ -82,11 +83,7 @@ int wmain(int argc, wchar_t* argv[]) {
 	wmih.GetFieldsFromObject(reqfields, L"win32_DiskDrive");
 	// wmih.GetFieldsFromQuery(reqfields, L"select * from win32_DiskDrive");
 	// wmih.RunWMIQuery(wmires, reqfields, L"Associators of {Win32_DiskDrive.DeviceID='\\\\.\\PHYSICALDRIVE0'} where AssocClass=Win32_DiskDriveToDiskPartition");
-	wmih.RunWMIQuery(wmires, reqfields, L"select * from win32_DiskDrive");
-	std::wcout << wmires[L"DeviceID0"] << std::endl;
-	std::wcout << wmires[L"DeviceID1"] << std::endl;
-	std::wcout << wmires[L"DeviceID2"] << std::endl;
-	std::wcout << wmires[L"FirmwareRevision0"] << std::endl;
+	wmih.RunWMIQuery(wmires, L"select * from win32_DiskDrive");
 	std::vector<std::wstring> cpud;
 	reg.GetCPUDesc(cpud);
 	SecDesc secdesc, secdesc2;
@@ -123,6 +120,7 @@ int wmain(int argc, wchar_t* argv[]) {
 	std::vector<DNS_RECORD> lres;
 	RegKeyDesc regkey;
 	RegValType rvt;
+	unsigned long procid = proc.GetCurrentProcPid();
 	std::vector<std::wstring> privs = proc.GetProcPrivileges(procid);
 	if (!valInList(privs, L"SeBackupPrivilege")) {
 		if (!proc.EnableBackupPrivilege(procid)) {
