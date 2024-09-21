@@ -1,5 +1,8 @@
 #include <iostream>
 #include "syshelper.h"
+#include "reghelper.h"
+#include "prochelper.h"
+#include "fshelper.h"
 
 bool IsBadReadPtr(void* p) {
 	MEMORY_BASIC_INFORMATION mbi = { 0 };
@@ -27,6 +30,16 @@ bool IsBadWritePtr(void* p) {
 		return b;
 	}
 	return true;
+}
+
+int rnd(const int from, const int to) {
+	std::mt19937 rng;
+	rng.seed(std::random_device()());
+	//rng.seed(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+	std::uniform_int_distribution<std::mt19937::result_type> dist(from, to);
+	return dist(rng);
+	// srand(time(0));
+	// return rand() % (to - from + 1) + from;
 }
 
 bool IsSIDWellKnown(const std::wstring strsid) {
@@ -1279,6 +1292,276 @@ SysOpResult SysHandler::ImpersonateUser(::HANDLE &token) const {
 	if (::ImpersonateLoggedOnUser(token)) {
 		return SysOpResult::Success;
 	} else {
+		return SysOpResult::Fail;
+	}
+}
+
+SysOpResult SysHandler::GetSysTempFolderPath(std::wstring &tempFldPath, const HKEY *root) const {
+	std::wstring tempfld;
+	RegHandler reg;
+	if (RegOpResult::Success == reg.GetSysTempPath(tempfld, root)) {
+		if (std::wstring::npos != tempfld.find(L"%")) {
+			std::vector<std::wstring> envvalvec = tokenFromString(tempfld, L"%", true);
+			if (!envvalvec.size()) {
+				return SysOpResult::Fail;
+			}
+			std::wstring ttokval;
+			for (size_t i = 0; i < envvalvec.size(); ++i) {
+				if (SysOpResult::Success != ExpandToken(ttokval, envvalvec[i])) {
+					return SysOpResult::Fail;
+				}
+				tempfld = replaceAll(tempfld, envvalvec[i], ttokval);
+			}
+		}
+		if (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(tempfld.c_str())) {
+			tempFldPath = tempfld;
+			return SysOpResult::Success;
+		}
+	}
+	std::wstring sysroottoken;
+	if (SysOpResult::Success == ExpandToken(sysroottoken, L"%SystemRoot%")) {
+		tempfld = sysroottoken + L"\\Temp";
+		if (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(tempfld.c_str())) {
+			tempFldPath = tempfld;
+			return SysOpResult::Success;
+		} else {
+			return SysOpResult::Fail;
+		}
+	} else {
+		return SysOpResult::Fail;
+	}
+}
+
+SysOpResult SysHandler::RunVBSScript(std::wstring &output, std::wstring &erroutput, const std::wstring scriptPath,
+	const std::wstring scriptArgs) const {
+	bool avail = false;
+	if (SysOpResult::Success == IsCScriptAvailable(avail)) {
+		if (avail) {
+			FSHandler fsh;
+			if (fsh.PathExists(scriptPath)) {
+				std::wstring fullpath = trim_copy(scriptPath) + L" " + trim_copy(scriptArgs);
+				ProcessHandler proc;
+				if (ProcOpResult::Success == proc.RunCommandPiped(L"cscript /nologo " + fullpath, output, erroutput)) {
+					return SysOpResult::Success;
+				} else {
+					return SysOpResult::Fail;
+				}
+			} else {
+				return SysOpResult::Fail;
+			}
+		} else {
+			return SysOpResult::Fail;
+		}
+	} else {
+		return SysOpResult::Fail;
+	}
+}
+
+SysOpResult SysHandler::RunPSScript(std::wstring &output, std::wstring &erroutput, const std::wstring scriptPath,
+	const std::wstring scriptArgs) const {
+	bool avail = false;
+	if (SysOpResult::Success == IsPowershellAvailable(avail)) {
+		if (avail) {
+			FSHandler fsh;
+			if (fsh.PathExists(scriptPath)) {
+				std::wstring fullpath = trim_copy(scriptPath) + L" " + trim_copy(scriptArgs);
+				ProcessHandler proc;
+				if (ProcOpResult::Success == proc.RunCommandPiped(L"powershell -File " + fullpath, output, erroutput)) {
+					return SysOpResult::Success;
+				} else {
+					return SysOpResult::Fail;
+				}
+			} else {
+				return SysOpResult::Fail;
+			}
+		} else {
+			return SysOpResult::Fail;
+		}
+	} else {
+		return SysOpResult::Fail;
+	}
+}
+
+SysOpResult SysHandler::ExpandToken(std::wstring &outStr, const std::wstring token) const {
+	NEW_ARR_NULLIFY(tBuf, wchar_t, 4096);
+	if (!tBuf) {
+		return SysOpResult::Fail;
+	}
+	if (::ExpandEnvironmentStrings(token.c_str(), tBuf, wcslen_c(L"%SystemRoot%"))) {
+		outStr = tBuf;
+		SAFE_ARR_DELETE(tBuf);
+		return SysOpResult::Success;
+	} else {
+		SAFE_ARR_DELETE(tBuf);
+		return SysOpResult::Fail;
+	}
+}
+
+SysOpResult SysHandler::IsSysTempFolderAvailable(bool &available, const HKEY *root) const {
+	std::wstring tempfld;
+	RegHandler reg;
+	if (RegOpResult::Success == reg.GetSysTempPath(tempfld, root)) {
+		if (std::wstring::npos != tempfld.find(L"%")) {
+			std::vector<std::wstring> envvalvec = tokenFromString(tempfld, L"%", true);
+			if (!envvalvec.size()) {
+				return SysOpResult::Fail;
+			}
+			std::wstring ttokval;
+			for (size_t i = 0; i < envvalvec.size(); ++i) {
+				if(SysOpResult::Success != ExpandToken(ttokval, envvalvec[i])) {
+					return SysOpResult::Fail;
+				}
+				tempfld = replaceAll(tempfld, envvalvec[i], ttokval);
+			}
+		}
+		if (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(tempfld.c_str())) {
+			std::wstring fpath = tempfld + L"\\tfile" + genRandomWString() + L".tmp";
+			if (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(fpath.c_str())) {
+				!::DeleteFile(fpath.c_str());
+			}
+			::HANDLE hFile = ::CreateFile(fpath.c_str(), GENERIC_WRITE,
+				FILE_SHARE_READ, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+			if (INVALID_HANDLE_VALUE != hFile) {
+				unsigned long bytesWritten = 0;
+				wchar_t tmpbuf[] = L"tmpbuf";
+				if (::WriteFile(hFile, tmpbuf, wcslen_c(tmpbuf) * sizeof(wchar_t), &bytesWritten, 0)) {
+					if (::CloseHandle(hFile)) {
+						if (::DeleteFile(fpath.c_str())) {
+							available = true;
+							return SysOpResult::Success;
+						}
+					}
+				}
+			}
+		}
+	}
+	size_t bufsz = SH_STRBUFSZ * sizeof(wchar_t);
+	wchar_t* wbuf = (wchar_t*)malloc(bufsz);
+	if (!wbuf) {
+		return SysOpResult::Fail;
+	}
+	memset(wbuf, 0, bufsz);
+	if (::ExpandEnvironmentStrings(L"%SystemRoot%", wbuf, wcslen_c(L"%SystemRoot%"))) {
+		std::wstring tempFolder = std::wstring(wbuf) + L"\\Temp";
+		if (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(wbuf)) {
+			std::wstring tempFilename = tempFolder + L"\\tfile" + genRandomWString() + L".tmp";
+			::HANDLE hFile = ::CreateFile(tempFilename.c_str(), GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS,
+				FILE_ATTRIBUTE_NORMAL, 0);
+			if (INVALID_HANDLE_VALUE != hFile) {
+				if (::CloseHandle(hFile)) {
+					if (::DeleteFile(tempFilename.c_str())) {
+						available = true;
+						SAFE_FREE(wbuf);
+						return SysOpResult::Success;
+					} else {
+						available = true;
+						SAFE_FREE(wbuf);
+						return SysOpResult::Fail;
+					}
+				} else {
+					available = true;
+					SAFE_FREE(wbuf);
+					return SysOpResult::Fail;
+				}
+			} else {
+				available = false;
+				SAFE_FREE(wbuf);
+				return SysOpResult::Success;
+			}
+		} else {
+			available = false;
+			SAFE_FREE(wbuf);
+			return SysOpResult::Success;
+		}
+	} else {
+		available = false;
+		SAFE_FREE(wbuf);
+		return SysOpResult::Fail;
+	}
+}
+
+SysOpResult SysHandler::IsPowershellAvailable(bool &available) const {
+	bool tfldavail = false;
+	IsSysTempFolderAvailable(tfldavail);
+	if (tfldavail) {
+		size_t bufsz = SH_STRBUFSZ * sizeof(wchar_t);
+		wchar_t* tBuf = (wchar_t*)malloc(bufsz);
+		if (!tBuf) {
+			return SysOpResult::Fail;
+		}
+		memset(tBuf, 0, bufsz);
+		std::wstring tscriptPath;
+		if (::ExpandEnvironmentStrings(L"%SystemRoot%", tBuf, wcslen_c(L"%SystemRoot%"))) {
+			tscriptPath = std::wstring(tBuf) + L"\\Temp\\tscript" + genRandomWString() + L".ps1";
+			wchar_t scriptbody[] = L"Write-Host \"Test Output\"";
+			FSHandler fsh;
+			if (FSOpResult::Success != fsh.WriteToTextFile(tscriptPath, scriptbody, TextFileEnc::UTF8)) {
+				return SysOpResult::Fail;
+			}
+			ProcessHandler proc;
+			std::wstring out, errout;
+			if (ProcOpResult::Success == proc.RunCommandPiped(L"powershell -File \"" + tscriptPath + L"\"",
+				out, errout)) {
+				if (partialMatch(out, L"Test Output")) {
+					available = true;
+				} else {
+					available = false;
+				}
+				if (::DeleteFile(tscriptPath.c_str())) {
+					return SysOpResult::Success;
+				} else {
+					return SysOpResult::Fail;
+				}
+			} else {
+				available = false;
+				return SysOpResult::Fail;
+			}
+		}
+	} else {
+		available = false;
+		return SysOpResult::Fail;
+	}
+	return SysOpResult::Success;
+}
+
+SysOpResult SysHandler::IsCScriptAvailable(bool& available) const {
+	bool tfldavail = false;
+	IsSysTempFolderAvailable(tfldavail);
+	if (tfldavail) {
+		size_t bufsz = SH_STRBUFSZ * sizeof(wchar_t);
+		wchar_t* tBuf = (wchar_t*)malloc(bufsz);
+		if (!tBuf) {
+			return SysOpResult::Fail;
+		}
+		memset(tBuf, 0, bufsz);
+		std::wstring tscriptPath;
+		if (::ExpandEnvironmentStrings(L"%SystemRoot%", tBuf, wcslen_c(L"%SystemRoot%"))) {
+			tscriptPath = std::wstring(tBuf) + L"\\Temp\\tscript" + genRandomWString() + L".vbs";
+			wchar_t scriptbody[] = L"WScript.Echo \"Test Output\"";
+			FSHandler fsh;
+			if (FSOpResult::Success != fsh.WriteToTextFile(tscriptPath, scriptbody)) {
+				return SysOpResult::Fail;
+			}
+			ProcessHandler proc;
+			std::wstring out, errout;
+			if (ProcOpResult::Success == proc.RunCommandPiped(L"cscript /nologo " + tscriptPath, out, errout)) {
+				if (partialMatch(out, L"Test Output")) {
+					available = true;
+				} else {
+					available = false;
+				}
+				if (::DeleteFile(tscriptPath.c_str())) {
+					return SysOpResult::Success;
+				} else {
+					return SysOpResult::Fail;
+				}
+			} else {
+				available = false;
+				return SysOpResult::Fail;
+			}
+		}
+	} else {
+		available = false;
 		return SysOpResult::Fail;
 	}
 }

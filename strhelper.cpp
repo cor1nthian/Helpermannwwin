@@ -1427,6 +1427,92 @@ std::map<std::wstring, std::vector<std::wstring>> splitStr(const std::wstring st
     return ret;
 }
 
+std::vector<std::string> tokenFromString(const std::string source, const std::string separator,
+    const bool includeSeparators, const bool ignoreCase) {
+    std::vector<std::string> ret;
+    if ((!source.length() || !separator.length()) || source.length() < 3 || separator.length() > source.length()) {
+        return ret;
+    }
+    std::string workStr, sep;
+    if (ignoreCase) {
+        workStr = lower_copy(source);
+        sep = lower_copy(separator);
+    } else {
+        workStr = source;
+        sep = separator;
+    }
+    size_t sepnum = countOccurence(workStr, sep);
+    if (!(sepnum % 2 == 0)) {
+        return ret;
+    }
+    size_t findpos = 0;
+    for (size_t i = 0; i < source.length(); ++i) {
+        findpos = workStr.find(sep, i);
+        if (std::string::npos == findpos) {
+            return ret;
+        }
+        if (includeSeparators) {
+            if (findpos != i) {
+                ret.push_back(source.substr(i - 1,
+                    (findpos - i) + sep.length() + 1));
+            }
+        } else {
+            if (findpos != i) {
+                ret.push_back(source.substr(i + sep.length() - 1,
+                    (findpos - i) - sep.length() + 1));
+            }
+        }
+        if (std::string::npos != findpos) {
+            i = findpos;
+        } else {
+            return ret;
+        }
+    }
+}
+
+std::vector<std::wstring> tokenFromString(const std::wstring source, const std::wstring separator,
+    const bool includeSeparators, const bool ignoreCase) {
+    std::vector<std::wstring> ret;
+    if ((!source.length() || !separator.length()) || source.length() < 3 || separator.length() > source.length()) {
+        return ret;
+    }
+    std::wstring workStr, sep;
+    if (ignoreCase) {
+        workStr = lower_copy(source);
+        sep = lower_copy(separator);
+    } else {
+        workStr = source;
+        sep = separator;
+    }
+    size_t sepnum = countOccurence(workStr, sep);
+    if (!(sepnum % 2 == 0)) {
+        return ret;
+    }
+    size_t findpos = 0;
+    for (size_t i = 0; i < source.length(); ++i) {
+        findpos = workStr.find(sep, i);
+        if (std::string::npos == findpos) {
+            return ret;
+        }
+        if (includeSeparators) {
+            if (findpos != i) {
+                ret.push_back(source.substr(i - 1,
+                    (findpos - i) + sep.length() + 1));
+            }
+        } else {
+            if (findpos != i) {
+                ret.push_back(source.substr(i + sep.length() - 1,
+                    (findpos - i) - sep.length() + 1));
+            }
+        }
+        if (std::string::npos != findpos) {
+            i = findpos;
+        } else {
+            return ret;
+        }
+    }
+}
+
 std::string joinStrs(const std::vector<std::string> strs, const std::string delimiter,
     const size_t startIdx, const size_t endIdx) {
     std::string ret;
@@ -2306,6 +2392,28 @@ std::wstring wmiQuerySimpleFromObject(const std::wstring objectName, const std::
         }
         return (L"select" + queryfieldsw + L"from " + objectName);
     }
+}
+
+std::string genRandomString(const size_t length, const std::string prefix) {
+    const char alphanum[] =
+        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    std::string tmp;
+    tmp.reserve(length);
+    for (int i = 0; i < length; ++i) {
+        tmp = tmp + alphanum[rnd(0, 62)];
+    }
+    return (prefix + tmp);
+}
+
+std::wstring genRandomWString(const size_t length, const std::wstring prefix) {
+    const wchar_t alphanum[] =
+        L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    std::wstring tmp;
+    tmp.reserve(length);
+    for (int i = 0; i < length; ++i) {
+        tmp = tmp + alphanum[rnd(0, 62)];
+    }
+    return (prefix + tmp);
 }
 
 bool valInList(const std::vector<std::string> &list, const std::string val,

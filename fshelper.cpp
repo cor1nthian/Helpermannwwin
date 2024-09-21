@@ -2917,6 +2917,51 @@ FSOpResult FSHandler::SetObjectSecurity(const SecDesc secDesc, const std::wstrin
 	return FSOpResult::Success;
 }
 
+FSOpResult FSHandler::WriteToTextFile(const std::wstring textFilename, const std::wstring data,
+	const TextFileEnc fileEncpding) {
+	unsigned long cdisp = 0;
+	if (PathExists(textFilename)) {
+		if (!::DeleteFile(textFilename.c_str())) {
+			return FSOpResult::Fail;
+		}
+	}
+	::HANDLE hFile = ::CreateFile(textFilename.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, 0,
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+	if (INVALID_HANDLE_VALUE == hFile) {
+		return FSOpResult::Fail;
+	}
+	char* outBuf = 0;
+	if (TextFileEnc::UTF8 == fileEncpding) {
+		outBuf = (char*)malloc((data.length() + 2) * sizeof(char));
+	} else if (TextFileEnc::UTF16LE == fileEncpding) {
+		outBuf = (char*)malloc((data.length() + 2) * sizeof(wchar_t));
+	} else {
+		return FSOpResult::Fail;
+	}
+	if (!outBuf) {
+		return FSOpResult::Fail;
+	}
+	unsigned long numbytes2write = 0, numbyteswritten = 0;
+	if (TextFileEnc::UTF8 == fileEncpding) {
+		memset(outBuf, 0, (data.length() + 2) * sizeof(char));
+		numbytes2write = data.length() * sizeof(char);
+		sprintf(outBuf, "%s", wstr2str(data).c_str());
+	} else if (TextFileEnc::UTF16LE == fileEncpding) {
+		memset(outBuf, 0, (data.length() + 2) * sizeof(wchar_t));
+		numbytes2write = data.length() * sizeof(wchar_t);
+		wsprintf((wchar_t*)outBuf, L"%s", data.c_str());
+		// memcpy(outBuf, data.c_str(), data.length() * sizeof(wchar_t));
+	}
+	if (!::WriteFile(hFile, outBuf, numbytes2write, &numbyteswritten, 0)) {
+		SAFE_FREE(outBuf);
+		::CloseHandle(hFile); 
+		return FSOpResult::Fail;
+	}
+	SAFE_FREE(outBuf);
+	::CloseHandle(hFile);
+	return FSOpResult::Success;
+}
+
 FSOpResult FSHandler::EnumFolderContents(FolderRecord &folderInfo, const std::wstring folderPath,
 	const bool getFileHashes, const HashType hashType, const bool getFileSize) {
 	if (PathExists(folderPath)) {

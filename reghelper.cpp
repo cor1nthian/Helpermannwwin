@@ -976,6 +976,21 @@ RegOpResult RegHandler::CreateMultiStrVal(const std::wstring valName,
 	return RegOpResult::Fail;
 }
 
+RegOpResult RegHandler::GetSysTempPath(std::wstring &path, const HKEY *root) {
+	std::wstring regpath;
+	if (RegOpResult::Success != GetStrVal(
+		L"HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\\TEMP", regpath, false,
+		root)) {
+		if (RegOpResult::Success != GetStrVal(
+			L"HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\\TMP", regpath,
+			false, root)) {
+			return RegOpResult::Fail;
+		}
+	}
+	path = regpath;
+	return RegOpResult::Success;
+}
+
 RegOpResult RegHandler::DeleteVal(const std::wstring valName, const HKEY *root) const {
 	if (valName.length()) {
 		// REGHELPERVALBEGIN

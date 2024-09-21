@@ -100,6 +100,7 @@ typedef long NTSTATUS;
     #pragma comment(lib, "Advapi32.lib")
     #pragma comment(lib, "wbemuuid.lib")
     #pragma comment(lib, "Propsys.lib")
+    #pragma comment(lib, "Shlwapi.lib")
 #endif
 
 // FSHelper Defines
@@ -154,10 +155,16 @@ typedef long NTSTATUS;
     (p)->pSecurityQualityOfService = 0;					\
 }
 
+// Prochelper defines
+#define PH_OUTCMDBUFSIZE        4096
+
 // NetHelper Defines
 #ifdef _DEBUG
 	#define DNSHELPER_SHOWERRORMSGBOX
 #endif
+
+// Syshelprr defines
+#define SH_STRBUFSZ             1024
 
 // Hardware geter defines
 #define HW_LINESDRIVE           2
@@ -180,8 +187,8 @@ typedef long NTSTATUS;
 #define MSSQLCONNTOOMANY		-1
 
 // WMI Helper defines
-#undef  WH_ADDEMPTYVALS
 #undef  WH_SKIPARRAYS
+#define WH_SKIPEMPTYVALS
 #define WH_TRIMDATA
 #define WH_MIMAWAITTIMEOUT      500
 #define WH_MAXAWAITTIMEOUT      3000

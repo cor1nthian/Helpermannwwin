@@ -143,8 +143,14 @@ size_t countOccurence(const std::string source, const std::string sequence);
 size_t countOccurence(const std::wstring source, const std::wstring sequence);
 std::vector<std::string> splitStr(const std::string str, const char* delimiter = "?", const bool includeEmpty = false);
 std::vector<std::wstring> splitStr(const std::wstring str, const wchar_t* delimiter = L"?", const bool includeEmpty = false);
-std::map<std::string, std::vector<std::string>> splitStr(const std::string str, const std::vector<const char*> delimiters, const bool ignoreCase = true, const bool includeEmpty = false);
-std::map<std::wstring, std::vector<std::wstring>> splitStr(const std::wstring str, const std::vector<const wchar_t*> delimiters, const bool ignoreCase = true, const bool includeEmpty = false);
+std::map<std::string, std::vector<std::string>> splitStr(const std::string str,
+	const std::vector<const char*> delimiters, const bool ignoreCase = true, const bool includeEmpty = false);
+std::map<std::wstring, std::vector<std::wstring>> splitStr(const std::wstring str,
+	const std::vector<const wchar_t*> delimiters, const bool ignoreCase = true, const bool includeEmpty = false);
+std::vector<std::string> tokenFromString(const std::string source, const std::string separator = "%",
+	const bool includeSeparators = true, const bool ignoreCase = true);
+std::vector<std::wstring> tokenFromString(const std::wstring source, const std::wstring separator = L"%",
+	const bool includeSeparators = true, const bool ignoreCase = true);
 std::string joinStrs(const std::vector<std::string> strs, const std::string delimiter = "",
 	const size_t startIdx = 0, const size_t endIdx = 0);
 std::wstring joinStrs(const std::vector<std::wstring> strs, const std::wstring delimiter = L"",
@@ -190,6 +196,8 @@ std::string wmiQuerySimpleFromObject(const std::string objectName,
 std::wstring wmiQuerySimpleFromObject(const std::wstring objectName,
 	const std::wstring namespacePath = L"ROOT\\CIMV2", const std::vector<std::wstring> queryFields = { L"*" },
 	const bool anyQueryFields = false);
+std::string genRandomString(const size_t length = 6, const std::string prefix = "_");
+std::wstring genRandomWString(const size_t length = 6, const std::wstring prefix = L"_");
 bool valInList(const std::vector<std::string> &list, const std::string val, const bool ignoreCase = true,
 	const bool exactMatch = false, size_t* posptr = 0);
 bool valInList(const std::vector<std::wstring> &list, const std::wstring val, const bool ignoreCase = true,

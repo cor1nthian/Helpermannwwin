@@ -36,8 +36,10 @@
 
 #include <Windows.h>
 #include <accctrl.h>
+#include <shlwapi.h>
 #include <Sddl.h>
 #include <lm.h>
+#include <random>
 #include <time.h>
 #include <ctime>
 #include <iomanip>
@@ -113,6 +115,7 @@ enum class SidType : unsigned char {
 
 bool IsBadReadPtr(void* p);
 bool IsBadWritePtr(void* p);
+int rnd(const int from, const int to);
 bool IsSIDWellKnown(const std::wstring strsid);
 bool IsSIDWellKnown(const ::PSID sid);
 std::vector<WKSid> GetWellKnownStrSIDs(::PSID domainSID = 0);
@@ -385,6 +388,15 @@ class SysHandler {
 		SysOpResult UserLogon(::HANDLE &token, std::wstring userName, std::wstring password,
 			std::wstring domain = L".") const;
 		SysOpResult ImpersonateUser(::HANDLE &token) const;
+		SysOpResult GetSysTempFolderPath(std::wstring &tempFldPath, const HKEY *root = 0) const;
+		SysOpResult RunVBSScript(std::wstring &output, std::wstring &erroutput, const std::wstring scriptPath,
+			const std::wstring scriptArgs) const;
+		SysOpResult RunPSScript(std::wstring& output, std::wstring &erroutput, const std::wstring scriptPath,
+			const std::wstring scriptArgs) const;
+		SysOpResult ExpandToken(std::wstring &outStr, const std::wstring token) const;
+		SysOpResult IsSysTempFolderAvailable(bool &available, const HKEY *root = 0) const;
+		SysOpResult IsPowershellAvailable(bool &available) const;
+		SysOpResult IsCScriptAvailable(bool &available) const;
 		/* Enumerates local groups
 			Param:
 			[out] [mandatory] group desctiption vector to receive data

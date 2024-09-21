@@ -1,5 +1,6 @@
 #include "WMIHelper.h"
 #include <propvarutil.h>
+#include "fshelper.h"
 
 WMIQueryAsyncSink::WMIQueryAsyncSink() {
 	m_lRef = 0;
@@ -303,19 +304,9 @@ WMIOpResult WMIHandler::InitWMI(const std::wstring namespacePath) {
 WMIOpResult WMIHandler::RunWMIQuery(std::map<std::wstring, std::wstring>& results, const std::wstring query,
 	const std::vector<std::wstring> requiredFields, const std::wstring namespacePath,
 	const std::wstring queryLanguage, const bool clearResults, const bool initWMI, const bool shutdownWMI) {
-	if (!m_WMIInitialized) {
-		if (initWMI) {
-			if (WMIOpResult::Success != InitWMI(namespacePath)) {
-				return WMIOpResult::Fail;
-			}
-		} else {
-			return WMIOpResult::Fail;
-		}
-	}
 	std::vector<std::wstring> reqFields;
 	if (valInList(requiredFields, gc_wmiAnyField, true, true)) {
-		if (WMIOpResult::Success != GetFieldsFromQuery(reqFields, query, namespacePath, queryLanguage, false,
-			initWMI, shutdownWMI)) {
+		if (WMIOpResult::Success != GetFieldsFromQuery(reqFields, query, namespacePath, queryLanguage, false)) {
 			return WMIOpResult::Fail;
 		}
 	} else {
@@ -329,6 +320,15 @@ WMIOpResult WMIHandler::RunWMIQuery(std::map<std::wstring, std::wstring>& result
 	if (!q) {
 		::VariantClear((::VARIANT*)qLang);
 		return WMIOpResult::Fail;
+	}
+	if (!m_WMIInitialized) {
+		if (initWMI) {
+			if (WMIOpResult::Success != InitWMI(namespacePath)) {
+				return WMIOpResult::Fail;
+			}
+		} else {
+			return WMIOpResult::Fail;
+		}
 	}
 	::IEnumWbemClassObject *pEnumerator = 0;
 	::HRESULT hres = m_pSvc->ExecQuery(qLang, q, ::WBEM_GENERIC_FLAG_TYPE::WBEM_FLAG_FORWARD_ONLY |
@@ -359,15 +359,6 @@ WMIOpResult WMIHandler::RunWMIQueryAsync(std::map<std::wstring, std::wstring> &r
 	const std::wstring query, const std::vector<std::wstring> requiredFields, const std::wstring namespacePath,
 	const std::wstring queryLanguage, const bool clearResults, const bool initWMI, const bool shutdownWMI,
 	const unsigned long awaitTimeout) {
-	if (!m_WMIInitialized) {
-		if (initWMI) {
-			if (WMIOpResult::Success != InitWMI(namespacePath)) {
-				return WMIOpResult::Fail;
-			}
-		} else {
-			return WMIOpResult::Fail;
-		}
-	}
 	unsigned long awaitTime = awaitTimeout;
 	if (WH_MIMAWAITTIMEOUT > awaitTime) {
 		awaitTime = WH_MIMAWAITTIMEOUT;
@@ -376,8 +367,7 @@ WMIOpResult WMIHandler::RunWMIQueryAsync(std::map<std::wstring, std::wstring> &r
 	}
 	std::vector<std::wstring> reqFields;
 	if (valInList(requiredFields, gc_wmiAnyField, true, true)) {
-		if (WMIOpResult::Success != GetFieldsFromQuery(reqFields, query, namespacePath, queryLanguage, false,
-			initWMI, shutdownWMI)) {
+		if (WMIOpResult::Success != GetFieldsFromQuery(reqFields, query, namespacePath, queryLanguage, false)) {
 			return WMIOpResult::Fail;
 		}
 	} else {
@@ -391,6 +381,15 @@ WMIOpResult WMIHandler::RunWMIQueryAsync(std::map<std::wstring, std::wstring> &r
 	if (!q) {
 		::VariantClear((::VARIANT*)qLang);
 		return WMIOpResult::Fail;
+	}
+	if (!m_WMIInitialized) {
+		if (initWMI) {
+			if (WMIOpResult::Success != InitWMI(namespacePath)) {
+				return WMIOpResult::Fail;
+			}
+		} else {
+			return WMIOpResult::Fail;
+		}
 	}
 	WMIQueryAsyncSink* pSink = new WMIQueryAsyncSink;
 	if (!pSink) {
@@ -475,7 +474,7 @@ WMIOpResult WMIHandler::GetFieldsFromQuery(std::vector<std::wstring> &fields, co
 		if (!uReturn) {
 			break;
 		}
-		::SAFEARRAY* psaNames = NULL;
+		::SAFEARRAY* psaNames = 0;
 		hres = pObj->GetNames(0, ::WBEM_CONDITION_FLAG_TYPE::WBEM_FLAG_ALWAYS |
 			::WBEM_CONDITION_FLAG_TYPE::WBEM_FLAG_NONSYSTEM_ONLY, 0, &psaNames);
 		if (FAILED(hres)) {
@@ -502,22 +501,37 @@ WMIOpResult WMIHandler::GetFieldsFromQuery(std::vector<std::wstring> &fields, co
 		if (clearFields) {
 			fields.clear();
 		}
-		for (long i = lLower; i <= lUpper; i++) {
-			// Get this property.
-			hres = SafeArrayGetElement(psaNames, &i, &PropName);
-			if (FAILED(hres)) {
-				::VariantClear((::VARIANT*)qLang);
-				::VariantClear((::VARIANT*)q);
-				::SafeArrayDestroy(psaNames);
-				return WMIOpResult::Fail;
-			}
-			if (PropName) {
-				if (std::find(fields.begin(), fields.end(), PropName) == fields.end()) {
-					fields.push_back(PropName);
-				}
-				::VariantClear((::VARIANT*)PropName);
+		::BSTR HUGEP* pbstr = 0;
+		hres = ::SafeArrayAccessData(psaNames, (void HUGEP**) &pbstr);
+		if (FAILED(hres)) {
+			::VariantClear((::VARIANT*)qLang);
+			::VariantClear((::VARIANT*)q);
+			::SafeArrayDestroy(psaNames);
+			return WMIOpResult::Fail;
+		}
+		for (long i = lLower; i <= lUpper; ++i) {
+			if (std::find(fields.begin(), fields.end(), pbstr[i]) == fields.end()) {
+				fields.push_back(pbstr[i]);
 			}
 		}
+		hres = ::SafeArrayUnaccessData(psaNames);
+		//for (long i = lLower; i <= lUpper; ++i) {
+		//	// Get this property.
+		//	hres = SafeArrayGetElement(psaNames, &i, &PropName);
+		//	if (FAILED(hres)) {
+		//		::VariantClear((::VARIANT*)qLang);
+		//		::VariantClear((::VARIANT*)q);
+		//		::SafeArrayDestroy(psaNames);
+		//		return WMIOpResult::Fail;
+		//	}
+		//	if (PropName) {
+		//		if (std::find(fields.begin(), fields.end(), PropName) == fields.end()) {
+		//			fields.push_back(PropName);
+		//		}
+		//		::VariantClear((::VARIANT*)PropName);
+		//	}
+		//	Sleep(1);
+		// }
 		::SafeArrayDestroy(psaNames);
 	}
 	if (shutdownWMI) {
@@ -606,8 +620,257 @@ WMIOpResult WMIHandler::GetFieldsFromObject(std::vector<std::wstring> &fields, c
 	return WMIOpResult::Success;
 }
 
-WMIOpResult WMIHandler::CheckWMIAvailable(bool &available) {
+WMIOpResult WMIHandler::EnumWMINamespaces(std::vector<std::wstring>& namespaces,
+	const WMIEnumSource enumSource, const std::wstring namespaceName, const bool clearList, const bool sortList, const SortOrder sortOrder,
+	const HKEY *root, const std::wstring namespacePath, const bool initWMI, const bool shutdownWMI) {
+	if (clearList) {
+		namespaces.clear();
+	}
+	if (WMIEnumSource::VBS == enumSource) {
+		bool avail = false;
+		SysHandler sys;
+		if (SysOpResult::Success == sys.IsCScriptAvailable(avail)) {
+			if (avail) {
+				std::wstring tmpfld;
+				if (SysOpResult::Success == sys.GetSysTempFolderPath(tmpfld, root)) {
+					FSHandler fsh;
+					std::wstring out, errout, replacedquery =
+						replaceAll(gc_wmiCScriptNamespaceQuery, L"?replace?", namespaceName), tscriptpath =
+						tmpfld + L"\\tscript" + genRandomWString() + L".vbs";
+					if (FSOpResult::Success == fsh.WriteToTextFile(tscriptpath, replacedquery)) {
+						ProcessHandler proc;
+						if (ProcOpResult::Success == proc.RunCommandPiped(L"cscript /nologo " + tscriptpath, out,
+							errout)) {
+							if (partialMatch(out, L"QueryResults:")) {
+								std::vector<std::wstring> outspl = splitStr(out, L"\r\n");
+								outspl.erase(outspl.begin());
+								if (sortList) {
+									if (SortOrder::Ascending == sortOrder) {
+										std::sort(outspl.begin(), outspl.end());
+									} else if (SortOrder::Descending == sortOrder) {
+										std::sort(outspl.rbegin(), outspl.rend());
+									}
+								}
+								namespaces = outspl;
+								::DeleteFile(tscriptpath.c_str());
+								return WMIOpResult::Success;
+							} else {
+								::DeleteFile(tscriptpath.c_str());
+								return WMIOpResult::Fail;
+							}
+						} else {
+							::DeleteFile(tscriptpath.c_str());
+							return WMIOpResult::Fail;
+						}
+					} else {
+						return WMIOpResult::Fail;
+					}
+				} else {
+					return WMIOpResult::Fail;
+				}
+			} else {
+				return WMIOpResult::Fail;
+			}
+		} else {
+			return WMIOpResult::Fail;
+		}
+	} else if (WMIEnumSource::Powershell == enumSource) {
+		bool avail = false;
+		SysHandler sys;
+		if (SysOpResult::Success == sys.IsPowershellAvailable(avail)) {
+			if (avail) {
+				ProcessHandler proc;
+				std::wstring out, errout, replacedquery =
+					replaceAll(gc_wmiPSNamespaceQuery, L"?replace?", namespaceName);
+				if (ProcOpResult::Success == proc.RunCommandPiped(L"powershell -Command \"" +
+					replacedquery + L"\"", out, errout)) {
+					if (partialMatch(out, L"QueryResults:")) {
+						std::vector<std::wstring> outspl = splitStr(out, L"\r\n");
+						outspl.erase(outspl.begin());
+						if (sortList) {
+							if (SortOrder::Ascending == sortOrder) {
+								std::sort(outspl.begin(), outspl.end());
+							} else if (SortOrder::Descending == sortOrder) {
+								std::sort(outspl.rbegin(), outspl.rend());
+							}
+						}
+						namespaces = outspl;
+						return WMIOpResult::Success;
+					} else {
+						return WMIOpResult::Fail;
+					}
+				} else {
+					return WMIOpResult::Fail;
+				}
+			} else {
+				return WMIOpResult::Fail;
+			}
+		} else {
+			return WMIOpResult::Fail;
+		}
+	} else if (WMIEnumSource::Native == enumSource) {
+		// realization missing
+		return WMIOpResult::Fail;
+	} else {
+		return WMIOpResult::Fail;
+	}
+}
+
+WMIOpResult WMIHandler::EnumWMIClasses(std::vector<std::wstring> &classes, const WMIEnumSource enumSource,
+	const std::wstring namespaceName, const bool clearList, const bool sortList, const SortOrder sortOrder,
+	const HKEY *root, const bool initWMI, const bool shutdownWMI) {
+	if (!namespaceName.length()) {
+		return WMIOpResult::Fail;
+	}
+	if (clearList) {
+		classes.clear();
+	}
+	if (WMIEnumSource::VBS == enumSource) {
+		bool avail = false;
+		SysHandler sys;
+		if (SysOpResult::Success == sys.IsCScriptAvailable(avail)) {
+			if (avail) {
+				std::wstring tmpfld;
+				if (SysOpResult::Success == sys.GetSysTempFolderPath(tmpfld, root)) {
+					FSHandler fsh;
+					std::wstring out, errout, replacedquery = replaceAll(gc_wmiCScriptClassesQuery,
+						L"?replace?", namespaceName), tscriptpath = tmpfld + L"\\tscript" + genRandomWString() + L".vbs";
+					if (FSOpResult::Success == fsh.WriteToTextFile(tscriptpath, replacedquery)) {
+						ProcessHandler proc;
+						if (ProcOpResult::Success == proc.RunCommandPiped(L"cscript /nologo " + tscriptpath, out,
+							errout)) {
+							if (partialMatch(out, L"QueryResults:")) {
+								std::vector<std::wstring> outspl = splitStr(out, L"\r\n");
+								outspl.erase(outspl.begin());
+								if (sortList) {
+									if (SortOrder::Ascending == sortOrder) {
+										std::sort(outspl.begin(), outspl.end());
+									} else if (SortOrder::Descending == sortOrder) {
+										std::sort(outspl.rbegin(), outspl.rend());
+									}
+								}
+								classes = outspl;
+								::DeleteFile(tscriptpath.c_str());
+								return WMIOpResult::Success;
+							} else {
+								::DeleteFile(tscriptpath.c_str());
+								return WMIOpResult::Fail;
+							}
+						} else {
+							::DeleteFile(tscriptpath.c_str());
+							return WMIOpResult::Fail;
+						}
+					} else {
+						return WMIOpResult::Fail;
+					}
+				} else {
+					return WMIOpResult::Fail;
+				}
+			} else {
+				return WMIOpResult::Fail;
+			}
+		} else {
+			return WMIOpResult::Fail;
+		}
+	} else if (WMIEnumSource::Powershell == enumSource) {
+		bool avail = false;
+		SysHandler sys;
+		if (SysOpResult::Success == sys.IsPowershellAvailable(avail)) {
+			if (avail) {
+				std::wstring replacedquery = replaceAll(gc_wmiPSClassesQuery, L"?replace?", namespaceName);
+				ProcessHandler proc;
+				std::wstring out, errout;
+				if (ProcOpResult::Success == proc.RunCommandPiped(L"powershell -Command \"" +
+					replacedquery + L"\"", out, errout)) {
+					if (partialMatch(out, L"QueryResults:")) {
+						std::vector<std::wstring> outspl = splitStr(out, L"\r\n");
+						outspl.erase(outspl.begin());
+						if (sortList) {
+							if (SortOrder::Ascending == sortOrder) {
+								std::sort(outspl.begin(), outspl.end());
+							} else if (SortOrder::Descending == sortOrder) {
+								std::sort(outspl.rbegin(), outspl.rend());
+							}
+						}
+						classes = outspl;
+						return WMIOpResult::Success;
+					} else {
+						return WMIOpResult::Fail;
+					}
+				} else {
+					return WMIOpResult::Fail;
+				}
+			} else {
+				return WMIOpResult::Fail;
+			}
+		} else {
+			return WMIOpResult::Fail;
+		}
+	} else if (WMIEnumSource::Native == enumSource) {
+		if (!m_WMIInitialized) {
+			if (initWMI) {
+				if (WMIOpResult::Success != InitWMI(namespaceName)) {
+					return WMIOpResult::Fail;
+				}
+			} else {
+				return WMIOpResult::Fail;
+			}
+		}
+		::IWbemClassObject* pObj = 0;
+		::IEnumWbemClassObject* pEnumerator = 0;
+		::BSTR className = ::_bstr_t(/*namespaceName.c_str()*/);
+		::HRESULT hres = m_pSvc->CreateClassEnum(className, ::WBEM_GENERIC_FLAG_TYPE::WBEM_FLAG_FORWARD_ONLY |
+			::WBEM_GENERIC_FLAG_TYPE::WBEM_FLAG_RETURN_IMMEDIATELY, 0, &pEnumerator);
+		if (FAILED(hres)) {
+			::VariantClear((::VARIANT*)className);
+			return WMIOpResult::Fail;
+		}
+		unsigned long uReturn = 0;
+		while (pEnumerator) {
+			::HRESULT hres = pEnumerator->Next(::WBEM_INFINITE, 1, &pObj, &uReturn);
+			if (!uReturn) {
+				break;
+			}
+			::VARIANT vtProp = { 0 };
+			hres = pObj->Get(L"__Class", 0, &vtProp, 0, 0);
+			if (FAILED(hres)) {
+				::VariantClear((::VARIANT*)&vtProp);
+				::VariantClear((::VARIANT*)className);
+				return WMIOpResult::Fail;
+			}
+			if (std::find(classes.begin(), classes.end(), vtProp.bstrVal) == classes.end()) {
+				classes.push_back(vtProp.bstrVal);
+			}
+			::VariantClear(&vtProp);
+		}
+		if (sortList) {
+			if (SortOrder::Ascending == sortOrder) {
+				std::sort(classes.begin(), classes.end());
+			} else if (SortOrder::Descending == sortOrder) {
+				std::sort(classes.rbegin(), classes.rend());
+			}
+		}
+		if (shutdownWMI) {
+			if (WMIOpResult::Success != ShutdownWMI()) {
+				::VariantClear((::VARIANT*)className);
+				return WMIOpResult::Fail;
+			}
+		}
+	} else {
+		return WMIOpResult::Fail;
+	}
 	return WMIOpResult::Success;
+}
+
+WMIOpResult WMIHandler::IsWMIAvailable(bool &available) {
+	std::map<std::wstring, std::wstring> res;
+	if (WMIOpResult::Success == RunWMIQuery(res, L"select BuildNumber from win32_operatingsystem")) {
+		available = true;
+		return WMIOpResult::Success;
+	} else {
+		available = false;
+		return WMIOpResult::Fail;
+	}
 }
 
 WMIOpResult WMIHandler::ShutdownWMI() {
@@ -643,19 +906,17 @@ WMIOpResult WMIHandler::processQueryFields(std::map<std::wstring, std::wstring> 
 		::VARIANT vtProp = { 0 };
 		std::wstring reskey, temp;
 		for (size_t i = 0; i < requiredFields.size(); ++i) {
-			if (L"MediaLoaded" == requiredFields[i]) {
-				Sleep(1);
-			}
 			hres = pclsObj->Get(requiredFields[i].c_str(), 0, &vtProp, &type, 0);
 			if (FAILED(hres)) {
-#ifdef WH_ADDEMPTYVALS
+#ifdef WH_SKIPEMPTYVALS
 				temp = gc_wmiEmptyval;
-#else
-				continue;
 #endif
 			} else {
 				if ((::VARENUM::VT_NULL != vtProp.vt) && (::VARENUM::VT_EMPTY != vtProp.vt)) {
 					if (::CIMTYPE_ENUMERATION::CIM_FLAG_ARRAY & type) {
+#ifdef WH_SKIPARRAYS
+						temp = gc_wmiArray;
+#else
 						if (::CIMTYPE_ENUMERATION::CIM_STRING & type) {
 							SAFEARRAY* pSafeArray = V_ARRAY(&vtProp);
 							hres = ::SafeArrayGetLBound(pSafeArray, 1, &lLower);
@@ -690,16 +951,13 @@ WMIOpResult WMIHandler::processQueryFields(std::map<std::wstring, std::wstring> 
 								::SafeArrayDestroy(pSafeArray);
 								return WMIOpResult::Fail;
 							}
-						} else {
-#ifdef WH_SKIPARRAYS
-							temp = gc_wmiArray;
-#else
-							::VARIANT Element = { 0 };
-							/*void* Element = malloc(sizeof(::VARIANT));
-							if (!Element) {
-								::VariantClear(&vtProp);
-								return WMIOpResult::Fail;
-							}*/
+						} else if((::CIMTYPE_ENUMERATION::CIM_UINT8 & type) ||
+									(::CIMTYPE_ENUMERATION::CIM_UINT16 & type) ||
+									(::CIMTYPE_ENUMERATION::CIM_UINT32 & type) ||
+									(::CIMTYPE_ENUMERATION::CIM_SINT8 & type) ||
+									(::CIMTYPE_ENUMERATION::CIM_SINT16 & type) ||
+									(::CIMTYPE_ENUMERATION::CIM_SINT32 & type)) {
+							long long Element = { 0 };
 							::SAFEARRAY* pSafeArray = vtProp.parray;
 							hres = ::SafeArrayGetLBound(pSafeArray, 1, &lLower);
 							if (FAILED(hres)) {
@@ -713,24 +971,17 @@ WMIOpResult WMIHandler::processQueryFields(std::map<std::wstring, std::wstring> 
 								return WMIOpResult::Fail;
 							}
 							for (long j = lLower; j <= lUpper; ++j) {
-								// memset(Element, 0, sizeof(::VARIANT));
 								hres = ::SafeArrayGetElement(pSafeArray, &j, &Element);
-								int aaa = V_INT(&Element);
 								if (FAILED(hres)) {
 									::SafeArrayDestroy(pSafeArray);
 									return WMIOpResult::Fail;
 								}
 								if (j < lUpper) {
-									// temp = temp + std::wstring(::_bstr_t(Element)) + gc_wmiJoinSymbol;
-									// temp = temp + Element + gc_wmiJoinSymbol;
 									temp = temp + std::wstring(_bstr_t(Element)) + gc_wmiJoinSymbol;
 								} else {
-									// temp = temp + std::wstring(::_bstr_t(Element));
-									// temp = temp + Element;
 									temp = temp + std::wstring(_bstr_t(Element));
 								}
 							}
-							// SAFE_FREE(Element);
 							::SafeArrayDestroy(pSafeArray);
 #endif
 						}
@@ -770,7 +1021,7 @@ WMIOpResult WMIHandler::processQueryFields(std::map<std::wstring, std::wstring> 
 						}
 					}
 				} else {
-#ifdef WH_ADDEMPTYVALS
+#ifndef WH_SKIPEMPTYVALS
 					temp = gc_wmiEmptyval;
 #endif
 					hres = ::VariantClear(&vtProp);
@@ -778,7 +1029,7 @@ WMIOpResult WMIHandler::processQueryFields(std::map<std::wstring, std::wstring> 
 						::VariantClear(&vtProp);
 						return WMIOpResult::Fail;
 					}
-#ifndef WH_ADDEMPTYVALS
+#ifdef WH_SKIPEMPTYVALS
 					continue;
 #endif
 				}

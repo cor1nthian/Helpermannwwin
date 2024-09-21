@@ -215,6 +215,7 @@ class RegHandler {
 			const std::wstring subCommandMenuNameAdd = L".mycmd", const HKEY *root = 0) const;
 		RegOpResult GetSoftwareVersion(const std::wstring softwareName, std::vector<SOFTWAREVERSION> &versions,
 			const bool uniqueValues = true, const bool anySoftware = true, const HKEY *root = 0) const;
+		RegOpResult GetSysTempPath(std::wstring &path, const HKEY *root = 0);
 		RegOpResult DeleteVal(const std::wstring valName, const HKEY *root = 0) const;
 		RegOpResult CopyVal(const std::wstring source, const std::wstring destKeyName,
 			const std::wstring destValName, const HKEY *root = 0) const;

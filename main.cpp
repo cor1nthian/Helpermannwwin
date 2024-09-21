@@ -74,11 +74,36 @@ int wmain(int argc, wchar_t* argv[]) {
 	ACLHandler aclh;
 	WMIHandler wmih;
 	MSSQLDBHandler mssqlh;
+	bool avail = false;
+	std::map<std::wstring, std::wstring> wmires;
+	std::map<std::wstring, std::wstring> wmires2;
+	/*wmih.RunWMIQuery(wmires, L"SELECT * FROM ME_System",
+		{ gc_wmiAnyField }, L"root\\Intel_ME", L"WQL", true, true, true);
+	wmih.RunWMIQuery(wmires2, L"SELECT * FROM Win32_PowerPlan WHERE IsActive = TRUE",
+		{ gc_wmiAnyField }, L"root\\cimv2\\power");*/
+	std::vector<std::wstring> tws1, tws2, tws3, tws4;
+	wmih.EnumWMIClasses(tws3, WMIEnumSource::Powershell, L"root\\cimv2\\power");
+	wmih.EnumWMINamespaces(tws1, WMIEnumSource::VBS);
+	wmih.EnumWMINamespaces(tws2, WMIEnumSource::Powershell);
+	wmih.EnumWMIClasses(tws1, WMIEnumSource::Powershell, L"root\\Intel_ME");
+	wmih.EnumWMIClasses(tws2, WMIEnumSource::Powershell, L"root\\Intel_ME\\ME_Event");
+	wmih.EnumWMIClasses(tws3, WMIEnumSource::Powershell, L"root\\cimv2\\power");
+	wmih.EnumWMIClasses(tws4, WMIEnumSource::Powershell, L"root\\RSOP\\Computer");
+	
+	std::wcout << genRandomWString(6, L"");
+	sys.IsSysTempFolderAvailable(avail);
+	// std::wstring rrr = genRandomWString();
+	std::vector<std::string> rrr2 = tokenFromString("%%token%%%%tokok%%123", "%%", false);
+	std::wstring rrr;
+	// sys.IsCScriptAvailable(avail);
+	std::wstring cret, creterr;
+	sys.IsPowershellAvailable(avail);
+	sys.IsCScriptAvailable(avail);
+	proc.RunCommandPiped(L"cmd /c dir", cret, creterr);
 	// std::string wmiobj = wmiObjectFromQuery("SELECT * FROM WIN32_DISKDRIVE");
 	// std::string wmiobj = wmiObjectFromQuery("Associators Of{Win32_NetworkAdapter.DeviceId = 1}Where AssocClass = Win32_NetworkAdapterSetting");
 	std::vector<std::wstring> reqfields{ L"Name", L"Index" };
 	// std::vector<std::wstring> reqfields{ L"Name", L"BootPartition" };
-	std::map<std::wstring, std::wstring> wmires;
 	// wmih.RunWMIQuery(wmires, reqfields, L"select * from win32_DiskDrive");
 	wmih.GetFieldsFromObject(reqfields, L"win32_DiskDrive");
 	// wmih.GetFieldsFromQuery(reqfields, L"select * from win32_DiskDrive");

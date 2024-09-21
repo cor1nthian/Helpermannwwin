@@ -3,6 +3,7 @@
 
 #define _WIN32_DCOM
 #include <comdef.h>
+#include <oledb.h>
 #include <Wbemidl.h>
 #include "config.h"
 #include "syshelper.h"
@@ -13,9 +14,45 @@ const std::wstring const gc_wmiArray		= L"(array)";
 const std::wstring const gc_wmiAnyField		= L"*";
 const std::wstring const gc_wmiJoinSymbol	= L" ]|[ ";
 
+const std::wstring const gc_wmiCScriptNamespaceQuery = L"WScript.Echo \"QueryResults:\"\n\
+strComputer = \".\"\n\
+Call EnumNameSpaces(\"?replace?\")\n\
+Sub EnumNameSpaces(strNameSpace)\n\
+WScript.Echo strNameSpace\n\
+Set objWMIService=GetObject(\"winmgmts:{impersonationLevel=impersonate}\\\\\"&strComputer&\"\\\"&strNameSpace)\n\
+Set colNameSpaces=objWMIService.InstancesOf(\"__NAMESPACE\")\n\
+For Each objNameSpace In colNameSpaces\n\
+Call EnumNameSpaces(strNameSpace&\"\\\"&objNameSpace.Name)\n\
+Next\n\
+End Sub";
+const std::wstring const gc_wmiCScriptClassesQuery = L"WSCript.Echo \"QueryResults:\"\n\
+Set objWMIService=GetObject(\"winmgmts:{impersonationLevel=impersonate}?replace?\")\n\
+Set colClasses=objWMIService.SubClassesOf\n\
+For Each objClass In colClasses\n\
+WScript.Echo objClass.Path_.Class\n\
+Next";
+
+const std::wstring const gc_wmiPSNamespaceQuery = L"function EnumNamespace{Param([Parameter(Position=0,Mandatory=$true)]\
+[System.String]$namespaceName)[System.String[]]$namespaces=Get-CimInstance -Class __Namespace -Namespace $namespaceName|\
+ForEach-Object Name;foreach($nspc in $namespaces){$nspc = $namespaceName +'\\' + $nspc;EnumNamespace $nspc;\
+Write-Output $nspc;}}Write-Output QueryResults:;Write-Output ?replace?;EnumNamespace ?replace?";
+const std::wstring const gc_wmiPSClassesQuery = L"Write-Output QueryResults:;\
+Get-CimClass -Namespace ?replace?|ForEach-Object CimClassName;";
+
 enum class WMIOpResult : unsigned char {
 	Success,
 	Fail
+};
+
+enum class SortOrder : unsigned char {
+	Ascending,
+	Descending
+};
+
+enum class WMIEnumSource : unsigned char {
+	VBS,
+	Powershell,
+	Native
 };
 
 class WMIQueryAsyncSink;
@@ -43,7 +80,7 @@ class WMIQueryAsyncSink : public ::IWbemObjectSink {
 		virtual ::HRESULT STDMETHODCALLTYPE QueryInterface(const GUID &riid, void** ppv);
 		virtual ::HRESULT STDMETHODCALLTYPE Indicate(long lObjectCount,
 			::IWbemClassObject __RPC_FAR* __RPC_FAR* apObjArray);
-		virtual ::HRESULT STDMETHODCALLTYPE  SetStatus(long lFlags, ::HRESULT hResult, ::BSTR strParam,
+		virtual ::HRESULT STDMETHODCALLTYPE SetStatus(long lFlags, ::HRESULT hResult, ::BSTR strParam,
 			::IWbemClassObject __RPC_FAR* pObjParam);
 		WMIOpResult SetHandler(WMIHandler *wmiHandler);
 	protected:
@@ -84,7 +121,16 @@ class WMIHandler {
 		WMIOpResult GetFieldsFromObject(std::vector<std::wstring> &fields, const std::wstring objectName,
 			const std::wstring namespacePath = L"ROOT\\CIMV2", const bool clearFields = true,
 			const bool initWMI = true, const bool shutdownWMI = false);
-		WMIOpResult CheckWMIAvailable(bool &available);
+		WMIOpResult EnumWMINamespaces(std::vector<std::wstring> &namespaces,
+			const WMIEnumSource enumSource = WMIEnumSource::VBS, const std::wstring namespaceName = L"ROOT",
+			const bool clearList = true, const bool sortList = true, const SortOrder sortOrder = SortOrder::Ascending,
+			const HKEY *root = 0, const std::wstring namespacePath = L"ROOT", const bool initWMI = true,
+			const bool shutdownWMI = false);
+		WMIOpResult EnumWMIClasses(std::vector<std::wstring> &classes,
+			const WMIEnumSource enumSource = WMIEnumSource::VBS, const std::wstring namespaceName = L"ROOT\\CIMV2",
+			const bool clearList = true, const bool sortList = true, const SortOrder sortOrder = SortOrder::Ascending,
+			const HKEY *root = 0, const bool initWMI = true, const bool shutdownWMI = false);
+		WMIOpResult IsWMIAvailable(bool &available);
 		WMIOpResult ShutdownWMI();
 	protected:
 		std::vector<std::wstring> m_asyncRequiredFields;

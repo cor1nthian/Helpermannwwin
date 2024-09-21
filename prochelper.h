@@ -300,6 +300,8 @@ class ProcessHandler {
 		unsigned long GetCurrentProcPid() const;
 		std::vector<std::wstring> GetProcPrivileges(const unsigned long pid,
 			const unsigned long desiredProcRights = PROCESS_ALL_ACCESS) const;
+		ProcOpResult RunCommandPiped(const std::wstring command, std::wstring &output, std::wstring &erroutput,
+			unsigned char restartNum = 10, unsigned long sleepTime = 1000) const;
 		ProcOpResult GetProcUserSID(const unsigned long pid, ::PSID &sid,
 			const unsigned long desiredProcRights = PROCESS_ALL_ACCESS) const;
 		ProcOpResult ListProcesses(std::vector<ProcDesc>& procList);

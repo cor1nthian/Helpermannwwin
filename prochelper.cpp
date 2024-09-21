@@ -1,3 +1,4 @@
+// #include <iostream>
 #include "prochelper.h"
 
 ProcResource::ProcResource() {
@@ -797,6 +798,112 @@ std::vector<std::wstring> ProcessHandler::GetProcPrivileges(const unsigned long 
 		}
 	}
 	return ret;
+}
+
+ProcOpResult ProcessHandler::RunCommandPiped(const std::wstring command, std::wstring &output,
+	std::wstring &erroutput, unsigned char restartNum, unsigned long sleepTime) const {
+	::HANDLE hChildStd_OUT_Rd = 0;
+	::HANDLE hChildStd_OUT_Wr = 0;
+	::HANDLE hChildStd_ERR_Rd = 0;
+	::HANDLE hChildStd_ERR_Wr = 0;
+	::SECURITY_ATTRIBUTES sa;
+	memset(&sa, 0, sizeof(::SECURITY_ATTRIBUTES));
+	// Set the bInheritHandle flag so pipe handles are inherited.
+	sa.nLength = sizeof(::SECURITY_ATTRIBUTES);
+	sa.bInheritHandle = true;
+	sa.lpSecurityDescriptor = 0;
+	// Create a pipe for the child process's STDERR.
+	if (!::CreatePipe(&hChildStd_ERR_Rd, &hChildStd_ERR_Wr, &sa, 0)) {
+		return ProcOpResult::Fail;
+	}
+	// Ensure the read handle to the pipe for STDERR is not inherited.
+	if (!::SetHandleInformation(hChildStd_ERR_Rd, HANDLE_FLAG_INHERIT, 0)) {
+		return ProcOpResult::Fail;
+	}
+	// Create a pipe for the child process's STDOUT.
+	if (!::CreatePipe(&hChildStd_OUT_Rd, &hChildStd_OUT_Wr, &sa, 0)) {
+		return ProcOpResult::Fail;
+	}
+	// Ensure the read handle to the pipe for STDOUT is not inherited
+	if (!::SetHandleInformation(hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0)) {
+		return ProcOpResult::Fail;
+	}
+	::PROCESS_INFORMATION piProcInfo = { 0 };
+	::STARTUPINFO siStartInfo = { 0 };
+	bool bSuccess = false;
+	// Set up members of the PROCESS_INFORMATION structure.
+	memset(&piProcInfo, 0, sizeof(::PROCESS_INFORMATION));
+	// Set up members of the STARTUPINFO structure.
+	// This structure specifies the STDERR and STDOUT handles for redirection.
+	memset(&siStartInfo, 0, sizeof(::STARTUPINFO));
+	siStartInfo.cb = sizeof(::STARTUPINFO);
+	siStartInfo.hStdError = hChildStd_ERR_Wr;
+	siStartInfo.hStdOutput = hChildStd_OUT_Wr;
+	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+	// Create the child process.
+	bSuccess = ::CreateProcess(
+		0,							// program name
+		(wchar_t*)command.c_str(),	// command line
+		0,							// process security attributes
+		0,							// primary thread security attributes
+		true,						// handles are inherited
+		CREATE_NO_WINDOW,			// creation flags (this is what hides the window)
+		0,							// use parent's environment
+		0,							// use parent's current directory
+		&siStartInfo,				// STARTUPINFO pointer
+		&piProcInfo					// receives PROCESS_INFORMATION
+	);
+	::CloseHandle(hChildStd_ERR_Wr);
+	::CloseHandle(hChildStd_OUT_Wr);
+	if (!bSuccess) {
+		::CloseHandle(hChildStd_ERR_Rd);
+		::CloseHandle(hChildStd_OUT_Rd);
+		return ProcOpResult::Fail;
+	}
+	// read output
+	unsigned long dwRead = 0;
+	NEW_ARR_NULLIFY(cBuf, char, PH_OUTCMDBUFSIZE);
+	if (!cBuf) {
+		return ProcOpResult::Fail;
+	}
+	bool bSuccess2 = false;
+	// read stdout
+	for (;;) {
+		memset(cBuf, 0, PH_OUTCMDBUFSIZE * sizeof(char));
+		bSuccess2 = ::ReadFile(hChildStd_OUT_Rd, cBuf, PH_OUTCMDBUFSIZE * sizeof(char), &dwRead, 0);
+		if (!bSuccess2 || !dwRead) {
+			break;
+		}
+		output = output + str2wstr(cBuf);
+	}
+	dwRead = 0;
+	// read stderr
+	for (;;) {
+		memset(cBuf, 0, PH_OUTCMDBUFSIZE * sizeof(char));
+		bSuccess2 = ::ReadFile(hChildStd_ERR_Rd, cBuf, PH_OUTCMDBUFSIZE * sizeof(char), &dwRead, 0);
+		if (!bSuccess2 || !dwRead) {
+			break;
+		}
+		erroutput = erroutput + str2wstr(cBuf);
+	}
+	SAFE_ARR_DELETE(cBuf);
+	::CloseHandle(hChildStd_ERR_Rd);
+	::CloseHandle(hChildStd_OUT_Rd);
+	if (!output.length()) {
+		if (restartNum) {
+			for (size_t i = 0; i < restartNum; ++i) {
+				RunCommandPiped(command, output, erroutput, 0, 0);
+				// std::cout << "RESTARTED!" << std::endl;
+				if (output.length()) {
+					break;
+				}
+				if (sleepTime) {
+					Sleep(sleepTime);
+				}
+			}
+		}
+	}
+	return ProcOpResult::Success;
 }
 
 ProcOpResult ProcessHandler::GetProcUserSID(const unsigned long pid, ::PSID &sid,
