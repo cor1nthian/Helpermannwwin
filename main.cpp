@@ -75,6 +75,7 @@ int wmain(int argc, wchar_t* argv[]) {
 	WMIHandler wmih;
 	MSSQLDBHandler mssqlh;
 	bool avail = false;
+	// std::map<size_t, std::wstring> rett = tokenFromString(L"%token%%lol%%kek%%lol%%kek%", L"%", false, true, true);
 	std::map<std::wstring, std::wstring> wmires;
 	std::map<std::wstring, std::wstring> wmires2;
 	/*wmih.RunWMIQuery(wmires, L"SELECT * FROM ME_System",
@@ -82,7 +83,7 @@ int wmain(int argc, wchar_t* argv[]) {
 	wmih.RunWMIQuery(wmires2, L"SELECT * FROM Win32_PowerPlan WHERE IsActive = TRUE",
 		{ gc_wmiAnyField }, L"root\\cimv2\\power");*/
 	std::vector<std::wstring> tws1, tws2, tws3, tws4;
-	wmih.EnumWMIClasses(tws3, WMIEnumSource::Powershell, L"root\\cimv2\\power");
+	// wmih.EnumWMIClasses(tws3, WMIEnumSource::Powershell, L"root\\cimv2\\power");
 	wmih.EnumWMINamespaces(tws1, WMIEnumSource::VBS);
 	wmih.EnumWMINamespaces(tws2, WMIEnumSource::Powershell);
 	wmih.EnumWMIClasses(tws1, WMIEnumSource::Powershell, L"root\\Intel_ME");
@@ -93,7 +94,7 @@ int wmain(int argc, wchar_t* argv[]) {
 	std::wcout << genRandomWString(6, L"");
 	sys.IsSysTempFolderAvailable(avail);
 	// std::wstring rrr = genRandomWString();
-	std::vector<std::string> rrr2 = tokenFromString("%%token%%%%tokok%%123", "%%", false);
+	std::map<size_t, std::string> rrr2 = tokenFromString("%%token%%%%tokok%%123", "%%", false);
 	std::wstring rrr;
 	// sys.IsCScriptAvailable(avail);
 	std::wstring cret, creterr;

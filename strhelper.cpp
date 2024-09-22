@@ -1119,15 +1119,23 @@ bool endsWith(const std::wstring source, const std::wstring sequence, const bool
     }
 }
 
-bool partialMatch(const std::string source, const std::string compare, const bool ignoreCase) {
+bool partialMatch(const std::string source, const std::string compare, const bool ignoreCase, size_t *position) {
     if (ignoreCase) {
-        if (std::string::npos != lower_copy(source).find(lower_copy(compare))) {
+        size_t pos = lower_copy(source).find(lower_copy(compare));
+        if (std::wstring::npos != pos) {
+            if (position) {
+                *position = pos;
+            }
             return true;
         } else {
             return false;
         }
     } else {
-        if (std::string::npos != source.find(compare)) {
+        size_t pos = source.find(compare);
+        if (std::wstring::npos != pos) {
+            if (position) {
+                *position = pos;
+            }
             return true;
         } else {
             return false;
@@ -1135,15 +1143,23 @@ bool partialMatch(const std::string source, const std::string compare, const boo
     }
 }
 
-bool partialMatch(const std::wstring source, const std::wstring compare, const bool ignoreCase) {
+bool partialMatch(const std::wstring source, const std::wstring compare, const bool ignoreCase, size_t *position) {
     if (ignoreCase) {
-        if (std::wstring::npos != lower_copy(source).find(lower_copy(compare))) {
+        size_t pos = lower_copy(source).find(lower_copy(compare));
+        if (std::wstring::npos != pos) {
+            if (position) {
+                *position = pos;
+            }
             return true;
         } else {
             return false;
         }
     } else {
-        if (std::wstring::npos != source.find(compare)) {
+        size_t pos = source.find(compare);
+        if (std::wstring::npos != pos) {
+            if (position) {
+                *position = pos;
+            }
             return true;
         } else {
             return false;
@@ -1243,7 +1259,8 @@ std::vector<std::wstring> splitStr(const std::wstring str, const wchar_t* delimi
     return ret;
 }
 
-std::map<std::string, std::vector<std::string>> splitStr(const std::string str, const std::vector<const char*> delimiters, const bool ignoreCase, const bool includeEmpty) {
+std::map<std::string, std::vector<std::string>> splitStr(const std::string str,
+    const std::vector<const char*> delimiters, const bool ignoreCase, const bool includeEmpty) {
     std::map<std::string, std::vector<std::string>> ret;
     std::vector<std::string> temp;
     auto& delim_unconst = const_cast<std::vector<const char*>&>(delimiters);
@@ -1335,7 +1352,8 @@ std::map<std::string, std::vector<std::string>> splitStr(const std::string str, 
     return ret;
 }
 
-std::map<std::wstring, std::vector<std::wstring>> splitStr(const std::wstring str, const std::vector<const wchar_t*> delimiters, const bool ignoreCase, const bool includeEmpty) {
+std::map<std::wstring, std::vector<std::wstring>> splitStr(const std::wstring str,
+    const std::vector<const wchar_t*> delimiters, const bool ignoreCase, const bool includeEmpty) {
     std::map<std::wstring, std::vector<std::wstring>> ret;
     std::vector<std::wstring> temp;
     auto& delim_unconst = const_cast<std::vector<const wchar_t*>&>(delimiters);
@@ -1427,9 +1445,9 @@ std::map<std::wstring, std::vector<std::wstring>> splitStr(const std::wstring st
     return ret;
 }
 
-std::vector<std::string> tokenFromString(const std::string source, const std::string separator,
-    const bool includeSeparators, const bool ignoreCase) {
-    std::vector<std::string> ret;
+std::map<size_t, std::string> tokenFromString(const std::string source, const std::string separator,
+    const bool includeSeparators, const bool ignoreCase, const bool uniqueValues) {
+    std::map<size_t, std::string> ret;
     if ((!source.length() || !separator.length()) || source.length() < 3 || separator.length() > source.length()) {
         return ret;
     }
@@ -1453,13 +1471,41 @@ std::vector<std::string> tokenFromString(const std::string source, const std::st
         }
         if (includeSeparators) {
             if (findpos != i) {
-                ret.push_back(source.substr(i - 1,
-                    (findpos - i) + sep.length() + 1));
+                if (uniqueValues) {
+                    bool noelem = true;
+                    std::string frag = source.substr(i - 1, (findpos - i) + sep.length() + 1);
+                    for(auto &it : ret) {
+                        if (frag == it.second) {
+                            noelem = false;
+                            break;
+                        }
+                    }
+                    if (noelem) {
+                        ret[i] = frag;
+                    }
+                } else {
+                    ret[i] = source.substr(i - 1, (findpos - i) + sep.length() + 1);
+                    // ret.push_back(source.substr(i - 1, (findpos - i) + sep.length() + 1));
+                }
             }
         } else {
             if (findpos != i) {
-                ret.push_back(source.substr(i + sep.length() - 1,
-                    (findpos - i) - sep.length() + 1));
+                if (uniqueValues) {
+                    bool noelem = true;
+                    std::string frag = source.substr(i + sep.length() - 1, (findpos - i) - sep.length() + 1);
+                    for (auto &it : ret) {
+                        if (frag == it.second) {
+                            noelem = false;
+                            break;
+                        }
+                    }
+                    if (noelem) {
+                        ret[i - sep.length()] = frag;
+                    }
+                } else {
+                    ret[i - sep.length()] = source.substr(i + sep.length() - 1, (findpos - i) - sep.length() + 1);
+                    // ret.push_back(source.substr(i + sep.length() - 1, (findpos - i) - sep.length() + 1));
+                }
             }
         }
         if (std::string::npos != findpos) {
@@ -1468,11 +1514,12 @@ std::vector<std::string> tokenFromString(const std::string source, const std::st
             return ret;
         }
     }
+    return ret;
 }
 
-std::vector<std::wstring> tokenFromString(const std::wstring source, const std::wstring separator,
-    const bool includeSeparators, const bool ignoreCase) {
-    std::vector<std::wstring> ret;
+std::map<size_t, std::wstring> tokenFromString(const std::wstring source, const std::wstring separator,
+    const bool includeSeparators, const bool ignoreCase, const bool uniqueValues) {
+    std::map<size_t, std::wstring> ret;
     if ((!source.length() || !separator.length()) || source.length() < 3 || separator.length() > source.length()) {
         return ret;
     }
@@ -1496,13 +1543,45 @@ std::vector<std::wstring> tokenFromString(const std::wstring source, const std::
         }
         if (includeSeparators) {
             if (findpos != i) {
-                ret.push_back(source.substr(i - 1,
-                    (findpos - i) + sep.length() + 1));
+                if (uniqueValues) {
+                    bool noelem = true;
+                    std::wstring frag = source.substr(i - 1, (findpos - i) + sep.length() + 1);
+                    for (auto& it : ret) {
+                        if (frag == it.second) {
+                            noelem = false;
+                            break;
+                        }
+                    }
+                    if (noelem) {
+                        ret[i] = frag;
+                        // ret[i] = frag;
+                    }
+                } else {
+                    ret[i] = source.substr(i - 1, (findpos - i) + sep.length() + 1);
+                    // ret[i] = source.substr(i - 1, (findpos - i) + sep.length() + 1);
+                    // ret.push_back(source.substr(i - 1, (findpos - i) + sep.length() + 1));
+                }
             }
         } else {
             if (findpos != i) {
-                ret.push_back(source.substr(i + sep.length() - 1,
-                    (findpos - i) - sep.length() + 1));
+                if (uniqueValues) {
+                    bool noelem = true;
+                    std::wstring frag = source.substr(i + sep.length() - 1, (findpos - i) - sep.length() + 1);
+                    for (auto& it : ret) {
+                        if (frag == it.second) {
+                            noelem = false;
+                            break;
+                        }
+                    }
+                    if (noelem) {
+                        ret[i - sep.length()] = frag;
+                        // ret[i] = frag;
+                    }
+                } else {
+                    ret[i - sep.length()] = source.substr(i + sep.length() - 1, (findpos - i) - sep.length() + 1);
+                    // ret[i] = source.substr(i + sep.length() - 1, (findpos - i) - sep.length() + 1);
+                    // ret.push_back(source.substr(i + sep.length() - 1, (findpos - i) - sep.length() + 1));
+                }
             }
         }
         if (std::string::npos != findpos) {
@@ -1511,6 +1590,7 @@ std::vector<std::wstring> tokenFromString(const std::wstring source, const std::
             return ret;
         }
     }
+    return ret;
 }
 
 std::string joinStrs(const std::vector<std::string> strs, const std::string delimiter,
@@ -2247,15 +2327,19 @@ std::wstring firstNumberFromString(const std::wstring line) {
 
 std::string wmiObjectFromQuery(const std::string query) {
     std::string querylow = lower_copy(query);
-    if (!startsWith(querylow, "gwmi")) {
-        if (partialMatch(querylow, "associators")) {
-            size_t opbpos = querylow.find("{");
-            if (std::string::npos != opbpos) {
-                size_t cpbpos = querylow.find("}");
-                if (std::string::npos != cpbpos) {
-                    size_t lng = cpbpos - opbpos - 1;
-                    if (query.length() > (cpbpos + lng)) {
-                        return query.substr(opbpos + 1, lng);
+    if (!startsWith(querylow, "get-wmiobject")) {
+        if (!startsWith(querylow, "gwmi")) {
+            if (partialMatch(querylow, "associators")) {
+                size_t opbpos = querylow.find("{");
+                if (std::string::npos != opbpos) {
+                    size_t cpbpos = querylow.find("}");
+                    if (std::string::npos != cpbpos) {
+                        size_t lng = cpbpos - opbpos - 1;
+                        if (query.length() > (cpbpos + lng)) {
+                            return query.substr(opbpos + 1, lng);
+                        } else {
+                            return query;
+                        }
                     } else {
                         return query;
                     }
@@ -2263,34 +2347,45 @@ std::string wmiObjectFromQuery(const std::string query) {
                     return query;
                 }
             } else {
-                return query;
-            }
-        } else {
-            size_t frompos = querylow.find(" from ");
-            if (std::string::npos != frompos) {
-                std::vector<std::string> qspl = splitStr(query, " ", false);
-                for (size_t i = 0; i < qspl.size(); ++i) {
-                    if ("from" == lower_copy(qspl[i])) {
-                        if (qspl.size() - 1 > i) {
-                            return qspl[i + 1];
-                        } else {
-                            return query;
+                size_t frompos = querylow.find(" from ");
+                if (std::string::npos != frompos) {
+                    std::vector<std::string> qspl = splitStr(query, " ", false);
+                    for (size_t i = 0; i < qspl.size(); ++i) {
+                        if ("from" == lower_copy(qspl[i])) {
+                            if (qspl.size() - 1 > i) {
+                                return qspl[i + 1];
+                            } else {
+                                return query;
+                            }
                         }
                     }
+                } else {
+                    return query;
+                }
+            }
+        } else {
+            if (querylow.length() > 6) {
+                size_t qstrippos = querylow.find(" ", 6);
+                if (std::string::npos != qstrippos) {
+                    size_t lng = (querylow.length() - 6) - qstrippos;
+                    return query.substr(6, lng);
+                } else {
+                    size_t lng = querylow.length() - 5;
+                    return query.substr(5, lng);
                 }
             } else {
                 return query;
             }
         }
     } else {
-        if (querylow.length() > 5) {
-            size_t qstrippos = querylow.find(" ", 6);
+        if (querylow.length() > 14) {
+            size_t qstrippos = querylow.find(" ", 15);
             if (std::string::npos != qstrippos) {
-                size_t lng = (querylow.length() - 6) - qstrippos;
-                return query.substr(6, lng);
+                size_t lng = (querylow.length() - 15) - qstrippos;
+                return query.substr(15, lng);
             } else {
-                size_t lng = querylow.length() - 5;
-                return query.substr(5, lng);
+                size_t lng = querylow.length() - 14;
+                return query.substr(14, lng);
             }
         } else {
             return query;
@@ -2300,15 +2395,19 @@ std::string wmiObjectFromQuery(const std::string query) {
 
 std::wstring wmiObjectFromQuery(const std::wstring query) {
     std::wstring querylow = lower_copy(query);
-    if (!startsWith(querylow, L"gwmi")) {
-        if (partialMatch(querylow, L"associators")) {
-            size_t opbpos = querylow.find(L"{");
-            if (std::string::npos != opbpos) {
-                size_t cpbpos = querylow.find(L"}");
-                if (std::string::npos != cpbpos) {
-                    size_t lng = cpbpos - opbpos - 1;
-                    if (query.length() > (cpbpos + lng)) {
-                        return query.substr(opbpos + 1, lng);
+    if (!startsWith(querylow, L"get-wmiobject")) {
+        if (!startsWith(querylow, L"gwmi")) {
+            if (partialMatch(querylow, L"associators")) {
+                size_t opbpos = querylow.find(L"{");
+                if (std::string::npos != opbpos) {
+                    size_t cpbpos = querylow.find(L"}");
+                    if (std::string::npos != cpbpos) {
+                        size_t lng = cpbpos - opbpos - 1;
+                        if (query.length() > (cpbpos + lng)) {
+                            return query.substr(opbpos + 1, lng);
+                        } else {
+                            return query;
+                        }
                     } else {
                         return query;
                     }
@@ -2316,35 +2415,46 @@ std::wstring wmiObjectFromQuery(const std::wstring query) {
                     return query;
                 }
             } else {
-                return query;
-            }
-        }
-        else {
-            size_t frompos = querylow.find(L" from ");
-            if (std::string::npos != frompos) {
-                std::vector<std::wstring> qspl = splitStr(query, L" ", false);
-                for (size_t i = 0; i < qspl.size(); ++i) {
-                    if (L"from" == lower_copy(qspl[i])) {
-                        if (qspl.size() - 1 > i) {
-                            return qspl[i + 1];
-                        } else {
-                            return query;
+                size_t frompos = querylow.find(L" from ");
+                if (std::string::npos != frompos) {
+                    std::vector<std::wstring> qspl = splitStr(query, L" ", false);
+                    for (size_t i = 0; i < qspl.size(); ++i) {
+                        if (L"from" == lower_copy(qspl[i])) {
+                            if (qspl.size() - 1 > i) {
+                                return qspl[i + 1];
+                            }
+                            else {
+                                return query;
+                            }
                         }
                     }
+                } else {
+                    return query;
+                }
+            }
+        } else {
+            if (querylow.length() > 6) {
+                size_t qstrippos = querylow.find(L" ", 6);
+                if (std::string::npos != qstrippos) {
+                    size_t lng = (querylow.length() - 6) - qstrippos;
+                    return query.substr(6, lng);
+                } else {
+                    size_t lng = querylow.length() - 5;
+                    return query.substr(5, lng);
                 }
             } else {
                 return query;
             }
         }
     } else {
-        if (querylow.length() > 5) {
-            size_t qstrippos = querylow.find(L" ", 6);
+        if (querylow.length() > 14) {
+            size_t qstrippos = querylow.find(L" ", 15);
             if (std::string::npos != qstrippos) {
-                size_t lng = (querylow.length() - 6) - qstrippos;
-                return query.substr(6, lng);
+                size_t lng = (querylow.length() - 15) - qstrippos;
+                return query.substr(15, lng);
             } else {
-                size_t lng = querylow.length() - 5;
-                return query.substr(5, lng);
+                size_t lng = querylow.length() - 14;
+                return query.substr(14, lng);
             }
         } else {
             return query;

@@ -561,7 +561,7 @@ SvcHandler::SvcHandler() {
 	m_scmOpen = false;
 }
 
-SvcHandler::SvcHandler(const SC_HANDLE schandle, const unsigned long scmrights, const bool scmopen) {
+SvcHandler::SvcHandler(const ::SC_HANDLE schandle, const unsigned long scmrights, const bool scmopen) {
 	m_scmHandle = schandle;
 	m_scmRights = scmrights;
 	m_scmOpen = scmopen;
@@ -637,7 +637,7 @@ ScmOpResult SvcHandler::SCM_OpenManager(unsigned long desiredRghts) {
 	if (!desiredRghts) {
 		desiredRghts = GENERIC_ALL;
 	}
-	SC_HANDLE sch = OpenSCManager(NULL, NULL, desiredRghts);
+	::SC_HANDLE sch = OpenSCManager(NULL, NULL, desiredRghts);
 	if (0 == sch) {
 		return ScmOpResult::OpenManagerFail;
 	}
@@ -647,7 +647,7 @@ ScmOpResult SvcHandler::SCM_OpenManager(unsigned long desiredRghts) {
 }
 
 ScmOpResult SvcHandler::SCM_CloseManager() {
-	if (!CloseServiceHandle(m_scmHandle)) {
+	if (!::CloseServiceHandle(m_scmHandle)) {
 		return ScmOpResult::CloseManagerFail;
 	}
 	m_scmHandle = 0;
@@ -740,7 +740,7 @@ ScmOpResult SvcHandler::RemoveSvc(const std::wstring svcName, const StrCompareTy
 	if (ScmOpResult::Success != ObtainSCMHanele(desiredRights)) {
 		return ScmOpResult::ChangeServiceFail;
 	}
-	SC_HANDLE hSvc = OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
+	::SC_HANDLE hSvc = ::OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
 	if (hSvc && INVALID_HANDLE_VALUE != hSvc) {
 		if (DeleteService(hSvc)) {
 			return ScmOpResult::Success;
@@ -777,7 +777,7 @@ ScmOpResult SvcHandler::StartSvc(const std::wstring displayName,
 		if (ScmOpResult::Success != ObtainSCMHanele(desiredRights)) {
 			return ScmOpResult::StartSvcFail;
 		}
-		SC_HANDLE hSvc = OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
+		::SC_HANDLE hSvc = ::OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
 		if (hSvc && INVALID_HANDLE_VALUE != hSvc) {
 			SERVICE_STATUS_PROCESS svcStatus = { 0 };
 			unsigned long dwBytesNeeded = 0, dwWaitTime = 0;
@@ -801,7 +801,7 @@ ScmOpResult SvcHandler::StartSvc(const std::wstring displayName,
 							dwOldCheckPoint = svcStatus.dwCheckPoint;
 						} else if ((dwStartTickCount && svcStatus.dwWaitHint) &&
 							(GetTickCount64() - dwStartTickCount > svcStatus.dwWaitHint)) {
-							CloseServiceHandle(hSvc);
+							::CloseServiceHandle(hSvc);
 							return ret;
 						}
 						size_t argCount = 0;
@@ -811,7 +811,7 @@ ScmOpResult SvcHandler::StartSvc(const std::wstring displayName,
 							if (argCount) {
 								svcArgsBuf = (wchar_t**)calloc(argCount, argCount * sizeof(wchar_t*));
 								if (!svcArgsBuf) {
-									CloseServiceHandle(hSvc);
+									::CloseServiceHandle(hSvc);
 									return ret;
 								}
 								size_t slen = 0;
@@ -844,7 +844,7 @@ ScmOpResult SvcHandler::StartSvc(const std::wstring displayName,
 									Sleep(dwWaitTime);
 									if (!QueryServiceStatusEx(hSvc, SC_STATUS_PROCESS_INFO,
 										(unsigned char*)&svcStatus, sizeof(SERVICE_STATUS_PROCESS), &dwBytesNeeded)) {
-										CloseServiceHandle(hSvc);
+										::CloseServiceHandle(hSvc);
 										return ret;
 									}
 									if (svcStatus.dwCheckPoint > dwOldCheckPoint) {
@@ -852,22 +852,22 @@ ScmOpResult SvcHandler::StartSvc(const std::wstring displayName,
 										dwOldCheckPoint = svcStatus.dwCheckPoint;
 									} else if ((dwStartTickCount && svcStatus.dwWaitHint) &&
 										(GetTickCount64() - dwStartTickCount > svcStatus.dwWaitHint)) {
-										CloseServiceHandle(hSvc);
+										::CloseServiceHandle(hSvc);
 										return ret;
 									}
 								}
 							}
 						} else {
-							CloseServiceHandle(hSvc);
+							::CloseServiceHandle(hSvc);
 							return ret;
 						}
 					}
 				} else {
-					CloseServiceHandle(hSvc);
+					::CloseServiceHandle(hSvc);
 					return ScmOpResult::StartSvcFailAlreadyStarted;
 				}
 			}
-			CloseServiceHandle(hSvc);
+			::CloseServiceHandle(hSvc);
 			return ScmOpResult::Success;
 		}
 	}
@@ -911,7 +911,7 @@ ScmOpResult SvcHandler::StopSvc(const std::wstring displayName, const bool stopD
 				}
 			}
 		}
-		SC_HANDLE hSvc = OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(),
+		::SC_HANDLE hSvc = ::OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(),
 			SERVICE_STOP | SERVICE_QUERY_STATUS);
 		if (hSvc && INVALID_HANDLE_VALUE != hSvc) {
 			SERVICE_STATUS_PROCESS svcStatus = { 0 };
@@ -931,7 +931,7 @@ ScmOpResult SvcHandler::StopSvc(const std::wstring displayName, const bool stopD
 					if (QueryServiceStatusEx(hSvc, SC_STATUS_PROCESS_INFO,
 						(unsigned char*)&svcStatus, sizeof(SERVICE_STATUS_PROCESS), &dwBytesNeeded)) {
 						if (svcStatus.dwCurrentState == SERVICE_STOPPED) {
-							CloseServiceHandle(hSvc);
+							::CloseServiceHandle(hSvc);
 							return ScmOpResult::Success;
 						}
 					}
@@ -949,34 +949,34 @@ ScmOpResult SvcHandler::StopSvc(const std::wstring displayName, const bool stopD
 							if (QueryServiceStatusEx(hSvc, SC_STATUS_PROCESS_INFO,
 								(unsigned char*)&svcStatus, sizeof(SERVICE_STATUS_PROCESS), &dwBytesNeeded)) {
 								if (svcStatus.dwCurrentState == SERVICE_STOPPED) {
-									CloseServiceHandle(hSvc);
+									::CloseServiceHandle(hSvc);
 									return ScmOpResult::Success;
 								} else if (GetTickCount64() - dwStartTime > timeout) {
-									CloseServiceHandle(hSvc);
+									::CloseServiceHandle(hSvc);
 									return ScmOpResult::StopSvcFail;
 								}
 							} else {
-								CloseServiceHandle(hSvc);
+								::CloseServiceHandle(hSvc);
 								return ScmOpResult::StopSvcFail;
 							}
 						}
 						if (QueryServiceStatusEx(hSvc, SC_STATUS_PROCESS_INFO,
 							(unsigned char*)&svcStatus, sizeof(SERVICE_STATUS_PROCESS), &dwBytesNeeded)) {
 							if (svcStatus.dwCurrentState == SERVICE_STOPPED) {
-								CloseServiceHandle(hSvc);
+								::CloseServiceHandle(hSvc);
 								return ScmOpResult::Success;
 							}
 						}
 					} else {
-						CloseServiceHandle(hSvc);
+						::CloseServiceHandle(hSvc);
 						return ScmOpResult::StopSvcFail;
 					}
 				} else {
-					CloseServiceHandle(hSvc);
+					::CloseServiceHandle(hSvc);
 					return ScmOpResult::StopSvcFailAlreadyStopped;
 				}
 			} else {
-				CloseServiceHandle(hSvc);
+				::CloseServiceHandle(hSvc);
 				return ScmOpResult::StopSvcFail;
 			}
 		} else {
@@ -1029,7 +1029,7 @@ ScmOpResult SvcHandler::EnumSvcsStatus(std::vector<SvcRecord>& svcrecs,
 	SvcRecord rec;
 	SvcTrigger trg;
 	size_t trgDataSz = 0;
-	SC_HANDLE svcHandle = 0;
+	::SC_HANDLE svcHandle = 0;
 	void* buf = NULL;
 	unsigned long bufSize = 0, moreBytesNeeded = 0, serviceCount = 0;
 	for (;;) {
@@ -1054,15 +1054,13 @@ ScmOpResult SvcHandler::EnumSvcsStatus(std::vector<SvcRecord>& svcrecs,
 				rec.svcName = services[i].lpServiceName;
 				rec.svcDisplayName = services[i].lpDisplayName;
 				rec.svcProcDetail = services[i].ServiceStatusProcess;
-				svcHandle = OpenService(m_scmHandle, rec.svcName.c_str(), SERVICE_QUERY_CONFIG);
+				svcHandle = ::OpenService(m_scmHandle, rec.svcName.c_str(), SERVICE_QUERY_CONFIG);
 				if (svcHandle) {
 					WinVerAdvanced wver = getWinVerAdvanced();
 					QUERY_SERVICE_CONFIG* configBuf = 0;
 					unsigned long configBufSz = 0, dwBN = sizeof(QUERY_SERVICE_CONFIG);
 					do {
 						SAFE_FREE(configBuf);
-						// free(configBuf);
-						// configBuf = 0;
 						configBufSz = dwBN;
 						configBuf = (QUERY_SERVICE_CONFIG*)malloc(configBufSz);
 						if (!configBuf) {
@@ -1158,7 +1156,7 @@ ScmOpResult SvcHandler::EnumSvcsStatus(std::vector<SvcRecord>& svcrecs,
 							return ScmOpResult::EnumSvcsFail;
 						}
 					}
-					CloseServiceHandle(svcHandle);
+					::CloseServiceHandle(svcHandle);
 				}
 				svcrecs.push_back(rec);
 			}
@@ -1210,7 +1208,7 @@ ScmOpResult SvcHandler::SetSvcStartupType(const std::wstring svcName, SvcStartUp
 		if (ScmOpResult::Success != ObtainSCMHanele(desiredRights)) {
 			return ScmOpResult::ChangeServiceFail;
 		}
-		SC_HANDLE hSvc = OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
+		::SC_HANDLE hSvc = ::OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
 		if (hSvc && INVALID_HANDLE_VALUE != hSvc) {
 			if (ChangeServiceConfig(hSvc, SERVICE_NO_CHANGE, static_cast<unsigned long>(startupType),
 				SERVICE_NO_CHANGE, 0, 0, 0, 0, 0, 0, 0)) {
@@ -1245,7 +1243,7 @@ ScmOpResult SvcHandler::SetSvcStartName(const std::wstring svcName, const std::w
 	if (ScmOpResult::Success != ObtainSCMHanele(desiredRights)) {
 		return ScmOpResult::ChangeServiceFail;
 	}
-	SC_HANDLE hSvc = OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
+	::SC_HANDLE hSvc = ::OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
 	if (hSvc && INVALID_HANDLE_VALUE != hSvc) {
 		if (ChangeServiceConfig(hSvc, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE,
 			SERVICE_NO_CHANGE, 0, 0, 0, 0, accLogin.c_str(), accPwd.c_str(), 0)) {
@@ -1282,7 +1280,7 @@ ScmOpResult SvcHandler::SetSvcDisplayName(const std::wstring svcName, const std:
 	if (ScmOpResult::Success != ObtainSCMHanele(desiredRights)) {
 		return ScmOpResult::ChangeServiceFail;
 	}
-	SC_HANDLE hSvc = OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
+	::SC_HANDLE hSvc = ::OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
 	if (hSvc && INVALID_HANDLE_VALUE != hSvc) {
 		if (ChangeServiceConfig(hSvc, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE,
 			SERVICE_NO_CHANGE, 0, 0, 0, 0, 0, 0, newDisplayName.c_str())) {
@@ -1330,7 +1328,7 @@ ScmOpResult SvcHandler::SetSvcDependencies(const std::wstring svcName,
 	if (ScmOpResult::Success != ObtainSCMHanele(desiredRights)) {
 		return ScmOpResult::ChangeServiceFail;
 	}
-	SC_HANDLE hSvc = OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
+	::SC_HANDLE hSvc = ::OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
 	if (hSvc && INVALID_HANDLE_VALUE != hSvc) {
 		if (ChangeServiceConfig(hSvc, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE,
 			SERVICE_NO_CHANGE, 0, 0, 0, buf, 0, 0, 0)) {
@@ -1369,7 +1367,7 @@ ScmOpResult SvcHandler::SetSvcDelayedAutostart(const std::wstring svcName, const
 	if (ScmOpResult::Success != ObtainSCMHanele(desiredRights)) {
 		return ScmOpResult::ChangeServiceFail;
 	}
-	SC_HANDLE hSvc = OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
+	::SC_HANDLE hSvc = ::OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
 	if (hSvc && INVALID_HANDLE_VALUE != hSvc) {
 		if (ChangeServiceConfig2(hSvc, SERVICE_CONFIG_DELAYED_AUTO_START_INFO,
 			(void*)&delayedAuotoStartInfo)) {
@@ -1408,7 +1406,7 @@ ScmOpResult SvcHandler::SetSvcDescription(const std::wstring svcName, const std:
 	if (ScmOpResult::Success != ObtainSCMHanele(desiredRights)) {
 		return ScmOpResult::ChangeServiceFail;
 	}
-	SC_HANDLE hSvc = OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
+	::SC_HANDLE hSvc = ::OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
 	if (hSvc && INVALID_HANDLE_VALUE != hSvc) {
 		if (ChangeServiceConfig2(hSvc, SERVICE_CONFIG_DESCRIPTION,
 			(void*)&svcDescInfo)) {
@@ -1442,7 +1440,7 @@ ScmOpResult SvcHandler::SetSvcType(const std::wstring svcName, const SvcType svc
 	if (ScmOpResult::Success != ObtainSCMHanele(desiredRights)) {
 		return ScmOpResult::ChangeServiceFail;
 	}
-	SC_HANDLE hSvc = OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
+	::SC_HANDLE hSvc = ::OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
 	if (hSvc && INVALID_HANDLE_VALUE != hSvc) {
 		if (ChangeServiceConfig(hSvc, static_cast<unsigned long>(svcType), SERVICE_NO_CHANGE,
 			SERVICE_NO_CHANGE, 0, 0, 0, 0, 0, 0, 0)) {
@@ -1479,7 +1477,7 @@ ScmOpResult SvcHandler::SetSvcBinary(const std::wstring svcName, const std::wstr
 	if (ScmOpResult::Success != ObtainSCMHanele(desiredRights)) {
 		return ScmOpResult::ChangeServiceFail;
 	}
-	SC_HANDLE hSvc = OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
+	::SC_HANDLE hSvc = ::OpenService(m_scmHandle, foundsvcs[0].svcName.c_str(), SERVICE_ALL_ACCESS);
 	if (hSvc && INVALID_HANDLE_VALUE != hSvc) {
 		if (ChangeServiceConfig(hSvc, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE,
 			SERVICE_NO_CHANGE, (L"\"" + svcBinPath + L"\"").c_str(), 0, 0, 0, 0, 0, 0)) {
@@ -2160,7 +2158,7 @@ ScmOpResult SvcHandler::StopDependentSvc(const SvcRecord& svcRec, const bool sto
 		if (ScmOpResult::Success != ObtainSCMHanele(desiredRights)) {
 			return ScmOpResult::StopSvcFail;
 		}
-		SC_HANDLE hSvc = OpenService(m_scmHandle, svcRec.svcName.c_str(),
+		::SC_HANDLE hSvc = ::OpenService(m_scmHandle, svcRec.svcName.c_str(),
 			SERVICE_STOP | SERVICE_QUERY_STATUS);
 		if (hSvc && INVALID_HANDLE_VALUE != hSvc) {
 			SERVICE_STATUS_PROCESS svcStatus = { 0 };
@@ -2180,7 +2178,7 @@ ScmOpResult SvcHandler::StopDependentSvc(const SvcRecord& svcRec, const bool sto
 					if (QueryServiceStatusEx(hSvc, SC_STATUS_PROCESS_INFO,
 						(unsigned char*)&svcStatus, sizeof(SERVICE_STATUS_PROCESS), &dwBytesNeeded)) {
 						if (svcStatus.dwCurrentState == SERVICE_STOPPED) {
-							CloseServiceHandle(hSvc);
+							::CloseServiceHandle(hSvc);
 							return ScmOpResult::Success;
 						}
 					}
@@ -2198,34 +2196,34 @@ ScmOpResult SvcHandler::StopDependentSvc(const SvcRecord& svcRec, const bool sto
 							if (QueryServiceStatusEx(hSvc, SC_STATUS_PROCESS_INFO,
 								(unsigned char*)&svcStatus, sizeof(SERVICE_STATUS_PROCESS), &dwBytesNeeded)) {
 								if (svcStatus.dwCurrentState == SERVICE_STOPPED) {
-									CloseServiceHandle(hSvc);
+									::CloseServiceHandle(hSvc);
 									return ScmOpResult::Success;
 								} else if (GetTickCount64() - dwStartTime > timeout) {
-									CloseServiceHandle(hSvc);
+									::CloseServiceHandle(hSvc);
 									return ScmOpResult::StopSvcFail;
 								}
 							} else {
-								CloseServiceHandle(hSvc);
+								::CloseServiceHandle(hSvc);
 								return ScmOpResult::StopSvcFail;
 							}
 						}
 						if (QueryServiceStatusEx(hSvc, SC_STATUS_PROCESS_INFO,
 							(unsigned char*)&svcStatus, sizeof(SERVICE_STATUS_PROCESS), &dwBytesNeeded)) {
 							if (svcStatus.dwCurrentState == SERVICE_STOPPED) {
-								CloseServiceHandle(hSvc);
+								::CloseServiceHandle(hSvc);
 								return ScmOpResult::Success;
 							}
 						}
 					} else {
-						CloseServiceHandle(hSvc);
+						::CloseServiceHandle(hSvc);
 						return ScmOpResult::StopSvcFail;
 					}
 				} else {
-					CloseServiceHandle(hSvc);
+					::CloseServiceHandle(hSvc);
 					return ScmOpResult::StopSvcFailAlreadyStopped;
 				}
 			} else {
-				CloseServiceHandle(hSvc);
+				::CloseServiceHandle(hSvc);
 				return ScmOpResult::StopSvcFail;
 			}
 		} else {
@@ -2247,7 +2245,7 @@ inline ScmOpResult SvcHandler::ObtainSCMHanele(const unsigned long desiredRights
 	return ScmOpResult::Success;
 }
 
-ScmOpResult SvcHandler::QuerySvcDesc(SC_HANDLE& svcHandle,  SvcRecord& rec) {
+ScmOpResult SvcHandler::QuerySvcDesc(::SC_HANDLE& svcHandle,  SvcRecord& rec) {
 	DWORD BufSz = 0, dwBN = 0;
 	void* Buf = 0;
 	do {
@@ -2277,7 +2275,7 @@ ScmOpResult SvcHandler::QuerySvcDesc(SC_HANDLE& svcHandle,  SvcRecord& rec) {
 	return ScmOpResult::Success;
 }
 
-ScmOpResult SvcHandler::QuerySvcDelayedAutostart(SC_HANDLE& svcHandle,  SvcRecord& rec) {
+ScmOpResult SvcHandler::QuerySvcDelayedAutostart(::SC_HANDLE& svcHandle,  SvcRecord& rec) {
 	DWORD BufSz = 0, dwBN = 0;
 	void* Buf = 0;
 	do {
@@ -2305,7 +2303,7 @@ ScmOpResult SvcHandler::QuerySvcDelayedAutostart(SC_HANDLE& svcHandle,  SvcRecor
 	return ScmOpResult::Success;
 }
 
-ScmOpResult SvcHandler::QuerySvcFailureActions(SC_HANDLE& svcHandle,  SvcRecord& rec) {
+ScmOpResult SvcHandler::QuerySvcFailureActions(::SC_HANDLE& svcHandle,  SvcRecord& rec) {
 	DWORD BufSz = 0, dwBN = 0;
 	void* Buf = 0;
 	do {
@@ -2344,7 +2342,7 @@ ScmOpResult SvcHandler::QuerySvcFailureActions(SC_HANDLE& svcHandle,  SvcRecord&
 	return ScmOpResult::Success;
 }
 
-ScmOpResult SvcHandler::QuerySvcFailureActionsFlag(SC_HANDLE& svcHandle,  SvcRecord& rec) {
+ScmOpResult SvcHandler::QuerySvcFailureActionsFlag(::SC_HANDLE& svcHandle,  SvcRecord& rec) {
 	DWORD BufSz = 0, dwBN = 0;
 	void* Buf = 0;
 	do {
@@ -2372,7 +2370,7 @@ ScmOpResult SvcHandler::QuerySvcFailureActionsFlag(SC_HANDLE& svcHandle,  SvcRec
 	return ScmOpResult::Success;
 }
 
-ScmOpResult SvcHandler::QuerySvcPreferredNode(SC_HANDLE& svcHandle,  SvcRecord& rec) {
+ScmOpResult SvcHandler::QuerySvcPreferredNode(::SC_HANDLE& svcHandle,  SvcRecord& rec) {
 	DWORD BufSz = 0, dwBN = 0;;
 	void* Buf = 0;
 	do {
@@ -2401,7 +2399,7 @@ ScmOpResult SvcHandler::QuerySvcPreferredNode(SC_HANDLE& svcHandle,  SvcRecord& 
 	return ScmOpResult::Success;
 }
 
-ScmOpResult SvcHandler::QuerySvcPreshutdownInfo(SC_HANDLE& svcHandle,  SvcRecord& rec) {
+ScmOpResult SvcHandler::QuerySvcPreshutdownInfo(::SC_HANDLE& svcHandle,  SvcRecord& rec) {
 	DWORD BufSz = 0, dwBN = 0;
 	void* Buf = 0;
 	do {
@@ -2429,7 +2427,7 @@ ScmOpResult SvcHandler::QuerySvcPreshutdownInfo(SC_HANDLE& svcHandle,  SvcRecord
 	return ScmOpResult::Success;
 }
 
-ScmOpResult SvcHandler::QuerySvcPrivileges(SC_HANDLE& svcHandle,  SvcRecord& rec) {
+ScmOpResult SvcHandler::QuerySvcPrivileges(::SC_HANDLE& svcHandle,  SvcRecord& rec) {
 	DWORD BufSz = 0, dwBN = 0;
 	void* Buf = 0;
 	do {
@@ -2484,7 +2482,7 @@ ScmOpResult SvcHandler::QuerySvcPrivileges(SC_HANDLE& svcHandle,  SvcRecord& rec
 	return ScmOpResult::Success;
 }
 
-ScmOpResult SvcHandler::QuerySvcSIDInfo(SC_HANDLE& svcHandle,  SvcRecord& rec) {
+ScmOpResult SvcHandler::QuerySvcSIDInfo(::SC_HANDLE& svcHandle,  SvcRecord& rec) {
 	DWORD BufSz = 0, dwBN = 0;
 	void* Buf = 0;
 	do {
@@ -2511,7 +2509,7 @@ ScmOpResult SvcHandler::QuerySvcSIDInfo(SC_HANDLE& svcHandle,  SvcRecord& rec) {
 	return ScmOpResult::Success;
 }
 
-ScmOpResult SvcHandler::QuerySvcTriggerInfo(SC_HANDLE& svcHandle,  SvcRecord& rec) {
+ScmOpResult SvcHandler::QuerySvcTriggerInfo(::SC_HANDLE& svcHandle,  SvcRecord& rec) {
 	DWORD BufSz = 0, dwBN = 0;
 	void* Buf = 0;
 	do {
@@ -2605,7 +2603,7 @@ ScmOpResult SvcHandler::QuerySvcTriggerInfo(SC_HANDLE& svcHandle,  SvcRecord& re
 	return ScmOpResult::Success;
 }
 
-ScmOpResult SvcHandler::QuerySvcLaunchProtected(SC_HANDLE& svcHandle,  SvcRecord& rec) {
+ScmOpResult SvcHandler::QuerySvcLaunchProtected(::SC_HANDLE& svcHandle,  SvcRecord& rec) {
 	DWORD BufSz = 0, dwBN = 0;
 	void* Buf = 0;
 	SERVICE_LAUNCH_PROTECTED_INFO* launchProtBuf = { 0 };

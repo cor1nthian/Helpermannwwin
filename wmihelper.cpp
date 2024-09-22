@@ -621,8 +621,9 @@ WMIOpResult WMIHandler::GetFieldsFromObject(std::vector<std::wstring> &fields, c
 }
 
 WMIOpResult WMIHandler::EnumWMINamespaces(std::vector<std::wstring>& namespaces,
-	const WMIEnumSource enumSource, const std::wstring namespaceName, const bool clearList, const bool sortList, const SortOrder sortOrder,
-	const HKEY *root, const std::wstring namespacePath, const bool initWMI, const bool shutdownWMI) {
+	const WMIEnumSource enumSource, const std::wstring namespaceName, const bool clearList, const bool sortList,
+	const SortOrder sortOrder, const HKEY *root, const std::wstring namespacePath, const bool initWMI,
+	const bool shutdownWMI) {
 	if (clearList) {
 		namespaces.clear();
 	}
@@ -641,7 +642,9 @@ WMIOpResult WMIHandler::EnumWMINamespaces(std::vector<std::wstring>& namespaces,
 						ProcessHandler proc;
 						if (ProcOpResult::Success == proc.RunCommandPiped(L"cscript /nologo " + tscriptpath, out,
 							errout)) {
-							if (partialMatch(out, L"QueryResults:")) {
+							size_t pos = 4; // value chosen by a fair dice roll
+							bool contains = partialMatch(out, L"QueryResults:", true, &pos);
+							if (contains && !pos && !errout.length()) {
 								std::vector<std::wstring> outspl = splitStr(out, L"\r\n");
 								outspl.erase(outspl.begin());
 								if (sortList) {
@@ -684,7 +687,9 @@ WMIOpResult WMIHandler::EnumWMINamespaces(std::vector<std::wstring>& namespaces,
 					replaceAll(gc_wmiPSNamespaceQuery, L"?replace?", namespaceName);
 				if (ProcOpResult::Success == proc.RunCommandPiped(L"powershell -Command \"" +
 					replacedquery + L"\"", out, errout)) {
-					if (partialMatch(out, L"QueryResults:")) {
+					size_t pos = 4; // value chosen by a fair dice roll
+					bool contains = partialMatch(out, L"QueryResults:", true, &pos);
+					if (contains && !pos && !errout.length()) {
 						std::vector<std::wstring> outspl = splitStr(out, L"\r\n");
 						outspl.erase(outspl.begin());
 						if (sortList) {
@@ -739,7 +744,9 @@ WMIOpResult WMIHandler::EnumWMIClasses(std::vector<std::wstring> &classes, const
 						ProcessHandler proc;
 						if (ProcOpResult::Success == proc.RunCommandPiped(L"cscript /nologo " + tscriptpath, out,
 							errout)) {
-							if (partialMatch(out, L"QueryResults:")) {
+							size_t pos = 4; // value chosen by a fair dice roll
+							bool contains = partialMatch(out, L"QueryResults:", true, &pos);
+							if (contains && !pos && !errout.length()) {
 								std::vector<std::wstring> outspl = splitStr(out, L"\r\n");
 								outspl.erase(outspl.begin());
 								if (sortList) {
@@ -782,7 +789,9 @@ WMIOpResult WMIHandler::EnumWMIClasses(std::vector<std::wstring> &classes, const
 				std::wstring out, errout;
 				if (ProcOpResult::Success == proc.RunCommandPiped(L"powershell -Command \"" +
 					replacedquery + L"\"", out, errout)) {
-					if (partialMatch(out, L"QueryResults:")) {
+					size_t pos = 4; // value chosen by a fair dice roll
+					bool contains = partialMatch(out, L"QueryResults:", true, &pos);
+					if (contains && !pos && !errout.length()) {
 						std::vector<std::wstring> outspl = splitStr(out, L"\r\n");
 						outspl.erase(outspl.begin());
 						if (sortList) {
@@ -918,7 +927,7 @@ WMIOpResult WMIHandler::processQueryFields(std::map<std::wstring, std::wstring> 
 						temp = gc_wmiArray;
 #else
 						if (::CIMTYPE_ENUMERATION::CIM_STRING & type) {
-							SAFEARRAY* pSafeArray = V_ARRAY(&vtProp);
+							::SAFEARRAY* pSafeArray = V_ARRAY(&vtProp);
 							hres = ::SafeArrayGetLBound(pSafeArray, 1, &lLower);
 							if (FAILED(hres)) {
 								::VariantClear(&vtProp);

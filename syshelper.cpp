@@ -1301,7 +1301,11 @@ SysOpResult SysHandler::GetSysTempFolderPath(std::wstring &tempFldPath, const HK
 	RegHandler reg;
 	if (RegOpResult::Success == reg.GetSysTempPath(tempfld, root)) {
 		if (std::wstring::npos != tempfld.find(L"%")) {
-			std::vector<std::wstring> envvalvec = tokenFromString(tempfld, L"%", true);
+			std::map<size_t, std::wstring> tmap = tokenFromString(tempfld, L"%", true);
+			std::vector<std::wstring> envvalvec;
+			for (auto& it : tmap) {
+				envvalvec.push_back(it.second);
+			}
 			if (!envvalvec.size()) {
 				return SysOpResult::Fail;
 			}
@@ -1402,7 +1406,11 @@ SysOpResult SysHandler::IsSysTempFolderAvailable(bool &available, const HKEY *ro
 	RegHandler reg;
 	if (RegOpResult::Success == reg.GetSysTempPath(tempfld, root)) {
 		if (std::wstring::npos != tempfld.find(L"%")) {
-			std::vector<std::wstring> envvalvec = tokenFromString(tempfld, L"%", true);
+			std::map<size_t, std::wstring> tmap = tokenFromString(tempfld, L"%", true);
+			std::vector<std::wstring> envvalvec;
+			for (auto &it : tmap) {
+				envvalvec.push_back(it.second);
+			}
 			if (!envvalvec.size()) {
 				return SysOpResult::Fail;
 			}

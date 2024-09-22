@@ -225,11 +225,13 @@ struct SvcRecord {
 		const SERVICE_STATUS_PROCESS svcprocdetial);
 	SvcRecord(const SvcRecord &other);
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	SvcRecord(SvcRecord&& other) noexcept;
+	SvcRecord(SvcRecord &&other) noexcept;
 #endif
 	~SvcRecord();
 	SvcRecord& operator=(const SvcRecord &other);
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 	SvcRecord& operator=(SvcRecord &&other) noexcept;
+#endif
 	bool operator==(const SvcRecord &other) const;
 	bool operator!=(const SvcRecord &other) const;
 	std::vector<std::wstring> dependencies;
@@ -264,7 +266,7 @@ struct SvcRecord {
 class SvcHandler {
 	public:
 		SvcHandler();
-		SvcHandler(const SC_HANDLE schandle, const unsigned long scmrights, const bool scmopen);
+		SvcHandler(const ::SC_HANDLE schandle, const unsigned long scmrights, const bool scmopen);
 		SvcHandler(const SvcHandler &other);
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 		SvcHandler(SvcHandler &&other) noexcept;
@@ -362,23 +364,23 @@ class SvcHandler {
 	protected:
 
 	private:
-		ScmOpResult QuerySvcDesc(SC_HANDLE& svcHandle, SvcRecord& rec);
-		ScmOpResult QuerySvcDelayedAutostart(SC_HANDLE& svcHandle, SvcRecord& rec);
-		ScmOpResult QuerySvcFailureActions(SC_HANDLE& svcHandle, SvcRecord& rec);
-		ScmOpResult QuerySvcFailureActionsFlag(SC_HANDLE& svcHandle, SvcRecord& rec);
-		ScmOpResult QuerySvcPreferredNode(SC_HANDLE& svcHandle, SvcRecord& rec);
-		ScmOpResult QuerySvcPreshutdownInfo(SC_HANDLE& svcHandle,  SvcRecord& rec);
-		ScmOpResult QuerySvcPrivileges(SC_HANDLE& svcHandle,  SvcRecord& rec);
-		ScmOpResult QuerySvcSIDInfo(SC_HANDLE& svcHandle,  SvcRecord& rec);
-		ScmOpResult QuerySvcTriggerInfo(SC_HANDLE& svcHandle,  SvcRecord& rec);
-		ScmOpResult QuerySvcLaunchProtected(SC_HANDLE& svcHandle,  SvcRecord& rec);
+		ScmOpResult QuerySvcDesc(::SC_HANDLE& svcHandle, SvcRecord& rec);
+		ScmOpResult QuerySvcDelayedAutostart(::SC_HANDLE& svcHandle, SvcRecord& rec);
+		ScmOpResult QuerySvcFailureActions(::SC_HANDLE& svcHandle, SvcRecord& rec);
+		ScmOpResult QuerySvcFailureActionsFlag(::SC_HANDLE& svcHandle, SvcRecord& rec);
+		ScmOpResult QuerySvcPreferredNode(::SC_HANDLE& svcHandle, SvcRecord& rec);
+		ScmOpResult QuerySvcPreshutdownInfo(::SC_HANDLE& svcHandle,  SvcRecord& rec);
+		ScmOpResult QuerySvcPrivileges(::SC_HANDLE& svcHandle,  SvcRecord& rec);
+		ScmOpResult QuerySvcSIDInfo(::SC_HANDLE& svcHandle,  SvcRecord& rec);
+		ScmOpResult QuerySvcTriggerInfo(::SC_HANDLE& svcHandle,  SvcRecord& rec);
+		ScmOpResult QuerySvcLaunchProtected(::SC_HANDLE& svcHandle,  SvcRecord& rec);
 		ScmOpResult StopDependentSvc(const SvcRecord& svcRec, const bool stopDrivers = false,
 			const unsigned long desiredRights = 0, const unsigned long timeout = 30000,
 			const std::vector<SvcRecord> *svcRecords = 0);
 		inline ScmOpResult ObtainSCMHanele(const unsigned long desiredRights = 0);
 		bool m_scmOpen;
 		unsigned long m_scmRights;
-		SC_HANDLE m_scmHandle;
+		::SC_HANDLE m_scmHandle;
 };
 
 #endif // _SERVICE_HELPER_H

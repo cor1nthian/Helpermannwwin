@@ -43,7 +43,5 @@ void setLastError(const unsigned long code);
 unsigned long getLastErrorCode();
 std::wstring getErrorDetails(const unsigned long errcode, const std::wstring funcName = L"",
 	const std::wstring additionalInfo = L"");
-bool getErrorInfo(::IErrorInfo* errorInfo);
-bool getIObjectErrorDetails(std::wstring &errorDescription, ::IUnknown* object, ::IErrorInfo* errinf);
 
 #endif // _WINERR_HELP_H

@@ -137,8 +137,9 @@ bool startsWith(const std::string source, const std::string sequence, const bool
 bool startsWith(const std::wstring source, const std::wstring sequence, const bool ignoreCase = true);
 bool endsWith(const std::string source, const std::string sequence, const bool ignoreCase = true);
 bool endsWith(const std::wstring source, const std::wstring sequence, const bool ignoreCase = true);
-bool partialMatch(const std::string source, const std::string compare, const bool ignoreCase = true);
-bool partialMatch(const std::wstring source, const std::wstring compare, const bool ignoreCase = true);
+bool partialMatch(const std::string source, const std::string compare, const bool ignoreCase = true, size_t *position = 0);
+bool partialMatch(const std::wstring source, const std::wstring compare, const bool ignoreCase = true,
+	size_t *position = 0);
 size_t countOccurence(const std::string source, const std::string sequence);
 size_t countOccurence(const std::wstring source, const std::wstring sequence);
 std::vector<std::string> splitStr(const std::string str, const char* delimiter = "?", const bool includeEmpty = false);
@@ -147,10 +148,10 @@ std::map<std::string, std::vector<std::string>> splitStr(const std::string str,
 	const std::vector<const char*> delimiters, const bool ignoreCase = true, const bool includeEmpty = false);
 std::map<std::wstring, std::vector<std::wstring>> splitStr(const std::wstring str,
 	const std::vector<const wchar_t*> delimiters, const bool ignoreCase = true, const bool includeEmpty = false);
-std::vector<std::string> tokenFromString(const std::string source, const std::string separator = "%",
-	const bool includeSeparators = true, const bool ignoreCase = true);
-std::vector<std::wstring> tokenFromString(const std::wstring source, const std::wstring separator = L"%",
-	const bool includeSeparators = true, const bool ignoreCase = true);
+std::map<size_t, std::string> tokenFromString(const std::string source, const std::string separator,
+	const bool includeSeparators = true, const bool ignoreCase = true, const bool uniqueValues = false);
+std::map<size_t, std::wstring> tokenFromString(const std::wstring source, const std::wstring separator,
+	const bool includeSeparators = true, const bool ignoreCase = true, const bool uniqueValues = false);
 std::string joinStrs(const std::vector<std::string> strs, const std::string delimiter = "",
 	const size_t startIdx = 0, const size_t endIdx = 0);
 std::wstring joinStrs(const std::vector<std::wstring> strs, const std::wstring delimiter = L"",
