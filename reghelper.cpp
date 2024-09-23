@@ -778,29 +778,33 @@ RegOpResult RegHandler::GetValueType(const std::wstring valName, RegValType &val
 }
 
 RegOpResult RegHandler::GetCPUDesc(std::vector<std::wstring> &cpuDesc, const HKEY* root) const {
+	RegOpResult ret = RegOpResult::Fail;
 	std::wstring tval;
 	if (RegOpResult::Success == GetStrVal(
 		L"HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0\\ProcessorNameString",
 		tval, false, root)) {
-		cpuDesc.push_back(tval);
-		if (RegOpResult::Success == GetStrVal(
-			L"HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0\\Identifier",
-			tval, false, root)) {
-			cpuDesc.push_back(tval);
-			if (RegOpResult::Success == GetStrVal(
-				L"HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0\\VendorIdentifier",
-				tval, false, root)) {
-				cpuDesc.push_back(tval);
-				return RegOpResult::Success;
-			} else {
-				return RegOpResult::Fail;
-			}
-		} else {
-			return RegOpResult::Fail;
-		}
+		ret = RegOpResult::Success;
+		cpuDesc.push_back(L"Name: " + tval);
 	} else {
-		return RegOpResult::Fail;
+		cpuDesc.push_back(L"Name: (null)");
 	}
+	if (RegOpResult::Success == GetStrVal(
+		L"HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0\\Identifier",
+		tval, false, root)) {
+		ret = RegOpResult::Success;
+		cpuDesc.push_back(L"Identifier: " + tval);
+	} else {
+		cpuDesc.push_back(L"Identifier: (null)");
+	}
+	if (RegOpResult::Success == GetStrVal(
+		L"HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0\\VendorIdentifier",
+		tval, false, root)) {
+		ret = RegOpResult::Success;
+		cpuDesc.push_back(L"Vendor: " + tval);
+	} else {
+		cpuDesc.push_back(L"Vendor: (null)");
+	}
+	return ret;
 }
 
 RegOpResult RegHandler::CreateStrVal(const std::wstring valName, const std::wstring& val, const HKEY *root) const {
