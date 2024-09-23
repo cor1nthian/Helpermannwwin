@@ -1345,7 +1345,8 @@ SysOpResult SysHandler::RunVBSScript(std::wstring &output, std::wstring &erroutp
 			if (fsh.PathExists(scriptPath)) {
 				std::wstring fullpath = trim_copy(scriptPath) + L" " + trim_copy(scriptArgs);
 				ProcessHandler proc;
-				if (ProcOpResult::Success == proc.RunCommandPiped(L"cscript /nologo " + fullpath, output, erroutput)) {
+				if (ProcOpResult::Success == proc.RunCommandPiped(L"cscript /nologo \"" + fullpath + L"\"", output,
+					erroutput)) {
 					return SysOpResult::Success;
 				} else {
 					return SysOpResult::Fail;
@@ -1370,7 +1371,8 @@ SysOpResult SysHandler::RunPSScript(std::wstring &output, std::wstring &erroutpu
 			if (fsh.PathExists(scriptPath)) {
 				std::wstring fullpath = trim_copy(scriptPath) + L" " + trim_copy(scriptArgs);
 				ProcessHandler proc;
-				if (ProcOpResult::Success == proc.RunCommandPiped(L"powershell -File " + fullpath, output, erroutput)) {
+				if (ProcOpResult::Success == proc.RunCommandPiped(L"powershell -File \"" + fullpath + L"\"", output,
+					erroutput)) {
 					return SysOpResult::Success;
 				} else {
 					return SysOpResult::Fail;
@@ -1391,7 +1393,7 @@ SysOpResult SysHandler::ExpandToken(std::wstring &outStr, const std::wstring tok
 	if (!tBuf) {
 		return SysOpResult::Fail;
 	}
-	if (::ExpandEnvironmentStrings(token.c_str(), tBuf, wcslen_c(L"%SystemRoot%"))) {
+	if (::ExpandEnvironmentStrings(token.c_str(), tBuf, wcslen_c(token.c_str()))) {
 		outStr = tBuf;
 		SAFE_ARR_DELETE(tBuf);
 		return SysOpResult::Success;
@@ -1423,7 +1425,7 @@ SysOpResult SysHandler::IsSysTempFolderAvailable(bool &available, const HKEY *ro
 			}
 		}
 		if (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(tempfld.c_str())) {
-			std::wstring fpath = tempfld + L"\\tfile" + genRandomWString() + L".tmp";
+			std::wstring fpath = tempfld + genRandomString(L"\\tfile_") + L".tmp";
 			if (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(fpath.c_str())) {
 				!::DeleteFile(fpath.c_str());
 			}
@@ -1452,7 +1454,7 @@ SysOpResult SysHandler::IsSysTempFolderAvailable(bool &available, const HKEY *ro
 	if (::ExpandEnvironmentStrings(L"%SystemRoot%", wbuf, wcslen_c(L"%SystemRoot%"))) {
 		std::wstring tempFolder = std::wstring(wbuf) + L"\\Temp";
 		if (INVALID_FILE_ATTRIBUTES != ::GetFileAttributes(wbuf)) {
-			std::wstring tempFilename = tempFolder + L"\\tfile" + genRandomWString() + L".tmp";
+			std::wstring tempFilename = tempFolder + genRandomString(L"\\tfile_") + L".tmp";
 			::HANDLE hFile = ::CreateFile(tempFilename.c_str(), GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS,
 				FILE_ATTRIBUTE_NORMAL, 0);
 			if (INVALID_HANDLE_VALUE != hFile) {
@@ -1500,7 +1502,7 @@ SysOpResult SysHandler::IsPowershellAvailable(bool &available) const {
 		memset(tBuf, 0, bufsz);
 		std::wstring tscriptPath;
 		if (::ExpandEnvironmentStrings(L"%SystemRoot%", tBuf, wcslen_c(L"%SystemRoot%"))) {
-			tscriptPath = std::wstring(tBuf) + L"\\Temp\\tscript" + genRandomWString() + L".ps1";
+			tscriptPath = std::wstring(tBuf) + genRandomString(L"\\Temp\\tscript_") + L".ps1";
 			wchar_t scriptbody[] = L"Write-Host \"Test Output\"";
 			FSHandler fsh;
 			if (FSOpResult::Success != fsh.WriteToTextFile(tscriptPath, scriptbody, TextFileEnc::UTF8)) {
@@ -1544,7 +1546,7 @@ SysOpResult SysHandler::IsCScriptAvailable(bool& available) const {
 		memset(tBuf, 0, bufsz);
 		std::wstring tscriptPath;
 		if (::ExpandEnvironmentStrings(L"%SystemRoot%", tBuf, wcslen_c(L"%SystemRoot%"))) {
-			tscriptPath = std::wstring(tBuf) + L"\\Temp\\tscript" + genRandomWString() + L".vbs";
+			tscriptPath = std::wstring(tBuf) + genRandomString(L"\\Temp\\tscript_") + L".vbs";
 			wchar_t scriptbody[] = L"WScript.Echo \"Test Output\"";
 			FSHandler fsh;
 			if (FSOpResult::Success != fsh.WriteToTextFile(tscriptPath, scriptbody)) {

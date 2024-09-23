@@ -1481,10 +1481,10 @@ std::map<size_t, std::string> tokenFromString(const std::string source, const st
                         }
                     }
                     if (noelem) {
-                        ret[i] = frag;
+                        ret[i - sep.length()] = frag;
                     }
                 } else {
-                    ret[i] = source.substr(i - 1, (findpos - i) + sep.length() + 1);
+                    ret[i - sep.length()] = source.substr(i - 1, (findpos - i) + sep.length() + 1);
                     // ret.push_back(source.substr(i - 1, (findpos - i) + sep.length() + 1));
                 }
             }
@@ -1553,11 +1553,11 @@ std::map<size_t, std::wstring> tokenFromString(const std::wstring source, const 
                         }
                     }
                     if (noelem) {
-                        ret[i] = frag;
+                        ret[i - sep.length()] = frag;
                         // ret[i] = frag;
                     }
                 } else {
-                    ret[i] = source.substr(i - 1, (findpos - i) + sep.length() + 1);
+                    ret[i - sep.length()] = source.substr(i - 1, (findpos - i) + sep.length() + 1);
                     // ret[i] = source.substr(i - 1, (findpos - i) + sep.length() + 1);
                     // ret.push_back(source.substr(i - 1, (findpos - i) + sep.length() + 1));
                 }
@@ -2504,7 +2504,7 @@ std::wstring wmiQuerySimpleFromObject(const std::wstring objectName, const std::
     }
 }
 
-std::string genRandomString(const size_t length, const std::string prefix) {
+std::string genRandomString(const std::string prefix, const size_t length) {
     const char alphanum[] =
         "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     std::string tmp;
@@ -2515,7 +2515,7 @@ std::string genRandomString(const size_t length, const std::string prefix) {
     return (prefix + tmp);
 }
 
-std::wstring genRandomWString(const size_t length, const std::wstring prefix) {
+std::wstring genRandomString(const std::wstring prefix, const size_t length) {
     const wchar_t alphanum[] =
         L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     std::wstring tmp;

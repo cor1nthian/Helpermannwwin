@@ -75,7 +75,7 @@ int wmain(int argc, wchar_t* argv[]) {
 	WMIHandler wmih;
 	MSSQLDBHandler mssqlh;
 	bool avail = false;
-	// std::map<size_t, std::wstring> rett = tokenFromString(L"%token%%lol%%kek%%lol%%kek%", L"%", false, true, true);
+	std::map<size_t, std::wstring> rett = tokenFromString(L"%token%%lol%%kek%%lol%%kek%", L"%", true, true, true);
 	std::map<std::wstring, std::wstring> wmires;
 	std::map<std::wstring, std::wstring> wmires2;
 	/*wmih.RunWMIQuery(wmires, L"SELECT * FROM ME_System",
@@ -91,7 +91,7 @@ int wmain(int argc, wchar_t* argv[]) {
 	wmih.EnumWMIClasses(tws3, WMIEnumSource::Powershell, L"root\\cimv2\\power");
 	wmih.EnumWMIClasses(tws4, WMIEnumSource::Powershell, L"root\\RSOP\\Computer");
 	
-	std::wcout << genRandomWString(6, L"");
+	std::wcout << genRandomString(L"", 6) << std::endl;
 	sys.IsSysTempFolderAvailable(avail);
 	// std::wstring rrr = genRandomWString();
 	std::map<size_t, std::string> rrr2 = tokenFromString("%%token%%%%tokok%%123", "%%", false);

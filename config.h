@@ -2,7 +2,6 @@
 #define _CONFIG_H
 
 // Common Defines
-
 typedef long NTSTATUS;
 
 // Macro Defines

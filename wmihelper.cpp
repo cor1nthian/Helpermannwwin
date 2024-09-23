@@ -6,6 +6,7 @@ WMIQueryAsyncSink::WMIQueryAsyncSink() {
 	m_lRef = 0;
 	m_bDone = 0;
 	m_WMIHandler = 0;
+	::InitializeCriticalSection(&m_threadLock);
 }
 
 WMIQueryAsyncSink::WMIQueryAsyncSink(const WMIQueryAsyncSink& other) {
@@ -13,6 +14,7 @@ WMIQueryAsyncSink::WMIQueryAsyncSink(const WMIQueryAsyncSink& other) {
 		m_lRef = other.m_lRef;
 		m_bDone = other.m_bDone;
 		m_WMIHandler = other.m_WMIHandler;
+		m_threadLock = other.m_threadLock;
 	}
 }
 
@@ -23,6 +25,8 @@ WMIQueryAsyncSink::WMIQueryAsyncSink(WMIQueryAsyncSink &&other) noexcept {
 		m_bDone = std::exchange(other.m_bDone, false);
 		m_WMIHandler = std::move(other.m_WMIHandler);
 		other.m_WMIHandler = 0;
+		m_threadLock = std::move(other.m_threadLock);
+		memset(&other.m_threadLock, 0, sizeof(::CRITICAL_SECTION));
 	}
 }
 #endif
@@ -32,6 +36,7 @@ WMIQueryAsyncSink& WMIQueryAsyncSink::operator=(const WMIQueryAsyncSink &other) 
 		m_lRef = other.m_lRef;
 		m_bDone = other.m_bDone;
 		m_WMIHandler = other.m_WMIHandler;
+		m_threadLock = other.m_threadLock;
 	}
 	return *this;
 }
@@ -43,16 +48,19 @@ WMIQueryAsyncSink& WMIQueryAsyncSink::operator=(WMIQueryAsyncSink &&other) noexc
 		m_bDone = std::exchange(other.m_bDone, false);
 		m_WMIHandler = std::move(other.m_WMIHandler);
 		other.m_WMIHandler = 0;
+		m_threadLock = std::move(other.m_threadLock);
+		memset(&other.m_threadLock, 0, sizeof(::CRITICAL_SECTION));
 	}
 	return *this;
 }
 #endif
 
-bool WMIQueryAsyncSink::operator==(const WMIQueryAsyncSink& other) const {
+bool WMIQueryAsyncSink::operator==(const WMIQueryAsyncSink &other) const {
 	if (this != &other) {
 		return (m_lRef == other.m_lRef &&
 				m_bDone == other.m_bDone &&
-				m_WMIHandler == other.m_WMIHandler);
+				m_WMIHandler == other.m_WMIHandler &&
+				!memcmp(&m_threadLock, &other.m_threadLock, sizeof(::CRITICAL_SECTION)));
 	} else {
 		return true;
 	}
@@ -62,7 +70,8 @@ bool WMIQueryAsyncSink::operator!=(const WMIQueryAsyncSink &other) const {
 	if (this != &other) {
 		return (m_lRef != other.m_lRef ||
 				m_bDone != other.m_bDone ||
-				m_WMIHandler != other.m_WMIHandler);
+				m_WMIHandler != other.m_WMIHandler ||
+				memcmp(&m_threadLock, &other.m_threadLock, sizeof(::CRITICAL_SECTION)));
 	} else {
 		return false;
 	}
@@ -70,6 +79,7 @@ bool WMIQueryAsyncSink::operator!=(const WMIQueryAsyncSink &other) const {
 
 WMIQueryAsyncSink::~WMIQueryAsyncSink() {
 	m_bDone = 1;
+	::DeleteCriticalSection(&m_threadLock);
 }
 
 unsigned long STDMETHODCALLTYPE WMIQueryAsyncSink::AddRef() {
@@ -143,7 +153,20 @@ unsigned long STDMETHODCALLTYPE WMIQueryAsyncSink::Release() {
 
 ::HRESULT STDMETHODCALLTYPE WMIQueryAsyncSink::SetStatus(long lFlags, ::HRESULT hResult, ::BSTR strParam,
 	::IWbemClassObject __RPC_FAR *pObjParam) {
+	if (lFlags == ::WBEM_STATUS_TYPE::WBEM_STATUS_COMPLETE) {
+		::EnterCriticalSection(&m_threadLock);
+		m_bDone = true;
+		::LeaveCriticalSection(&m_threadLock);
+	} else if (lFlags == ::WBEM_STATUS_TYPE::WBEM_STATUS_PROGRESS) {}
 	return ::WBEMSTATUS::WBEM_S_NO_ERROR;
+}
+
+bool WMIQueryAsyncSink::IsDone() {
+	bool done = true;
+	::EnterCriticalSection(&m_threadLock);
+	done = m_bDone;
+	::LeaveCriticalSection(&m_threadLock);
+	return done;
 }
 
 WMIOpResult WMIQueryAsyncSink::SetHandler(WMIHandler *wmiHandler) {
@@ -470,7 +493,7 @@ WMIOpResult WMIHandler::GetFieldsFromQuery(std::vector<std::wstring> &fields, co
 		return WMIOpResult::Fail;
 	}
 	while (pEnumerator) {
-		hres = pEnumerator->Next(::WBEM_INFINITE, 1, &pObj, &uReturn);
+		hres = pEnumerator->Next(::WBEM_TIMEOUT_TYPE::WBEM_INFINITE, 1, &pObj, &uReturn);
 		if (!uReturn) {
 			break;
 		}
@@ -637,7 +660,7 @@ WMIOpResult WMIHandler::EnumWMINamespaces(std::vector<std::wstring>& namespaces,
 					FSHandler fsh;
 					std::wstring out, errout, replacedquery =
 						replaceAll(gc_wmiCScriptNamespaceQuery, L"?replace?", namespaceName), tscriptpath =
-						tmpfld + L"\\tscript" + genRandomWString() + L".vbs";
+						tmpfld + genRandomString(L"\\tscript_") + L".vbs";
 					if (FSOpResult::Success == fsh.WriteToTextFile(tscriptpath, replacedquery)) {
 						ProcessHandler proc;
 						if (ProcOpResult::Success == proc.RunCommandPiped(L"cscript /nologo " + tscriptpath, out,
@@ -739,7 +762,7 @@ WMIOpResult WMIHandler::EnumWMIClasses(std::vector<std::wstring> &classes, const
 				if (SysOpResult::Success == sys.GetSysTempFolderPath(tmpfld, root)) {
 					FSHandler fsh;
 					std::wstring out, errout, replacedquery = replaceAll(gc_wmiCScriptClassesQuery,
-						L"?replace?", namespaceName), tscriptpath = tmpfld + L"\\tscript" + genRandomWString() + L".vbs";
+						L"?replace?", namespaceName), tscriptpath = tmpfld + genRandomString(L"\\tscript") + L".vbs";
 					if (FSOpResult::Success == fsh.WriteToTextFile(tscriptpath, replacedquery)) {
 						ProcessHandler proc;
 						if (ProcOpResult::Success == proc.RunCommandPiped(L"cscript /nologo " + tscriptpath, out,
@@ -836,7 +859,7 @@ WMIOpResult WMIHandler::EnumWMIClasses(std::vector<std::wstring> &classes, const
 		}
 		unsigned long uReturn = 0;
 		while (pEnumerator) {
-			::HRESULT hres = pEnumerator->Next(::WBEM_INFINITE, 1, &pObj, &uReturn);
+			::HRESULT hres = pEnumerator->Next(::WBEM_TIMEOUT_TYPE::WBEM_INFINITE, 1, &pObj, &uReturn);
 			if (!uReturn) {
 				break;
 			}
@@ -904,7 +927,7 @@ WMIOpResult WMIHandler::processQueryFields(std::map<std::wstring, std::wstring> 
 	::IWbemClassObject* pclsObj = 0;
 	unsigned long uReturn = 0;
 	while (enumerator) {
-		::HRESULT hres = enumerator->Next(::WBEM_INFINITE, 1, &pclsObj, &uReturn);
+		::HRESULT hres = enumerator->Next(::WBEM_TIMEOUT_TYPE::WBEM_INFINITE, 1, &pclsObj, &uReturn);
 		if (!uReturn) {
 			break;
 		}

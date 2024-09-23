@@ -82,12 +82,14 @@ class WMIQueryAsyncSink : public ::IWbemObjectSink {
 			::IWbemClassObject __RPC_FAR* __RPC_FAR* apObjArray);
 		virtual ::HRESULT STDMETHODCALLTYPE SetStatus(long lFlags, ::HRESULT hResult, ::BSTR strParam,
 			::IWbemClassObject __RPC_FAR* pObjParam);
+		bool IsDone();
 		WMIOpResult SetHandler(WMIHandler *wmiHandler);
 	protected:
 	private:
 		long m_lRef;
 		int m_bDone;
 		WMIHandler* m_WMIHandler;
+		::CRITICAL_SECTION m_threadLock;
 };
 
 class WMIHandler {

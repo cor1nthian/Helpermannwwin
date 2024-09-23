@@ -197,8 +197,8 @@ std::string wmiQuerySimpleFromObject(const std::string objectName,
 std::wstring wmiQuerySimpleFromObject(const std::wstring objectName,
 	const std::wstring namespacePath = L"ROOT\\CIMV2", const std::vector<std::wstring> queryFields = { L"*" },
 	const bool anyQueryFields = false);
-std::string genRandomString(const size_t length = 6, const std::string prefix = "_");
-std::wstring genRandomWString(const size_t length = 6, const std::wstring prefix = L"_");
+std::string genRandomString(const std::string prefix = "_", const size_t length = 6);
+std::wstring genRandomString(const std::wstring prefix = L"_", const size_t length = 6);
 bool valInList(const std::vector<std::string> &list, const std::string val, const bool ignoreCase = true,
 	const bool exactMatch = false, size_t* posptr = 0);
 bool valInList(const std::vector<std::wstring> &list, const std::wstring val, const bool ignoreCase = true,
