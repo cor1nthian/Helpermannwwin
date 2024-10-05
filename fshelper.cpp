@@ -1,628 +1,7 @@
 #include <stdio.h>
 #include <iostream>
 #include "fshelper.h"
-
-NTSTATUS(WINAPI* pRtlInitUnicodeString)(UnicodeString*, wchar_t*);
-NTSTATUS(WINAPI* pNtCreateFile)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, IOStatusBlock*, LARGE_INTEGER*, unsigned long,
-	unsigned long, unsigned long, unsigned long, void*, unsigned long);
-NTSTATUS(WINAPI* pNtCreateEvent)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, EvtType, unsigned char);
-NTSTATUS(WINAPI* pNtQueryDirectoryFile)(::HANDLE, ::HANDLE, PIO_APC_ROUTINE, void*, IOStatusBlock*, void*,
-	unsigned long, FolderInfo, unsigned char, UnicodeString*, unsigned char);
-NTSTATUS(WINAPI* pNtWaitForSingleobject)(::HANDLE, unsigned char, LARGE_INTEGER*);
-NTSTATUS(WINAPI* pRtlUnicodeStringToAnsiString)(ANSIString*, UnicodeString*, unsigned char);
-NTSTATUS(WINAPI* pNtClearEvent)(::HANDLE);
-NTSTATUS(WINAPI* pNtClose)(::HANDLE);
-
-UnicodeString::UnicodeString() {
-	Length = 0;
-	MaximumLength = 0;
-	Buffer = 0;
-}
-
-UnicodeString::UnicodeString(const unsigned short length, const unsigned short maxlength) {
-	Length = length;
-	MaximumLength = maxlength;
-	Buffer = (wchar_t*)malloc(Length * sizeof(wchar_t));
-	// Buffer = (wchar_t*)::LocalAlloc(LPTR, Length);
-	// NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, wchar_t, Length);
-}
-
-UnicodeString::UnicodeString(const unsigned short length, const unsigned short maxlength, const wchar_t* buffer) {
-	Length = length;
-	MaximumLength = maxlength;
-	Buffer = (wchar_t*)malloc(Length * sizeof(wchar_t));
-	// Buffer = (wchar_t*)::LocalAlloc(LPTR, Length);
-	// NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, wchar_t, Length);
-	if(Buffer) {
-		memset(Buffer, 0, Length * sizeof(wchar_t));
-		wsprintf(Buffer, L"%s", buffer);
-	}
-}
-
-UnicodeString::UnicodeString(const UnicodeString &other) {
-	if (this != &other) {
-		Length = other.Length;
-		MaximumLength = other.MaximumLength;
-		if (Buffer) {
-			SAFE_FREE(Buffer);
-		}
-		if (other.Buffer) {
-			Buffer = (wchar_t*)malloc(MaximumLength * sizeof(char));
-			if (Buffer) {
-				memset(Buffer, 0, MaximumLength * sizeof(wchar_t));
-				wsprintf(Buffer, L"%s", other.Buffer);
-			}
-		}
-	}
-}
-
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-UnicodeString::UnicodeString(UnicodeString &&other) noexcept {
-	if (this != &other) {
-		Length = std::exchange(other.Length, 0);
-		MaximumLength = std::exchange(other.MaximumLength, 0);
-		Buffer = std::move(other.Buffer);
-		other.Buffer = 0;
-	}
-}
-#endif
-
-UnicodeString::~UnicodeString() {
-	/*if (Buffer) {
-		SAFE_FREE(Buffer);
-	}*/
-}
-
-UnicodeString& UnicodeString::operator=(const UnicodeString &other) {
-	if (this != &other) {
-		Length = other.Length;
-		MaximumLength = other.MaximumLength;
-		if (Buffer) {
-			SAFE_FREE(Buffer);
-		}
-		if (other.Buffer) {
-			Buffer = (wchar_t*)malloc(MaximumLength * sizeof(char));
-			if (Buffer) {
-				memset(Buffer, 0, MaximumLength * sizeof(wchar_t));
-				wsprintf(Buffer, L"%s", other.Buffer);
-			}
-		}
-	}
-	return *this;
-}
-
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-UnicodeString& UnicodeString::operator=(UnicodeString &&other) noexcept {
-	if (this != &other) {
-		Length = std::exchange(other.Length, 0);
-		MaximumLength = std::exchange(other.MaximumLength, 0);
-		Buffer = std::move(other.Buffer);
-		other.Buffer = 0;
-	}
-	return *this;
-}
-#endif
-
-bool UnicodeString::operator==(const UnicodeString& other) const {
-	if (this != &other) {
-		return (Length == other.Length &&
-				MaximumLength == other.MaximumLength &&
-				!memcmp(Buffer, other.Buffer, Length * sizeof(wchar_t)));
-	} else {
-		return true;
-	}
-}
-
-bool UnicodeString::operator!=(const UnicodeString& other) const {
-	if (this != &other) {
-		return (Length != other.Length ||
-				MaximumLength != other.MaximumLength ||
-				memcmp(Buffer, other.Buffer, Length * sizeof(wchar_t)));
-	} else {
-		return false;
-	}
-}
-
-ANSIString::ANSIString() {
-	Length = 0;
-	MaximumLength = 0;
-	Buffer = 0;
-}
-
-ANSIString::ANSIString(const unsigned short length, const unsigned short maxlength) {
-	Length = length;
-	MaximumLength = maxlength;
-	Buffer = (char*)malloc(Length * sizeof(char));
-	if (Buffer) {
-		memset(Buffer, 0, Length * sizeof(wchar_t));
-	}
-	// NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, char, Length);
-}
-
-ANSIString::ANSIString(const unsigned short length, const unsigned short maxlength, const char* buffer) {
-	Length = length;
-	MaximumLength = maxlength;
-	Buffer = (char*)malloc(Length * sizeof(char));
-	// NEW_ARR_NULLIFY_NO_REDEFINE(Buffer, char, Length);
-	if (Buffer) {
-		memset(Buffer, 0, Length * sizeof(wchar_t));
-		sprintf(Buffer, "%s", buffer);
-	}
-}
-
-ANSIString::ANSIString(const ANSIString &other) {
-	if (this != &other) {
-		Length = other.Length;
-		MaximumLength = other.MaximumLength;
-		if (Buffer) {
-			SAFE_FREE(Buffer);
-		}
-		if (other.Buffer) {
-			Buffer = (char*)malloc(MaximumLength * sizeof(char));
-			if (Buffer) {
-				memset(Buffer, 0, MaximumLength * sizeof(wchar_t));
-				sprintf(Buffer, "%s", other.Buffer);
-			}
-		}
-	}
-}
-
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-ANSIString::ANSIString(ANSIString &&other) noexcept {
-	if (this != &other) {
-		Length = std::exchange(other.Length, 0);
-		MaximumLength = std::exchange(other.MaximumLength, 0);
-		Buffer = std::move(other.Buffer);
-		other.Buffer = 0;
-	}
-}
-#endif
-
-ANSIString::~ANSIString() {
-	/*if (Buffer) {
-		SAFE_FREE(Buffer);
-	}*/
-}
-
-ANSIString& ANSIString::operator=(const ANSIString &other) {
-	if (this != &other) {
-		Length = other.Length;
-		MaximumLength = other.MaximumLength;
-		if (Buffer) {
-			SAFE_FREE(Buffer);
-		}
-		if (other.Buffer) {
-			Buffer = (char*)malloc(MaximumLength * sizeof(char));
-			if (Buffer) {
-				memset(Buffer, 0, MaximumLength * sizeof(wchar_t));
-				sprintf(Buffer, "%s", other.Buffer);
-			}
-		}
-	}
-	return *this;
-}
-
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-ANSIString& ANSIString::operator=(ANSIString&& other) noexcept {
-	if (this != &other) {
-		Length = std::exchange(other.Length, 0);
-		MaximumLength = std::exchange(other.MaximumLength, 0);
-		Buffer = std::move(other.Buffer);
-		other.Buffer = 0;
-	}
-	return *this;
-}
-#endif
-
-bool ANSIString::operator==(const ANSIString& other) const {
-	if (this != &other) {
-		return (Length == other.Length &&
-				MaximumLength == other.MaximumLength &&
-				!memcmp(Buffer, other.Buffer, Length * sizeof(char)));
-	} else {
-		return true;
-	}
-}
-
-bool ANSIString::operator!=(const ANSIString& other) const {
-	if (this != &other) {
-		return (Length != other.Length ||
-				MaximumLength != other.MaximumLength ||
-				memcmp(Buffer, other.Buffer, Length * sizeof(char)));
-	} else {
-		return false;
-	}
-}
-
-ObjectAttributes::ObjectAttributes() {
-	uLength = 0;
-	uAttributes = 0;
-	pSecurityDescriptor = 0;
-	pSecurityQualityOfService = 0;
-	hRootDirectory = 0;
-	pObjectName = 0;
-}
-
-ObjectAttributes::ObjectAttributes(const ObjectAttributes &other) {
-	if (this != &other) {
-		uLength = other.uLength;
-		uAttributes = other.uAttributes;
-		if (other.pSecurityDescriptor) {
-			if (pSecurityDescriptor) {
-				SAFE_FREE(pSecurityDescriptor);
-			}
-			pSecurityDescriptor = malloc(SECURITY_DESCRIPTOR_MIN_LENGTH);
-			if (pSecurityDescriptor) {
-				memcpy(pSecurityDescriptor, other.pSecurityDescriptor, sizeof(SECURITY_DESCRIPTOR));
-			}
-		} else {
-			if (pSecurityDescriptor) {
-				SAFE_FREE(pSecurityDescriptor);
-			}
-		}
-		pSecurityQualityOfService = other.pSecurityQualityOfService;
-		hRootDirectory = other.hRootDirectory;
-		if (other.pObjectName) {
-			if (pObjectName) {
-				SAFE_DELETE(pObjectName);
-			}
-			pObjectName = new UnicodeString;
-			if (pObjectName) {
-				memcpy(pObjectName, other.pObjectName, sizeof(UnicodeString));
-			}
-		} else {
-			if (pObjectName) {
-				SAFE_DELETE(pObjectName);
-			}
-		}
-	}
-}
-
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-ObjectAttributes::ObjectAttributes(ObjectAttributes &&other) noexcept {
-	if (this != &other) {
-		uLength = std::exchange(other.uLength, 0);
-		uAttributes = std::exchange(other.uAttributes, 0);
-		hRootDirectory = std::move(other.hRootDirectory);
-		other.hRootDirectory = 0;
-		pSecurityDescriptor = std::move(other.pSecurityDescriptor);
-		other.pSecurityDescriptor = 0;
-		pSecurityQualityOfService = std::move(other.pSecurityQualityOfService);
-		other.pSecurityQualityOfService = 0;
-		pObjectName = std::move(other.pObjectName);
-		other.pObjectName = 0;
-	}
-}
-#endif
-
-ObjectAttributes::~ObjectAttributes() {
-	/*if (pObjectName) {
-		SAFE_DELETE(pObjectName);
-	}*/
-}
-
-ObjectAttributes& ObjectAttributes::operator=(const ObjectAttributes &other) {
-	if (this != &other) {
-		uLength = other.uLength;
-		uAttributes = other.uAttributes;
-		if (other.pSecurityDescriptor) {
-			if (pSecurityDescriptor) {
-				SAFE_FREE(pSecurityDescriptor);
-			}
-			pSecurityDescriptor = malloc(SECURITY_DESCRIPTOR_MIN_LENGTH);
-			if (pSecurityDescriptor) {
-				memcpy(pSecurityDescriptor, other.pSecurityDescriptor, sizeof(SECURITY_DESCRIPTOR));
-			}
-		} else {
-			if (pSecurityDescriptor) {
-				SAFE_FREE(pSecurityDescriptor);
-			}
-		}
-		pSecurityQualityOfService = other.pSecurityQualityOfService;
-		hRootDirectory = other.hRootDirectory;
-		if (other.pObjectName) {
-			if (pObjectName) {
-				SAFE_DELETE(pObjectName);
-			}
-			pObjectName = new UnicodeString;
-			if (pObjectName) {
-				memcpy(pObjectName, other.pObjectName, sizeof(UnicodeString));
-			}
-		} else {
-			if (pObjectName) {
-				SAFE_DELETE(pObjectName);
-			}
-		}
-	}
-	return *this;
-}
-
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-ObjectAttributes& ObjectAttributes::operator=(ObjectAttributes &&other) noexcept {
-	if (this != &other) {
-		uLength = std::exchange(other.uLength, 0);
-		uAttributes = std::exchange(other.uAttributes, 0);
-		hRootDirectory = std::move(other.hRootDirectory);
-		other.hRootDirectory = 0;
-		pSecurityDescriptor = std::move(other.pSecurityDescriptor);
-		other.pSecurityDescriptor = 0;
-		pSecurityQualityOfService = std::move(other.pSecurityQualityOfService);
-		other.pSecurityQualityOfService = 0;
-		pObjectName = std::move(other.pObjectName);
-		other.pObjectName = 0;
-	}
-	return *this;
-}
-#endif
-
-bool ObjectAttributes::operator==(const ObjectAttributes& other) const {
-	if (this != &other) {
-		return (uLength == other.uLength &&
-				uAttributes == other.uAttributes &&
-				hRootDirectory == other.hRootDirectory &&
-				// pSecurityQualityOfService == other.pSecurityQualityOfService &&
-				!memcmp(pSecurityDescriptor, other.pSecurityDescriptor, sizeof(SECURITY_DESCRIPTOR)) &&
-				!memcmp(pObjectName, other.pObjectName, sizeof(UnicodeString)));
-	} else {
-		return true;
-	}
-}
-
-bool ObjectAttributes::operator!=(const ObjectAttributes& other) const {
-	if (this != &other) {
-		return (uLength != other.uLength ||
-				uAttributes != other.uAttributes ||
-				hRootDirectory != other.hRootDirectory ||
-				// pSecurityQualityOfService != other.pSecurityQualityOfService ||
-				memcmp(pSecurityDescriptor, other.pSecurityDescriptor, sizeof(SECURITY_DESCRIPTOR)) ||
-				memcmp(pObjectName, other.pObjectName, sizeof(UnicodeString)));
-	} else {
-		return false;
-	}
-}
-
-IOStatusBlock::IOStatusBlock() {
-	Status = 0;
-	Pointer = 0;
-	Information = 0;
-}
-
-IOStatusBlock::IOStatusBlock(const NTSTATUS statuus, const unsigned long long info) {
-	Status = statuus;
-	Information = info;
-	Pointer = 0;
-}
-
-IOStatusBlock::IOStatusBlock(const IOStatusBlock &other) {
-	if (this != &other) {
-		Status = other.Status;
-		Pointer = other.Pointer;
-		Information = other.Information;
-	}
-}
-
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-IOStatusBlock::IOStatusBlock(IOStatusBlock &&other) noexcept {
-	if (this != &other) {
-		Status = std::exchange(other.Status, 0);
-		Information = std::exchange(other.Information, 0);
-		Pointer = std::move(other.Pointer);
-		other.Pointer = 0;
-	}
-}
-#endif
-
-IOStatusBlock::~IOStatusBlock() {}
-
-IOStatusBlock& IOStatusBlock::operator=(const IOStatusBlock &other) {
-	if (this != &other) {
-		Status = other.Status;
-		Pointer = other.Pointer;
-		Information = other.Information;
-	}
-	return *this;
-}
-
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-IOStatusBlock& IOStatusBlock::operator=(IOStatusBlock &&other) {
-	if (this != &other) {
-		Status = std::exchange(other.Status, 0);
-		Information = std::exchange(other.Information, 0);
-		Pointer = std::move(other.Pointer);
-		other.Pointer = 0;
-	}
-	return *this;
-}
-#endif
-
-bool IOStatusBlock::operator==(const IOStatusBlock& other) const {
-	if (this != &other) {
-		return (Status == other.Status &&
-				Information == other.Information);
-	} else {
-		return true;
-	}
-}
-
-bool IOStatusBlock::operator!=(const IOStatusBlock& other) const {
-	if (this != &other) {
-		return (Status != other.Status ||
-				Information != other.Information);
-	} else {
-		return false;
-	}
-}
-
-FileDirBothInformation::FileDirBothInformation() {
-	NextEntryOffset = 0;
-	FileIndex = 0;
-	FileAttributes = 0;
-	FileNameLength = 0;
-	EaSize = 0;
-	ShortNameLength = 0;
-	CreationTime = { 0 };
-	LastAccessTime = { 0 };
-	LastWriteTime = { 0 };
-	ChangeTime = { 0 };
-	EndOfFile = { 0 };
-	AllocationSize = { 0 };
-	memset(ShortName, 0, FSH_SHORTNAMELENGTH * sizeof(wchar_t));
-	memset(FileName, 0, sizeof(wchar_t));
-}
-
-FileDirBothInformation::FileDirBothInformation(const FileDirBothInformation &other) {
-	if (this != &other) {
-		NextEntryOffset = other.NextEntryOffset;
-		FileIndex = other.FileIndex;
-		FileAttributes = other.FileAttributes;
-		FileNameLength = other.FileNameLength;
-		EaSize = other.EaSize;
-		ShortNameLength = other.ShortNameLength;
-		CreationTime.LowPart = other.CreationTime.LowPart;
-		CreationTime.HighPart = other.CreationTime.HighPart;
-		LastAccessTime.LowPart = other.LastAccessTime.LowPart;
-		LastAccessTime.HighPart = other.LastAccessTime.HighPart;
-		LastWriteTime.LowPart = other.LastWriteTime.LowPart;
-		LastWriteTime.HighPart = other.LastWriteTime.HighPart;
-		ChangeTime.LowPart = other.ChangeTime.LowPart;
-		ChangeTime.HighPart = other.ChangeTime.HighPart;
-		EndOfFile.LowPart = other.EndOfFile.LowPart;
-		EndOfFile.HighPart = other.EndOfFile.HighPart;
-		AllocationSize.LowPart = other.AllocationSize.LowPart;
-		AllocationSize.HighPart = other.AllocationSize.HighPart;
-		wsprintf(ShortName, L"%s", other.ShortName);
-		wsprintf(FileName, L"%s", other.FileName);
-	}
-}
-
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-FileDirBothInformation::FileDirBothInformation(FileDirBothInformation &&other) noexcept {
-	if (this != &other) {
-		NextEntryOffset = std::exchange(other.NextEntryOffset, 0);
-		FileIndex = std::exchange(other.FileIndex, 0);
-		FileAttributes = std::exchange(other.FileAttributes, 0);
-		FileNameLength = std::exchange(other.FileNameLength, 0);
-		EaSize = std::exchange(other.EaSize, 0);
-		ShortNameLength = std::exchange(other.ShortNameLength, 0);
-		CreationTime.LowPart = std::exchange(other.CreationTime.LowPart, 0);
-		CreationTime.HighPart = std::exchange(other.CreationTime.HighPart, 0);
-		LastAccessTime.LowPart = std::exchange(other.LastAccessTime.LowPart, 0);
-		LastAccessTime.HighPart = std::exchange(other.LastAccessTime.HighPart, 0);
-		LastWriteTime.LowPart = std::exchange(other.LastWriteTime.LowPart, 0);
-		LastWriteTime.HighPart = std::exchange(other.LastWriteTime.HighPart, 0);
-		ChangeTime.LowPart = std::exchange(other.ChangeTime.LowPart, 0);
-		ChangeTime.HighPart = std::exchange(other.ChangeTime.HighPart, 0);
-		EndOfFile.LowPart = std::exchange(other.EndOfFile.LowPart, 0);
-		EndOfFile.HighPart = std::exchange(other.EndOfFile.HighPart, 0);
-		AllocationSize.LowPart = std::exchange(other.AllocationSize.LowPart, 0);
-		AllocationSize.HighPart = std::exchange(other.AllocationSize.HighPart, 0);
-		wsprintf(ShortName, L"%s", other.ShortName);
-		memset(other.ShortName, 0, FSH_SHORTNAMELENGTH * sizeof(wchar_t));
-		wsprintf(FileName, L"%s", other.FileName);
-		memset(other.FileName, 0, sizeof(wchar_t));
-	}
-}
-#endif
-
-FileDirBothInformation::~FileDirBothInformation() {}
-
-FileDirBothInformation& FileDirBothInformation::operator=(const FileDirBothInformation &other) {
-	if (this != &other) {
-		NextEntryOffset = other.NextEntryOffset;
-		FileIndex = other.FileIndex;
-		FileAttributes = other.FileAttributes;
-		FileNameLength = other.FileNameLength;
-		EaSize = other.EaSize;
-		ShortNameLength = other.ShortNameLength;
-		CreationTime.LowPart = other.CreationTime.LowPart;
-		CreationTime.HighPart = other.CreationTime.HighPart;
-		LastAccessTime.LowPart = other.LastAccessTime.LowPart;
-		LastAccessTime.HighPart = other.LastAccessTime.HighPart;
-		LastWriteTime.LowPart = other.LastWriteTime.LowPart;
-		LastWriteTime.HighPart = other.LastWriteTime.HighPart;
-		ChangeTime.LowPart = other.ChangeTime.LowPart;
-		ChangeTime.HighPart = other.ChangeTime.HighPart;
-		EndOfFile.LowPart = other.EndOfFile.LowPart;
-		EndOfFile.HighPart = other.EndOfFile.HighPart;
-		AllocationSize.LowPart = other.AllocationSize.LowPart;
-		AllocationSize.HighPart = other.AllocationSize.HighPart;
-		wsprintf(ShortName, L"%s", other.ShortName);
-		wsprintf(FileName, L"%s", other.FileName);
-	}
-	return *this;
-}
-
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-FileDirBothInformation& FileDirBothInformation::operator=(FileDirBothInformation &&other) noexcept {
-	if (this != &other) {
-		NextEntryOffset = std::exchange(other.NextEntryOffset, 0);
-		FileIndex = std::exchange(other.FileIndex, 0);
-		FileAttributes = std::exchange(other.FileAttributes, 0);
-		FileNameLength = std::exchange(other.FileNameLength, 0);
-		EaSize = std::exchange(other.EaSize, 0);
-		ShortNameLength = std::exchange(other.ShortNameLength, 0);
-		CreationTime.LowPart = std::exchange(other.CreationTime.LowPart, 0);
-		CreationTime.HighPart = std::exchange(other.CreationTime.HighPart, 0);
-		LastAccessTime.LowPart = std::exchange(other.LastAccessTime.LowPart, 0);
-		LastAccessTime.HighPart = std::exchange(other.LastAccessTime.HighPart, 0);
-		LastWriteTime.LowPart = std::exchange(other.LastWriteTime.LowPart, 0);
-		LastWriteTime.HighPart = std::exchange(other.LastWriteTime.HighPart, 0);
-		ChangeTime.LowPart = std::exchange(other.ChangeTime.LowPart, 0);
-		ChangeTime.HighPart = std::exchange(other.ChangeTime.HighPart, 0);
-		EndOfFile.LowPart = std::exchange(other.EndOfFile.LowPart, 0);
-		EndOfFile.HighPart = std::exchange(other.EndOfFile.HighPart, 0);
-		AllocationSize.LowPart = std::exchange(other.AllocationSize.LowPart, 0);
-		AllocationSize.HighPart = std::exchange(other.AllocationSize.HighPart, 0);
-		wsprintf(ShortName, L"%s", other.ShortName);
-		memset(other.ShortName, 0, FSH_SHORTNAMELENGTH * sizeof(wchar_t));
-		wsprintf(FileName, L"%s", other.FileName);
-		memset(other.FileName, 0, sizeof(wchar_t));
-	}
-	return *this;
-}
-#endif
-
-bool FileDirBothInformation::operator==(const FileDirBothInformation &other) const {
-	if (this != &other) {
-		return (NextEntryOffset == other.NextEntryOffset &&
-				FileIndex == other.FileIndex &&
-				FileAttributes == other.FileAttributes &&
-				FileNameLength == other.FileNameLength &&
-				EaSize == other.EaSize &&
-				ShortNameLength == other.ShortNameLength &&
-				CreationTime.QuadPart == other.CreationTime.QuadPart &&
-				LastAccessTime.QuadPart == other.LastAccessTime.QuadPart &&
-				LastWriteTime.QuadPart == other.LastWriteTime.QuadPart &&
-				ChangeTime.QuadPart == other.ChangeTime.QuadPart &&
-				EndOfFile.QuadPart == other.EndOfFile.QuadPart &&
-				AllocationSize.QuadPart == other.AllocationSize.QuadPart &&
-				!memcmp(ShortName, other.ShortName, FSH_SHORTNAMELENGTH * sizeof(wchar_t)) &&
-				!memcmp(FileName, other.FileName, FileNameLength * sizeof(wchar_t)));
-	} else {
-		return true;
-	}
-}
-
-bool FileDirBothInformation::operator!=(const FileDirBothInformation& other) const {
-	if (this != &other) {
-		return (NextEntryOffset != other.NextEntryOffset ||
-				FileIndex != other.FileIndex ||
-				FileAttributes != other.FileAttributes ||
-				FileNameLength != other.FileNameLength ||
-				EaSize != other.EaSize ||
-				ShortNameLength != other.ShortNameLength ||
-				CreationTime.QuadPart != other.CreationTime.QuadPart ||
-				LastAccessTime.QuadPart != other.LastAccessTime.QuadPart ||
-				LastWriteTime.QuadPart != other.LastWriteTime.QuadPart ||
-				ChangeTime.QuadPart != other.ChangeTime.QuadPart ||
-				EndOfFile.QuadPart != other.EndOfFile.QuadPart ||
-				AllocationSize.QuadPart != other.AllocationSize.QuadPart ||
-				!memcmp(ShortName, other.ShortName, FSH_SHORTNAMELENGTH * sizeof(wchar_t)) ||
-				!memcmp(FileName, other.FileName, FileNameLength * sizeof(wchar_t)));
-	} else {
-		return false;
-	}
-}
+#include "ntapi.h"
 
 BinData::BinData() {
 	Platform = BinPlatform::PlatformUnknown;
@@ -690,7 +69,7 @@ FileRecord::FileRecord() {
 	size = 0;
 }
 
-FileRecord::FileRecord(const FileRecord& other) {
+FileRecord::FileRecord(const FileRecord &other) {
 	if (this != &other) {
 		fileName = other.fileName;
 		filePath = other.filePath;
@@ -712,7 +91,7 @@ FileRecord::FileRecord(FileRecord &&other) noexcept {
 
 FileRecord::~FileRecord() {}
 
-FileRecord& FileRecord::operator=(const FileRecord& other) {
+FileRecord& FileRecord::operator=(const FileRecord &other) {
 	if (this != &other) {
 		fileName = other.fileName;
 		filePath = other.filePath;
@@ -734,7 +113,7 @@ FileRecord& FileRecord::operator=(FileRecord &&other) noexcept {
 }
 #endif
 
-bool FileRecord::operator==(const FileRecord& other) const {
+bool FileRecord::operator==(const FileRecord &other) const {
 	if (this != &other) {
 		return (lower_copy(hash) == lower_copy(other.hash) &&
 				size == other.size &&
@@ -748,7 +127,7 @@ bool FileRecord::operator==(const FileRecord& other) const {
 	}
 }
 
-bool FileRecord::operator!=(const FileRecord& other) const {
+bool FileRecord::operator!=(const FileRecord &other) const {
 	if (this != &other) {
 		return (lower_copy(hash) != lower_copy(other.hash) ||
 				size != other.size ||
@@ -786,7 +165,7 @@ FolderRecord::FolderRecord(FolderRecord &&other) noexcept {
 
 FolderRecord::~FolderRecord() {}
 
-FolderRecord& FolderRecord::operator=(const FolderRecord& other) {
+FolderRecord& FolderRecord::operator=(const FolderRecord &other) {
 	if (this != &other) {
 		folderName = other.folderName;
 		folderPath = other.folderPath;
@@ -926,14 +305,34 @@ bool DriveDesc::operator!=(const DriveDesc &other) const {
 }
 
 PartitionDesc::PartitionDesc() {
+	partitionStyle = PartitionStyle::GPT;
+	rewritePartition = false;
+	MBRPartitionType = 0;
+	MBRBootIndicator = 0;
+	MBRRecognizedPartitions = 0;
+	GPTAttributes = 0;
+	startOffset = 0;
 	spaceFree = 0;
 	spaceTotal = 0;
+	partNumber = 0;
 }
 
 PartitionDesc::PartitionDesc(const PartitionDesc &other) {
 	if (this != &other) {
+		partitionStyle = other.partitionStyle;
+		rewritePartition = other.rewritePartition;
+		MBRPartitionType = other.MBRPartitionType;
+		MBRBootIndicator = other.MBRBootIndicator;
+		MBRRecognizedPartitions = other.MBRRecognizedPartitions;
+		GPTAttributes = other.GPTAttributes;
+		startOffset = other.startOffset;
 		spaceFree = other.spaceFree;
 		spaceTotal = other.spaceTotal;
+		partNumber = other.partNumber;
+		MBRID = other.MBRID;
+		GPTID = other.GPTID;
+		GPTType = other.GPTType;
+		GPTName = other.GPTName;
 		partitionPath = other.partitionPath;
 		volumePath = other.volumePath;
 		volumes = other.volumes;
@@ -944,8 +343,20 @@ PartitionDesc::PartitionDesc(const PartitionDesc &other) {
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 PartitionDesc::PartitionDesc(PartitionDesc &&other) noexcept {
 	if (this != &other) {
+		partitionStyle = std::exchange(other.partitionStyle, PartitionStyle::GPT);
+		rewritePartition = std::exchange(other.rewritePartition, false);
+		MBRPartitionType = std::exchange(other.MBRPartitionType, 0);
+		MBRBootIndicator = std::exchange(other.MBRBootIndicator, 0);
+		MBRRecognizedPartitions = std::exchange(other.MBRRecognizedPartitions, 0);
+		GPTAttributes = std::exchange(other.GPTAttributes, 0);
+		startOffset = std::exchange(other.startOffset, 0);
 		spaceFree = std::exchange(other.spaceFree, 0);
 		spaceTotal = std::exchange(other.spaceTotal, 0);
+		partNumber = std::exchange(other.partNumber, 0);
+		MBRID = std::move(other.MBRID);
+		GPTID = std::move(other.GPTID);
+		GPTType = std::move(other.GPTType);
+		GPTName = std::move(other.GPTName);
 		partitionPath = std::move(other.partitionPath);
 		volumePath = std::move(other.volumePath);
 		volumes = std::move(other.volumes);
@@ -958,8 +369,20 @@ PartitionDesc::~PartitionDesc() {}
 
 PartitionDesc& PartitionDesc:: operator=(const PartitionDesc &other) {
 	if (this != &other) {
+		partitionStyle = other.partitionStyle;
+		rewritePartition = other.rewritePartition;
+		MBRPartitionType = other.MBRPartitionType;
+		MBRBootIndicator = other.MBRBootIndicator;
+		MBRRecognizedPartitions = other.MBRRecognizedPartitions;
+		GPTAttributes = other.GPTAttributes;
+		startOffset = other.startOffset;
 		spaceFree = other.spaceFree;
 		spaceTotal = other.spaceTotal;
+		partNumber = other.partNumber;
+		MBRID = other.MBRID;
+		GPTID = other.GPTID;
+		GPTType = other.GPTType;
+		GPTName = other.GPTName;
 		partitionPath = other.partitionPath;
 		volumePath = other.volumePath;
 		volumes = other.volumes;
@@ -971,8 +394,19 @@ PartitionDesc& PartitionDesc:: operator=(const PartitionDesc &other) {
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 PartitionDesc& PartitionDesc::operator=(PartitionDesc &&other) noexcept {
 	if (this != &other) {
+		partitionStyle = std::exchange(other.partitionStyle, PartitionStyle::GPT);
+		rewritePartition = std::exchange(other.rewritePartition, false);
+		MBRPartitionType = std::exchange(other.MBRPartitionType, 0);
+		MBRBootIndicator = std::exchange(other.MBRBootIndicator, 0);
+		MBRRecognizedPartitions = std::exchange(other.MBRRecognizedPartitions, 0);
+		GPTAttributes = std::exchange(other.GPTAttributes, 0);
+		startOffset = std::exchange(other.startOffset, 0);
 		spaceFree = std::exchange(other.spaceFree, 0);
-		spaceTotal = std::exchange(other.spaceTotal, 0);
+		partNumber = std::exchange(other.partNumber, 0);
+		MBRID = std::move(other.MBRID);
+		GPTID = std::move(other.GPTID);
+		GPTType = std::move(other.GPTType);
+		GPTName = std::move(other.GPTName);
 		partitionPath = std::move(other.partitionPath);
 		volumePath = std::move(other.volumePath);
 		volumes = std::move(other.volumes);
@@ -984,8 +418,20 @@ PartitionDesc& PartitionDesc::operator=(PartitionDesc &&other) noexcept {
 
 bool PartitionDesc::operator==(const PartitionDesc &other) const {
 	if (this != &other) {
-		return (spaceFree == other.spaceFree &&
+		return (partitionStyle == other.partitionStyle &&
+				rewritePartition == other.rewritePartition &&
+				MBRPartitionType == other.MBRPartitionType &&
+				MBRBootIndicator == other.MBRBootIndicator &&
+				MBRRecognizedPartitions == other.MBRRecognizedPartitions &&
+				GPTAttributes == other.GPTAttributes &&
+				startOffset == other.startOffset &&
+				spaceFree == other.spaceFree &&
 				spaceTotal == other.spaceTotal &&
+				partNumber == other.partNumber &&
+				lower_copy(MBRID) == lower_copy(other.MBRID) &&
+				lower_copy(GPTID) == lower_copy(other.GPTID) &&
+				lower_copy(GPTType) == lower_copy(other.GPTType) &&
+				lower_copy(GPTName) == lower_copy(other.GPTName) &&
 				lower_copy(partitionPath) == lower_copy(other.partitionPath) &&
 				lower_copy(volumePath) == lower_copy(other.volumePath) &&
 				lower_copy(volumes) == lower_copy(other.volumes) &&
@@ -997,8 +443,20 @@ bool PartitionDesc::operator==(const PartitionDesc &other) const {
 
 bool PartitionDesc::operator!=(const PartitionDesc &other) const {
 	if (this != &other) {
-		return (spaceFree != other.spaceFree ||
+		return (partitionStyle != other.partitionStyle ||
+				rewritePartition != other.rewritePartition ||
+				MBRPartitionType != other.MBRPartitionType ||
+				MBRBootIndicator != other.MBRBootIndicator ||
+				MBRRecognizedPartitions != other.MBRRecognizedPartitions ||
+				GPTAttributes != other.GPTAttributes ||
+				startOffset != other.startOffset ||
+				spaceFree != other.spaceFree ||
 				spaceTotal != other.spaceTotal ||
+				partNumber != other.partNumber ||
+				lower_copy(MBRID) != lower_copy(other.MBRID) ||
+				lower_copy(GPTID) != lower_copy(other.GPTID) ||
+				lower_copy(GPTType) != lower_copy(other.GPTType) ||
+				lower_copy(GPTName) != lower_copy(other.GPTName) ||
 				lower_copy(partitionPath) != lower_copy(other.partitionPath) ||
 				lower_copy(volumePath) != lower_copy(other.volumePath) ||
 				lower_copy(volumes) != lower_copy(other.volumes) ||
@@ -1090,84 +548,45 @@ VolumeDesc::VolumeDesc(const VolumeDesc &other) {
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 VolumeDesc::VolumeDesc(VolumeDesc &&other) noexcept {
 	if (this != &other) {
-		physDrives = other.physDrives;
-		other.physDrives.~vector();
-		partLetter = other.partLetter;
-		other.partLetter.~basic_string();
-		volumeLabel = other.volumeLabel;
-		other.volumeLabel.~basic_string();
-		volumePath = other.volumePath;
-		other.volumePath.~basic_string();
-		drivePath = other.drivePath;
-		other.drivePath.~basic_string();
-		deviceType = other.deviceType;
-		other.deviceType = DevType::Unknown;
-		volumeSerial = other.volumeSerial;
-		other.volumeSerial = 0;
-		volumeSerialStr = other.volumeSerialStr;
-		other.volumeSerialStr.~basic_string();
-		spaceFree = other.spaceFree;
-		other.spaceFree = 0;
-		spaceTotal = other.spaceTotal;
-		other.spaceTotal = 0;
-		fsName = other.fsName;
-		other.fsName.~basic_string();
-		maxComponentLen = other.maxComponentLen;
-		other.maxComponentLen = 0;
-		caseSensitiveSearch = other.caseSensitiveSearch;
-		other.caseSensitiveSearch = false;
-		casePreservedMames = other.casePreservedMames;
-		other.casePreservedMames = false;
-		unicodeFNames = other.unicodeFNames;
-		other.unicodeFNames = false;
-		persistentACLS = other.persistentACLS;
-		other.persistentACLS = false;
-		supportFileCompress = other.supportFileCompress;
-		other.supportFileCompress = false;
-		supportQuota = other.supportQuota;
-		other.supportQuota = false;
-		supportSparseFile = other.supportSparseFile;
-		other.supportSparseFile = false;
-		supportReparsePoints = other.supportReparsePoints;
-		other.supportReparsePoints = false;
-		supportRemoteStorage = other.supportRemoteStorage;
-		other.supportRemoteStorage = false;
-		supportPosixUnlinkRename = other.supportPosixUnlinkRename;
-		other.supportRemoteStorage = false;
-		supportObjectIds = other.supportObjectIds;
-		other.supportObjectIds = false;
-		supportEncryption = other.supportEncryption;
-		other.supportEncryption = false;
-		supportNamedStreams = other.supportNamedStreams;
-		other.supportNamedStreams = false;
-		supportTransactions = other.supportTransactions;
-		other.supportTransactions = false;
-		supportHardLink = other.supportHardLink;
-		other.supportHardLink = false;
-		suportExtendAttrib = other.suportExtendAttrib;
-		other.suportExtendAttrib = false;
-		supportFileIdOpen = other.supportFileIdOpen;
-		other.supportFileIdOpen = false;
-		supportUSNJournal = other.supportUSNJournal;
-		other.supportUSNJournal = false;
-		supportIntegrityStream = other.supportIntegrityStream;
-		other.supportIntegrityStream = false;
-		supportBlockRefCount = other.supportBlockRefCount;
-		other.supportBlockRefCount = false;
-		supportSparseVdl = other.supportSparseVdl;
-		other.supportSparseVdl = false;
-		supportGhosting = other.supportGhosting;
-		other.supportGhosting = false;
-		returnCleanupResInfo = other.returnCleanupResInfo;
-		other.returnCleanupResInfo = false;
-		volumeCompressed = other.volumeCompressed;
-		other.volumeCompressed = false;
-		volumeReadOnly = other.volumeReadOnly;
-		other.volumeReadOnly = false;
-		volumeDax = other.volumeDax;
-		other.volumeDax = false;
-		seqWriteOnce = other.seqWriteOnce;
-		other.seqWriteOnce = false;
+		maxComponentLen = std::exchange(other.maxComponentLen, 0);
+		caseSensitiveSearch = std::exchange(other.caseSensitiveSearch, false);
+		casePreservedMames = std::exchange(other.casePreservedMames, false);
+		unicodeFNames = std::exchange(other.unicodeFNames, false);
+		persistentACLS = std::exchange(other.persistentACLS, false);
+		supportFileCompress = std::exchange(other.supportFileCompress, false);
+		supportQuota = std::exchange(other.supportQuota, false);
+		supportSparseFile = std::exchange(other.supportSparseFile, false);
+		supportReparsePoints = std::exchange(other.supportReparsePoints, false);
+		supportRemoteStorage = std::exchange(other.supportRemoteStorage, false);
+		supportPosixUnlinkRename = std::exchange(other.supportPosixUnlinkRename, false);
+		supportObjectIds = std::exchange(other.supportObjectIds, false);
+		supportEncryption = std::exchange(other.supportEncryption, false);
+		supportNamedStreams = std::exchange(other.supportNamedStreams, false);
+		supportTransactions = std::exchange(other.supportTransactions, false);
+		supportHardLink = std::exchange(other.supportHardLink, false);
+		suportExtendAttrib = std::exchange(other.suportExtendAttrib, false);
+		supportFileIdOpen = std::exchange(other.supportFileIdOpen, false);
+		supportUSNJournal = std::exchange(other.supportUSNJournal, false);
+		supportIntegrityStream = std::exchange(other.supportIntegrityStream, false);
+		supportBlockRefCount = std::exchange(other.supportBlockRefCount, false);
+		supportSparseVdl = std::exchange(other.supportSparseVdl, false);
+		supportGhosting = std::exchange(other.supportGhosting, false);
+		returnCleanupResInfo = std::exchange(other.returnCleanupResInfo, false);
+		volumeCompressed = std::exchange(other.volumeCompressed, false);
+		volumeReadOnly = std::exchange(other.volumeReadOnly, false);
+		volumeDax = std::exchange(other.volumeDax, false);
+		seqWriteOnce = std::exchange(other.seqWriteOnce, false);
+		deviceType = std::exchange(other.deviceType, DevType::Unknown);
+		volumeSerial = std::exchange(other.volumeSerial, 0);
+		spaceFree = std::exchange(other.spaceFree, 0);
+		spaceTotal = std::exchange(other.spaceTotal, 0);
+		physDrives = std::move(other.physDrives);
+		partLetter = std::move(other.partLetter);
+		volumeLabel = std::move(other.volumeLabel);
+		volumePath = std::move(other.volumePath);
+		drivePath = std::move(other.drivePath);
+		volumeSerialStr = std::move(other.volumeSerialStr);
+		fsName = std::move(other.fsName);
 	}
 }
 #endif
@@ -1219,84 +638,45 @@ VolumeDesc& VolumeDesc::operator=(const VolumeDesc &other) {
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 VolumeDesc& VolumeDesc::operator=(VolumeDesc &&other) noexcept {
 	if (this != &other) {
-		physDrives = other.physDrives;
-		other.physDrives.~vector();
-		partLetter = other.partLetter;
-		other.partLetter.~basic_string();
-		volumeLabel = other.volumeLabel;
-		other.volumeLabel.~basic_string();
-		volumePath = other.volumePath;
-		other.volumePath.~basic_string();
-		drivePath = other.drivePath;
-		other.drivePath.~basic_string();
-		volumeSerial = other.volumeSerial;
-		other.volumeSerial = 0;
-		volumeSerialStr = other.volumeSerialStr;
-		other.volumeSerialStr.~basic_string();
-		spaceFree = other.spaceFree;
-		other.spaceFree = 0;
-		spaceTotal = other.spaceTotal;
-		other.spaceTotal = 0;
-		fsName = other.fsName;
-		other.fsName.~basic_string();
-		deviceType = other.deviceType;
-		other.deviceType = DevType::Unknown;
-		maxComponentLen = other.maxComponentLen;
-		other.maxComponentLen = 0;
-		caseSensitiveSearch = other.caseSensitiveSearch;
-		other.caseSensitiveSearch = false;
-		casePreservedMames = other.casePreservedMames;
-		other.casePreservedMames = false;
-		unicodeFNames = other.unicodeFNames;
-		other.unicodeFNames = false;
-		persistentACLS = other.persistentACLS;
-		other.persistentACLS = false;
-		supportFileCompress = other.supportFileCompress;
-		other.supportFileCompress = false;
-		supportQuota = other.supportQuota;
-		other.supportQuota = false;
-		supportSparseFile = other.supportSparseFile;
-		other.supportSparseFile = false;
-		supportReparsePoints = other.supportReparsePoints;
-		other.supportReparsePoints = false;
-		supportRemoteStorage = other.supportRemoteStorage;
-		other.supportRemoteStorage = false;
-		supportPosixUnlinkRename = other.supportPosixUnlinkRename;
-		other.supportRemoteStorage = false;
-		supportObjectIds = other.supportObjectIds;
-		other.supportObjectIds = false;
-		supportEncryption = other.supportEncryption;
-		other.supportEncryption = false;
-		supportNamedStreams = other.supportNamedStreams;
-		other.supportNamedStreams = false;
-		supportTransactions = other.supportTransactions;
-		other.supportTransactions = false;
-		supportHardLink = other.supportHardLink;
-		other.supportHardLink = false;
-		suportExtendAttrib = other.suportExtendAttrib;
-		other.suportExtendAttrib = false;
-		supportFileIdOpen = other.supportFileIdOpen;
-		other.supportFileIdOpen = false;
-		supportUSNJournal = other.supportUSNJournal;
-		other.supportUSNJournal = false;
-		supportIntegrityStream = other.supportIntegrityStream;
-		other.supportIntegrityStream = false;
-		supportBlockRefCount = other.supportBlockRefCount;
-		other.supportBlockRefCount = false;
-		supportSparseVdl = other.supportSparseVdl;
-		other.supportSparseVdl = false;
-		supportGhosting = other.supportGhosting;
-		other.supportGhosting = false;
-		returnCleanupResInfo = other.returnCleanupResInfo;
-		other.returnCleanupResInfo = false;
-		volumeCompressed = other.volumeCompressed;
-		other.volumeCompressed = false;
-		volumeReadOnly = other.volumeReadOnly;
-		other.volumeReadOnly = false;
-		volumeDax = other.volumeDax;
-		other.volumeDax = false;
-		seqWriteOnce = other.seqWriteOnce;
-		other.seqWriteOnce = false;
+		maxComponentLen = std::exchange(other.maxComponentLen, 0);
+		caseSensitiveSearch = std::exchange(other.caseSensitiveSearch, false);
+		casePreservedMames = std::exchange(other.casePreservedMames, false);
+		unicodeFNames = std::exchange(other.unicodeFNames, false);
+		persistentACLS = std::exchange(other.persistentACLS, false);
+		supportFileCompress = std::exchange(other.supportFileCompress, false);
+		supportQuota = std::exchange(other.supportQuota, false);
+		supportSparseFile = std::exchange(other.supportSparseFile, false);
+		supportReparsePoints = std::exchange(other.supportReparsePoints, false);
+		supportRemoteStorage = std::exchange(other.supportRemoteStorage, false);
+		supportPosixUnlinkRename = std::exchange(other.supportPosixUnlinkRename, false);
+		supportObjectIds = std::exchange(other.supportObjectIds, false);
+		supportEncryption = std::exchange(other.supportEncryption, false);
+		supportNamedStreams = std::exchange(other.supportNamedStreams, false);
+		supportTransactions = std::exchange(other.supportTransactions, false);
+		supportHardLink = std::exchange(other.supportHardLink, false);
+		suportExtendAttrib = std::exchange(other.suportExtendAttrib, false);
+		supportFileIdOpen = std::exchange(other.supportFileIdOpen, false);
+		supportUSNJournal = std::exchange(other.supportUSNJournal, false);
+		supportIntegrityStream = std::exchange(other.supportIntegrityStream, false);
+		supportBlockRefCount = std::exchange(other.supportBlockRefCount, false);
+		supportSparseVdl = std::exchange(other.supportSparseVdl, false);
+		supportGhosting = std::exchange(other.supportGhosting, false);
+		returnCleanupResInfo = std::exchange(other.returnCleanupResInfo, false);
+		volumeCompressed = std::exchange(other.volumeCompressed, false);
+		volumeReadOnly = std::exchange(other.volumeReadOnly, false);
+		volumeDax = std::exchange(other.volumeDax, false);
+		seqWriteOnce = std::exchange(other.seqWriteOnce, false);
+		deviceType = std::exchange(other.deviceType, DevType::Unknown);
+		volumeSerial = std::exchange(other.volumeSerial, 0);
+		spaceFree = std::exchange(other.spaceFree, 0);
+		spaceTotal = std::exchange(other.spaceTotal, 0);
+		physDrives = std::move(other.physDrives);
+		partLetter = std::move(other.partLetter);
+		volumeLabel = std::move(other.volumeLabel);
+		volumePath = std::move(other.volumePath);
+		drivePath = std::move(other.drivePath);
+		volumeSerialStr = std::move(other.volumeSerialStr);
+		fsName = std::move(other.fsName);
 	}
 	return *this;
 }
@@ -1592,7 +972,7 @@ FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc> &partList, const
 			unsigned long charCount = MAX_PATH + 1;
 			for (;;) {
 				if (::GetVolumePathNamesForVolumeName(VolumeName, partLetters, charCount, &charCount)) {
-					if (charCount) {
+					if (charCount && wcslen_c(partLetters)) {
 						std::wstring repl = replaceChars(partLetters, L"\0", L"\n", charCount, 1, 1);
 						partdesc.volumes = splitStr(repl, L"\n");
 					}
@@ -1615,7 +995,7 @@ FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc> &partList, const
 				0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 			if (INVALID_HANDLE_VALUE != hFile) {
 				unsigned long bytes = 0, bytesReturned = 0;
-				VOLUME_DISK_EXTENTS* volDiskExt = (VOLUME_DISK_EXTENTS*)malloc(sizeof(VOLUME_DISK_EXTENTS));
+				::VOLUME_DISK_EXTENTS* volDiskExt = (::VOLUME_DISK_EXTENTS*)malloc(sizeof(::VOLUME_DISK_EXTENTS));
 				if (!volDiskExt) {
 					SAFE_FREE(VolumeName);
 					SAFE_FREE(DeviceName);
@@ -1628,8 +1008,8 @@ FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc> &partList, const
 					if (ERROR_MORE_DATA == getLastErrorCode()) {
 						unsigned long numDisks = volDiskExt->NumberOfDiskExtents;
 						SAFE_FREE(volDiskExt);
-						volDiskExt = (VOLUME_DISK_EXTENTS*)malloc((numDisks * sizeof(DISK_EXTENT)) +
-							sizeof(VOLUME_DISK_EXTENTS));
+						volDiskExt = (::VOLUME_DISK_EXTENTS*)malloc((numDisks * sizeof(::DISK_EXTENT)) +
+							sizeof(::VOLUME_DISK_EXTENTS));
 						if (!volDiskExt) {
 							SAFE_FREE(VolumeName);
 							SAFE_FREE(DeviceName);
@@ -1645,21 +1025,6 @@ FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc> &partList, const
 							SAFE_FREE(partLetters);
 							return FSOpResult::Fail;
 						}
-						for (unsigned long i = 0; i < volDiskExt->NumberOfDiskExtents; ++i) {
-#ifdef FSH_FULLPHYSDRIVESTRING
-							partdesc.drives.push_back(L"\\\\.\\PhysicalDrive" + std::to_wstring(volDiskExt->Extents[i].DiskNumber));
-#else
-							partdesc.drives.push_back(L"PhysicalDrive" + std::to_wstring(volDiskExt));
-#endif
-						}
-					}
-				} else {
-					for (unsigned long i = 0; i < volDiskExt->NumberOfDiskExtents; ++i) {
-#ifdef FSH_FULLPHYSDRIVESTRING
-						partdesc.drives.push_back(L"\\\\.\\PhysicalDrive" + std::to_wstring(volDiskExt->Extents[i].DiskNumber));
-#else
-						partdesc.drives.push_back(L"PhysicalDrive" + std::to_wstring(volDiskExt));
-#endif
 					}
 				}
 				::CloseHandle(hFile);
@@ -1703,7 +1068,7 @@ FSOpResult FSHandler::EnumDrives(std::vector<DriveDesc> &driveList, const bool c
 	if (physDrives.size() && 0 == physDrives.size() % HW_LINESDRIVE) {
 		unsigned long long spacetotal = 0;
 		size_t i = 0;
-		for (i = 0; i < physDrives.size() - 1; i += 2) {
+		for (i = 0; i < physDrives.size() - 1; i += HW_LINESDRIVE) {
 			spacetotal = 0;
 			if (FSOpResult::Success != GetDriveSpace_DriveGeometry(physDrives[i + 1], spacetotal)) {
 				return FSOpResult::Fail;
@@ -1712,36 +1077,74 @@ FSOpResult FSHandler::EnumDrives(std::vector<DriveDesc> &driveList, const bool c
 		}
 		std::wstring dptrh;
 		for (i = 0; i < driveList.size(); ++i) {
-#ifdef FSH_FULLPHYSDRIVESTRING
-			dptrh = driveList[i].drivePath;
-#else
-			dptrh = L"\\\\.\\" + driveList[i].drivePath;
-#endif
+			if (startsWith(driveList[i].drivePath, L"\\\\.\\")) {
+				dptrh = driveList[i].drivePath;
+			} else {
+				dptrh = L"\\\\.\\" + driveList[i].drivePath;
+			}
 			if (endsWith(dptrh, L"\\")) {
 				dptrh = removeFromEnd_copy(dptrh, L"\\");
 			}
 			::HANDLE hFile = ::CreateFile(dptrh.c_str(), GENERIC_READ,
 				FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 			if (INVALID_HANDLE_VALUE != hFile) {
-				unsigned long outBudSz = 8192, bytesReturned = 0;
+				unsigned long outBufSz = 8192, bytesReturned = 0;
 				// DRIVE_LAYOUT_INFORMATION_EX* outBuf = (DRIVE_LAYOUT_INFORMATION_EX*)malloc(outBudSz);
-				void* outBuf = malloc(outBudSz);
-				if (::DeviceIoControl(hFile, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, 0, 0, outBuf, outBudSz, &bytesReturned,
-					0)) {
-					Sleep(1);
-				} else {
+				void* outBuf = malloc(outBufSz);
+				if (!outBuf) {
 					return FSOpResult::Fail;
 				}
-				if (outBuf) {
+				if (::DeviceIoControl(hFile, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, 0, 0, outBuf, outBufSz, &bytesReturned,
+					0)) {
+					Sleep(1);
 					// void* outBufUntyoed = (void*)outBuf;
-					DRIVE_LAYOUT_INFORMATION_EX* bufTyped = (DRIVE_LAYOUT_INFORMATION_EX*)outBuf;
+					::DRIVE_LAYOUT_INFORMATION_EX* bufTyped = (::DRIVE_LAYOUT_INFORMATION_EX*)outBuf;
 					// unsigned long offset = offsetof(DRIVE_LAYOUT_INFORMATION_EX, PartitionEntry[0]);
 					unsigned long offset = 2 * sizeof(unsigned long);
+					PartitionDesc pdesc;
 					for (size_t j = 0; j < bufTyped->PartitionCount; ++j) {
-						PARTITION_INFORMATION_EX* partdata =
-							(PARTITION_INFORMATION_EX*)&bufTyped->PartitionEntry[0] + offset;
-						offset += sizeof(PARTITION_INFORMATION_EX);
+						memset(&pdesc, 0, sizeof(PartitionDesc));
+#if defined(FSH_FULLPHYSDRIVESTRING)
+						if (!startsWith(driveList[i].drivePath, L"\\\\.\\")) {
+							pdesc.drives.push_back(L"\\\\.\\" + driveList[i].drivePath);
+						} else {
+							pdesc.drives.push_back(driveList[i].drivePath);
+						}
+#else
+						if (startsWith(driveList[i].drivePath, L"\\\\.\\")) {
+							pdesc.drives.push_back(removeFromStart_copy(driveList[i].drivePath, L"\\\\.\\"));
+						} else {
+							pdesc.drives.push_back(driveList[i].drivePath);
+						}
+#endif
+						::PARTITION_INFORMATION_EX* partdata =
+							(::PARTITION_INFORMATION_EX*)&bufTyped->PartitionEntry[j];
+						if(::PARTITION_STYLE::PARTITION_STYLE_GPT == partdata->PartitionStyle) {
+							pdesc.partitionStyle = PartitionStyle::GPT;
+						} else if (::PARTITION_STYLE::PARTITION_STYLE_MBR == partdata->PartitionStyle) {
+							pdesc.partitionStyle = PartitionStyle::MBR;
+						} else if (::PARTITION_STYLE::PARTITION_STYLE_RAW == partdata->PartitionStyle) {
+							pdesc.partitionStyle = PartitionStyle::RAW;
+						} else {
+							return FSOpResult::Fail;
+						}
+						pdesc.spaceTotal = partdata->PartitionLength.QuadPart;
+						pdesc.startOffset = partdata->StartingOffset.QuadPart;
+						pdesc.partNumber = partdata->PartitionNumber;
+						pdesc.rewritePartition = partdata->RewritePartition;
+						pdesc.MBRBootIndicator = partdata->Mbr.BootIndicator;
+						pdesc.MBRHiddenSectors = partdata->Mbr.HiddenSectors;
+						pdesc.MBRPartitionType = partdata->Mbr.PartitionType;
+						pdesc.MBRRecognizedPartitions = partdata->Mbr.RecognizedPartition;
+						pdesc.MBRID = GUID2wstr(partdata->Mbr.PartitionId);
+						pdesc.GPTAttributes = partdata->Gpt.Attributes;
+						pdesc.GPTName = partdata->Gpt.Name;
+						pdesc.GPTID = GUID2wstr(partdata->Gpt.PartitionId);
+						pdesc.GPTType = GUID2wstr(partdata->Gpt.PartitionType);
+						driveList[i].partitions.push_back(pdesc);
 					}
+				} else {
+					return FSOpResult::Fail;
 				}
 				SAFE_FREE(outBuf);
 				::CloseHandle(hFile);
@@ -2045,7 +1448,10 @@ FSOpResult FSHandler::RenameFolder(const std::wstring folderPath, const std::wst
 
 FSOpResult FSHandler::MoveFolder(const std::wstring folderPath, const std::wstring folderPathDest,
 	const bool checkDestSpace) {
-	if (lower_copy(folderPath) == lower_copy(folderPathDest)) {
+	if (!folderPath.length() || !folderPathDest.length()) {
+		return FSOpResult::Fail;
+	}
+	if (lower_copy(trim_copy(folderPath)) == lower_copy(trim_copy(folderPathDest))) {
 		return FSOpResult::Fail;
 	}
 	if (!PathExists(folderPath)) {
@@ -2314,43 +1720,44 @@ FSOpResult FSHandler::GetFolderSizeOnDrive_NtQueryDir(unsigned long long &folder
 	if (!hModule) {
 		return FSOpResult::Fail;
 	}
-	pRtlInitUnicodeString = (NTSTATUS(WINAPI*)(UnicodeString*, wchar_t*)) ::GetProcAddress(hModule, "RtlInitUnicodeString");
-	pNtCreateFile = (NTSTATUS(WINAPI*)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, IOStatusBlock*, LARGE_INTEGER*,
-		unsigned long, unsigned long, unsigned long, unsigned long, void*, unsigned long))
+	pRtlInitUnicodeString RtlInitUnicodeString = (pRtlInitUnicodeString)
+		::GetProcAddress(hModule, "RtlInitUnicodeString");
+	pNtCreateFile NtCreateFile = (pNtCreateFile)
 		::GetProcAddress(hModule, "NtCreateFile");
-	pNtCreateEvent = (NTSTATUS(WINAPI*)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, EvtType, unsigned char))
+	pNtCreateEvent NtCreateEvent = (pNtCreateEvent)
 		::GetProcAddress(hModule, "NtCreateEvent");
-	pNtQueryDirectoryFile = (NTSTATUS(WINAPI*)(::HANDLE, ::HANDLE, PIO_APC_ROUTINE, void*, IOStatusBlock*, void*,
-		unsigned long, FolderInfo, unsigned char, UnicodeString*, unsigned char))
+	pNtQueryDirectoryFile NtQueryDirectoryFile = (pNtQueryDirectoryFile)
 		::GetProcAddress(hModule, "NtQueryDirectoryFile");
-	pNtWaitForSingleobject = (NTSTATUS(WINAPI*)(::HANDLE, unsigned char, LARGE_INTEGER*))
+	pNtWaitForSingleobject NtWaitForSingleobject = (pNtWaitForSingleobject)
 		::GetProcAddress(hModule, "NtWaitForSingleObject");
-	pRtlUnicodeStringToAnsiString = (NTSTATUS(WINAPI*)(ANSIString*, UnicodeString*, unsigned char))
+	pRtlUnicodeStringToAnsiString RtlUnicodeStringToAnsiString = (pRtlUnicodeStringToAnsiString)
 		::GetProcAddress(hModule, "RtlUnicodeStringToAnsiString");
-	pNtClearEvent = (NTSTATUS(WINAPI*)(::HANDLE)) ::GetProcAddress(hModule, "NtClearEvent");
-	pNtClose = (NTSTATUS(WINAPI*)(::HANDLE)) ::GetProcAddress(hModule, "NtClose");
-	if (0 == pRtlInitUnicodeString) {
+	pNtClearEvent NtClearEvent = (pNtClearEvent)
+		::GetProcAddress(hModule, "NtClearEvent");
+	pNtClose NtClose = (pNtClose)
+		::GetProcAddress(hModule, "NtClose");
+	if (0 == RtlInitUnicodeString) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pRtlUnicodeStringToAnsiString) {
+	if (0 == RtlUnicodeStringToAnsiString) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtCreateFile) {
+	if (0 == NtCreateFile) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtCreateEvent) {
+	if (0 == NtCreateEvent) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtQueryDirectoryFile) {
+	if (0 == NtQueryDirectoryFile) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtWaitForSingleobject) {
+	if (0 == NtWaitForSingleobject) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtClearEvent) {
+	if (0 == NtClearEvent) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtClose) {
+	if (0 == NtClose) {
 		return FSOpResult::Fail;
 	}
 	::HANDLE RootDirectoryHandle = 0;
@@ -2370,14 +1777,14 @@ FSOpResult FSHandler::GetFolderSizeOnDrive_NtQueryDir(unsigned long long &folder
 		return FSOpResult::Fail;
 	}
 	wsprintf(wszBuffer, L"\\??\\%s\\", folderPath.c_str());
-	ntStatus = ((pRtlInitUnicodeString)(&RootDirectoryName, wszBuffer));
+	ntStatus = ((RtlInitUnicodeString)(&RootDirectoryName, wszBuffer));
 	if (!NT_SUCCESS(ntStatus)) {
 		SAFE_FREE(wszBuffer);
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
 	}
 	InitializeObjectAttributes(&RootDirectoryAttributes, &RootDirectoryName, OBJ_CASE_INSENSITIVE, 0, 0);
-	ntStatus = ((pNtCreateFile)(&RootDirectoryHandle,
+	ntStatus = ((NtCreateFile)(&RootDirectoryHandle,
 		GENERIC_READ,
 		&RootDirectoryAttributes,
 		&IOSB,
@@ -2392,13 +1799,13 @@ FSOpResult FSHandler::GetFolderSizeOnDrive_NtQueryDir(unsigned long long &folder
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
 	}
-	ntStatus = ((pNtCreateEvent)(&Event, GENERIC_ALL, 0, EvtType::NotificationEvent, 0));
+	ntStatus = ((NtCreateEvent)(&Event, GENERIC_ALL, 0, EvtType::NotificationEvent, 0));
 	if (!NT_SUCCESS(ntStatus)) {
 		SAFE_FREE(wszBuffer);
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
 	}
-	ntStatus = ((pNtQueryDirectoryFile)(RootDirectoryHandle,
+	ntStatus = ((NtQueryDirectoryFile)(RootDirectoryHandle,
 		Event, 0, 0,
 		&IOSB,
 		Buffer,
@@ -2406,7 +1813,7 @@ FSOpResult FSHandler::GetFolderSizeOnDrive_NtQueryDir(unsigned long long &folder
 		FolderInfo::FileDirectoryBothInformation,
 		0, 0, 0));
 	if (STATUS_PENDING == ntStatus) {
-		ntStatus = ((pNtWaitForSingleobject)(Event, 1, 0));
+		ntStatus = ((NtWaitForSingleobject)(Event, 1, 0));
 	}
 	if (!NT_SUCCESS(ntStatus)) {
 		SAFE_FREE(wszBuffer);
@@ -2435,14 +1842,14 @@ FSOpResult FSHandler::GetFolderSizeOnDrive_NtQueryDir(unsigned long long &folder
 			DirInformation = (FileDirBothInformation*)(((unsigned char*)DirInformation) + DirInformation->NextEntryOffset);
 		}
 	}
-	((pNtClose)(RootDirectoryHandle));
-	ntStatus = ((pNtClearEvent)(Event));
+	((NtClose)(RootDirectoryHandle));
+	ntStatus = ((NtClearEvent)(Event));
 	if (!NT_SUCCESS(ntStatus)) {
 		SAFE_FREE(wszBuffer);
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
 	}
-	((pNtClose)(Event));
+	((NtClose)(Event));
 	SAFE_FREE(wszBuffer);
 	SAFE_FREE(Buffer);
 	if (!::FreeLibrary(hModule)) {
@@ -2494,44 +1901,42 @@ FSOpResult FSHandler::GetFSizeOnDrive_NtQueryDir(unsigned long long &fileSize, c
 	if (!hModule) {
 		return FSOpResult::Fail;
 	}
-	pRtlInitUnicodeString = (NTSTATUS(WINAPI*)(UnicodeString*, wchar_t*))
+	pRtlInitUnicodeString RtlInitUnicodeString = (pRtlInitUnicodeString)
 		::GetProcAddress(hModule, "RtlInitUnicodeString");
-	pNtCreateFile = (NTSTATUS(WINAPI*)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, IOStatusBlock*, LARGE_INTEGER*,
-		unsigned long, unsigned long, unsigned long, unsigned long, void*, unsigned long))
+	pNtCreateFile NtCreateFile = (pNtCreateFile)
 		::GetProcAddress(hModule, "NtCreateFile");
-	pNtCreateEvent = (NTSTATUS(WINAPI*)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, EvtType, unsigned char))
+	pNtCreateEvent NtCreateEvent = (pNtCreateEvent)
 		::GetProcAddress(hModule, "NtCreateEvent");
-	pNtQueryDirectoryFile = (NTSTATUS(WINAPI*)(::HANDLE, ::HANDLE, PIO_APC_ROUTINE, void*, IOStatusBlock*, void*,
-		unsigned long, FolderInfo, unsigned char, UnicodeString*, unsigned char))
+	pNtQueryDirectoryFile NtQueryDirectoryFile = (pNtQueryDirectoryFile)
 		::GetProcAddress(hModule, "NtQueryDirectoryFile");
-	pNtWaitForSingleobject = (NTSTATUS(WINAPI*)(::HANDLE, unsigned char, LARGE_INTEGER*))
+	pNtWaitForSingleobject NtWaitForSingleobject = (pNtWaitForSingleobject)
 		::GetProcAddress(hModule, "NtWaitForSingleObject");
-	pRtlUnicodeStringToAnsiString = (NTSTATUS(WINAPI*)(ANSIString*, UnicodeString*, unsigned char))
+	pRtlUnicodeStringToAnsiString RtlUnicodeStringToAnsiString = (pRtlUnicodeStringToAnsiString)
 		::GetProcAddress(hModule, "RtlUnicodeStringToAnsiString");
-	pNtClearEvent = (NTSTATUS(WINAPI*)(::HANDLE)) ::GetProcAddress(hModule, "NtClearEvent");
-	pNtClose = (NTSTATUS(WINAPI*)(::HANDLE)) ::GetProcAddress(hModule, "NtClose");
-	if (0 == pRtlInitUnicodeString) {
+	pNtClearEvent NtClearEvent = (pNtClearEvent) ::GetProcAddress(hModule, "NtClearEvent");
+	pNtClose NtClose = (pNtClose) ::GetProcAddress(hModule, "NtClose");
+	if (0 == RtlInitUnicodeString) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pRtlUnicodeStringToAnsiString) {
+	if (0 == RtlUnicodeStringToAnsiString) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtCreateFile) {
+	if (0 == NtCreateFile) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtCreateEvent) {
+	if (0 == NtCreateEvent) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtQueryDirectoryFile) {
+	if (0 == NtQueryDirectoryFile) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtWaitForSingleobject) {
+	if (0 == NtWaitForSingleobject) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtClearEvent) {
+	if (0 == NtClearEvent) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtClose) {
+	if (0 == NtClose) {
 		return FSOpResult::Fail;
 	}
 	::HANDLE RootDirectoryHandle = 0;
@@ -2551,14 +1956,14 @@ FSOpResult FSHandler::GetFSizeOnDrive_NtQueryDir(unsigned long long &fileSize, c
 		return FSOpResult::Fail;
 	}
 	wsprintf(wszBuffer, L"\\??\\%s\\", ownerfolder.c_str());
-	ntStatus = ((pRtlInitUnicodeString)(&RootDirectoryName, wszBuffer));
+	ntStatus = ((RtlInitUnicodeString)(&RootDirectoryName, wszBuffer));
 	if (!NT_SUCCESS(ntStatus)) {
 		SAFE_FREE(wszBuffer);
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
 	}
 	InitializeObjectAttributes(&RootDirectoryAttributes, &RootDirectoryName, OBJ_CASE_INSENSITIVE, 0, 0);
-	ntStatus = ((pNtCreateFile)(&RootDirectoryHandle,
+	ntStatus = ((NtCreateFile)(&RootDirectoryHandle,
 		GENERIC_READ,
 		&RootDirectoryAttributes,
 		&IOSB,
@@ -2573,13 +1978,13 @@ FSOpResult FSHandler::GetFSizeOnDrive_NtQueryDir(unsigned long long &fileSize, c
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
 	}
-	ntStatus = ((pNtCreateEvent)(&Event, GENERIC_ALL, 0, EvtType::NotificationEvent, 0));
+	ntStatus = ((NtCreateEvent)(&Event, GENERIC_ALL, 0, EvtType::NotificationEvent, 0));
 	if (!NT_SUCCESS(ntStatus)) {
 		SAFE_FREE(wszBuffer);
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
 	}
-	ntStatus = ((pNtQueryDirectoryFile)(RootDirectoryHandle,
+	ntStatus = ((NtQueryDirectoryFile)(RootDirectoryHandle,
 		Event, 0, 0,
 		&IOSB,
 		Buffer,
@@ -2587,7 +1992,7 @@ FSOpResult FSHandler::GetFSizeOnDrive_NtQueryDir(unsigned long long &fileSize, c
 		FolderInfo::FileDirectoryBothInformation,
 		0, 0, 0));
 	if (STATUS_PENDING == ntStatus) {
-		ntStatus = ((pNtWaitForSingleobject)(Event, 1, 0));
+		ntStatus = (NtWaitForSingleobject)(Event, 1, 0);
 	}
 	if (!NT_SUCCESS(ntStatus)) {
 		SAFE_FREE(wszBuffer);
@@ -2614,13 +2019,13 @@ FSOpResult FSHandler::GetFSizeOnDrive_NtQueryDir(unsigned long long &fileSize, c
 		}
 	}
 	((pNtClose)(RootDirectoryHandle));
-	ntStatus = ((pNtClearEvent)(Event));
+	ntStatus = ((NtClearEvent)(Event));
 	if (!NT_SUCCESS(ntStatus)) {
 		SAFE_FREE(wszBuffer);
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
 	}
-	((pNtClose)(Event));
+	((NtClose)(Event));
 	SAFE_FREE(wszBuffer);
 	SAFE_FREE(Buffer);
 	if (!::FreeLibrary(hModule)) {
@@ -3347,44 +2752,43 @@ FSOpResult FSHandler::GetFolderSizeOnDriveRec(unsigned long long &folderSize, co
 	} else {
 		return FSOpResult::Fail;
 	}
-	pRtlInitUnicodeString = (NTSTATUS(WINAPI*)(UnicodeString*, wchar_t*))
+	pRtlInitUnicodeString RtlInitUnicodeString = (pRtlInitUnicodeString)
 		::GetProcAddress(ntDLLModule, "RtlInitUnicodeString");
-	pNtCreateFile = (NTSTATUS(WINAPI*)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, IOStatusBlock*, LARGE_INTEGER*,
-		unsigned long, unsigned long, unsigned long, unsigned long, void*, unsigned long))
+	pNtCreateFile NtCreateFile = (pNtCreateFile)
 		::GetProcAddress(ntDLLModule, "NtCreateFile");
-	pNtCreateEvent = (NTSTATUS(WINAPI*)(::HANDLE*, ACCESS_MASK, ObjectAttributes*, EvtType, unsigned char))
+	pNtCreateEvent NtCreateEvent = (pNtCreateEvent)
 		::GetProcAddress(ntDLLModule, "NtCreateEvent");
-	pNtQueryDirectoryFile = (NTSTATUS(WINAPI*)(::HANDLE, ::HANDLE, PIO_APC_ROUTINE, void*, IOStatusBlock*, void*,
-		unsigned long, FolderInfo, unsigned char, UnicodeString*, unsigned char))
+	pNtQueryDirectoryFile NtQueryDirectoryFile = (pNtQueryDirectoryFile)
 		::GetProcAddress(ntDLLModule, "NtQueryDirectoryFile");
-	pNtWaitForSingleobject = (NTSTATUS(WINAPI*)(::HANDLE, unsigned char, LARGE_INTEGER*))
+	pNtWaitForSingleobject NtWaitForSingleobject = (pNtWaitForSingleobject)
 		::GetProcAddress(ntDLLModule, "NtWaitForSingleObject");
-	pRtlUnicodeStringToAnsiString = (NTSTATUS(WINAPI*)(ANSIString*, UnicodeString*, unsigned char))
+	pRtlUnicodeStringToAnsiString RtlUnicodeStringToAnsiString = (pRtlUnicodeStringToAnsiString)
 		::GetProcAddress(ntDLLModule, "RtlUnicodeStringToAnsiString");
-	pNtClearEvent = (NTSTATUS(WINAPI*)(::HANDLE)) ::GetProcAddress(ntDLLModule, "NtClearEvent");
-	pNtClose = (NTSTATUS(WINAPI*)(::HANDLE)) ::GetProcAddress(ntDLLModule, "NtClose");
-	if (0 == pRtlInitUnicodeString) {
+	pNtClearEvent NtClearEvent = (pNtClearEvent)
+		::GetProcAddress(ntDLLModule, "NtClearEvent");
+	pNtClose NtClose = (pNtClose) ::GetProcAddress(ntDLLModule, "NtClose");
+	if (0 == RtlInitUnicodeString) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pRtlUnicodeStringToAnsiString) {
+	if (0 == RtlUnicodeStringToAnsiString) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtCreateFile) {
+	if (0 == NtCreateFile) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtCreateEvent) {
+	if (0 == NtCreateEvent) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtQueryDirectoryFile) {
+	if (0 == NtQueryDirectoryFile) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtWaitForSingleobject) {
+	if (0 == NtWaitForSingleobject) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtClearEvent) {
+	if (0 == NtClearEvent) {
 		return FSOpResult::Fail;
 	}
-	if (0 == pNtClose) {
+	if (0 == NtClose) {
 		return FSOpResult::Fail;
 	}
 	::HANDLE RootDirectoryHandle = 0;
@@ -3404,14 +2808,14 @@ FSOpResult FSHandler::GetFolderSizeOnDriveRec(unsigned long long &folderSize, co
 		return FSOpResult::Fail;
 	}
 	wsprintf(wszBuffer, L"\\??\\%s\\", folderPath.c_str());
-	ntStatus = ((pRtlInitUnicodeString)(&RootDirectoryName, wszBuffer));
+	ntStatus = ((RtlInitUnicodeString)(&RootDirectoryName, wszBuffer));
 	if (!NT_SUCCESS(ntStatus)) {
 		SAFE_FREE(wszBuffer);
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
 	}
 	InitializeObjectAttributes(&RootDirectoryAttributes, &RootDirectoryName, OBJ_CASE_INSENSITIVE, 0, 0);
-	ntStatus = ((pNtCreateFile)(&RootDirectoryHandle,
+	ntStatus = ((NtCreateFile)(&RootDirectoryHandle,
 		GENERIC_READ,
 		&RootDirectoryAttributes,
 		&IOSB,
@@ -3426,13 +2830,14 @@ FSOpResult FSHandler::GetFolderSizeOnDriveRec(unsigned long long &folderSize, co
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
 	}
-	ntStatus = ((pNtCreateEvent)(&Event, GENERIC_ALL, 0, EvtType::NotificationEvent, 0));
+	ntStatus = ((NtCreateEvent)(&Event, GENERIC_ALL, 0, EvtType::NotificationEvent, 0));
 	if (!NT_SUCCESS(ntStatus)) {
+		((NtClose)(RootDirectoryHandle));
 		SAFE_FREE(wszBuffer);
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
 	}
-	ntStatus = ((pNtQueryDirectoryFile)(RootDirectoryHandle,
+	ntStatus = ((NtQueryDirectoryFile)(RootDirectoryHandle,
 		Event, 0, 0,
 		&IOSB,
 		Buffer,
@@ -3440,9 +2845,12 @@ FSOpResult FSHandler::GetFolderSizeOnDriveRec(unsigned long long &folderSize, co
 		FolderInfo::FileDirectoryBothInformation,
 		0, 0, 0));
 	if (STATUS_PENDING == ntStatus) {
-		ntStatus = ((pNtWaitForSingleobject)(Event, 1, 0));
+		ntStatus = ((NtWaitForSingleobject)(Event, 1, 0));
 	}
 	if (!NT_SUCCESS(ntStatus)) {
+		((NtClose)(RootDirectoryHandle));
+		((NtClearEvent)(Event));
+		((NtClose)(Event));
 		SAFE_FREE(wszBuffer);
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
@@ -3473,14 +2881,15 @@ FSOpResult FSHandler::GetFolderSizeOnDriveRec(unsigned long long &folderSize, co
 			DirInformation = (FileDirBothInformation*)(((unsigned char*)DirInformation) + DirInformation->NextEntryOffset);
 		}
 	}
-	((pNtClose)(RootDirectoryHandle));
-	ntStatus = ((pNtClearEvent)(Event));
+	((NtClose)(RootDirectoryHandle));
+	ntStatus = ((NtClearEvent)(Event));
 	if (!NT_SUCCESS(ntStatus)) {
+		((NtClose)(Event));
 		SAFE_FREE(wszBuffer);
 		SAFE_FREE(Buffer);
 		return FSOpResult::Fail;
 	}
-	((pNtClose)(Event));
+	((NtClose)(Event));
 	SAFE_FREE(wszBuffer);
 	SAFE_FREE(Buffer);
 	return FSOpResult::Success;

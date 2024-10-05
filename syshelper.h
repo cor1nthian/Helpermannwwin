@@ -374,7 +374,7 @@ class SysHandler {
 			[out]	free paging file
 			[out]	total paging file
 			Returns result code of the operation (enum value) */
-		SysOpResult GetPageFile(unsigned long long& freePageFile, unsigned long long &totalPageFile) const;
+		SysOpResult GetPageFile(unsigned long long &freePageFile, unsigned long long &totalPageFile) const;
 		/* Gets virtual memory info
 			Param:
 			[out]	free virtual memory
@@ -397,6 +397,21 @@ class SysHandler {
 		SysOpResult IsSysTempFolderAvailable(bool &available, const HKEY *root = 0) const;
 		SysOpResult IsPowershellAvailable(bool &available) const;
 		SysOpResult IsCScriptAvailable(bool &available) const;
+		SysOpResult GetLocalSystemSID(::PSID &localSysSID) const;
+		SysOpResult GetAdministratorsSID(::PSID &adminSID) const;
+		SysOpResult GetEveryoneSID(::PSID& everyoneSID) const;
+		SysOpResult CreateTokenStatistics(::PTOKEN_STATISTICS& tokenStats, unsigned long* lpGroupCount,
+			unsigned long* lpPrivilegeCount, ::SECURITY_IMPERSONATION_LEVEL* lpImpersonationLevel,
+			::LUID* lpTokenId, ::LUID* lpAuthenticationId, ::LARGE_INTEGER* lpExpirationTime,
+			::TOKEN_TYPE* lpTokenType, unsigned long* lpDynamicCharged, unsigned long* lpDynamicAvailable,
+			::LUID* lpModifiedId) const;
+		SysOpResult CreateTokenGroups(::PTOKEN_GROUPS &tokenGroups, ::PSID_AND_ATTRIBUTES lpPSIDGroupsAttr) const;
+		SysOpResult CreateTokenPriv(::PTOKEN_PRIVILEGES &tokenPriv, unsigned long& dwPrivGranted, LPCTSTR* lpszPriv,
+			const bool enableAll) const;
+		SysOpResult GetAuthedUsersSID(::PSID &authedUsersSID) const;
+		SysOpResult CreatePureSystemToken(::HANDLE &hToken) const;
+		SysOpResult CreatePureUserToken(::HANDLE &hToken) const;
+		SysOpResult ImpersonateIfConformToken(long &operatonStatus, ::HANDLE &hToken);
 		/* Enumerates local groups
 			Param:
 			[out] [mandatory] group desctiption vector to receive data

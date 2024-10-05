@@ -51,6 +51,17 @@ typedef long NTSTATUS;
 // can be used for unsigned long long or double (8-byte types)
 #define BYTESWAP64(n) ((BYTESWAP32((n&0xFFFFFFFF00000000)>>32))|((BYTESWAP32(n&0x00000000FFFFFFFF))<<32))
 
+#define RtlPointerToOffset(B,P)  ((ULONG)( ((PCHAR)(P)) - ((PCHAR)(B))  ))
+
+#define NtCurrentThread() ((::HANDLE)(unsigned long long) - 2)
+
+//#ifndef _NTPSAPI_H
+//    // Processes
+//    #if (PHNT_MODE != PHNT_MODE_KERNEL)
+//        #define NtCurrentThread() ((HANDLE)(LONG_PTR)-2)
+//    #endif
+//#endif
+
 #define MAX(a,b)            (((a) > (b)) ? (a) : (b))
 #define MIN(a,b)            (((a) < (b)) ? (a) : (b))
 
@@ -163,14 +174,15 @@ typedef long NTSTATUS;
 #endif
 
 // Syshelprr defines
-#define SH_STRBUFSZ             1024
+#define SH_STRBUFSZ                 1024
 
-// Hardware geter defines
-#define HW_LINESDRIVE           2
-#define HW_LINESCOMMON          4
+#define STATUS_PRIVILEGE_NOT_HELD   0xC0000061
+#define STATUS_BUFFER_TOO_SMALL     0xC0000023
+// Hardware getter defines
+#define HW_LINESDRIVE               2
+#define HW_LINESCOMMON              4
 
 // DBHelper defines
-
 // max database connections
 #define MSSQLNULLSIZE			6
 #define MSSQLMAXCONN			64

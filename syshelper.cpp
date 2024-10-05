@@ -1,8 +1,16 @@
+//#if defined(_WIN64)
+//	#define _AMD64_
+//#else
+//	#define _X86_
+//#endif
+
 #include <iostream>
 #include "syshelper.h"
 #include "reghelper.h"
 #include "prochelper.h"
 #include "fshelper.h"
+#include "ntapi.h"
+// #include <ntdef.h>
 
 bool IsBadReadPtr(void* p) {
 	MEMORY_BASIC_INFORMATION mbi = { 0 };
@@ -1576,6 +1584,602 @@ SysOpResult SysHandler::IsCScriptAvailable(bool& available) const {
 	}
 }
 
+SysOpResult SysHandler::GetLocalSystemSID(::PSID &localSysSID) const {
+	::SID_IDENTIFIER_AUTHORITY sidAuth = SECURITY_NT_AUTHORITY;
+	::PSID psid = 0;
+	if (::AllocateAndInitializeSid(&sidAuth, 1, SECURITY_LOCAL_SYSTEM_RID, 0, 0, 0, 0, 0, 0, 0, &psid)) {
+		localSysSID = psid;
+		return SysOpResult::Success;
+	} else {
+		localSysSID = 0;
+		return SysOpResult::Fail;
+	}
+}
+
+SysOpResult SysHandler::GetAdministratorsSID(::PSID &adminSID) const {
+	::SID_IDENTIFIER_AUTHORITY sidAuth = SECURITY_NT_AUTHORITY;
+	::PSID psid = 0;
+	if (::AllocateAndInitializeSid(&sidAuth, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
+		&psid)) {
+		adminSID = psid;
+		return SysOpResult::Success;
+	} else {
+		adminSID = 0;
+		return SysOpResult::Fail;
+	}
+}
+
+SysOpResult SysHandler::GetEveryoneSID(::PSID &everyoneSID) const {
+	SID_IDENTIFIER_AUTHORITY ntauth = SECURITY_WORLD_SID_AUTHORITY;
+	PSID psid = 0;
+	if (::AllocateAndInitializeSid(&ntauth, 1, 0, 0, 0, 0, 0, 0, 0, 0, &psid)) {
+		everyoneSID = psid;
+		return SysOpResult::Success;
+	} else {
+		everyoneSID = 0;
+		return SysOpResult::Fail;
+	}
+}
+
+SysOpResult SysHandler::GetAuthedUsersSID(::PSID &authedUsersSID) const {
+	::SID_IDENTIFIER_AUTHORITY sidAuth = SECURITY_NT_AUTHORITY;
+	::PSID psid = 0;
+	if (::AllocateAndInitializeSid(&sidAuth, 1, SECURITY_AUTHENTICATED_USER_RID, 0, 0, 0, 0, 0, 0, 0, &psid)) {
+		authedUsersSID = psid;
+		return SysOpResult::Success;
+	} else {
+		authedUsersSID = 0;
+		return SysOpResult::Fail;
+	}
+}
+
+SysOpResult SysHandler::CreateTokenStatistics(
+	::PTOKEN_STATISTICS &tokenStats,						// Mandatiry / Out
+	unsigned long* lpGroupCount,							// Mandatory
+	unsigned long* lpPrivilegeCount,						// Mandatory
+	::SECURITY_IMPERSONATION_LEVEL* lpImpersonationLevel,	// Only when ImpersonteToken
+	::PLUID lpTokenId,										// Optional
+	::PLUID lpAuthenticationId,								// Optional 
+	::PLARGE_INTEGER lpExpirationTime,						// Optional
+	::TOKEN_TYPE* lpTokenType,								// Primary
+	unsigned long* lpDynamicCharged,						// Optional
+	unsigned long* lpDynamicAvailable,						// Optional
+	::LUID* lpModifiedId									// Optional
+) const {
+	// check http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnsecure/html/msdn_secguts.asp
+	bool bSuccess = false;
+	unsigned long dwSize = sizeof(::TOKEN_STATISTICS);
+	void* lpData = 0;
+	::TOKEN_STATISTICS* lpStatisticsToken = 0;
+	::LUID luidFakeTokenId = { 0 };
+	::LUID luidFakeAuthenticationId = { 0 };
+	::LUID luidFakeModifiedId = { 0 };
+	__try {
+		if (!::AllocateLocallyUniqueId(&luidFakeTokenId) ||
+			!::AllocateLocallyUniqueId(&luidFakeAuthenticationId) ||
+			!::AllocateLocallyUniqueId(&luidFakeModifiedId)) {
+			__leave;
+		}
+		lpData = ::LocalAlloc(LPTR, dwSize);
+		if (!lpData) {
+			return SysOpResult::Fail;
+		}
+		lpStatisticsToken = (::TOKEN_STATISTICS*)lpData;
+		if (lpTokenId) {
+			lpStatisticsToken->TokenId.HighPart = lpTokenId->HighPart;
+			lpStatisticsToken->TokenId.LowPart = lpTokenId->LowPart;
+		} else {
+			lpStatisticsToken->TokenId.HighPart = luidFakeTokenId.HighPart;
+			lpStatisticsToken->TokenId.LowPart = luidFakeTokenId.LowPart;
+		}
+		if (lpAuthenticationId) {
+			lpStatisticsToken->AuthenticationId.HighPart = lpAuthenticationId->HighPart;
+			lpStatisticsToken->AuthenticationId.LowPart = lpAuthenticationId->LowPart;
+		} else {
+			lpStatisticsToken->TokenId.HighPart = luidFakeAuthenticationId.HighPart;
+			lpStatisticsToken->TokenId.LowPart = luidFakeAuthenticationId.LowPart;
+		}
+		if (lpExpirationTime) {
+			lpStatisticsToken->ExpirationTime.HighPart = lpExpirationTime->HighPart;
+			lpStatisticsToken->ExpirationTime.LowPart = lpExpirationTime->LowPart;
+		} else {
+			lpStatisticsToken->ExpirationTime.HighPart = 0x7FFFFFFF;
+			lpStatisticsToken->ExpirationTime.LowPart = 0xFFFFFFFF;
+		}
+		if (lpTokenType) {
+			lpStatisticsToken->TokenType = *lpTokenType;
+		} else {
+			lpStatisticsToken->TokenType = TokenPrimary;
+		}
+		if (lpImpersonationLevel) {
+			lpStatisticsToken->ImpersonationLevel = *lpImpersonationLevel;
+		} else {
+			lpStatisticsToken->ImpersonationLevel = ::SECURITY_IMPERSONATION_LEVEL::SecurityAnonymous;
+		}
+		if (lpDynamicCharged) {
+			lpStatisticsToken->DynamicCharged = *lpDynamicCharged;
+		} else {
+			lpStatisticsToken->DynamicCharged = 500; //0x300? //fake fake fake
+		}
+		if (lpDynamicAvailable) {
+			lpStatisticsToken->DynamicAvailable = *lpDynamicAvailable;
+		} else {
+			lpStatisticsToken->DynamicAvailable = 420;
+		}
+		if (lpGroupCount) {
+			lpStatisticsToken->GroupCount = *lpGroupCount;
+		} else {
+			lpStatisticsToken->GroupCount = 0; //err?
+		}
+		if (lpPrivilegeCount) {
+			lpStatisticsToken->PrivilegeCount = *lpPrivilegeCount;
+		} else {
+			lpStatisticsToken->PrivilegeCount = 0;
+		}
+		if (lpModifiedId) {
+			lpStatisticsToken->ModifiedId.HighPart = lpModifiedId->HighPart;
+			lpStatisticsToken->ModifiedId.LowPart = lpModifiedId->LowPart;
+		} else {
+			//make it original
+			lpStatisticsToken->TokenId.HighPart = luidFakeTokenId.HighPart; //luidFakeModifiedId.HighPart;
+			lpStatisticsToken->TokenId.LowPart = luidFakeTokenId.LowPart; //luidFakeModifiedId.LowPart;
+		}
+		bSuccess = true;
+	} __finally {
+		if (bSuccess) {
+			tokenStats = (::PTOKEN_STATISTICS)lpData;
+			return SysOpResult::Success;
+		} else {
+			if (lpData) {
+				SAFE_LOCALFREE(lpData);
+			}
+			tokenStats = 0;
+			return SysOpResult::Fail;
+		}
+	}
+	return SysOpResult::Success;
+}
+
+SysOpResult SysHandler::CreateTokenGroups(::PTOKEN_GROUPS &tokenGroups, ::PSID_AND_ATTRIBUTES lpPSIDGroupsAttr) const {
+	int bRet = 0, dim = 0, i = 0;
+	while ((lpPSIDGroupsAttr[dim].Sid) && dim < 64) {
+		++dim;
+	}
+	// too many recs
+	if (dim >= 64) {
+		return SysOpResult::Fail; //Arg Error!
+	}
+	unsigned char* lpBase = 0;
+	unsigned long dwGroupTokenSize = 0;
+	::PTOKEN_GROUPS lpGroupToken = 0;
+	::SID_AND_ATTRIBUTES* lpEachGrp = 0;
+	__try {
+		dwGroupTokenSize = sizeof(unsigned long) + sizeof(::SID_AND_ATTRIBUTES) * dim;
+		for (i = 0; i < dim; ++i) {
+			dwGroupTokenSize += ::GetLengthSid(lpPSIDGroupsAttr[i].Sid);
+		}
+		// Copying is boring
+		lpGroupToken = (::PTOKEN_GROUPS)::LocalAlloc(LPTR, dwGroupTokenSize);
+		if (!lpGroupToken) {
+			__leave;
+		}
+		lpGroupToken->GroupCount = dim;
+		lpEachGrp = (::SID_AND_ATTRIBUTES*)lpGroupToken->Groups;
+		lpBase = (unsigned char*)lpGroupToken;
+		lpBase += sizeof(unsigned long) + sizeof(::SID_AND_ATTRIBUTES) * dim;
+		for (i = 0; i < dim; ++i) {
+			lpEachGrp[i].Attributes = lpPSIDGroupsAttr[i].Attributes;
+			CopyMemory(lpBase, lpPSIDGroupsAttr[i].Sid, ::GetLengthSid(lpPSIDGroupsAttr[i].Sid));
+			lpEachGrp[i].Sid = (::PSID)lpBase;
+			lpBase += ::GetLengthSid(lpPSIDGroupsAttr[i].Sid);
+		}
+		bRet = 1;
+	} __finally {
+		if (bRet) {
+			tokenGroups = lpGroupToken;
+			return SysOpResult::Success;
+		} else {
+			if (lpGroupToken) {
+				SAFE_LOCALFREE(lpGroupToken);
+			}
+			tokenGroups = 0;
+			return SysOpResult::Fail;
+		}
+	}
+}
+
+SysOpResult SysHandler::CreateTokenPriv(::PTOKEN_PRIVILEGES &tokenPriv, unsigned long &dwPrivGranted, LPCTSTR* lpszPriv,
+	const bool enableAll) const {
+	const wchar_t* _lpszPriv[] = {
+		//////////////     Priviledge      /////////////////
+		SE_CREATE_TOKEN_NAME, SE_ASSIGNPRIMARYTOKEN_NAME,
+		SE_LOCK_MEMORY_NAME, SE_CREATE_TOKEN_NAME,
+		SE_ASSIGNPRIMARYTOKEN_NAME, SE_LOCK_MEMORY_NAME, SE_INCREASE_QUOTA_NAME,
+		//SE_UNSOLICITED_INPUT_NAME, // failure to find in Win2k, XP
+		//SE_MACHINE_ACCOUNT_NAME,  // leading to Zw failure in WinXP
+		SE_TCB_NAME, SE_SECURITY_NAME, SE_TAKE_OWNERSHIP_NAME,
+		SE_LOAD_DRIVER_NAME, SE_SYSTEM_PROFILE_NAME,
+		SE_SYSTEMTIME_NAME, SE_PROF_SINGLE_PROCESS_NAME,
+		SE_INC_BASE_PRIORITY_NAME, SE_CREATE_PAGEFILE_NAME,
+		SE_CREATE_PERMANENT_NAME, SE_BACKUP_NAME,
+		SE_RESTORE_NAME, SE_SHUTDOWN_NAME,
+		SE_DEBUG_NAME, SE_AUDIT_NAME,
+		SE_SYSTEM_ENVIRONMENT_NAME, SE_CHANGE_NOTIFY_NAME,
+		SE_REMOTE_SHUTDOWN_NAME, SE_UNDOCK_NAME,
+		SE_SYNC_AGENT_NAME, SE_ENABLE_DELEGATION_NAME,
+		SE_MANAGE_VOLUME_NAME,  //failure to find on Win2k but ok when Xp+
+		0
+		////////////////     NT Rights      ////////////////
+		//SE_BATCH_LOGON_NAME, SE_DENY_BATCH_LOGON_NAME,
+		//SE_DENY_INTERACTIVE_LOGON_NAME, SE_DENY_NETWORK_LOGON_NAME,
+		//SE_DENY_SERVICE_LOGON_NAME, SE_INTERACTIVE_LOGON_NAME ,
+		//SE_NETWORK_LOGON_NAME, SE_SERVICE_LOGON_NAME, 0
+		///////////////////////////////////////////////////
+	};
+	int dim = 0;
+	const wchar_t** pPriv = 0;
+	if (enableAll) {
+		pPriv = _lpszPriv;
+		while (pPriv[dim]) {
+			++dim;
+		}
+	} else {
+		pPriv = lpszPriv;
+		if (lpszPriv) while (pPriv[dim] != NULL)  dim++;
+	}
+	bool bSuccess = false;
+	int i = 0;
+	unsigned long dwSize = sizeof(unsigned long) + dim * sizeof(::LUID_AND_ATTRIBUTES),
+		dwIndex = 0; // real number of priviledes;
+	::TOKEN_PRIVILEGES* lpPrivToken = { 0 };
+	void* lpData = 0;
+	void* lpData2 = 0;
+	__try {
+		lpData = ::LocalAlloc(LPTR, dwSize);
+		lpPrivToken = (::TOKEN_PRIVILEGES*)(lpData);
+		lpPrivToken->PrivilegeCount = dim;
+		::LUID luid = { 0 };
+		for (i = 0; i < dim; ++i) {
+			const wchar_t* szPrivAdd = pPriv[i];
+			memset(&luid, 0, sizeof(::LUID));
+			if (!::LookupPrivilegeValue(0, szPrivAdd, &luid)) {
+				// If the name is bogus... SE_UNSOLICITED_INPUT_NAME brrr go on
+				//__leave;
+				continue;
+			}
+			lpPrivToken->Privileges[dwIndex].Luid.HighPart = luid.HighPart;
+			lpPrivToken->Privileges[dwIndex].Luid.LowPart = luid.LowPart;
+			lpPrivToken->Privileges[dwIndex].Attributes = SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT;
+			dwIndex++;
+		}
+		if (dwIndex == (unsigned long)dim) {
+			dwPrivGranted = dim;
+			lpData2 = lpData;
+			bSuccess = true;
+		} else {
+			dwPrivGranted = dwIndex;
+			dwSize = sizeof(unsigned long) + dwIndex * sizeof(::LUID_AND_ATTRIBUTES);
+			lpData2 = ::LocalAlloc(LPTR, dwSize);
+			if (!lpData2) {
+				__leave;
+			}
+			CopyMemory(lpData2, lpData, dwSize);
+			lpPrivToken = (::TOKEN_PRIVILEGES*)(lpData2);
+			lpPrivToken->PrivilegeCount = dwIndex;
+			bSuccess = true;
+		}
+	} __finally {
+		if (bSuccess) {
+			if (lpData != lpData2 && lpData) {
+				SAFE_LOCALFREE(lpData);
+			}
+			tokenPriv = (::TOKEN_PRIVILEGES*)lpData2;
+			return SysOpResult::Success;
+		} else {
+			if (lpData) {
+				SAFE_LOCALFREE(lpData);
+			}
+			tokenPriv = 0;
+			return SysOpResult::Fail;
+		}
+	}
+}
+
+SysOpResult SysHandler::CreatePureSystemToken(::HANDLE &hToken) const {
+	hToken = 0;
+	int bRet = 0;
+	ProcessHandler proc;
+	unsigned long procpid = proc.GetCurrentProcPid();
+	std::vector<std::wstring> privs = proc.GetProcPrivileges(procpid);
+	if (privs.size()) {
+		if (!valInList(privs, L"SeCreateTokenPrivilge")) {
+			if (!proc.EnableCreateTokenPrivilege(procpid)) {
+				return SysOpResult::Fail;
+			}
+		}
+	} else {
+		return SysOpResult::Fail;
+	}
+	::PTOKEN_STATISTICS lpStatsToken = { 0 };
+	::PSID lpSidOwner = 0;
+	if (SysOpResult::Success != GetLocalSystemSID(lpSidOwner)) {
+		return SysOpResult::Fail;
+	}
+	if (lpSidOwner) {
+		::NTSTATUS ntStatus = 0;
+		// SYSTEM Token has 3 group SIDs
+		// SID_AND_ATTRIBUTES grpSIDAttr[3];    
+		::PTOKEN_GROUPS lpGroupToken = 0;
+		unsigned long dwGroupNumber = 3;
+		::PTOKEN_PRIVILEGES lpPrivToken = { 0 };
+		unsigned long dwPrivGranted = 0;
+		::TOKEN_OWNER ownerToken = { 0 };
+		ownerToken.Owner = 0;
+		::TOKEN_PRIMARY_GROUP primGroupToken = { 0 };
+		if (SysOpResult::Success != GetLocalSystemSID(primGroupToken.PrimaryGroup)) {
+			return SysOpResult::Fail;
+		}
+		::PTOKEN_DEFAULT_DACL lpDaclToken = { 0 };
+		::SID_AND_ATTRIBUTES lpEachGrp[4] = { 0 };
+		lpEachGrp[0].Sid = 0;
+		lpEachGrp[1].Sid = 0;
+		lpEachGrp[2].Sid = 0;
+		if (SysOpResult::Success != GetAdministratorsSID(lpEachGrp[0].Sid)) {
+			return SysOpResult::Fail;
+		}
+		lpEachGrp[0].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_OWNER;
+		if (SysOpResult::Success != GetEveryoneSID(lpEachGrp[1].Sid)) {
+			return SysOpResult::Fail;
+		}
+		lpEachGrp[1].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+		if (SysOpResult::Success != GetAuthedUsersSID(lpEachGrp[2].Sid)) {
+			return SysOpResult::Fail;
+		}
+		lpEachGrp[2].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+		lpEachGrp[3].Sid = 0;
+		lpEachGrp[3].Attributes = 0;
+		if (SysOpResult::Success != CreateTokenGroups(lpGroupToken, lpEachGrp)) {
+			return SysOpResult::Fail;
+		}
+		if (SysOpResult::Success != CreateTokenPriv(lpPrivToken, dwPrivGranted, 0, true)) {
+			return SysOpResult::Fail;
+		}
+		if (SysOpResult::Success != GetLocalSystemSID(ownerToken.Owner)) {
+			return SysOpResult::Fail;
+		}
+		::PSID lpSidOwner = 0;
+		::TOKEN_USER userToken = { 0 };
+		if (SysOpResult::Success != GetLocalSystemSID(userToken.User.Sid)) {
+			return SysOpResult::Fail;
+		}
+		userToken.User.Attributes = 0;    //no use
+		//this luid only unique in this session
+		::LUID luid = { 0 };
+		if (!::AllocateLocallyUniqueId(&luid)) {
+			return SysOpResult::Fail;
+		}
+		::TOKEN_SOURCE sourceToken = { {'*', 'S', 'Y', 'S', 'T', 'E', 'M', '*'}, {luid.LowPart, luid.HighPart} };
+		// Allocate the System Luid.  The first 1000 LUIDs are reserved.
+		// Use #999 here (0x3E7 = 999)
+		//
+		//#define SYSTEM_LUID                     { 0x3E7, 0x0 }
+		//#define ANONYMOUS_LOGON_LUID            { 0x3e6, 0x0 }
+		//#define LOCALSERVICE_LUID               { 0x3e5, 0x0 }
+		//#define NETWORKSERVICE_LUID             { 0x3e4, 0x0 }
+		::LUID authid = SYSTEM_LUID;
+		// PTOKEN_STATISTICS lpStatsToken = { 0 };
+		if (SysOpResult::Success != CreateTokenStatistics(lpStatsToken, 0, 0, 0, 0, 0, 0, 0,
+			&dwGroupNumber, &dwPrivGranted, 0)) {
+			return SysOpResult::Fail;
+		}
+		//typedef enum _SECURITY_IMPERSONATION_LEVEL {
+		//SecurityAnonymous,
+		//SecurityIdentification,
+		//SecurityImpersonation,
+		//SecurityDelegation
+		//} SECURITY_IMPERSONATION_LEVEL, *
+		//  PSECURITY_IMPERSONATION_LEVEL;
+
+		//typedef struct _SECURITY_QUALITY_OF_SERVICE {
+		//DWORD Length;
+		//SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+		//SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode;
+		//BOOLEAN EffectiveOnly;
+		//} SECURITY_QUALITY_OF_SERVICE, * PSECURITY_QUALITY_OF_SERVICE;
+
+		//#define SECURITY_DYNAMIC_TRACKING      (TRUE)
+		//#define SECURITY_STATIC_TRACKING       (FALSE)
+
+		//typedef BOOLEAN SECURITY_CONTEXT_TRACKING_MODE,
+		//              * PSECURITY_CONTEXT_TRACKING_MODE;
+		//fake value,,,
+		::SECURITY_QUALITY_OF_SERVICE sqos = { sizeof(sqos),
+			::SECURITY_IMPERSONATION_LEVEL::SecurityAnonymous, SECURITY_STATIC_TRACKING, 0 };
+		// ::OBJECT_ATTRIBUTES oa = { sizeof(oa), 0, 0, 0, 0, &sqos };
+		ObjectAttributes oa;
+		memset(&oa, 0, sizeof(ObjectAttributes));
+		oa.uLength = sizeof(ObjectAttributes);
+		oa.pSecurityQualityOfService = &sqos;
+		::HMODULE hModule = ::LoadLibrary(L"ntdll.dll");
+		if (!hModule) {
+			return SysOpResult::Fail;
+		}
+		pNtCreateToken NtCreateToken = (pNtCreateToken)
+			::GetProcAddress(hModule, "NtCreateToken");
+		if (0 == NtCreateToken) {
+			return SysOpResult::Fail;
+		}
+		ntStatus = NtCreateToken(&hToken, TOKEN_ALL_ACCESS, &oa, TokenPrimary, (::LUID*)(&authid),
+			// NT::PLUID(&stats->AuthenticationId),
+			(::LARGE_INTEGER*)(&lpStatsToken->ExpirationTime),
+			&userToken, lpGroupToken, lpPrivToken, &ownerToken,
+			&primGroupToken, lpDaclToken, &sourceToken);
+		/* if (!::FreeLibrary(hModule)) {
+			return SysOpResult::Fail;
+		} */
+		//You may get 0xC0000061 which is STATUS_PRIVILEDGE_NOT_HELD,
+		//If so, try to GRANT SeCreateTokenPrivilege and relog once...
+		//STATUS_PRIVILEDGE_NOT_HELD;
+		//#define STATUS_ACCESS_VIOLATION     ((NTSTATUS)0xC0000005L)    // winnt
+		//An invalid parameter was passed to a service or function.
+		//#define STATUS_INVALID_PARAMETER         ((NTSTATUS)0xC000000DL)
+		if (NT_SUCCESS(ntStatus)) {
+			bRet = true;
+		} else {
+			return SysOpResult::Fail;
+		}
+		if (lpSidOwner) {
+			::FreeSid(lpSidOwner);
+			lpSidOwner = 0;
+		}
+		if (primGroupToken.PrimaryGroup) {
+			::FreeSid(primGroupToken.PrimaryGroup);
+			primGroupToken.PrimaryGroup = 0;
+		}
+		// free DACL if you allocate it yourself inside this Func
+		if (lpDaclToken) {}
+		if (lpEachGrp[0].Sid) {
+			::FreeSid(lpEachGrp[0].Sid);
+			lpEachGrp[0].Sid = 0;
+		}
+		if (lpEachGrp[1].Sid) {
+			::FreeSid(lpEachGrp[1].Sid);
+			lpEachGrp[1].Sid = 0;
+		}
+		if (lpEachGrp[2].Sid) {
+			::FreeSid(lpEachGrp[2].Sid);
+			lpEachGrp[2].Sid = 0;
+		}
+		// Free Inside SID
+		if (lpGroupToken && lpGroupToken->GroupCount > 0) {
+			::SID_AND_ATTRIBUTES* lpEachGrp = 0;
+			for (int i = 0; i < (int)lpGroupToken->GroupCount; ++i) {
+				lpEachGrp = lpGroupToken[i].Groups;
+				::FreeSid(lpEachGrp->Sid);
+				++lpEachGrp;
+			}
+		}
+		if (lpGroupToken) {
+			SAFE_LOCALFREE(lpGroupToken);
+		}
+		if (lpStatsToken) {
+			SAFE_LOCALFREE(lpStatsToken);
+		}
+		if (lpPrivToken) {
+			SAFE_LOCALFREE(lpPrivToken);
+		}
+		return SysOpResult::Success;
+	}
+	return SysOpResult::Success;
+}
+
+SysOpResult SysHandler::CreatePureUserToken(::HANDLE &hToken) const {
+	return SysOpResult::Success;
+}
+
+SysOpResult SysHandler::ImpersonateIfConformToken(long &operatonStatus, ::HANDLE &hToken) {
+	static volatile unsigned char guz = 0;
+	// ::OBJECT_ATTRIBUTES zoa = { sizeof(::OBJECT_ATTRIBUTES) };
+	ObjectAttributes zoa;
+	memset(&zoa, 0, sizeof(ObjectAttributes));
+	zoa.uLength = sizeof(ObjectAttributes);
+	unsigned long cb = 0, rcb = 0x200;
+	void* stack = alloca(sizeof(guz));
+	if (!stack) {
+		return SysOpResult::Fail;
+	}
+	union {
+		void* buf;
+		::TOKEN_PRIVILEGES* ptp;
+	};
+	::HMODULE hModule = ::LoadLibrary(L"ntdll.dll");
+	if (!hModule) {
+		return SysOpResult::Fail;
+	}
+	pNtQueryInformationToken NtQueryInformationToken = (pNtQueryInformationToken)
+		::GetProcAddress(hModule, "NtQueryInformationToken");
+	pNtSetInformationThread NtSetInformationThread = (pNtSetInformationThread)
+		::GetProcAddress(hModule, "NtSetInformationThread");
+	pNtDuplicateToken NtDuplicateToken = (pNtDuplicateToken)
+		::GetProcAddress(hModule, "NtDuplicateToken");
+	pNtAdjustPrivilegesToken NtAdjustPrivilegesToken = (pNtAdjustPrivilegesToken)
+		::GetProcAddress(hModule, "NtAdjustPrivilegesToken");
+	pNtClose NtClose = (pNtClose)
+		::GetProcAddress(hModule, "NtClose");
+	if (0 == NtQueryInformationToken) {
+		return SysOpResult::Fail;
+	}
+	if (0 == NtSetInformationThread) {
+		return SysOpResult::Fail;
+	}
+	if (0 == NtDuplicateToken) {
+		return SysOpResult::Fail;
+	}
+	if (0 == NtAdjustPrivilegesToken) {
+		return SysOpResult::Fail;
+	}
+	if (0 == NtClose) {
+		return SysOpResult::Fail;
+	}
+	::NTSTATUS status = 0;
+	do {
+		if (cb < rcb) {
+			cb = RtlPointerToOffset(buf = alloca(rcb - cb), stack);
+		}
+		if (0 <= (status = NtQueryInformationToken(&hToken, TokenPrivileges, buf, cb, &rcb))) {
+			if (unsigned long PrivilegeCount = ptp->PrivilegeCount) {
+				unsigned long n = 1;
+				int bNeedAdjust = 0;
+				::PLUID_AND_ATTRIBUTES Privileges = ptp->Privileges;
+				do {
+					if (!Privileges->Luid.HighPart) {
+						switch (Privileges->Luid.LowPart) {
+						case 0: // SE_CREATE_TOKEN_NAME:
+							if (!(Privileges->Attributes & SE_PRIVILEGE_ENABLED)) {
+								Privileges->Attributes |= SE_PRIVILEGE_ENABLED;
+								bNeedAdjust = 1;
+							}
+							if (!--n) {
+								static SECURITY_QUALITY_OF_SERVICE sqos = {
+									sizeof(sqos), SecurityImpersonation, SECURITY_STATIC_TRACKING, FALSE
+								};
+								// static OBJECT_ATTRIBUTES soa = { sizeof(soa), 0, 0, 0, 0, &sqos };
+								ObjectAttributes soa;
+								memset(&soa, 0, sizeof(ObjectAttributes));
+								soa.uLength = sizeof(ObjectAttributes);
+								soa.pSecurityQualityOfService = &sqos;
+								if (0 <= (status = NtDuplicateToken(hToken, TOKEN_ADJUST_PRIVILEGES |
+									TOKEN_IMPERSONATE, &soa, SECURITY_IMPERSONATION_LEVEL::SecurityAnonymous,
+									::TOKEN_TYPE::TokenImpersonation, &hToken))) {
+									if (bNeedAdjust) {
+										status = NtAdjustPrivilegesToken(hToken, 0, ptp, 0, 0, 0);
+									}
+									if (status == STATUS_SUCCESS) {
+										::HANDLE cThread = ::GetCurrentThread();
+										status = NtSetInformationThread(&cThread,
+											::THREAD_INFORMATION_CLASS::ThreadAbsoluteCpuPriority,
+											&hToken, sizeof(::HANDLE));
+									}
+									NtClose(hToken);
+								}
+								operatonStatus = status;
+								return SysOpResult::Success;
+							}
+							break;
+						}
+					}
+				} while (Privileges++, --PrivilegeCount);
+			}
+			operatonStatus = STATUS_PRIVILEGE_NOT_HELD;
+			return SysOpResult::Fail;
+		}
+	} while (status == STATUS_BUFFER_TOO_SMALL);
+	if (!::FreeLibrary(hModule)) {
+		return SysOpResult::Fail;
+	}
+	return SysOpResult::Success;
+}
+
 SysOpResult SysHandler::EnumLocalGroups(std::vector<GroupDesc> &groupList,
 	const std::wstring machineName, const bool enumAccs,
 	const std::vector<AccountDesc> *accList) const {
@@ -1661,8 +2265,8 @@ SysOpResult SysHandler::EnumLocalGroups(std::vector<GroupDesc> &groupList,
 SysOpResult SysHandler::EnumAccounts(std::vector<AccountDesc> &accountList,
 	const std::wstring machineName, const bool enumGroups) const {
 	unsigned long entriesRead = 0, totalEntries = 0, resHandle = 0, res = 0;
-	USER_INFO_20* buf = 0;
-	USER_INFO_20* tmpbuf = 0;
+	::USER_INFO_20* buf = 0;
+	::USER_INFO_20* tmpbuf = 0;
 	do {
 		SAFE_NetApiBufferFree(buf);
 		res = ::NetUserEnum(machineName.c_str(), 20,
@@ -1719,7 +2323,7 @@ SysOpResult SysHandler::EnumAccounts(std::vector<AccountDesc> &accountList,
 		}
 	} while (ERROR_MORE_DATA == res || NERR_Success != res);
 	SAFE_NetApiBufferFree(buf);
-	USER_INFO_4* buf4 = 0;
+	::USER_INFO_4* buf4 = 0;
 	AccountDesc* rec = 0;
 	for (size_t i = 0; i < accountList.size(); ++i) {
 		res = ::NetUserGetInfo(machineName.c_str(), accountList[i].accountName.c_str(), 4,

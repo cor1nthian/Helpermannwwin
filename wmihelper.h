@@ -86,8 +86,8 @@ class WMIQueryAsyncSink : public ::IWbemObjectSink {
 		WMIOpResult SetHandler(WMIHandler *wmiHandler);
 	protected:
 	private:
-		long m_lRef;
 		int m_bDone;
+		long m_lRef;
 		WMIHandler* m_WMIHandler;
 		::CRITICAL_SECTION m_threadLock;
 };

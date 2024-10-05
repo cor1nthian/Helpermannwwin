@@ -663,8 +663,7 @@ ScmOpResult SvcHandler::InstallSvc(const std::wstring svcName, const std::wstrin
 	wchar_t* startupAccLoginPtr = (startupAccLogin.length()) ? ((wchar_t*)startupAccLogin.c_str()) : 0;
 	wchar_t* startupAccPwdPtr = (startupAccPwd.length()) ? ((wchar_t*)startupAccPwd.c_str()) : 0;
 	wchar_t* depenendenciesPtr = 0;
-	size_t i = 0;
-	unsigned long bufSz = 0;
+	size_t i = 0, bufSz = 0;
 	if (!svcName.length()) {
 		return ScmOpResult::InstallFail;
 	}

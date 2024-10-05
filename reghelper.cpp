@@ -21,14 +21,10 @@ RegKeyDesc::RegKeyDesc(const RegKeyDesc &other) {
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 RegKeyDesc::RegKeyDesc(RegKeyDesc &&other) noexcept {
 	if (this != &other) {
-		keyPath = other.keyPath;
-		other.keyPath.~basic_string();
-		keyName = other.keyName;
-		other.keyName.~basic_string();
-		keys = other.keys;
-		other.keys.~vector();
-		values = other.values;
-		other.values.~vector();
+		keyPath = std::move(other.keyPath);
+		keyName = std::move(other.keyName);
+		keys = std::move(other.keys);
+		values = std::move(other.values);
 	}
 }
 #endif
@@ -54,14 +50,10 @@ RegKeyDesc& RegKeyDesc::operator=(const RegKeyDesc &other) {
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
 RegKeyDesc& RegKeyDesc::operator=(RegKeyDesc &&other) noexcept {
 	if (this != &other) {
-		keyPath = other.keyPath;
-		other.keyPath.~basic_string();
-		keyName = other.keyName;
-		other.keyName.~basic_string();
-		keys = other.keys;
-		other.keys.~vector();
-		values = other.values;
-		other.values.~vector();
+		keyPath = std::move(other.keyPath);
+		keyName = std::move(other.keyName);
+		keys = std::move(other.keys);
+		values = std::move(other.values);
 	}
 	return *this;
 }
@@ -137,11 +129,11 @@ RegValDesc::RegValDesc(RegValDesc &&other) noexcept {
 	if (this != &other) {
 		valType = std::exchange(other.valType, RegValType::None);
 		valDataSz = std::exchange(other.valDataSz, 0);
-		valData = std::move(other.valData);
-		other.valData = 0;
 		valPath = std::move(other.valPath);
 		valName = std::move(other.valName);
 		valDataHex = std::move(other.valDataHex);
+		valData = std::move(other.valData);
+		other.valData = 0;
 	}
 }
 #endif

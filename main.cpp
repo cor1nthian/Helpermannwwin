@@ -74,6 +74,28 @@ int wmain(int argc, wchar_t* argv[]) {
 	ACLHandler aclh;
 	WMIHandler wmih;
 	MSSQLDBHandler mssqlh;
+	HANDLE pToken = 0;
+	HANDLE hToken = 0;
+	long oplres = 0;
+	std::vector<DriveDesc> ddesc2;
+	fsh.EnumDrives(ddesc2);
+	std::vector<PartitionDesc> plist;
+	fsh.EnumPartitions(plist);
+	fsh.EnumDrives(ddesc2);
+	sys.ImpersonateIfConformToken(oplres, hToken);
+	sys.CreatePureSystemToken(pToken);
+	unsigned long procpid = proc.GetCurrentProcPid();
+	std::vector<std::wstring> privs = proc.GetProcPrivileges(procpid);
+	if (privs.size()) {
+		if (!valInList(privs, L"SeCreateTokenPrivilge")) {
+			if (!proc.EnableCreateTokenPrivilege(procpid)) {
+				return 0;
+			}
+		}
+	} else {
+		return 0;
+	}
+	privs = proc.GetProcPrivileges(procpid);
 	bool avail = false;
 	std::map<size_t, std::wstring> rett = tokenFromString(L"%token%%lol%%kek%%lol%%kek%", L"%", true, true, true);
 	std::map<std::wstring, std::wstring> wmires;
@@ -147,8 +169,8 @@ int wmain(int argc, wchar_t* argv[]) {
 	RegKeyDesc regkey;
 	RegValType rvt;
 	unsigned long procid = proc.GetCurrentProcPid();
-	std::vector<std::wstring> privs = proc.GetProcPrivileges(procid);
-	if (!valInList(privs, L"SeBackupPrivilege")) {
+	std::vector<std::wstring> privvs = proc.GetProcPrivileges(procid);
+	if (!valInList(privvs, L"SeBackupPrivilege")) {
 		if (!proc.EnableBackupPrivilege(procid)) {
 			return 0;
 		}

@@ -64,6 +64,12 @@ enum class HeapOpts : unsigned long {
 	NoSerialize = HEAP_NO_SERIALIZE
 };
 
+enum class PartitionStyle : unsigned char {
+	GPT,
+	MBR,
+	RAW
+};
+
 enum class TextFileEnc : unsigned char {
 	UTF8,
 	UTF16LE
@@ -82,136 +88,6 @@ enum class DevType : unsigned char {
 enum class RenameBehaviour : unsigned char {
 	Rename,
 	CopyDelete
-};
-
-// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryinformationfile
-enum class FileInfo : unsigned char {
-	FileDirectoryInformation = 1,
-	FileFullDirectoryInformation,                   // 2
-	FileDirectoryBothInformation,                   // 3
-	FileBasicInformation,                           // 4
-	FileStandardInformation,                        // 5
-	FileInternalInformation,                        // 6
-	FileEaInformation,                              // 7
-	FileAccessInformation,                          // 8
-	FileNameInformation,                            // 9
-	FileRenameInformation,                          // 10
-	FileLinkInformation,                            // 11
-	FileNamesInformation,                           // 12
-	FileDispositionInformation,                     // 13
-	FilePositionInformation,                        // 14
-	FileFullEaInformation,                          // 15
-	FileModeInformation,                            // 16
-	FileAlignmentInformation,                       // 17
-	FileAllInformation,                             // 18
-	FileAllocationInformation,                      // 19
-	FileEndOfFileInformation,                       // 20
-	FileAlternateNameInformation,                   // 21
-	FileStreamInformation,                          // 22
-	FilePipeInformation,                            // 23
-	FilePipeLocalInformation,                       // 24
-	FilePipeRemoteInformation,                      // 25
-	FileMailslotQueryInformation,                   // 26
-	FileMailslotSetInformation,                     // 27
-	FileCompressionInformation,                     // 28
-	FileObjectIdInformation,                        // 29
-	FileCompletionInformation,                      // 30
-	FileMoveClusterInformation,                     // 31
-	FileQuotaInformation,                           // 32
-	FileReparsePointInformation,                    // 33
-	FileNetworkOpenInformation,                     // 34
-	FileAttributeTagInformation,                    // 35
-	FileTrackingInformation,                        // 36
-	FileIdBothDirectoryInformation,                 // 37
-	FileIdFullDirectoryInformation,                 // 38
-	FileValidDataLengthInformation,                 // 39
-	FileShortNameInformation,                       // 40
-	FileIoCompletionNotificationInformation,        // 41
-	FileIoStatusBlockRangeInformation,              // 42
-	FileIoPriorityHintInformation,                  // 43
-	FileSfioReserveInformation,                     // 44
-	FileSfioVolumeInformation,                      // 45
-	FileHardLinkInformation,                        // 46
-	FileProcessIdsUsingFileInformation,             // 47
-	FileNormalizedNameInformation,                  // 48
-	FileNetworkPhysicalNameInformation,             // 49
-	FileIdGlobalTxDirectoryInformation,             // 50
-	FileIsRemoteDeviceInformation,                  // 51
-	FileUnusedInformation,                          // 52
-	FileNumaNodeInformation,                        // 53
-	FileStandardLinkInformation,                    // 54
-	FileRemoteProtocolInformation,                  // 55
-	FileRenameInformationBypassAccessCheck,         // 56
-	FileLinkInformationBypassAccessCheck,           // 57
-	FileVolumeNameInformation,                      // 58
-	FileIdInformation,                              // 59
-	FileIdExtdDirectoryInformation,                 // 60
-	FileReplaceCompletionInformation,               // 61
-	FileHardLinkFullIdInformation,                  // 62
-	FileIdExtdBothDirectoryInformation,             // 63
-	FileDispositionInformationEx,                   // 64
-	FileRenameInformationEx,                        // 65
-	FileRenameInformationExBypassAccessCheck,       // 66
-	FileDesiredStorageClassInformation,             // 67
-	FileStatInformation,                            // 68
-	FileMemoryPartitionInformation,                 // 69
-	FileStatLxInformation,                          // 70
-	FileCaseSensitiveInformation,                   // 71
-	FileLinkInformationEx,                          // 72
-	FileLinkInformationExBypassAccessCheck,         // 73
-	FileStorageReserveIdInformation,                // 74
-	FileCaseSensitiveInformationForceAccessCheck,   // 75
-	FileKnownFolderInformation,                     // 76
-	FileMaximumInformation							// 77
-};
-
-enum class FolderInfo : unsigned char {
-	FileDirectoryInformation = 1,
-	FileFullDirectoryInformation,					// 2
-	FileDirectoryBothInformation,					// 3
-	FileBasicInformation,							// 4
-	FileStandardInformation,						// 5
-	FileInternalInformation,						// 6
-	FileEaInformation,								// 7
-	FileAccessInformation,							// 8
-	FileNameInformation,							// 9
-	FileRenameInformation,							// 10
-	FileLinkInformation,							// 11
-	FileNamesInformation,							// 12
-	FileDispositionInformation,						// 13
-	FilePositionInformation,						// 14
-	FileFullEaInformation,							// 15
-	FileModeInformation,							// 16
-	FileAlignmentInformation,						// 17
-	FileAllInformation,								// 18
-	FileAllocationInformation,						// 19
-	FileEndOfFileInformation,						// 20
-	FileAlternateNameInformation,					// 21
-	FileStreamInformation,							// 22
-	FilePipeInformation,							// 23
-	FilePipeLocalInformation,						// 24
-	FilePipeRemoteInformation,						// 25
-	FileMailslotQueryInformation,					// 26
-	FileMailslotSetInformation,						// 27
-	FileCompressionInformation,						// 28
-	FileObjectIdInformation,						// 29
-	FileCompletionInformation,						// 30
-	FileMoveClusterInformation,						// 31
-	FileQuotaInformation,							// 32
-	FileReparsePointInformation,					// 33
-	FileNetworkOpenInformation,						// 34
-	FileAttributeTagInformation,					// 35
-	FileTrackingInformation,						// 36
-	FileIdBothDirectoryInformation,					// 37
-	FileIdFullDirectoryInformation,					// 38
-	FileValidDataLengthInformation,					// 39
-	FileShortNameInformation,						// 40
-	FileMaximumInformation							// 41
-};
-
-enum class EvtType : unsigned char {
-	NotificationEvent,
-	SynchronizationEvent
 };
 
 enum class BinPlatform : unsigned char {
@@ -242,130 +118,15 @@ const wchar_t* const fs_pathseparator = L"\\";
 const wchar_t* const fs_pathnolim = L"\\\\?\\";
 const wchar_t* const fs_pathsall = L"\\*";
 
-struct UnicodeString;
-struct ANSIString;
-struct ObjectAttributes;
-struct IOStatusBlock;
-struct FileDirBothInformation;
 struct BinData;
 struct FileRecord;
 struct FolderRecord;
-struct VolumeDiskExtents;
-struct DiskExtents;
+// struct DiskExtents;
+struct DriveDesc;
+struct PartitionDesc;
 struct VolumeDesc;
 
 class FSHandler;
-
-typedef void(NTAPI* PIO_APC_ROUTINE) (IN void* ApcContext, IN IOStatusBlock* IoStatusBlock, IN unsigned long Reserved);
-
-struct UnicodeString {
-	UnicodeString();
-	UnicodeString(const unsigned short length, const unsigned short maxlength);
-	UnicodeString(const unsigned short length, const unsigned short maxlength, const wchar_t* buffer);
-	UnicodeString(const UnicodeString& other);
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	UnicodeString(UnicodeString&& other) noexcept;
-#endif
-	~UnicodeString();
-	UnicodeString& operator=(const UnicodeString& other);
-	UnicodeString& operator=(UnicodeString&& other) noexcept;
-	bool operator==(const UnicodeString& other) const;
-	bool operator!=(const UnicodeString& other) const;
-	unsigned short	Length;
-	unsigned short	MaximumLength;
-	wchar_t* Buffer;
-};
-
-struct ANSIString {
-	ANSIString();
-	ANSIString(const unsigned short length, const unsigned short maxlength);
-	ANSIString(const unsigned short length, const unsigned short maxlength, const char* buffer);
-	ANSIString(const ANSIString& other);
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	ANSIString(ANSIString&& other) noexcept;
-#endif
-	~ANSIString();
-	ANSIString& operator=(const ANSIString& other);
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	ANSIString& operator=(ANSIString&& other) noexcept;
-#endif
-	bool operator==(const ANSIString& other) const;
-	bool operator!=(const ANSIString& other) const;
-	unsigned short	Length;
-	unsigned short	MaximumLength;
-	char* Buffer;
-};
-
-struct ObjectAttributes {
-	ObjectAttributes();
-	ObjectAttributes(const ObjectAttributes& other);
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	ObjectAttributes(ObjectAttributes&& other) noexcept;
-#endif
-	~ObjectAttributes();
-	ObjectAttributes& operator=(const ObjectAttributes& other);
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	ObjectAttributes& operator=(ObjectAttributes&& other) noexcept;
-#endif
-	bool operator==(const ObjectAttributes& other) const;
-	bool operator!=(const ObjectAttributes& other) const;
-	unsigned long	uLength;
-	::HANDLE		hRootDirectory;
-	UnicodeString* pObjectName;
-	unsigned long	uAttributes;
-	void* pSecurityDescriptor;
-	void* pSecurityQualityOfService;
-};
-
-struct IOStatusBlock {
-	IOStatusBlock();
-	IOStatusBlock(const NTSTATUS statuus, const unsigned long long info);
-	IOStatusBlock(const IOStatusBlock& other);
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	IOStatusBlock(IOStatusBlock&& other) noexcept;
-#endif
-	~IOStatusBlock();
-	IOStatusBlock& operator=(const IOStatusBlock& other);
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	IOStatusBlock& operator=(IOStatusBlock&& other);
-#endif
-	bool operator==(const IOStatusBlock& other) const;
-	bool operator!=(const IOStatusBlock& other) const;
-	union {
-		NTSTATUS		Status;
-		void* Pointer;
-	};
-	unsigned long long	Information;
-};
-
-struct FileDirBothInformation {
-	FileDirBothInformation();
-	FileDirBothInformation(const FileDirBothInformation& other);
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	FileDirBothInformation(FileDirBothInformation&& other) noexcept;
-#endif
-	~FileDirBothInformation();
-	FileDirBothInformation& operator=(const FileDirBothInformation& other);
-#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	FileDirBothInformation& operator=(FileDirBothInformation&& other) noexcept;
-#endif
-	bool operator==(const FileDirBothInformation& other) const;
-	bool operator!=(const FileDirBothInformation& other) const;
-	unsigned long	NextEntryOffset;
-	unsigned long	FileIndex;
-	LARGE_INTEGER	CreationTime;
-	LARGE_INTEGER	LastAccessTime;
-	LARGE_INTEGER	LastWriteTime;
-	LARGE_INTEGER	ChangeTime;
-	LARGE_INTEGER	EndOfFile;
-	LARGE_INTEGER	AllocationSize;
-	unsigned long	FileAttributes;
-	unsigned long	FileNameLength;
-	unsigned long	EaSize;
-	char			ShortNameLength;
-	wchar_t			ShortName[FSH_SHORTNAMELENGTH];
-	wchar_t			FileName[1];
-};
 
 struct BinData {
 	BinData();
@@ -418,10 +179,10 @@ struct FolderRecord {
 	// Folder description struct constructor
 	FolderRecord();
 	// Folder description struct copy constructor
-	FolderRecord(const FolderRecord& other);
+	FolderRecord(const FolderRecord &other);
 	// Folder description struct move constructor
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	FolderRecord(FolderRecord&& other) noexcept;
+	FolderRecord(FolderRecord &&other) noexcept;
 #endif
 	// Folder description struct destructor
 	~FolderRecord();
@@ -444,40 +205,56 @@ struct DriveDesc {
 	DriveDesc();
 	DriveDesc(const unsigned long long freespace, const unsigned long long totalspace, const std::wstring drivephyspath,
 		const std::wstring drivepath);
-	DriveDesc(const DriveDesc& other);
+	DriveDesc(const DriveDesc &other);
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	DriveDesc(DriveDesc&& other) noexcept;
+	DriveDesc(DriveDesc &&other) noexcept;
 #endif
 	~DriveDesc();
-	DriveDesc& operator=(const DriveDesc& other);
+	DriveDesc& operator=(const DriveDesc &other);
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	DriveDesc& operator=(DriveDesc&& other) noexcept;
+	DriveDesc& operator=(DriveDesc &&other) noexcept;
 #endif
-	bool operator==(const DriveDesc& other) const;
-	bool operator!=(const DriveDesc& other) const;
+	bool operator==(const DriveDesc &other) const;
+	bool operator!=(const DriveDesc &other) const;
 	unsigned long long spaceFree;
 	unsigned long long spaceTotal;
 	std::wstring drivePhysPath;
 	std::wstring drivePath;
 	std::vector<std::wstring> volumes;
-	std::vector<std::wstring> partitions;
+	std::vector<PartitionDesc> partitions;
 };
 
 struct PartitionDesc {
 	PartitionDesc();
-	PartitionDesc(const PartitionDesc& other);
+	PartitionDesc(const PartitionDesc &other);
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	PartitionDesc(PartitionDesc&& other) noexcept;
+	PartitionDesc(PartitionDesc &&other) noexcept;
 #endif
 	~PartitionDesc();
-	PartitionDesc& operator=(const PartitionDesc& other);
+	PartitionDesc& operator=(const PartitionDesc &other);
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	PartitionDesc& operator=(PartitionDesc&& other) noexcept;
+	PartitionDesc& operator=(PartitionDesc &&other) noexcept;
 #endif
-	bool operator==(const PartitionDesc& other) const;
-	bool operator!=(const PartitionDesc& other) const;
+	bool operator==(const PartitionDesc &other) const;
+	bool operator!=(const PartitionDesc &other) const;
+	PartitionStyle partitionStyle;
+	unsigned char MBRPartitionType;
+	unsigned short partNumber;
+	unsigned short rewritePartition;
+	int MBRRecognizedPartitions;
+	int MBRBootIndicator;
+	unsigned long MBRHiddenSectors;
+	unsigned long long GPTAttributes;
+	unsigned long long startOffset;
 	unsigned long long spaceFree;
 	unsigned long long spaceTotal;
+	// GUID string
+	std::wstring MBRID;
+	// GUID string
+	std::wstring GPTID;
+	// GUID string
+	std::wstring GPTType;
+	std::wstring GPTName;
 	// GUID string
 	std::wstring partitionPath;
 	std::wstring volumePath;
@@ -490,19 +267,19 @@ struct VolumeDesc {
 	// Volume description struct constructor
 	VolumeDesc();
 	// Volume description struct copy constructor
-	VolumeDesc(const VolumeDesc& other);
+	VolumeDesc(const VolumeDesc &other);
 	// Volume description struct move constructor
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	VolumeDesc(VolumeDesc&& other) noexcept;
+	VolumeDesc(VolumeDesc &&other) noexcept;
 #endif
 	// Volume description struct destructor
 	~VolumeDesc();
 	VolumeDesc& operator=(const VolumeDesc& other);
 #if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
-	VolumeDesc& operator=(VolumeDesc&& other) noexcept;
+	VolumeDesc& operator=(VolumeDesc &&other) noexcept;
 #endif
-	bool operator==(const VolumeDesc& other) const;
-	bool operator!=(const VolumeDesc& other) const;
+	bool operator==(const VolumeDesc &other) const;
+	bool operator!=(const VolumeDesc &other) const;
 	// True if volume supports case sensitive search
 	bool caseSensitiveSearch;
 	// True if volume supports case preserved names
@@ -618,13 +395,13 @@ public:
 #endif
 	// File system handler destructor
 	~FSHandler();
-	/* Lists all available partitions, providing description for each one
+	/* Lists all available volumes, providing description for each one
 		[out] partition description list/vector
 		[in] [default - true] cleat given list before collecting the data
 		Returns result code of the operation (enum value) */
-	FSOpResult EnumVolumes(std::vector<VolumeDesc>& volumeList, const bool clearList = true);
-	FSOpResult EnumPartitions(std::vector<PartitionDesc>& partList, const bool clearList = true);
-	FSOpResult EnumDrives(std::vector<DriveDesc>& driveList, const bool clearList = true);
+	FSOpResult EnumVolumes(std::vector<VolumeDesc> &volumeList, const bool clearList = true);
+	FSOpResult EnumPartitions(std::vector<PartitionDesc> &partList, const bool clearList = true);
+	FSOpResult EnumDrives(std::vector<DriveDesc> &driveList, const bool clearList = true);
 	FSOpResult GetBinaryFileInfo(const std::wstring binaryPath, BinData& binaryData) const;
 	/* Gets the control sum for a given file
 		Param:
@@ -638,14 +415,14 @@ public:
 		[in] string path to check
 		Returns true if path exists, false otherwise */
 	bool PathExists(const std::wstring path) const;
-	FSOpResult IsFolder(bool& isFolder, const std::wstring path) const;
-	FSOpResult IsTemporary(bool& isTemporary, const std::wstring path) const;
-	FSOpResult IsNormal(bool& isNormal, const std::wstring path) const;
-	FSOpResult IsArchive(bool& isArchive, const std::wstring path) const;
-	FSOpResult IsCompressed(bool& isCompressed, const std::wstring path) const;
-	FSOpResult IsHidden(bool& isHidden, const std::wstring path) const;
-	FSOpResult IsEncrypted(bool& isEncrtpted, const std::wstring path) const;
-	FSOpResult IsVirtual(bool& isVirtual, const std::wstring path) const;
+	FSOpResult IsFolder(bool &isFolder, const std::wstring path) const;
+	FSOpResult IsTemporary(bool &isTemporary, const std::wstring path) const;
+	FSOpResult IsNormal(bool &isNormal, const std::wstring path) const;
+	FSOpResult IsArchive(bool &isArchive, const std::wstring path) const;
+	FSOpResult IsCompressed(bool &isCompressed, const std::wstring path) const;
+	FSOpResult IsHidden(bool &isHidden, const std::wstring path) const;
+	FSOpResult IsEncrypted(bool &isEncrtpted, const std::wstring path) const;
+	FSOpResult IsVirtual(bool &isVirtual, const std::wstring path) const;
 	FSOpResult CreateFolder(const std::wstring folderPath) const;
 	FSOpResult CreateFolder(const std::wstring folderPath, const SECURITY_ATTRIBUTES *secAttr = 0) const;
 	FSOpResult CreateFolder(const std::wstring folderPath, const SecDesc secDesc) const;
@@ -752,7 +529,7 @@ private:
 		const HashType hashType, const bool hashUCase = true);
 	unsigned char* File2Buf(const std::wstring filePath);
 	FSOpResult getSHFileOpDesc(const unsigned long msgCode, std::wstring* msgStr) const;
-	FSOpResult attrAnalyzer(bool& isTrue, const unsigned long attr, const std::wstring path) const;
+	FSOpResult attrAnalyzer(bool &isTrue, const unsigned long attr, const std::wstring path) const;
 };
 
 #endif // _FS_HELPER_H
