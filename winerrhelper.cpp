@@ -1,7 +1,7 @@
 #include "winerrhelper.h"
 
-void errorMsgBox(const std::wstring errormsg) {
-	::MessageBox(0, errormsg.c_str(), L"ERROR", MB_ICONERROR);
+void errorMsgBox(const std::wstring errormsg, const std::wstring msgboxCaption, const unsigned int msgboxIcon) {
+	::MessageBox(0, errormsg.c_str(), msgboxCaption.c_str(), msgboxIcon);
 }
 
 void setLastError(const unsigned long code) {

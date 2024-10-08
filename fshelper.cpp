@@ -238,12 +238,22 @@ DriveDesc::DriveDesc(const unsigned long long freespace, const unsigned long lon
 	drivePath = drivepath;
 }
 
+DriveDesc::DriveDesc(const unsigned long long freespace, const unsigned long long totalspace, const std::wstring drivephyspath,
+	const std::wstring drivepath, const std::wstring serialnumber) {
+	spaceFree = freespace;
+	spaceTotal = totalspace;
+	drivePhysPath = drivephyspath;
+	drivePath = drivepath;
+	serialNumber = serialnumber;
+}
+
 DriveDesc::DriveDesc(const DriveDesc &other) {
 	if (this != &other) {
 		spaceFree = other.spaceFree;
 		spaceTotal = other.spaceTotal;
 		drivePhysPath = other.drivePhysPath;
 		drivePath = other.drivePath;
+		serialNumber = other.serialNumber;
 	}
 }
 
@@ -254,6 +264,7 @@ DriveDesc::DriveDesc(DriveDesc &&other) noexcept {
 		spaceTotal = std::exchange(other.spaceTotal, 0);
 		drivePhysPath = std::move(other.drivePhysPath);
 		drivePath = std::move(other.drivePath);
+		serialNumber = std::move(other.serialNumber);
 	}
 }
 #endif
@@ -266,6 +277,7 @@ DriveDesc& DriveDesc::operator=(const DriveDesc &other) {
 		spaceTotal = other.spaceTotal;
 		drivePhysPath = other.drivePhysPath;
 		drivePath = other.drivePath;
+		serialNumber = other.serialNumber;
 	}
 	return *this;
 }
@@ -277,6 +289,7 @@ DriveDesc& DriveDesc::operator=(DriveDesc &&other) noexcept {
 		spaceTotal = std::exchange(other.spaceTotal, 0);
 		drivePhysPath = std::move(other.drivePhysPath);
 		drivePath = std::move(other.drivePath);
+		serialNumber = std::move(other.serialNumber);
 	}
 	return *this;
 }
@@ -285,9 +298,10 @@ DriveDesc& DriveDesc::operator=(DriveDesc &&other) noexcept {
 bool DriveDesc::operator==(const DriveDesc &other) const {
 	if (this != &other) {
 		return (spaceFree == other.spaceFree &&
-				spaceTotal == other.spaceTotal&&
-				lower_copy(drivePhysPath) == lower_copy(drivePhysPath) &&
-				lower_copy(drivePath) == lower_copy(drivePath));
+				spaceTotal == other.spaceTotal &&
+				lower_copy(drivePhysPath) == lower_copy(other.drivePhysPath) &&
+				lower_copy(drivePath) == lower_copy(other.drivePath) &&
+				lower_copy(serialNumber) == lower_copy(other.serialNumber));
 	} else {
 		return true;
 	}
@@ -297,8 +311,9 @@ bool DriveDesc::operator!=(const DriveDesc &other) const {
 	if (this != &other) {
 		return (spaceFree != other.spaceFree ||
 				spaceTotal != other.spaceTotal ||
-				lower_copy(drivePhysPath) != lower_copy(drivePhysPath) ||
-				lower_copy(drivePath) != lower_copy(drivePath));
+				lower_copy(drivePhysPath) != lower_copy(other.drivePhysPath) ||
+				lower_copy(drivePath) != lower_copy(other.drivePath) ||
+				lower_copy(serialNumber) != lower_copy(other.serialNumber));
 	} else {
 		return false;
 	}
@@ -461,6 +476,64 @@ bool PartitionDesc::operator!=(const PartitionDesc &other) const {
 				lower_copy(volumePath) != lower_copy(other.volumePath) ||
 				lower_copy(volumes) != lower_copy(other.volumes) ||
 				lower_copy(drives) != lower_copy(other.drives));
+	} else {
+		return false;
+	}
+}
+
+DriveRecord::DriveRecord() {
+	physOffset = 0;
+}
+
+DriveRecord::DriveRecord(const DriveRecord& other) {
+	if (this != &other) {
+		physOffset = other.physOffset;
+		physDrive = other.physDrive;
+	}
+}
+
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
+DriveRecord::DriveRecord(DriveRecord &&other) noexcept {
+	if (this != &other) {
+		physOffset = std::exchange(other.physOffset, 0);
+		physDrive = std::move(other.physDrive);
+	}
+}
+#endif
+
+DriveRecord::~DriveRecord() {}
+
+DriveRecord& DriveRecord::operator=(const DriveRecord &other) {
+	if (this != &other) {
+		physOffset = other.physOffset;
+		physDrive = other.physDrive;
+	}
+	return *this;
+}
+
+#if (defined(STDVER) && STDVER >= 11 && STDVER != 98)
+DriveRecord& DriveRecord::operator=(DriveRecord &&other) noexcept {
+	if (this != &other) {
+		physOffset = std::exchange(other.physOffset, 0);
+		physDrive = std::move(other.physDrive);
+	}
+	return *this;
+}
+#endif
+
+bool DriveRecord::operator==(const DriveRecord &other) {
+	if (this != &other) {
+		return (physOffset == other.physOffset &&
+				lower_copy(physDrive) == lower_copy(physDrive));
+	} else {
+		return true;
+	}
+}
+
+bool DriveRecord::operator!=(const DriveRecord &other) {
+	if (this != &other) {
+		return (physOffset != other.physOffset ||
+				lower_copy(physDrive) != lower_copy(physDrive));
 	} else {
 		return false;
 	}
@@ -920,6 +993,279 @@ FSOpResult FSHandler::EnumVolumes(std::vector<VolumeDesc> &volumeList, const boo
 	}
 }
 
+FSOpResult FSHandler::EnumVolumes2(std::vector<VolumeDesc> &volumeList, const bool clearList) {
+	size_t Index = 0, bufSz = (MAX_PATH + 1) * sizeof(wchar_t);
+	if (clearList) {
+		volumeList.clear();
+	}
+	MALLOC_NULLIFY(VolumeName, wchar_t, bufSz);
+	if (!VolumeName) {
+		return FSOpResult::Fail;
+	}
+	MALLOC_NULLIFY(DeviceName, wchar_t, bufSz);
+	if (!DeviceName) {
+		SAFE_FREE(VolumeName);
+		return FSOpResult::Fail;
+	}
+	MALLOC_NULLIFY(VolPathName, wchar_t, bufSz);
+	if (!VolPathName) {
+		SAFE_FREE(VolumeName);
+		SAFE_FREE(DeviceName);
+		return FSOpResult::Fail;
+	}
+	MALLOC_NULLIFY(fsname, wchar_t, bufSz);
+	if (!fsname) {
+		SAFE_FREE(VolumeName);
+		SAFE_FREE(DeviceName);
+		SAFE_FREE(VolPathName);
+		return FSOpResult::Fail;
+	}
+	::HANDLE FindHandle = ::FindFirstVolume(VolumeName, MAX_PATH);
+	if (INVALID_HANDLE_VALUE != FindHandle) {
+		for (;;) {
+			if (VolumeName[0] != L'\\' ||
+				VolumeName[1] != L'\\' ||
+				VolumeName[2] != L'?' ||
+				VolumeName[3] != L'\\' ||
+				VolumeName[Index] != L'\\') {
+				SAFE_FREE(VolumeName);
+				SAFE_FREE(DeviceName);
+				SAFE_FREE(VolPathName);
+				SAFE_FREE(fsname);
+				return FSOpResult::Fail;
+			}
+			VolumeDesc elem;
+			elem.volumePath = VolumeName;
+			if (::QueryDosDevice(removeFromEnd_copy(removeFromStart_copy(elem.volumePath, L"\\\\?\\"),
+				{ L'\\' }).c_str(), DeviceName, MAX_PATH)) {
+				elem.drivePath = DeviceName;
+			} else {
+				SAFE_FREE(VolumeName);
+				SAFE_FREE(DeviceName);
+				SAFE_FREE(VolPathName);
+				SAFE_FREE(fsname);
+				return FSOpResult::Fail;
+			}
+			unsigned long charCount = MAX_PATH;
+			if (::GetVolumePathNamesForVolumeName(elem.volumePath.c_str(), VolPathName, MAX_PATH, &charCount)) {
+				elem.partLetter = VolPathName;
+			} else {
+				SAFE_FREE(VolumeName);
+				SAFE_FREE(DeviceName);
+				SAFE_FREE(VolPathName);
+				SAFE_FREE(fsname);
+				return FSOpResult::Fail;
+			}
+			memset(VolumeName, 0, bufSz);
+			wchar_t plBuf[4] = { 0 };
+			unsigned long fileSystemFlags = 0, psn = 0;
+			if (::GetVolumeInformation(elem.volumePath.c_str(), VolumeName, MAX_PATH, &psn,
+				&elem.maxComponentLen, &fileSystemFlags, fsname, MAX_PATH)) {
+				elem.deviceType = (DevType)::GetDriveType(elem.volumePath.c_str());
+				wchar_t buf[16] = { 0 };
+				elem.volumeSerial = psn;
+				swprintf(buf, L"%X", psn);
+				upper_chars(buf);
+				elem.fsName = fsname;
+				elem.volumeSerialStr = buf;
+				elem.volumeLabel = VolumeName;
+				elem.caseSensitiveSearch = fileSystemFlags & FILE_CASE_SENSITIVE_SEARCH;
+				elem.casePreservedMames = fileSystemFlags & FILE_CASE_PRESERVED_NAMES;
+				elem.unicodeFNames = fileSystemFlags & FILE_UNICODE_ON_DISK;
+				elem.persistentACLS = fileSystemFlags & FILE_PERSISTENT_ACLS;
+				elem.supportFileCompress = fileSystemFlags & FILE_FILE_COMPRESSION;
+				elem.supportQuota = fileSystemFlags & FILE_VOLUME_QUOTAS;
+				elem.supportSparseFile = fileSystemFlags & FILE_SUPPORTS_SPARSE_FILES;
+				elem.supportReparsePoints = fileSystemFlags & FILE_SUPPORTS_REPARSE_POINTS;
+				elem.supportRemoteStorage = fileSystemFlags & FILE_SUPPORTS_REMOTE_STORAGE;
+				elem.supportPosixUnlinkRename = fileSystemFlags & FILE_SUPPORTS_POSIX_UNLINK_RENAME;
+				elem.supportObjectIds = fileSystemFlags & FILE_SUPPORTS_OBJECT_IDS;
+				elem.supportEncryption = fileSystemFlags & FILE_SUPPORTS_ENCRYPTION;
+				elem.supportNamedStreams = fileSystemFlags & FILE_NAMED_STREAMS;
+				elem.supportTransactions = fileSystemFlags & FILE_SUPPORTS_TRANSACTIONS;
+				elem.supportHardLink = fileSystemFlags & FILE_SUPPORTS_HARD_LINKS;
+				elem.suportExtendAttrib = fileSystemFlags & FILE_SUPPORTS_EXTENDED_ATTRIBUTES;
+				elem.supportFileIdOpen = fileSystemFlags & FILE_SUPPORTS_OPEN_BY_FILE_ID;
+				elem.supportUSNJournal = fileSystemFlags & FILE_SUPPORTS_USN_JOURNAL;
+				elem.supportIntegrityStream = fileSystemFlags & FILE_SUPPORTS_INTEGRITY_STREAMS;
+				elem.supportBlockRefCount = fileSystemFlags & FILE_SUPPORTS_BLOCK_REFCOUNTING;
+				elem.supportSparseVdl = fileSystemFlags & FILE_SUPPORTS_SPARSE_VDL;
+				elem.supportGhosting = fileSystemFlags & FILE_SUPPORTS_GHOSTING;
+				elem.returnCleanupResInfo = fileSystemFlags & FILE_RETURNS_CLEANUP_RESULT_INFO;
+				elem.volumeCompressed = fileSystemFlags & FILE_VOLUME_IS_COMPRESSED;
+				elem.volumeReadOnly = fileSystemFlags & FILE_READ_ONLY_VOLUME;
+				elem.volumeDax = fileSystemFlags & FILE_DAX_VOLUME;
+				elem.seqWriteOnce = fileSystemFlags & FILE_SEQUENTIAL_WRITE_ONCE;
+			}else {
+				SAFE_FREE(VolumeName);
+				SAFE_FREE(DeviceName);
+				SAFE_FREE(VolPathName);
+				return FSOpResult::Fail;
+			}
+			if (FSOpResult::Success != GetDriveSpace(elem.volumePath, elem.spaceFree, elem.spaceTotal)) {
+				SAFE_FREE(VolumeName);
+				SAFE_FREE(DeviceName);
+				SAFE_FREE(VolPathName);
+				SAFE_FREE(fsname);
+				return FSOpResult::Fail;
+			}
+			std::wstring volPath = removeFromEnd_copy(elem.volumePath, { L'\\' });
+			::HANDLE hFile = ::CreateFile(volPath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+				0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+			if (INVALID_HANDLE_VALUE != hFile) {
+				unsigned long bytes = 0, bytesReturned = 0;
+				::VOLUME_DISK_EXTENTS* volDiskExt = (::VOLUME_DISK_EXTENTS*)malloc(sizeof(::VOLUME_DISK_EXTENTS));
+				if (!volDiskExt) {
+					SAFE_FREE(VolumeName);
+					SAFE_FREE(DeviceName);
+					SAFE_FREE(VolPathName);
+					SAFE_FREE(fsname);
+					if (::FindVolumeClose(FindHandle)) {
+						FindHandle = INVALID_HANDLE_VALUE;
+					} else {
+						// FindVolumeClose error
+					}
+					return FSOpResult::Fail;
+				}
+				bool ret = ::DeviceIoControl(hFile, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, 0, 0, volDiskExt,
+					sizeof(::VOLUME_DISK_EXTENTS), &bytes, 0);
+				if (!ret) {
+					if (ERROR_MORE_DATA == getLastErrorCode()) {
+						unsigned long numDisks = volDiskExt->NumberOfDiskExtents;
+						SAFE_FREE(volDiskExt);
+						volDiskExt = (::VOLUME_DISK_EXTENTS*)malloc((numDisks * sizeof(::DISK_EXTENT)) +
+							sizeof(::VOLUME_DISK_EXTENTS));
+						if (!volDiskExt) {
+							SAFE_FREE(VolumeName);
+							SAFE_FREE(DeviceName);
+							SAFE_FREE(VolPathName);
+							SAFE_FREE(fsname);
+							if (::FindVolumeClose(FindHandle)) {
+								FindHandle = INVALID_HANDLE_VALUE;
+							} else {
+								// FindVolumeClose error
+							}
+							return FSOpResult::Fail;
+						}
+						ret = ::DeviceIoControl(hFile, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, 0, 0, volDiskExt,
+							(numDisks * sizeof(::DISK_EXTENT)) + sizeof(::VOLUME_DISK_EXTENTS), &bytes, 0);
+						if (!ret) {
+							SAFE_FREE(volDiskExt);
+							SAFE_FREE(VolumeName);
+							SAFE_FREE(DeviceName);
+							SAFE_FREE(VolPathName);
+							SAFE_FREE(fsname);
+							if (::FindVolumeClose(FindHandle)) {
+								FindHandle = INVALID_HANDLE_VALUE;
+							} else {
+								// FindVolumeClose error
+							}
+							return FSOpResult::Fail;
+						}
+						for (unsigned long i = 0; i < volDiskExt->NumberOfDiskExtents; ++i) {
+#ifdef FSH_FULLPHYSDRIVESTRING
+							elem.physDrives.push_back(L"\\\\.\\PhysicalDrive" +
+								std::to_wstring(volDiskExt->Extents[i].DiskNumber));
+#else
+							elem.physDrives.push_back(L"PhysicalDrive" +
+								std::to_wstring(volDiskExt->Extents[i].DiskNumber));
+#endif
+						}
+					} else {
+						SAFE_FREE(volDiskExt);
+						SAFE_FREE(VolumeName);
+						SAFE_FREE(DeviceName);
+						SAFE_FREE(VolPathName);
+						SAFE_FREE(fsname);
+						if (::FindVolumeClose(FindHandle)) {
+							FindHandle = INVALID_HANDLE_VALUE;
+						} else {
+							// FindVolumeClose error
+						}
+						return FSOpResult::Fail;
+					}
+				} else {
+					for (unsigned long i = 0; i < volDiskExt->NumberOfDiskExtents; ++i) {
+#ifdef FSH_FULLPHYSDRIVESTRING
+						elem.physDrives.push_back(L"\\\\.\\PhysicalDrive" +
+							std::to_wstring(volDiskExt->Extents[i].DiskNumber));
+#else
+						elem.physDrives.push_back(L"PhysicalDrive" +
+							std::to_wstring(volDiskExt->Extents[i].DiskNumber));
+#endif
+					}
+				}
+				//::VOLUME_LOGICAL_OFFSET logicalOff = { 0 };
+				//logicalOff.LogicalOffset = 0; // 16049504256;
+				//::VOLUME_PHYSICAL_OFFSETS physicalOff = { 0 };
+				//if (!::DeviceIoControl(hFile, IOCTL_VOLUME_LOGICAL_TO_PHYSICAL, &logicalOff,
+				//	sizeof(::VOLUME_LOGICAL_OFFSET), &physicalOff, sizeof(::VOLUME_PHYSICAL_OFFSETS),
+				//	&bytesReturned, 0)) {
+				//	SAFE_FREE(VolumeName);
+				//	SAFE_FREE(DeviceName);
+				//	SAFE_FREE(VolPathName);
+				//	SAFE_FREE(fsname);
+				//	if (::FindVolumeClose(FindHandle)) {
+				//		FindHandle = INVALID_HANDLE_VALUE;
+				//	} else {
+				//		// FindVolumeClose error
+				//	}
+				//	return FSOpResult::Fail;
+				//}
+				if (::CloseHandle(hFile)) {
+					hFile = INVALID_HANDLE_VALUE;
+				} else {
+					Sleep(1);
+					// CloseHandle error
+				}
+				SAFE_FREE(volDiskExt);
+			} else {
+				SAFE_FREE(VolumeName);
+				SAFE_FREE(DeviceName);
+				SAFE_FREE(VolPathName);
+				SAFE_FREE(fsname);
+				return FSOpResult::Fail;
+			}
+			volumeList.push_back(elem);
+			memset(VolumeName, 0, bufSz);
+			memset(DeviceName, 0, bufSz);
+			memset(VolPathName, 0, bufSz);
+			if (!::FindNextVolume(FindHandle, VolumeName, MAX_PATH)) {
+				if (ERROR_NO_MORE_FILES != getLastErrorCode()) {
+					SAFE_FREE(VolumeName);
+					SAFE_FREE(DeviceName);
+					SAFE_FREE(VolPathName);
+					SAFE_FREE(fsname);
+					if (::FindVolumeClose(FindHandle)) {
+						FindHandle = INVALID_HANDLE_VALUE;
+					} else {
+						// FindVolumeClose error
+					}
+					return FSOpResult::Fail;
+				} else {
+					break;
+				}
+			}
+		}
+		if (::FindVolumeClose(FindHandle)) {
+			FindHandle = INVALID_HANDLE_VALUE;
+		} else {
+			// FindVolumeClose error
+		}
+	} else {
+		SAFE_FREE(VolumeName);
+		SAFE_FREE(DeviceName);
+		SAFE_FREE(VolPathName);
+		SAFE_FREE(fsname);
+		return FSOpResult::Fail;
+	}
+	SAFE_FREE(VolumeName);
+	SAFE_FREE(DeviceName);
+	SAFE_FREE(VolPathName);
+	SAFE_FREE(fsname);
+	return FSOpResult::Success;
+}
+
 FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc> &partList, const bool clearList) {
 	size_t Index = 0, bufSz = (MAX_PATH + 1) * sizeof(wchar_t);
 	if (clearList) {
@@ -1059,7 +1405,7 @@ FSOpResult FSHandler::EnumPartitions(std::vector<PartitionDesc> &partList, const
 	return FSOpResult::Success;
 }
 
-FSOpResult FSHandler::EnumDrives(std::vector<DriveDesc> &driveList, const bool clearList) {
+FSOpResult FSHandler::EnumDrives(std::vector<DriveDesc> &driveList, const bool trimSerialNumber, const bool clearList) {
 	// HW_GetHardDrives();
 	if (clearList) {
 		driveList.clear();
@@ -1088,13 +1434,13 @@ FSOpResult FSHandler::EnumDrives(std::vector<DriveDesc> &driveList, const bool c
 			::HANDLE hFile = ::CreateFile(dptrh.c_str(), GENERIC_READ,
 				FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 			if (INVALID_HANDLE_VALUE != hFile) {
-				unsigned long outBufSz = 8192, bytesReturned = 0;
+				unsigned long bytesReturned = 0;
 				// DRIVE_LAYOUT_INFORMATION_EX* outBuf = (DRIVE_LAYOUT_INFORMATION_EX*)malloc(outBudSz);
-				void* outBuf = malloc(outBufSz);
+				void* outBuf = malloc(FS_TEMPBUFSZ);
 				if (!outBuf) {
 					return FSOpResult::Fail;
 				}
-				if (::DeviceIoControl(hFile, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, 0, 0, outBuf, outBufSz, &bytesReturned,
+				if (::DeviceIoControl(hFile, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, 0, 0, outBuf, FS_TEMPBUFSZ, &bytesReturned,
 					0)) {
 					Sleep(1);
 					// void* outBufUntyoed = (void*)outBuf;
@@ -1146,8 +1492,51 @@ FSOpResult FSHandler::EnumDrives(std::vector<DriveDesc> &driveList, const bool c
 				} else {
 					return FSOpResult::Fail;
 				}
+				::STORAGE_PROPERTY_QUERY storagePropertyQuery;
+				memset(&storagePropertyQuery, 0, sizeof(::STORAGE_PROPERTY_QUERY));
+				storagePropertyQuery.PropertyId = ::STORAGE_PROPERTY_ID::StorageDeviceProperty;
+				storagePropertyQuery.QueryType = ::STORAGE_QUERY_TYPE::PropertyStandardQuery;
+				::STORAGE_DESCRIPTOR_HEADER storageDescriptorHeader = { 0 };
+				memset(outBuf, 0, FS_TEMPBUFSZ);
+				if (!::DeviceIoControl(hFile, IOCTL_STORAGE_QUERY_PROPERTY,
+					&storagePropertyQuery, sizeof(::STORAGE_PROPERTY_QUERY), &storageDescriptorHeader,
+					sizeof(::STORAGE_DESCRIPTOR_HEADER), &bytesReturned, 0)) {
+					SAFE_FREE(outBuf);
+					if (!::CloseHandle(hFile)) {
+						// CloseHandle failed
+					}
+					return FSOpResult::Fail;
+				}
+				if (!::DeviceIoControl(hFile, IOCTL_STORAGE_QUERY_PROPERTY, &storagePropertyQuery,
+					sizeof(::STORAGE_PROPERTY_QUERY), outBuf, 8192, &bytesReturned, 0)) {
+					SAFE_FREE(outBuf);
+					if (!::CloseHandle(hFile)) {
+						// CloseHandle failed
+					}
+					return FSOpResult::Fail;
+				}
+				::STORAGE_DEVICE_DESCRIPTOR* pDeviceDescriptor = (::STORAGE_DEVICE_DESCRIPTOR*)outBuf;
+				if (pDeviceDescriptor->SerialNumberOffset) {
+					MALLOC_NULLIFY(snbuf, char, FS_SBBUFSZ);
+					if (!snbuf) {
+						SAFE_FREE(outBuf);
+						if (!::CloseHandle(hFile)) {
+							// CloseHandle failed
+						}
+						return FSOpResult::Fail;
+					}
+					sprintf(snbuf, "%s", ((char*)outBuf + pDeviceDescriptor->SerialNumberOffset));
+					if (trimSerialNumber) {
+						driveList[i].serialNumber = str2wstr(trim_copy(snbuf));
+					} else {
+						driveList[i].serialNumber = str2wstr(snbuf);
+					}
+					SAFE_FREE(snbuf);
+				}
 				SAFE_FREE(outBuf);
-				::CloseHandle(hFile);
+				if (!::CloseHandle(hFile)) {
+					// CloseHandle failed
+				}
 			} else {
 				return FSOpResult::Fail;
 			}

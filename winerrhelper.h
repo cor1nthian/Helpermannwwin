@@ -38,7 +38,8 @@
 #include "config.h"
 #include "strhelper.h"
 
-void errorMsgBox(const std::wstring errormsg);
+void errorMsgBox(const std::wstring errormsg, const std::wstring msgboxCaption = L"ERROR",
+	const unsigned int msgboxIcon = MB_ICONERROR);
 void setLastError(const unsigned long code);
 unsigned long getLastErrorCode();
 std::wstring getErrorDetails(const unsigned long errcode, const std::wstring funcName = L"",

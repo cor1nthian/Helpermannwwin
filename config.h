@@ -165,6 +165,9 @@ typedef long NTSTATUS;
     (p)->pSecurityQualityOfService = 0;					\
 }
 
+#define FS_TEMPBUFSZ            2048
+#define FS_SBBUFSZ              256
+
 // Prochelper defines
 #define PH_OUTCMDBUFSIZE        4096
 

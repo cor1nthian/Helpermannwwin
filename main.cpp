@@ -74,11 +74,14 @@ int wmain(int argc, wchar_t* argv[]) {
 	ACLHandler aclh;
 	WMIHandler wmih;
 	MSSQLDBHandler mssqlh;
+	std::vector<DriveDesc> ddesc2;
+	fsh.EnumDrives(ddesc2);
 	HANDLE pToken = 0;
 	HANDLE hToken = 0;
 	long oplres = 0;
-	std::vector<DriveDesc> ddesc2;
-	fsh.EnumDrives(ddesc2);
+	std::vector<VolumeDesc> vdesc2;
+	fsh.EnumVolumes2(vdesc2);
+	fsh.EnumVolumes(vdesc2);
 	std::vector<PartitionDesc> plist;
 	fsh.EnumPartitions(plist);
 	fsh.EnumDrives(ddesc2);
